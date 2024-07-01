@@ -1,0 +1,63 @@
+﻿#pragma once
+
+
+#include "Core.h"
+#include "spdlog/spdlog.h"
+#include "spdlog/fmt/ostr.h"
+
+
+//
+//template<typename... Args>
+//void IFNITY_LOG(std::shared_ptr<spdlog::logger> logger, spdlog::level::level_enum level, const char* fmt, Args&&... args) {
+//	switch (level) {
+//	case spdlog::level::warn:
+//		logger->warn(fmt, std::forward<Args>(args)...);
+//		break;
+//	case spdlog::level::err:
+//		logger->error(fmt, std::forward<Args>(args)...);
+//		break;
+//	default:
+//		logger->info(fmt, std::forward<Args>(args)...);
+//		break;
+//	}
+//}
+#define IFNITY_LOG(logger, level,  ...) \
+    do { \
+        if (level == WARNING) { \
+            logger->warn(__VA_ARGS__); \
+        } else if (level == ERROR) { \
+            logger->error(__VA_ARGS__);} \
+			else if (level == TRACE) { \
+            logger->trace(__VA_ARGS__); \
+        } else { \
+            logger->info(__VA_ARGS__); \
+        } \
+    } while (0)
+namespace IFNITY
+{
+
+	class  IFNITY_API  Log
+	{
+	public:
+			static void init();
+
+			IFNITY_INLINE  static std::shared_ptr<spdlog::logger>& GetCoreLogger() { return log_CoreLogger; }
+			IFNITY_INLINE  static std::shared_ptr<spdlog::logger>& GetAppLogger()  { return log_AppLogger; }
+
+
+	private :
+
+		static std::shared_ptr<spdlog::logger> log_CoreLogger;
+		static std::shared_ptr<spdlog::logger> log_AppLogger;
+
+		
+	};
+
+	
+}
+
+#define LogCore IFNITY::Log::GetAppLogger()
+#define LogApp IFNITY::Log::GetAppLogger()
+#define WARNING spdlog::level::warn
+#define ERROR   spdlog::level::err
+#define TRACE   spdlog::level::trace
