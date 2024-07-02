@@ -29,10 +29,17 @@ file(GLOB_RECURSE SOURCE_FILES
     ${PROJECT_SOURCE_DIR}/src/*.h
     ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
+# Add precompiled header
+
+# Add precompiled header source files
+set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES})
 
+
+
+target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/pch.h)
 # Check if SOURCE_FILES is empty
 if(NOT SOURCE_FILES)
     message(FATAL_ERROR "No source files given to target: ${PROJECT_NAME}")
@@ -59,7 +66,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     LINK_FLAGS_DIST "${CMAKE_SHARED_LINKER_FLAGS_DIST}"
 )
 
-# Post build commands
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${CMAKE_BINARY_DIR}/Sandbox
-)
+# Opcional: establece propiedades adicionales para la biblioteca
+set_target_properties(Ifnity PROPERTIES OUTPUT_NAME "ifnity")
+
+

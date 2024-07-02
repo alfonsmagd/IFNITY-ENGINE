@@ -11,3 +11,6 @@ add_subdirectory(Ifnity)
 # Añade el subdirectorio que contiene el proyecto Sandbox
 # Asume que Sandbox está en un subdirectorio llamado Sandbox en la raíz de tu proyecto
 add_subdirectory(Sandbox)
+
+# El dll que genera Ifnity se copiará automáticamente a la carpeta de salida de Sandbox
+# Esto es para que no tengas que copiar manualmente el archivo dll cada vez que lo generes

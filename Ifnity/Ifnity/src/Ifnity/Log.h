@@ -1,26 +1,13 @@
 ﻿#pragma once
 
 
+
 #include "Core.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/fmt/ostr.h"
 
 
-//
-//template<typename... Args>
-//void IFNITY_LOG(std::shared_ptr<spdlog::logger> logger, spdlog::level::level_enum level, const char* fmt, Args&&... args) {
-//	switch (level) {
-//	case spdlog::level::warn:
-//		logger->warn(fmt, std::forward<Args>(args)...);
-//		break;
-//	case spdlog::level::err:
-//		logger->error(fmt, std::forward<Args>(args)...);
-//		break;
-//	default:
-//		logger->info(fmt, std::forward<Args>(args)...);
-//		break;
-//	}
-//}
+
 #define IFNITY_LOG(logger, level,  ...) \
     do { \
         if (level == WARNING) { \
@@ -57,7 +44,7 @@ namespace IFNITY
 }
 
 #define LogCore IFNITY::Log::GetAppLogger()
-#define LogApp IFNITY::Log::GetAppLogger()
+#define LogApp	IFNITY::Log::GetAppLogger()
 #define WARNING spdlog::level::warn
 #define ERROR   spdlog::level::err
 #define TRACE   spdlog::level::trace
