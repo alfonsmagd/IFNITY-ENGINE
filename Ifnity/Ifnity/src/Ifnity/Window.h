@@ -8,6 +8,9 @@
 
 IFNITY_NAMESPACE
 
+
+class Window;
+
 	struct WindowProps
 	{
 		std::string Title;
@@ -22,8 +25,7 @@ IFNITY_NAMESPACE
 		}
 	};
 
-// Interface representing a desktop system based Window
-// This is a pure virtual class, it has no implementation.
+
 class IFNITY_API Window
 {
 public:
@@ -43,8 +45,33 @@ public:
 
 	virtual void* GetNativeWindow() const = 0;
 
-	static Window* Create(const WindowProps& props = WindowProps());
+	enum API_WINDOW_TYPE
+	{
+		OPENGL,
+		D3D12,
+		D3D11,
+		VULKAN,
+
+		SIZE_OF_API_WINDOW_TYPE
+	};
+
+	//Destructor for the WindowBuilder
+	
+
+	
+	//Factory method to create a window
+	static Window* Create(API_WINDOW_TYPE api = OPENGL ,const WindowProps& props = WindowProps());
+
+private:
+
+	template<typename WindowType, typename... Args>
+	static WindowType* BuildWindow(Args&&... args)
+	{
+		return new WindowType(std::forward<Args>(args)...);
+	}
 };
 
 
+
 IFNITY_END_NAMESPACE
+

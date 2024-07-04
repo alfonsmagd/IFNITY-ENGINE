@@ -21,6 +21,7 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 # La línea siguiente ya no es necesaria porque add_subdirectory se encargará de incluir los directorios necesarios
 # include_directories(${PROJECT_SOURCE_DIR}/vendor/glfw/include)
+include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
@@ -35,7 +36,7 @@ file(GLOB_RECURSE SOURCE_FILES
 set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES} "src/Ifnity/Window.cpp")
 
 
 

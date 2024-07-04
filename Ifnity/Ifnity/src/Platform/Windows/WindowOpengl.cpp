@@ -1,24 +1,19 @@
 #include "pch.h"
-#include "WindowWindow.h"
-
+#include "WindowOpengl.h"
+#include <glm\glm.hpp>
 
 IFNITY_NAMESPACE
 
 ///Static variable to check if GLFW is initialized.
 static bool s_GLFWInitialized = false;
 
-Window* Window::Create(const WindowProps& props)
-{
-	return new WindowWindow(props);
-}
-
-
 ///Default Constructor
 ///
 /// @param props Window properties.
-WindowWindow::WindowWindow(const WindowProps& props)
+WindowOpengl::WindowOpengl(const WindowProps& props)
 {
 	//
+	glm::abs(0.0f);
 	m_WindowData.props = props;
 	m_WindowData.Title = props.Title;
 	m_WindowData.VSync = false;
@@ -28,13 +23,13 @@ WindowWindow::WindowWindow(const WindowProps& props)
 
 }
 
-WindowWindow::~WindowWindow()
+WindowOpengl::~WindowOpengl()
 {
 	// Shutdown the window and close GLFW
 	Shutdown();
 }
 
-void WindowWindow::OnUpdate()
+void WindowOpengl::OnUpdate()
 {
 	glfwPollEvents();
 	glfwSwapBuffers(m_Window);
@@ -44,18 +39,18 @@ void WindowWindow::OnUpdate()
 /// This function sets the VSync in glfw window.
 /// </summary>
 /// <param name="enabled"> true enable Vsync, false disenabled Vsync.</param>
-void WindowWindow::SetVSync(bool enabled)
+void WindowOpengl::SetVSync(bool enabled)
 {
 	//GLFW function to enable or disable VSync
 	enabled ? glfwSwapInterval(1) : glfwSwapInterval(0);
 }
 
-bool WindowWindow::IsVSync() const
+bool WindowOpengl::IsVSync() const
 {
 	return false;
 }
 
-void WindowWindow::Init()
+void WindowOpengl::Init()
 {
 	// Create the window 
 	IFNITY_LOG(LogApp, TRACE, "Initialize Window {0}", m_WindowData.Title.c_str());
@@ -73,6 +68,7 @@ void WindowWindow::Init()
 			s_GLFWInitialized = true;
 		}
 	}
+	
 
 	// Create a windowed mode window glfwCreateWindow
 	m_Window = glfwCreateWindow(
@@ -81,13 +77,13 @@ void WindowWindow::Init()
 		m_WindowData.Title.c_str(), 
 		NULL,
 		NULL);
-
+	
 	glfwMakeContextCurrent(m_Window);
 	glfwSetWindowUserPointer(m_Window, &m_WindowData.props);
 	SetVSync(true);
 }
 
-void WindowWindow::Shutdown()
+void WindowOpengl::Shutdown()
 {
 	// Destroy the window
 	glfwDestroyWindow(m_Window);

@@ -1,17 +1,19 @@
 #pragma once
 #include "Ifnity\Window.h"
-#include <GLFW\glfw3.h>
 
+#include <GLFW\glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW\glfw3native.h>
 
 
 IFNITY_NAMESPACE
 
-class WindowWindow final: public Window
+class WindowOpengl final: public Window
 {
 
 public:
-	WindowWindow(const WindowProps& props);
-	virtual ~WindowWindow();
+	WindowOpengl(const WindowProps& props);
+	virtual ~WindowOpengl();
 
 	void OnUpdate() override;
 	
