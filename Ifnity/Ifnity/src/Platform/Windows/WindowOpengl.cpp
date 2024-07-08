@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "WindowOpengl.h"
 #include <glm\glm.hpp>
+#include <Ifnity\Event\WindowEvent.h>
 
 IFNITY_NAMESPACE
 
@@ -79,8 +80,29 @@ void WindowOpengl::Init()
 		NULL);
 	
 	glfwMakeContextCurrent(m_Window);
-	glfwSetWindowUserPointer(m_Window, &m_WindowData.props);
-	SetVSync(true);
+	//Take a pointer to the window data information to then return in callbaks. 
+	glfwSetWindowUserPointer(m_Window, &m_WindowData);
+	SetVSync(true);  
+
+	// Set GLFW callbacks
+
+	glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			data.props.Width = width;
+			data.props.Height = height;
+
+			// event its the argument of the callback function that we set in the windowOpengl class. 
+			WindowResizeEvent event(width, height);
+			data.EventCallback(event);
+		});
+
+	glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			WindowCloseEvent event;
+			data.EventCallback(event);
+		});
 }
 
 void WindowOpengl::Shutdown()

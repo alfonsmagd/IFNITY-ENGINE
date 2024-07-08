@@ -7,6 +7,7 @@
 
 namespace IFNITY
 {
+	#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
 	// Reload Function 
 
@@ -15,21 +16,17 @@ namespace IFNITY
 	App::App()
 	{
 		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window->SetEventCallback(BIND_EVENT_FN(App::OnEvent));
 	}
 	App::~App()
 	{
 		printf("~App() \n");
 	}
 
-	bool OnWindowResize(IFNITY::WindowResizeEvent& e)
-	{
-		// Aquí va el código para manejar el evento WindowResizeEvent
-		// Por ejemplo, podrías imprimir las nuevas dimensiones de la ventana:
-		std::cout << "Window resized to " << e.GetWidth() << "x" << e.GetHeight() << std::endl;
-		return true;
-	}
+
 	void App::run()
 	{
+
 
 		while(m_runing)
 		{
@@ -38,10 +35,20 @@ namespace IFNITY
 			m_Window->OnUpdate();
 		}
 
-	/*	WindowResizeEvent e(100, 20);
-		IFNITY::EventDispatcher dispatcher(e);
-		dispatcher.Dispatch<IFNITY::WindowResizeEvent>(OnWindowResize);
-		IFNITY_LOG(LogApp, ERROR, e);*/
+	}
+
+	void App::OnEvent(Event& e)
+	{
+		EventDispatcher dispatcher(e);
+		//This will call the function OnWindowClose if the event is WindowCloseEvent type do this function. 
+		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(App::OnWindowClose));
+		IFNITY_LOG(LogCore,TRACE, e.ToString());
+	}
+
+	bool App::OnWindowClose(WindowCloseEvent& e)
+	{
+		m_runing = false;
+		return true;
 	}
 
 }

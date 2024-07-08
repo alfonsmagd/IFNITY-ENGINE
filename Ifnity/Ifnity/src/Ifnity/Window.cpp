@@ -3,9 +3,7 @@
 
 IFNITY_NAMESPACE
 
-
-
-
+// Create Window 
 Window* Window::Create(API_WINDOW_TYPE api, const WindowProps& props)
 {
 
