@@ -4,20 +4,11 @@
 
 extern IFNITY::App* IFNITY::CreateApp();
 
-struct obj
-{
-	std::string ToString() const 
-	{
-		return "hey";
-	}
-};
-
 
 
 int main(int argc, char** argv)
 {
 	IFNITY::Log::init();
-
 
 	IFNITY_LOG(LogCore, ERROR, "variable{}");
 	

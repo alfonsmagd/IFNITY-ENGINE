@@ -1,11 +1,141 @@
+# Visual Studio
+.vs/
+.vscode/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.suo
+*.user
+*.csproj.user
+*.userosscache
+*.userprefs
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# NTLDR file
+NTLDR
+BOOTSECT.BAK
+hiberfil.sys
+pagefile.sys
+swapfile.sys
+
+# Folder config file
+Desktop.ini
+
+# CMake
 CMakeLists.txt.user
 CMakeCache.txt
-CMakeFiles
-CMakeScripts
-Testing
+CMakeFiles/
+CMakeScripts/
 Makefile
 cmake_install.cmake
 install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
-_deps
+_deps/
+
+# CTest
+Testing/
+
+# Qt
+*.pro.user
+*.pro.user.*
+*.qmake.stash
+*.qmake.cache
+
+# General
+*.obj
+*.o
+*.exe
+*.out
+*.dll
+*.so
+*.dylib
+*.lib
+*.a
+*.pdb
+*.idb
+*.class
+*.psess
+*.pdb
+*.ipch
+*.aps
+*.ncb
+*.sdf
+*.cache
+*.ilk
+*.log
+*.dmp
+*.opendb
+*.tlog
+*.lastbuildstate
+
+# Compiled Python files
+*.pyc
+*.pyo
+*.pyd
+
+# Python egg
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+.Python
+develop-eggs/
+
+# Backup files
+*.bak
+*.swp
+
+# JetBrains
+.idea/
+*.iml
+*.iws
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Directories potentially created on remote AFP share
+.Spotlight-V100
+.Trashes
+
+# User-specific files
+*.rsuser
+*.rs
+
+# Binary Database
+*.sql
+*.sqlite
+*.sqlite3
+
+# Web Environment
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Logs
+*.log
+
+# Application specific
+*.stackdump
+
+# Build directory
+/build/

@@ -71,7 +71,7 @@ namespace events
 
     /// The connect function template is a syntax sugar to register an event
     /// listener to an event source.
-    /// @author mflores
+ 
     template <class Event>
     void connect(const EventSource<Event>& eventSource, EventListener<Event>& eventlistener)
     {
@@ -80,7 +80,7 @@ namespace events
 
     /// The connect function template is a syntax sugar to unregister an event
     /// listener from an event source.
-    /// @author mflores
+    
     template <class Event>
     void disconnect(const EventSource<Event>& eventSource, EventListener<Event>& eventlistener)
     {

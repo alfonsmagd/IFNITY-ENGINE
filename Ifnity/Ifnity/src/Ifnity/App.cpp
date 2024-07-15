@@ -40,7 +40,7 @@ namespace IFNITY
 	void App::OnEvent(Event& e)
 	{
 		EventDispatcher dispatcher(e);
-		//This will call the function OnWindowClose if the event is WindowCloseEvent type do this function. 
+		//This will call the function OnWindowClose if the event is WindowCloseEvent type.
 		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(App::OnWindowClose));
 		IFNITY_LOG(LogCore,TRACE, e.ToString());
 	}
