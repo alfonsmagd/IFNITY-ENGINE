@@ -36,7 +36,7 @@ file(GLOB_RECURSE SOURCE_FILES
 set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES} "src/Ifnity/Window.cpp")
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES} "src/Ifnity/Window.cpp" "src/Ifnity/Event/EventSystem.h" "src/Ifnity/Event/EventMacro.h")
 
 
 
