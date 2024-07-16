@@ -2,12 +2,13 @@
 
 #include "App.h"
 #include "Log.h"
-#include "Event/WindowEvent.h"
 #include "Window.h"
+
+
 
 namespace IFNITY
 {
-	#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
+	//#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
 	// Reload Function 
 
@@ -16,7 +17,15 @@ namespace IFNITY
 	App::App()
 	{
 		m_Window = std::unique_ptr<Window>(Window::Create());
-		m_Window->SetEventCallback(BIND_EVENT_FN(App::OnEvent));
+
+		//Intialize the EventListenerControler 
+		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
+		//events::connect<WindowResizeEvent>(m_GLFWEventSource, m_GLFWEventListener);
+		//Connect with the EventSourceController 
+		
+		events::connect<WindowResize>(*m_Window->GetGLFWEventSource(), *m_GLFWEventListener);
+		events::connect<WindowClose>(*m_Window->GetGLFWEventSource(),  *m_GLFWEventListener);
+
 	}
 	App::~App()
 	{
@@ -27,28 +36,14 @@ namespace IFNITY
 	void App::run()
 	{
 
-
-		while(m_runing)
+		while(m_GLFWEventListener.get()->getRunning())
 		{
 			glClearColor(1, 0, 1, 1);
 			glClear(GL_COLOR_BUFFER_BIT);
 			m_Window->OnUpdate();
 		}
-
+		
 	}
 
-	void App::OnEvent(Event& e)
-	{
-		EventDispatcher dispatcher(e);
-		//This will call the function OnWindowClose if the event is WindowCloseEvent type.
-		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_FN(App::OnWindowClose));
-		IFNITY_LOG(LogCore,TRACE, e.ToString());
-	}
-
-	bool App::OnWindowClose(WindowCloseEvent& e)
-	{
-		m_runing = false;
-		return true;
-	}
 
 }

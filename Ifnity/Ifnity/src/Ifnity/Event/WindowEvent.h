@@ -1,48 +1,49 @@
 #pragma once
-
+#include "pch.h"
 
 
 #include "Event.h"
+#include "EventBus.h"
 #include <GLFW/glfw3.h>
 
 
 namespace IFNITY {
 
-	class IFNITY_API WindowResizeEvent : public Event
+	using WindowGroupSourceEvent   = events::EventTemplateSource<WINDOW_EVENT_GROUP>;
+	using WindowGroupListenerEvent = events::EventTemplateListener<WINDOW_EVENT_GROUP>;
+
+
+	class GLFWEventSource : public WindowGroupSourceEvent
 	{
 	public:
-		WindowResizeEvent(unsigned int width, unsigned int height)
-			: m_Width(width), m_Height(height) {}
-
-		unsigned int GetWidth() const { return m_Width; }
-		unsigned int GetHeight() const { return m_Height; }
-
-		std::string ToString() const override
+		// Aquí podrías tener métodos para disparar los eventos específicos
+		void triggerWindowResize(int width, int height)
 		{
-			std::stringstream ss;
-			ss << "WindowResizeEvent: " << m_Width << ", " << m_Height;
-			return ss.str();
+			dispatchEvent(WindowResize(width, height));
 		}
 
-		EVENT_CLASS_TYPE(WindowResize)
-		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+		void triggerWindowClose()
+		{
+			dispatchEvent(WindowClose());
+		}
+	};
+
+	class GLFWEventListener: public WindowGroupListenerEvent
+	{
+	public:
+		void onEventReceived(const WindowResize& event)
+		{
+			IFNITY_LOG(LogCore, TRACE, event.ToString());
+		}
+
+		void onEventReceived(const WindowClose& event)
+		{
+			IFNITY_LOG(LogCore, TRACE, event.ToString());
+			m_runing = false;
+		}
+		bool getRunning() { return m_runing; }
 	private:
-		unsigned int m_Width, m_Height;
+		bool m_runing = true;
 	};
-
-	class IFNITY_API WindowCloseEvent: public Event
-	{
-			
-	public:
-		WindowCloseEvent() = default;
-
-		std::string ToString() const override
-		{
-			std::stringstream ss;
-			ss << "WindowOpengl Close";
-			return ss.str();
-		}
-		EVENT_CLASS_TYPE(WindowClose)
-	    EVENT_CLASS_CATEGORY(EventCategoryApplication)
-	};
+  
 }

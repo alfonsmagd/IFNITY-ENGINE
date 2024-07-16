@@ -1,6 +1,6 @@
 #pragma once
 #include "Ifnity\Window.h"
-
+#include <Ifnity\Event\WindowEvent.h>
 #include <GLFW\glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW\glfw3native.h>
@@ -22,9 +22,11 @@ public:
 	unsigned int GetHeight() const override { return m_WindowData.props.Width; }
 
 	// Window attributes
-	void SetEventCallback(const EventCallbackFn& callback) override { m_WindowData.EventCallback = callback; }
 	void SetVSync(bool enabled) override;
 	bool IsVSync() const override;
+
+	//Get GLFWEventSourceBus to connect Listeners
+	GLFWEventSource* GetGLFWEventSource()  override { return &m_WindowData.GLFWEventSourceBus; }
 
 	//TODO: Implement this function
 	void* GetNativeWindow() const override { return nullptr; }
@@ -38,6 +40,8 @@ private:
 	// This is a unique pointer because we want to make sure that there is only one window
 	
 	GLFWwindow* m_Window;
+	//Create a EventSource for the WindowGroup
+	
 	// Struct to hold window data
 	struct WindowData
 	{
@@ -45,7 +49,7 @@ private:
 		WindowProps props;
 		bool VSync;
 
-		EventCallbackFn EventCallback;
+		GLFWEventSource  GLFWEventSourceBus;
 	}m_WindowData;
 
 };

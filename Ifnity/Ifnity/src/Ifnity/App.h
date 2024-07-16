@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "Core.h"
 #include "Window.h"
-
+#include "Event/WindowEvent.h"
 
 IFNITY_NAMESPACE
 	
@@ -15,12 +15,12 @@ IFNITY_NAMESPACE
 		virtual ~App();
 		void run();
 
-		void OnEvent(Event& e);
-
 	private:
-		bool OnWindowClose(WindowCloseEvent& e);
 		bool m_runing = true;
 		std::unique_ptr<Window> m_Window;
+		std::unique_ptr<GLFWEventListener> m_GLFWEventListener;
+
+		
 	};
 
 	App* CreateApp();

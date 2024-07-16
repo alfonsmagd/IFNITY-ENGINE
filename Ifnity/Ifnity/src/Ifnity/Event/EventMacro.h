@@ -3,7 +3,7 @@
 
 
 #define EVENT_BEGIN(EventType) \
-class EventType \
+class IFNITY_API EventType \
 {
 
 
@@ -22,9 +22,28 @@ public: \
       return m_ ## ParameterName; \
    }
 
+
+#define EVENT_TOSTRING(EventType, Description) \
+public: \
+   std::string ToString() const  \
+   { \
+      std::stringstream ss; \
+      ss << Description; \
+      return ss.str(); \
+   }
+
+#define EVENT_TOSTRING2(EventType, Parameter1Name, Parameter2Name) \
+public: \
+   std::string ToString() const  \
+   { \
+      std::stringstream ss; \
+      ss << #EventType << ": " << get ## Parameter1Name() << ", " << get ## Parameter2Name(); \
+      return ss.str(); \
+   }
 /// Macro for defining a class representing an event with no parameters
-#define EVENT(EventType) \
+#define EVENT(EventType,Description) \
 EVENT_BEGIN(EventType) \
+EVENT_TOSTRING(EventType, Description) \
 EVENT_END()
 
 /// Macro for defining a class representing an event with one parameter
@@ -50,5 +69,6 @@ public: \
 \
 EVENT_PARAMETER(Parameter1Type, Parameter1Name) \
 EVENT_PARAMETER(Parameter2Type, Parameter2Name) \
+EVENT_TOSTRING2(EventType, Parameter1Name, Parameter2Name) \
 EVENT_END()
 

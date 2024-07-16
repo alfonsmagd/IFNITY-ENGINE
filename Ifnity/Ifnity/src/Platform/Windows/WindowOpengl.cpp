@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "WindowOpengl.h"
 #include <glm\glm.hpp>
-#include <Ifnity\Event\WindowEvent.h>
+
 
 IFNITY_NAMESPACE
 
@@ -11,7 +11,7 @@ static bool s_GLFWInitialized = false;
 ///Default Constructor
 ///
 /// @param props Window properties.
-WindowOpengl::WindowOpengl(const WindowProps& props)
+WindowOpengl::WindowOpengl(const WindowProps& props) 
 {
 	//
 	glm::abs(0.0f);
@@ -82,6 +82,7 @@ void WindowOpengl::Init()
 	glfwMakeContextCurrent(m_Window);
 	//Take a pointer to the window data information to then return in callbaks. 
 	glfwSetWindowUserPointer(m_Window, &m_WindowData);
+	
 	SetVSync(true);  
 
 	// Set GLFW callbacks
@@ -92,16 +93,17 @@ void WindowOpengl::Init()
 			data.props.Width = width;
 			data.props.Height = height;
 
-			// event its the argument of the callback function that we set in the windowOpengl class. 
-			WindowResizeEvent event(width, height);
-			data.EventCallback(event);
+			data.GLFWEventSourceBus.triggerWindowResize(width, height);
+
+
+			
 		});
 
 	glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			WindowCloseEvent event;
-			data.EventCallback(event);
+
+			data.GLFWEventSourceBus.triggerWindowClose();
 		});
 }
 

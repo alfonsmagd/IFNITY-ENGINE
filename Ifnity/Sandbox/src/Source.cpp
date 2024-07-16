@@ -5,8 +5,6 @@
 #include <Ifnity.h>
 
 
-
-
 class Source: public IFNITY::App
 {
 public:

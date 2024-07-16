@@ -4,6 +4,9 @@
 
 #include "Ifnity/Core.h"
 #include "Ifnity/Event/Event.h"
+#include "Ifnity/Event/WindowEvent.h"
+
+
 
 
 IFNITY_NAMESPACE
@@ -29,7 +32,7 @@ class Window;
 class IFNITY_API Window
 {
 public:
-	using EventCallbackFn = std::function<void(Event&)>;
+
 
 	virtual ~Window() = default;
 
@@ -39,10 +42,10 @@ public:
 	virtual unsigned int GetHeight() const = 0;
 
 	// Window attributes
-	virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
+	
 	virtual void SetVSync(bool enabled) = 0;
 	virtual bool IsVSync() const = 0;
-
+	virtual GLFWEventSource* GetGLFWEventSource() = 0;
 	virtual void* GetNativeWindow() const = 0;
 
 	enum API_WINDOW_TYPE
@@ -58,7 +61,6 @@ public:
 	//Destructor for the WindowBuilder
 	
 
-	
 	//Factory method to create a window
 	static Window* Create(API_WINDOW_TYPE api = OPENGL ,const WindowProps& props = WindowProps());
 

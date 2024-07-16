@@ -6,7 +6,7 @@
 #include "Ifnity/Log.h"
 
 //wOMDPW
-#include "Ifnity/Window.h"
-//Entry Point
+
+//Entry Point this include have put at the end of the file.
 #include "Ifnity/EntryPoint.h"
 

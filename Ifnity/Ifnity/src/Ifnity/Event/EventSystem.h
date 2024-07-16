@@ -104,30 +104,6 @@ namespace events
         }
     };
 
-    EVENT2(WindowResize, int, Width, int, Height);
-
-
-    //WindowResize Listener 
-    class WindowResizeListener: public EventListener<WindowResize>
-    {
-    public:
-        void onEventReceived(const WindowResize& event)
-        {
-            std::cout << "WindowResize event received: " << event.getWidth() << "x" << event.getHeight() << std::endl;
-        }
-    };
-
-    //WindowResize Source
-    class WindowResizeSource: public EventSource<WindowResize>
-    {
-    public:
-        void resize(int width, int height)
-        {
-            dispatchEvent(WindowResize(width, height));
-
-        }
-    };
-
 } // namespace events
 
 IFNITY_END_NAMESPACE
