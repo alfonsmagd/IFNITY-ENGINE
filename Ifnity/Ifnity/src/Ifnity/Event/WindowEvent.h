@@ -15,35 +15,62 @@ namespace IFNITY {
 
 	class GLFWEventSource : public WindowGroupSourceEvent
 	{
+	
 	public:
-		// Aquí podrías tener métodos para disparar los eventos específicos
-		void triggerWindowResize(int width, int height)
+		template<typename EventType, typename... Args>
+		void triggerEvent(Args&&... args)
 		{
-			dispatchEvent(WindowResize(width, height));
-		}
-
-		void triggerWindowClose()
-		{
-			dispatchEvent(WindowClose());
+			EventType event(std::forward<Args>(args)...);
+			dispatchEvent(event);
 		}
 	};
 
+
+	/// <summary>
+	/// This class is an example of how 
+	/// </summary>
 	class GLFWEventListener: public WindowGroupListenerEvent
 	{
 	public:
-		void onEventReceived(const WindowResize& event)
+		
+		void onEventReceived(const WindowResize& event) 
 		{
-			IFNITY_LOG(LogCore, TRACE, event.ToString());
+			logEvent(event);
 		}
 
-		void onEventReceived(const WindowClose& event)
+		void onEventReceived(const WindowClose& event) 
+		{
+			logEvent(event);
+			m_running = false;
+		}
+
+		void onEventReceived(const KeyPressed& event) 
+		{
+			logEvent(event);
+		}
+
+		void onEventReceived(const KeyRelease& event) 
+		{
+			logEvent(event);
+		}
+
+		void onEventReceived(const MouseMove& event) 
+		{
+			logEvent(event);
+		}
+
+	
+		
+		bool getRunning() { return m_running; }
+	private:
+		bool m_running = true;
+
+		///Loggin function Event. 
+		template<typename EventType>
+		void logEvent(const EventType& event)
 		{
 			IFNITY_LOG(LogCore, TRACE, event.ToString());
-			m_runing = false;
 		}
-		bool getRunning() { return m_runing; }
-	private:
-		bool m_runing = true;
 	};
   
 }

@@ -100,7 +100,7 @@ namespace events
     public:
         void onEventReceived(const Event& event)
         {
-            EventSource<Event>::dispatchEvent(event);
+            template.EventSource<Event>::dispatchEvent(event);
         }
     };
 

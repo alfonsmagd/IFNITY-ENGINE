@@ -93,8 +93,8 @@ void WindowOpengl::Init()
 			data.props.Width = width;
 			data.props.Height = height;
 
-			data.GLFWEventSourceBus.triggerWindowResize(width, height);
-
+			//data.GLFWEventSourceBus.triggerWindowResize(width, height);
+			data.GLFWEventSourceBus.triggerEvent<WindowResize>(width, height);
 
 			
 		});
@@ -103,8 +103,39 @@ void WindowOpengl::Init()
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-			data.GLFWEventSourceBus.triggerWindowClose();
+			//data.GLFWEventSourceBus.triggerWindowClose();
+			data.GLFWEventSourceBus.triggerEvent<WindowClose>();
 		});
+
+	glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			switch(action)
+			{
+			case GLFW_PRESS:
+				//data.GLFWEventSourceBus.triggerKeyPressed(key, 0);
+				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, 0);
+				break;
+			case GLFW_RELEASE:
+				//data.GLFWEventSourceBus.triggerKeyReleased(key);
+				data.GLFWEventSourceBus.triggerEvent<KeyRelease>(key);
+				break;
+			case GLFW_REPEAT:
+				//data.GLFWEventSourceBus.triggerKeyPressed(key, 1);
+				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, 1);
+				break;
+			}
+		});
+	
+	glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			//data.GLFWEventSourceBus.triggerMouseMoved(xpos, ypos);
+			data.GLFWEventSourceBus.triggerEvent<MouseMove>(xpos, ypos);
+		});
+
+
 }
 
 void WindowOpengl::Shutdown()

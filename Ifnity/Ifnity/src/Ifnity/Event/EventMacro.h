@@ -40,6 +40,26 @@ public: \
       ss << #EventType << ": " << get ## Parameter1Name() << ", " << get ## Parameter2Name(); \
       return ss.str(); \
    }
+
+// Event with 3 parameters to String    
+#define EVENT_TOSTRING3(EventType, Parameter1Name, Parameter2Name, Parameter3Name) \
+public: \
+   std::string ToString() const  \
+   { \
+	  std::stringstream ss; \
+	  ss << #EventType << ": " << get ## Parameter1Name() << ", " << get ## Parameter2Name() << ", " << get ## Parameter3Name(); \
+	  return ss.str(); \
+   }
+
+
+#define EVENT_TOSTRING1(EventType, Parameter1Name) \
+public: \
+   std::string ToString() const  \
+   { \
+      std::stringstream ss; \
+      ss << #EventType << ": " << get ## Parameter1Name(); \
+      return ss.str(); \
+   }
 /// Macro for defining a class representing an event with no parameters
 #define EVENT(EventType,Description) \
 EVENT_BEGIN(EventType) \
@@ -54,6 +74,7 @@ public: \
    { \
    } \
 \
+EVENT_TOSTRING1(EventType, ParameterName)\
 EVENT_PARAMETER(ParameterType, ParameterName) \
 EVENT_END()
 
@@ -70,5 +91,22 @@ public: \
 EVENT_PARAMETER(Parameter1Type, Parameter1Name) \
 EVENT_PARAMETER(Parameter2Type, Parameter2Name) \
 EVENT_TOSTRING2(EventType, Parameter1Name, Parameter2Name) \
+EVENT_END()
+
+/// Macro for defining a class representing an event with two parameters
+#define EVENT3(EventType, Parameter1Type, Parameter1Name, Parameter2Type, Parameter2Name, Parameter3Type, Parameter3Name) \
+EVENT_BEGIN(EventType) \
+public: \
+   EventType(Parameter1Type value1, Parameter2Type value2, Parameter3Type value3) \
+	  : m_ ## Parameter1Name(value1) \
+	  , m_ ## Parameter2Name(value2) \
+	  , m_ ## Parameter3Name(value3) \
+   { \
+   } \
+\
+EVENT_PARAMETER(Parameter1Type, Parameter1Name) \
+EVENT_PARAMETER(Parameter2Type, Parameter2Name) \
+EVENT_PARAMETER(Parameter3Type, Parameter3Name) \
+EVENT_TOSTRING3(EventType, Parameter1Name, Parameter2Name, Parameter3Name) \
 EVENT_END()
 

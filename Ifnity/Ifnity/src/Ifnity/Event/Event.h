@@ -5,16 +5,19 @@
 #include "Ifnity/Event/EventMacro.h"
 
 namespace IFNITY {
+    
+    // Event Creating . 
+	EVENT2(MouseMove, int, X, int, Y);
+    EVENT2(WindowResize, int, Width, int, Height);
+    EVENT2(KeyPressed, int, Key, int, Repeat);
+	EVENT1(KeyRelease, int, Key)
+    EVENT(WindowClose,"Window Close Event");
 
-	EVENT2(WindowResize, int, Width, int, Height);
-	EVENT(WindowClose,"Window Close Event");
+    #define WINDOW_EVENT_GROUP       WindowResize, \
+                                     WindowClose , \
+                                     KeyPressed, \
+									 KeyRelease, \
+									 MouseMove
 
-
-
-	#define WINDOW_EVENT_GROUP       WindowResize, \
-								     WindowClose 
-
-	
-	
 
 }

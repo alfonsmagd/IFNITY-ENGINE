@@ -12,19 +12,23 @@ namespace IFNITY
 
 	// Reload Function 
 
+	#define CONNECT_EVENT(x) ConnectEvent<x>()
 
 	//Default Constructor;
 	App::App()
 	{
-		m_Window = std::unique_ptr<Window>(Window::Create());
 
+		m_Window = std::unique_ptr<Window>(Window::Create());
 		//Intialize the EventListenerControler 
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
-		//events::connect<WindowResizeEvent>(m_GLFWEventSource, m_GLFWEventListener);
-		//Connect with the EventSourceController 
 		
-		events::connect<WindowResize>(*m_Window->GetGLFWEventSource(), *m_GLFWEventListener);
-		events::connect<WindowClose>(*m_Window->GetGLFWEventSource(),  *m_GLFWEventListener);
+		CONNECT_EVENT(WindowResize);
+		CONNECT_EVENT(WindowClose);
+		CONNECT_EVENT(KeyPressed);
+		CONNECT_EVENT(KeyRelease);
+		CONNECT_EVENT(MouseMove);
+
+		
 
 	}
 	App::~App()
@@ -36,13 +40,18 @@ namespace IFNITY
 	void App::run()
 	{
 
-		while(m_GLFWEventListener.get()->getRunning())
+		while(isRunning())
 		{
-			glClearColor(1, 0, 1, 1);
+			glClearColor(0, 0.6, 0.6, 1);
 			glClear(GL_COLOR_BUFFER_BIT);
 			m_Window->OnUpdate();
 		}
 		
+	}
+
+	bool App::isRunning()
+	{
+		return m_GLFWEventListener->getRunning();
 	}
 
 
