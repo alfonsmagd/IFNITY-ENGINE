@@ -60,7 +60,6 @@ Testing/
 *.dll
 *.so
 *.dylib
-*.lib
 *.a
 *.pdb
 *.idb
