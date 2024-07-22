@@ -21,12 +21,16 @@ namespace IFNITY
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		//Intialize the EventListenerControler 
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
-		
+		m_CameraEventListener = std::make_unique<EventCameraListener>();
+
+
 		CONNECT_EVENT(WindowResize);
 		CONNECT_EVENT(WindowClose);
 		CONNECT_EVENT(KeyPressed);
 		CONNECT_EVENT(KeyRelease);
 		CONNECT_EVENT(MouseMove);
+		CONNECT_EVENT(ScrollMouseMove);
+		CONNECT_EVENT(MouseClick);	
 
 		
 

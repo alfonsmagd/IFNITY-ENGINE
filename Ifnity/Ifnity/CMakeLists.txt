@@ -13,6 +13,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/Dist)
 
+#Rutas  nvml.lib 
+set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
+
 # Agregar GLFW como un subdirectorio para que sea construido con el proyecto
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 
@@ -22,6 +25,9 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 # La línea siguiente ya no es necesaria porque add_subdirectory se encargará de incluir los directorios necesarios
 # include_directories(${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
+#include nvml directory
+include_directories(${PROJECT_SOURCE_DIR}/vendor/nvml)
+
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
@@ -36,7 +42,7 @@ file(GLOB_RECURSE SOURCE_FILES
 set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES} "src/Ifnity/Window.cpp" "src/Ifnity/Event/EventSystem.h" "src/Ifnity/Event/EventMacro.h" "src/Ifnity/Event/EventBus.h")
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES})
 
 
 
@@ -47,9 +53,12 @@ if(NOT SOURCE_FILES)
 endif()
 
 # Link libraries
-# Ahora vinculamos con el target glfw en lugar de glfw3
-target_link_libraries(${PROJECT_NAME} glfw opengl32)
+target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
+target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${NVML_LIB_PATH})
 
+
+  
 # Preprocessor definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS IFNITY_EXPORTS_DLL)
 
@@ -67,7 +76,17 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     LINK_FLAGS_DIST "${CMAKE_SHARED_LINKER_FLAGS_DIST}"
 )
 
-# Opcional: establece propiedades adicionales para la biblioteca
-set_target_properties(Ifnity PROPERTIES OUTPUT_NAME "ifnity")
+# Copiar nvml.lib al directorio de enlace
+add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}
+)
 
 

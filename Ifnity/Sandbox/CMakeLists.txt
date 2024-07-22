@@ -6,21 +6,19 @@ project(Sandbox)
 # Establece C++ como el lenguaje del proyecto
 set(CMAKE_CXX_STANDARD 17)
 
-message(PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR})
+message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
+
 # Directorios de los archivos fuente
-file(GLOB_RECURSE SOURCES
-     "${PROJECT_SOURCE_DIR}/src/*.cpp"
-)
+file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 # Directorios de los archivos de cabecera
-file(GLOB_RECURSE HEADERS
-     "${PROJECT_SOURCE_DIR}/src/*.h"
-)
+file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/src/*.h")
 
 # Incluye directorios
 include_directories(
     "${PROJECT_SOURCE_DIR}/../Ifnity/vendor/spdlog/include"
     "${PROJECT_SOURCE_DIR}/../Ifnity/src"
+    "${PROJECT_SOURCE_DIR}/../Ifnity/vendor/nvml"
 )
 
 # Especifica el ejecutable
@@ -30,20 +28,28 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 # y de que Ifnity se construya antes de Sandbox
 add_dependencies(${PROJECT_NAME} Ifnity)
 
-# Enlaza la biblioteca Ifnity al proyecto Sandbox
-# Asegúrate de que el directorio de Ifnity.dll esté en tu PATH o especifica su ruta aquí
-target_link_libraries(${PROJECT_NAME}
-    Ifnity
+# Agrega el directorio que contiene el .lib a las rutas de enlace
+link_directories("${CMAKE_BINARY_DIR}/Debug")
+link_directories("${CMAKE_BINARY_DIR}/Release")
+link_directories("${CMAKE_BINARY_DIR}/Dist")
+
+# Vincula la biblioteca Ifnity al proyecto Sandbox
+target_link_libraries(${PROJECT_NAME} PUBLIC Ifnity)
+
+
+
+add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${PROJECT_SOURCE_DIR}/../Ifnity/vendor/nvml/nvml.lib"
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
-# Configura los directorios de salida
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}/${PROJECT_NAME}
-    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin-int/${CMAKE_BUILD_TYPE}/${PROJECT_NAME}
-)
-
+# Asegúrate de copiar la DLL al directorio de salida para que pueda ser encontrada en tiempo de ejecución
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
     $<TARGET_FILE:Ifnity>
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "${PROJECT_SOURCE_DIR}/../Ifnity/vendor/nvml/nvml.lib"
     $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )

@@ -131,10 +131,21 @@ void WindowOpengl::Init()
 	glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			//data.GLFWEventSourceBus.triggerMouseMoved(xpos, ypos);
+			
 			data.GLFWEventSourceBus.triggerEvent<MouseMove>(xpos, ypos);
 		});
 
+	glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			data.GLFWEventSourceBus.triggerEvent<ScrollMouseMove>(xoffset, yoffset);
+		});
+
+	glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			data.GLFWEventSourceBus.triggerEvent<MouseClick>(button, action, mods);
+		});
 
 }
 

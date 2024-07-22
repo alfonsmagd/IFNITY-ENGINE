@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "Core.h"
 #include "Window.h"
-#include "Event/WindowEvent.h"
+
 
 IFNITY_NAMESPACE
 	
@@ -19,8 +19,9 @@ IFNITY_NAMESPACE
 		bool isRunning();
 		std::unique_ptr<Window> m_Window;
 		std::unique_ptr<GLFWEventListener> m_GLFWEventListener;
+		std::unique_ptr<EventCameraListener> m_CameraEventListener;
 
-		//TODO : Implement this function in app.tpp.
+		//TODO : Implement this function in app.tpp. this is only sugar sintax to reduce time to use. 
 		template<typename EvenType>
 		void ConnectEvent()
 		{

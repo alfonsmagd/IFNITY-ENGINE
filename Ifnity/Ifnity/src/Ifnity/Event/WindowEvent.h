@@ -7,6 +7,7 @@
 #include <GLFW/glfw3.h>
 
 
+
 namespace IFNITY {
 
 	using WindowGroupSourceEvent   = events::EventTemplateSource<WINDOW_EVENT_GROUP>;
@@ -23,6 +24,16 @@ namespace IFNITY {
 			EventType event(std::forward<Args>(args)...);
 			dispatchEvent(event);
 		}
+	};
+
+	class EventCameraListener: public events::EventListener<MouseMove>
+	{
+	public:
+		void onEventReceived(const MouseMove& event) override
+		{
+			IFNITY_LOG(LogCore, TRACE, event.ToString() + "camera");
+		}
+	
 	};
 
 
@@ -59,6 +70,16 @@ namespace IFNITY {
 			logEvent(event);
 		}
 
+		void onEventReceived(const ScrollMouseMove& event)
+		{
+			logEvent(event);
+		}
+
+		void onEventReceived(const MouseClick& event)
+		{
+			logEvent(event);
+		}
+
 	
 		
 		bool getRunning() { return m_running; }
@@ -69,7 +90,9 @@ namespace IFNITY {
 		template<typename EventType>
 		void logEvent(const EventType& event)
 		{
-			IFNITY_LOG(LogCore, TRACE, event.ToString());
+			#ifdef _DEBUG
+				IFNITY_LOG(LogCore, TRACE, event.ToString());
+			#endif
 		}
 	};
   
