@@ -1,8 +1,6 @@
 #pragma once
 
-#include <string>
-#include <vector>
-#include <map>
+#include "pch.h"
 /* 
 This class is bassed on the NvmlMonitor class from the NVIDIA NVML example 
 Capture the GPU load and memory for all GPUs on the system.
@@ -26,8 +24,20 @@ Measurements:
 
 */
 
+/// <summary>
+/// Locator pattern for maintenance of the NVML library and usage with Logger or IMGUI 
+/// </summary>
+class NvmlMonitor;
+class IFNITY_API IDisplayBenchMark
+{
+public:
+    virtual void display(const NvmlMonitor& monitor) = 0;
+    //Destructor 
+    virtual ~IDisplayBenchMark() {}
 
-class NvmlMonitor
+};
+
+class IFNITY_API NvmlMonitor
 {
 public:
     NvmlMonitor(uint32_t interval = 100, uint32_t limit = 100);
@@ -188,17 +198,18 @@ public:
         std::string        driverVersion;
     };
 
-
+	void						  setDisplay(IDisplayBenchMark* display) { m_display = display; }
     void                          refresh();  // Take measurement
-    bool                          isValid()                         { return m_valid; }
-    uint32_t                      getGpuCount()                     { return m_physicalGpuCount; }
-    const DeviceInfo& getDeviceInfo(int gpu)                        { return m_deviceInfo[ gpu ]; }
-    const DeviceMemory& getDeviceMemory(int gpu)                    { return m_deviceMemory[ gpu ]; }
-    const DeviceUtilization& getDeviceUtilization(int gpu)          { return m_deviceUtilization[ gpu ]; }
-    const DevicePerformanceState& getDevicePerformanceState(int gpu){ return m_devicePerformanceState[ gpu ]; }
-    const DevicePowerState& getDevicePowerState(int gpu)            { return m_devicePowerState[ gpu ]; }
-    const SysInfo& getSysInfo()                                     { return m_sysInfo; }
-    int  getOffset()                                                { return m_offset; }
+    bool                          isValid()                              { return m_valid; }
+    uint32_t                      getGpuCount() const                    { return m_physicalGpuCount; }
+    const DeviceInfo& getDeviceInfo(int gpu)const                        { return m_deviceInfo[ gpu ]; }
+    const DeviceMemory& getDeviceMemory(int gpu)const                    { return m_deviceMemory[ gpu ]; }
+    const DeviceUtilization& getDeviceUtilization(int gpu)const          { return m_deviceUtilization[ gpu ]; }
+    const DevicePerformanceState& getDevicePerformanceState(int gpu)const{ return m_devicePerformanceState[ gpu ]; }
+    const DevicePowerState& getDevicePowerState(int gpu)const            { return m_devicePowerState[ gpu ]; }
+    const SysInfo& getSysInfo()                const                     { return m_sysInfo; }
+    int  getOffset()                                                     { return m_offset; }
+	void display()                                                       { if(m_display) m_display->display(*this); }   
 
     private:
 	void addRefreshable(IRefreshable* refreshable)                  { m_refreshables.push_back(refreshable); }
@@ -217,5 +228,40 @@ public:
         uint32_t                            m_offset = 0;    // Index of the most recent cpu load sample
         uint32_t                            m_maxElements = 100;  // Number of max stored measurements
         uint32_t                            m_minInterval = 100;  // Minimum interval lapse
+
+		IDisplayBenchMark* m_display = nullptr;
 };
 
+
+class IFNITY_API LoggerDisplayMonitor: public IDisplayBenchMark
+{
+public:
+    void display(const  NvmlMonitor& monitor) override
+    {
+		std::stringstream logStream;
+		// Display the GPU information
+		for(unsigned int i = 0; i < monitor.getGpuCount(); i++)
+		{
+			const auto& deviceInfo = monitor.getDeviceInfo(i);
+			const auto& deviceMemory = monitor.getDeviceMemory(i);
+			const auto& deviceUtilization = monitor.getDeviceUtilization(i);
+			const auto& devicePerformanceState = monitor.getDevicePerformanceState(i);
+			const auto& devicePowerState = monitor.getDevicePowerState(i);
+
+			// Display the GPU information
+			logStream << "GPU " << i << ": " << deviceInfo.deviceName.get() << std::endl;
+			logStream << "  Driver: " << deviceInfo.currentDriverModel.get() << std::endl;
+			logStream << "  Compute Capability: " << deviceInfo.computeCapabilityMajor.get() << "." << deviceInfo.computeCapabilityMinor.get() << std::endl;
+            logStream << "  Memory: " << deviceMemory.memoryUsed.get()[ 1 ] << " / " << deviceMemory.memoryTotal.get() << std::endl;
+            logStream << "  Utilization: " << deviceUtilization.gpuUtilization.get()[ 1 ] << " % GPU, " << deviceUtilization.memUtilization.get()[ 1 ] << " % Memory" << std::endl;
+            logStream << "  Performance State: " << devicePerformanceState.clockGraphics.get()[ 1 ] << " MHz GPU, " << devicePerformanceState.clockMem.get()[ 1 ] << " MHz Memory" << std::endl;
+            logStream << "  Power: " << devicePowerState.power.get()[ 1 ] << " W, " << devicePowerState.temperature.get()[ 1 ] << " C, " << devicePowerState.fanSpeed.get()[ 1 ] << " % Fan" << std::endl;
+
+            IFNITY_LOG(LogCore, TRACE, logStream.str());
+		}
+	}
+
+	//Destructor LoggerDisplayMonitor
+	virtual ~LoggerDisplayMonitor() {}
+
+};

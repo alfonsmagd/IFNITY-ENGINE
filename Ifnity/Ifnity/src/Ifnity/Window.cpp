@@ -16,18 +16,22 @@ Window* Window::Create(API_WINDOW_TYPE api, const WindowProps& props)
 			
 		} // Fin del ámbito para OPENGL
 
-	case D3D12:
-	{
+		case D3D12:
+		{
 
 
-	} // Fin del ámbito para D3D12
-	break; 
+		} // Fin del ámbito para D3D12
+		case VULKAN:
+		{
+		
+		}
+		break; 
 
-	// Otros cases...
+		
 
-	default:
-		 return BuildWindow<WindowOpengl>(props);;
-	}
+		default:
+			 return BuildWindow<WindowOpengl>(props);
+		}
 }
 
 IFNITY_END_NAMESPACE

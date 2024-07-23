@@ -22,3 +22,4 @@
 #define BIT(X) (1 << X)
 #define IFNITY_NAMESPACE namespace IFNITY {
 #define IFNITY_END_NAMESPACE }
+

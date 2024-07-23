@@ -49,6 +49,7 @@ message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
 # Source files
 file(GLOB_RECURSE SOURCE_FILES
     ${PROJECT_SOURCE_DIR}/src/*.h
+    ${PROJECT_SOURCE_DIR}/src/*.hpp
     ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
 # Add precompiled header
