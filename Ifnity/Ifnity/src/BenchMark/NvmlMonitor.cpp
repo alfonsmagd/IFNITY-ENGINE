@@ -24,10 +24,10 @@
 #include <iostream>
 
 
-#define NVP_SUPPORTS_NVML
+
 #if defined(NVP_SUPPORTS_NVML)
-#define NVML_NO_UNVERSIONED_FUNC_DEFS
-#include "nvml.h"
+    #define NVML_NO_UNVERSIONED_FUNC_DEFS
+    #include <nvml.h>
 #ifdef _WIN32
  // The cfgmgr32 header is necessary for interrogating driver information in the registry.
 #include <cfgmgr32.h>
@@ -198,6 +198,7 @@ NvmlMonitor::~NvmlMonitor()
 // Returning the current amount of memory is used by the device
 static uint64_t getMemory(nvmlDevice_t device)
 {
+
     try
     {
         nvmlMemory_t memory{};

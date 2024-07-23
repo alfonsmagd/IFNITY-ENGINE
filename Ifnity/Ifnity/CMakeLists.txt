@@ -13,6 +13,21 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/Dist)
 
+
+# Buscar nvml.dll en el sistema
+find_file(NVML_LIBRARY
+    NAMES nvml.dll
+    PATHS $ENV{PROGRAMFILES}/NVIDIA Corporation/NVSMI
+          $ENV{SYSTEMROOT}/System32
+)
+
+if(NOT NVML_LIBRARY)
+    message(STATUS "nvml.dll no se encontró en el sistema.")
+else()
+    message(STATUS "nvml.dll encontrado: ${NVML_LIBRARY}")
+endif()
+
+
 #Rutas  nvml.lib 
 set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 
@@ -55,7 +70,14 @@ endif()
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${NVML_LIB_PATH})
+if(NVML_LIBRARY)
+    message(STATUS "Enlazando nvml.lib ya que nvml.dll .")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC NVP_SUPPORTS_NVML)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${NVML_LIB_PATH})
+else()
+    # nvml.dll no fue encontrado
+    message(STATUS "nvml.dll no fue encontrado. nvml.lib no será enlazado.")
+endif()
 
 
   
