@@ -4,6 +4,50 @@
 #include "pch.h"
 #include <Ifnity.h>
 
+//Helper And Macros. 
+#define CONNECT_EVENT_LAYER(eventType, eventBus) \
+    IFNITY::events::connect<IFNITY::eventType>(eventBus, *this)
+
+class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
+{
+public:
+	ExampleLayer(): Layer("Example") {}
+	~ExampleLayer() {}
+
+	void OnUpdate() override
+	{
+		IFNITY_LOG(LogApp, TRACE, "Update App");
+	}
+
+
+	void onEventReceived(const IFNITY::WindowResize& event) override
+	{
+		IFNITY_LOG(LogApp, WARNING, event.ToString() + "Example Layer");
+	}
+	void ConnectToEventBusImpl(void* bus) override
+	{
+		auto eventBus = static_cast<IFNITY::GLFWEventSource*>(bus);
+		if(eventBus)
+		{
+			CONNECT_EVENT_LAYER(WindowResize, *eventBus);
+			CONNECT_EVENT_LAYER(WindowClose, *eventBus);
+			CONNECT_EVENT_LAYER(KeyPressed, *eventBus);
+			CONNECT_EVENT_LAYER(KeyRelease, *eventBus);
+			CONNECT_EVENT_LAYER(MouseMove, *eventBus);
+			CONNECT_EVENT_LAYER(ScrollMouseMove, *eventBus);
+			CONNECT_EVENT_LAYER(MouseClick, *eventBus);
+		}
+		else
+		{
+			// Manejar el error de conversión
+			IFNITY_LOG(LogApp, ERROR, "Error: El puntero no es de tipo IFNITY::GLFWEventSource*");
+		}
+	}
+
+
+};
+
+
 void printf(const char* str)
 {
 	std::cout << str << std::endl;
@@ -12,7 +56,10 @@ void printf(const char* str)
 class Source: public IFNITY::App
 {
 public:
-	Source() = default;
+	Source()
+	{
+		PushLayer(new ExampleLayer());
+	}
 	~Source() {}
 };
 

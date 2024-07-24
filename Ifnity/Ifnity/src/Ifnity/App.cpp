@@ -23,9 +23,9 @@ namespace IFNITY
 		//Intialize the EventListenerControler 
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
 		
-		// Conectar eventos
-	/*	m_GLFWEventListener->SetEventCallback([ this ](Event& e) { OnEvent(e); });*/
-		m_EventBus = *m_Window->GetGLFWEventSource();
+		
+		
+		m_EventBus = m_Window->GetGLFWEventSource();
 
 		CONNECT_EVENT(WindowResize);
 		CONNECT_EVENT(WindowClose);
@@ -35,11 +35,7 @@ namespace IFNITY
 		CONNECT_EVENT(ScrollMouseMove);
 		CONNECT_EVENT(MouseClick);	
 
-		// Conectar capas al bus de eventos que puede ser generico. 
-		for(auto& layer : m_LayerStack)
-		{
-			layer->ConnectToEventBus(m_EventBus);
-		}
+		
 		
 
 	}
@@ -51,6 +47,7 @@ namespace IFNITY
 
 	void App::run()
 	{
+		InitiateEventBusLayers();
 
 		while(isRunning())
 		{
@@ -81,7 +78,16 @@ namespace IFNITY
 
 	}
 
-	bool App::isRunning()
+	void App::InitiateEventBusLayers()
+	{
+		for(Layer* layer : m_LayerStack)
+		{
+			layer->ConnectToEventBus(m_EventBus);
+		}
+	
+	}
+
+	bool App::isRunning() const
 	{
 		return m_GLFWEventListener->getRunning();
 	}

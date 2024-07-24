@@ -10,7 +10,7 @@ class  IFNITY_API LayerStack
 {
 
 public:
-	LayerStack() = default ;
+	LayerStack();
 	~LayerStack();
 
 	void PushLayer(Layer* layer);

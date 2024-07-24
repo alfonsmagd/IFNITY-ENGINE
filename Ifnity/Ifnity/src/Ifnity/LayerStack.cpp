@@ -14,10 +14,17 @@ LayerStack::~LayerStack()
 
 
 
+LayerStack::LayerStack()
+{
+
+	m_LayerInsert = m_Layers.begin();
+}
+
 void LayerStack::PushLayer(Layer* layer)
 {
 	//Insert layer at the layer insert iterator. 
 	m_LayerInsert = m_Layers.emplace(m_LayerInsert, layer);
+	m_LayerInsert++;
 	
 }
 
