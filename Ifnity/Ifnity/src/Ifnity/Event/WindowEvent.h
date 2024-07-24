@@ -44,9 +44,17 @@ namespace IFNITY {
 	{
 	public:
 		
+		using EventCallbackFn = std::function<void(Event&)>;
+
+		void SetEventCallback(const EventCallbackFn& callback)
+		{
+			m_EventCallback = callback;
+		}
+
 		void onEventReceived(const WindowResize& event) 
 		{
 			logEvent(event);
+
 		}
 
 		void onEventReceived(const WindowClose& event) 
@@ -85,7 +93,7 @@ namespace IFNITY {
 		bool getRunning() { return m_running; }
 	private:
 		bool m_running = true;
-
+		EventCallbackFn m_EventCallback;
 		///Loggin function Event. 
 		template<typename EventType>
 		void logEvent(const EventType& event)

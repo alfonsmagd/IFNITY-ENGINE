@@ -6,6 +6,7 @@
 
 
 
+
 namespace IFNITY
 {
 	//#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -21,8 +22,10 @@ namespace IFNITY
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		//Intialize the EventListenerControler 
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
-		m_CameraEventListener = std::make_unique<EventCameraListener>();
-
+		
+		// Conectar eventos
+	/*	m_GLFWEventListener->SetEventCallback([ this ](Event& e) { OnEvent(e); });*/
+		m_EventBus = *m_Window->GetGLFWEventSource();
 
 		CONNECT_EVENT(WindowResize);
 		CONNECT_EVENT(WindowClose);
@@ -32,6 +35,11 @@ namespace IFNITY
 		CONNECT_EVENT(ScrollMouseMove);
 		CONNECT_EVENT(MouseClick);	
 
+		// Conectar capas al bus de eventos que puede ser generico. 
+		for(auto& layer : m_LayerStack)
+		{
+			layer->ConnectToEventBus(m_EventBus);
+		}
 		
 
 	}
@@ -49,8 +57,28 @@ namespace IFNITY
 			glClearColor(0, 0.6, 0.6, 1);
 			glClear(GL_COLOR_BUFFER_BIT);
 			m_Window->OnUpdate();
+
+			for(Layer* layer : m_LayerStack)
+			{
+				layer->OnUpdate();
+			}
+
 		}
 		
+	}
+
+	void App::PushLayer(Layer* layer)
+	{
+		
+		m_LayerStack.PushLayer(layer);
+
+	
+	}
+
+	void App::PushOverlay(Layer* overlay)
+	{
+		m_LayerStack.PushOverlay(overlay);
+
 	}
 
 	bool App::isRunning()
