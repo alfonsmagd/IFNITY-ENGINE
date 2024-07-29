@@ -43,8 +43,8 @@ namespace IFNITY
 	
 }
 
-#define LogCore IFNITY::Log::GetAppLogger()
-#define LogApp	IFNITY::Log::GetAppLogger()
+#define LogApp  IFNITY::Log::GetAppLogger()
+#define LogCore	IFNITY::Log::GetCoreLogger()
 #define WARNING spdlog::level::warn
 #define ERROR   spdlog::level::err
 #define TRACE   spdlog::level::trace

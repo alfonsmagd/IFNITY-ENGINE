@@ -44,9 +44,11 @@ namespace IFNITY {
 	{
 	public:
 		
-		void onEventReceived(const WindowResize& event) 
+	
+		virtual void onEventReceived(const WindowResize& event) 
 		{
 			logEvent(event);
+
 		}
 
 		void onEventReceived(const WindowClose& event) 
@@ -55,27 +57,27 @@ namespace IFNITY {
 			m_running = false;
 		}
 
-		void onEventReceived(const KeyPressed& event) 
+		virtual void onEventReceived(const KeyPressed& event) 
 		{
 			logEvent(event);
 		}
 
-		void onEventReceived(const KeyRelease& event) 
+		virtual void onEventReceived(const KeyRelease& event) 
 		{
 			logEvent(event);
 		}
 
-		void onEventReceived(const MouseMove& event) 
+		virtual void onEventReceived(const MouseMove& event) 
 		{
 			logEvent(event);
 		}
 
-		void onEventReceived(const ScrollMouseMove& event)
+		virtual void onEventReceived(const ScrollMouseMove& event)
 		{
 			logEvent(event);
 		}
 
-		void onEventReceived(const MouseClick& event)
+		virtual void onEventReceived(const MouseClick& event)
 		{
 			logEvent(event);
 		}
@@ -85,7 +87,7 @@ namespace IFNITY {
 		bool getRunning() { return m_running; }
 	private:
 		bool m_running = true;
-
+	
 		///Loggin function Event. 
 		template<typename EventType>
 		void logEvent(const EventType& event)

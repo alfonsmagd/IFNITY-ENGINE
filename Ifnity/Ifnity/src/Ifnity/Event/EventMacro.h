@@ -1,9 +1,20 @@
 
 
+#pragma once
 
+class IFNITY_API Event
+{public:
+	virtual ~Event() = default;
+    bool Handled = false;
+};
+
+
+#define EVENT_DESTRUCTOR(EventType) \
+public: \
+   virtual ~EventType() = default;
 
 #define EVENT_BEGIN(EventType) \
-class IFNITY_API EventType \
+class IFNITY_API EventType : public Event  \
 {
 
 
@@ -64,6 +75,7 @@ public: \
 #define EVENT(EventType,Description) \
 EVENT_BEGIN(EventType) \
 EVENT_TOSTRING(EventType, Description) \
+EVENT_DESTRUCTOR(EventType) \
 EVENT_END()
 
 /// Macro for defining a class representing an event with one parameter
@@ -76,6 +88,7 @@ public: \
 \
 EVENT_TOSTRING1(EventType, ParameterName)\
 EVENT_PARAMETER(ParameterType, ParameterName) \
+EVENT_DESTRUCTOR(EventType) \
 EVENT_END()
 
 /// Macro for defining a class representing an event with two parameters
@@ -91,6 +104,7 @@ public: \
 EVENT_PARAMETER(Parameter1Type, Parameter1Name) \
 EVENT_PARAMETER(Parameter2Type, Parameter2Name) \
 EVENT_TOSTRING2(EventType, Parameter1Name, Parameter2Name) \
+EVENT_DESTRUCTOR(EventType) \
 EVENT_END()
 
 /// Macro for defining a class representing an event with two parameters
@@ -108,5 +122,6 @@ EVENT_PARAMETER(Parameter1Type, Parameter1Name) \
 EVENT_PARAMETER(Parameter2Type, Parameter2Name) \
 EVENT_PARAMETER(Parameter3Type, Parameter3Name) \
 EVENT_TOSTRING3(EventType, Parameter1Name, Parameter2Name, Parameter3Name) \
+EVENT_DESTRUCTOR(EventType) \
 EVENT_END()
 
