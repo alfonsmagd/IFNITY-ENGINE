@@ -3,6 +3,8 @@
 #include "App.h"
 #include "Log.h"
 #include "Window.h"
+#include <glad\glad.h>
+#include <GLFW/glfw3.h>
 
 
 
@@ -34,6 +36,7 @@ namespace IFNITY
 		CONNECT_EVENT(MouseMove);
 		CONNECT_EVENT(ScrollMouseMove);
 		CONNECT_EVENT(MouseClick);	
+
 
 		
 		

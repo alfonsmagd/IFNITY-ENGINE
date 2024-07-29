@@ -1,6 +1,7 @@
 #pragma once
 #include "Ifnity\Window.h"
 #include <Ifnity\Event\WindowEvent.h>
+#include <glad\glad.h>
 #include <GLFW\glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW\glfw3native.h>
@@ -33,6 +34,8 @@ public:
 
 private:
 	void Init();
+	void InitializeGLAD();
+	std::string GetOpenGLInfo();
 	void Shutdown();
 
 private:

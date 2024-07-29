@@ -31,8 +31,10 @@ endif()
 #Rutas  nvml.lib 
 set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 
-# Agregar GLFW como un subdirectorio para que sea construido con el proyecto
+# Add GLFW like a subdirectory to be built with the project
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
+
+
 
 # Include directories
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -42,6 +44,8 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
 #include nvml directory
 include_directories(${PROJECT_SOURCE_DIR}/vendor/nvml)
+#include glad directory 
+include_directories(${PROJECT_SOURCE_DIR}/vendor/glad/include)
 
 
 
@@ -52,13 +56,19 @@ file(GLOB_RECURSE SOURCE_FILES
     ${PROJECT_SOURCE_DIR}/src/*.hpp
     ${PROJECT_SOURCE_DIR}/src/*.cpp
 )
+
+# Vendor Source Files 
+set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.cpp)
+
+
 # Add precompiled header
 
 # Add precompiled header source files
 set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES})
+add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+
 
 
 
@@ -71,6 +81,8 @@ endif()
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
+
+
 if(NVML_LIBRARY)
     message(STATUS "Enlazando nvml.lib ya que nvml.dll .")
     target_compile_definitions(${PROJECT_NAME} PUBLIC NVP_SUPPORTS_NVML)

@@ -70,6 +70,7 @@ void WindowOpengl::Init()
 		}
 	}
 	
+	
 
 	// Create a windowed mode window glfwCreateWindow
 	m_Window = glfwCreateWindow(
@@ -80,6 +81,14 @@ void WindowOpengl::Init()
 		NULL);
 	
 	glfwMakeContextCurrent(m_Window);
+
+	//Initialize GLAD
+	InitializeGLAD();
+
+	//Print OpenGL information
+	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
+
+
 	//Take a pointer to the window data information to then return in callbaks. 
 	glfwSetWindowUserPointer(m_Window, &m_WindowData);
 	
@@ -149,6 +158,49 @@ void WindowOpengl::Init()
 
 }
 
+void WindowOpengl::InitializeGLAD()
+{
+	// Initialize glad
+	if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+	{
+		IFNITY_LOG(LogApp, ERROR, "Failed to initialize GLAD");
+		
+	}
+	else
+	{
+		IFNITY_LOG(LogApp, WARNING, "GLAD Initialized");
+	}
+}
+
+std::string WindowOpengl::GetOpenGLInfo()
+{
+
+		std::ostringstream oss;
+
+		//Get version Opengl 
+		const GLubyte* renderer = glGetString(GL_RENDERER); // Nombre del renderer
+		const GLubyte* version  =  glGetString(GL_VERSION);   // Versión de OpenGL
+
+		oss << "Renderer: " << renderer << "\n";
+		oss << "OpenGL version supported: " << version << "\n";
+
+		// Obtener el número de extensiones soportadas
+		GLint numExtensions;
+		glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+
+		oss << "Number of extensions: " << numExtensions << "\n";
+
+		// Listar todas las extensiones soportadas
+		for(GLint i = 0; i < numExtensions; ++i)
+		{
+			const GLubyte* extension = glGetStringi(GL_EXTENSIONS, i);
+			oss << "Extension " << i + 1 << ": " << extension << "\n";
+		}
+
+		return oss.str();
+	
+}
+
 void WindowOpengl::Shutdown()
 {
 	// Destroy the window
@@ -157,9 +209,6 @@ void WindowOpengl::Shutdown()
 	glfwTerminate();
 
 }
-
-
-
 
 
 IFNITY_END_NAMESPACE
