@@ -52,6 +52,8 @@ namespace IFNITY
 	{
 		InitiateEventBusLayers();
 
+		m_Window->CreateWindowSurface(WindowProps());
+
 		while(isRunning())
 		{
 			glClearColor(0, 0.6, 0.6, 1);

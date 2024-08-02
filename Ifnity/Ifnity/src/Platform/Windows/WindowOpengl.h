@@ -20,7 +20,7 @@ public:
 	
 
 	unsigned int GetWidth() const override { return m_WindowData.props.Width; }
-	unsigned int GetHeight() const override { return m_WindowData.props.Width; }
+	unsigned int GetHeight() const override { return m_WindowData.props.Height; }
 
 	// Window attributes
 	void SetVSync(bool enabled) override;
@@ -32,6 +32,9 @@ public:
 	//TODO: Implement this function
 	void* GetNativeWindow() const override { return nullptr; }
 
+
+	protected:
+		bool InitInternalInstance() override { return true; } //TODO: Implement this function in .cpp file.
 private:
 	void Init();
 	void InitializeGLAD();
