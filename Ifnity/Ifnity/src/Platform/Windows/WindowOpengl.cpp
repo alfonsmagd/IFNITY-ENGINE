@@ -18,9 +18,7 @@ WindowOpengl::WindowOpengl(const WindowProps& props)
 	m_WindowData.props = props;
 	m_WindowData.Title = props.Title;
 	m_WindowData.VSync = false;
-
-	// Initialize the library
-	Init();
+	
 
 }
 
@@ -49,6 +47,31 @@ void WindowOpengl::SetVSync(bool enabled)
 bool WindowOpengl::IsVSync() const
 {
 	return false;
+}
+
+bool WindowOpengl::CreateAPISurface()
+{
+	if(m_Window == nullptr)
+	{
+		IFNITY_LOG(LogApp, ERROR, "Failed to get Window in OPENGL CreateAPISurface()");
+		glfwTerminate();
+		return false;
+	}
+
+	// TODO TO GET THE SURFACE FOR OPENGL API , and not setting by default. 
+	glfwMakeContextCurrent(m_Window);
+
+	//Initialize GLAD
+	InitializeGLAD();
+
+	SetVSync(true);
+	//Print OpenGL information
+	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
+
+	return true;
+
+	
+
 }
 
 void WindowOpengl::Init()
@@ -82,11 +105,7 @@ void WindowOpengl::Init()
 	
 	glfwMakeContextCurrent(m_Window);
 
-	//Initialize GLAD
-	InitializeGLAD();
-
-	//Print OpenGL information
-	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
+	
 
 
 	//Take a pointer to the window data information to then return in callbaks. 
@@ -156,6 +175,11 @@ void WindowOpengl::Init()
 			data.GLFWEventSourceBus.triggerEvent<MouseClick>(button, action, mods);
 		});
 
+	//Initialize GLAD
+	InitializeGLAD();
+
+	//Print OpenGL information
+	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
 }
 
 void WindowOpengl::InitializeGLAD()
@@ -169,6 +193,8 @@ void WindowOpengl::InitializeGLAD()
 	else
 	{
 		IFNITY_LOG(LogApp, WARNING, "GLAD Initialized");
+		const GLubyte* vendor = glGetString(GL_VENDOR);
+		m_IsNvidia = (std::string(reinterpret_cast<const char*>(vendor)).find("NVIDIA") != std::string::npos);
 	}
 }
 
@@ -178,8 +204,8 @@ std::string WindowOpengl::GetOpenGLInfo()
 		std::ostringstream oss;
 
 		//Get version Opengl 
-		const GLubyte* renderer = glGetString(GL_RENDERER); // Nombre del renderer
-		const GLubyte* version  =  glGetString(GL_VERSION);   // Versión de OpenGL
+		const GLubyte* renderer = glGetString(GL_RENDERER); 
+		const GLubyte* version  =  glGetString(GL_VERSION);   //Opengl Version
 
 		oss << "Renderer: " << renderer << "\n";
 		oss << "OpenGL version supported: " << version << "\n";

@@ -23,6 +23,8 @@ IFNITY_NAMESPACE
 		void PushOverlay(Layer* overlay);
 
 
+	protected:
+		void SetEventBus(GLFWEventSource* eventBus) { m_EventBus = eventBus; }
 	private:
 		
 		std::unique_ptr<Window> m_Window;

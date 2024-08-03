@@ -22,12 +22,14 @@ namespace IFNITY
 	{
 
 		m_Window = std::unique_ptr<Window>(Window::Create());
+
+		m_Window->CreateWindowSurface(WindowProps());
 		//Intialize the EventListenerControler 
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
 		
 		
 		
-		m_EventBus = m_Window->GetGLFWEventSource();
+		SetEventBus(m_Window->GetGLFWEventSource());
 
 		CONNECT_EVENT(WindowResize);
 		CONNECT_EVENT(WindowClose);
@@ -52,11 +54,11 @@ namespace IFNITY
 	{
 		InitiateEventBusLayers();
 
-		m_Window->CreateWindowSurface(WindowProps());
+		
 
 		while(isRunning())
 		{
-			glClearColor(0, 0.6, 0.6, 1);
+			glClearColor(1, 0.6, 0.6, 0.3);
 			glClear(GL_COLOR_BUFFER_BIT);
 			m_Window->OnUpdate();
 

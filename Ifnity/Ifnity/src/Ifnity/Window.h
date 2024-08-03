@@ -5,6 +5,14 @@
 #include "Ifnity/Core.h"
 #include "Ifnity/Event/Event.h"
 #include "Ifnity/Event/WindowEvent.h"
+
+#define GLFW_INCLUDE_NONE // Do not include any OpenGL headers
+#include <GLFW/glfw3.h>
+#ifdef _WIN32
+#define GLFW_EXPOSE_NATIVE_WIN32
+#endif // _WIN32
+#include <GLFW/glfw3native.h>
+
 #include "Ifnity/Graphics/ifrhi.h"
 
 
@@ -27,6 +35,9 @@ struct WindowProps
 		: Title(title), Width(width), Height(height)
 	{
 	}
+
+	bool VSync = false;
+	GLFWEventSource GLFWEventSourceBus;
 };
 
 
@@ -44,13 +55,15 @@ public:
 	// Window attributes
 	virtual void SetVSync(bool enabled) = 0;
 	virtual bool IsVSync() const = 0;
-	virtual GLFWEventSource* GetGLFWEventSource() = 0;
+	
 	virtual void* GetNativeWindow() const = 0;
 
 	//Base Methods to build in glfw window process with no API specified by default. 
-	void CreateWindowSurface(const WindowProps& props);
+	bool CreateWindowSurface(const WindowProps& props);
 	bool CreateInstance();
-
+	//Get GLFWEventSourceBus to connect Listeners
+	GLFWEventSource* GetGLFWEventSource()  { return &m_Props.GLFWEventSourceBus; }
+	
 	//Destructor for the WindowBuilder
 
 
@@ -60,13 +73,16 @@ public:
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
 	virtual bool InitInternalInstance() = 0;
+	virtual bool CreateAPISurface() = 0;
 
 protected:
 	WindowProps m_Props;
+	bool m_IsNvidia = false;
+	GLFWwindow* m_Window = nullptr;
 	bool m_InstanceCreated = false;
 
 private:
-
+	void SetGLFWCallbacks();
 	template<typename WindowType, typename... Args>
 	static WindowType* BuildWindow(Args&&... args)
 	{
@@ -74,7 +90,7 @@ private:
 	}
 
 private:
-	bool m_isNvidia = true;
+	
 	rhi::GraphicsAPI m_API{ rhi::GraphicsAPI::OPENGL }; // By default opengl is the api 
 };
 

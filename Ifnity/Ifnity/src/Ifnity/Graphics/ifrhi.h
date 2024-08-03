@@ -18,9 +18,5 @@ IFNITY_NAMESPACE namespace rhi {
     };
 
 
-
-
-
-
 }
 IFNITY_END_NAMESPACE
