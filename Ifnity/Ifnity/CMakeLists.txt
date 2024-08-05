@@ -33,6 +33,7 @@ set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 
 # Add GLFW like a subdirectory to be built with the project
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/imgui)
 
 
 
@@ -46,6 +47,8 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/nvml)
 #include glad directory 
 include_directories(${PROJECT_SOURCE_DIR}/vendor/glad/include)
+#include imgui directory
+include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui) 
 
 
 
@@ -81,6 +84,7 @@ endif()
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
+target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 
 
 if(NVML_LIBRARY)
