@@ -21,7 +21,7 @@
 IFNITY_NAMESPACE
 
 
-class Window;
+class GraphicsDeviceManager;
 
 struct WindowProps
 {
@@ -41,18 +41,18 @@ struct WindowProps
 };
 
 
-class IFNITY_API Window
+class IFNITY_API GraphicsDeviceManager
 {
 public:
 
-	virtual ~Window() = default;
+	virtual ~GraphicsDeviceManager() = default;
 
 	virtual void OnUpdate() = 0;
 
 	virtual unsigned int GetWidth() const = 0;
 	virtual unsigned int GetHeight() const = 0;
 
-	// Window attributes
+	// GraphicsDeviceManager attributes
 	virtual void SetVSync(bool enabled) = 0;
 	virtual bool IsVSync() const = 0;
 	
@@ -68,12 +68,13 @@ public:
 
 
 	//Factory method to create a window
-	static Window* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::OPENGL, const WindowProps& props = WindowProps());
+	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::OPENGL, const WindowProps& props = WindowProps());
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
 	virtual bool InitInternalInstance() = 0;
 	virtual bool CreateAPISurface() = 0;
+	virtual bool ConfigureSpecificHintsGLFW()  const = 0;
 
 protected:
 	WindowProps m_Props;

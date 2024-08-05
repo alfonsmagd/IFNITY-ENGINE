@@ -49,6 +49,13 @@ bool WindowOpengl::IsVSync() const
 	return false;
 }
 
+bool WindowOpengl::ConfigureSpecificHintsGLFW() const
+{
+	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+
+	return true;
+}
+
 bool WindowOpengl::CreateAPISurface()
 {
 	if(m_Window == nullptr)

@@ -2,7 +2,7 @@
 
 #include "App.h"
 #include "Log.h"
-#include "Window.h"
+#include "GraphicsDeviceManager.h"
 #include <glad\glad.h>
 #include <GLFW/glfw3.h>
 
@@ -21,7 +21,7 @@ namespace IFNITY
 	App::App()
 	{
 
-		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window = std::unique_ptr<GraphicsDeviceManager>(GraphicsDeviceManager::Create());
 
 		m_Window->CreateWindowSurface(WindowProps());
 		//Intialize the EventListenerControler 
@@ -47,6 +47,8 @@ namespace IFNITY
 	App::~App()
 	{
 		printf("~App() \n");
+
+
 	}
 
 

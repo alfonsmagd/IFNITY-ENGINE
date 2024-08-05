@@ -1,4 +1,4 @@
-#include "Window.h"
+#include "GraphicsDeviceManager.h"
 #include "Platform\Windows\WindowOpengl.h"
 
 
@@ -10,7 +10,7 @@
 IFNITY_NAMESPACE
 
 
-bool Window::CreateWindowSurface(const WindowProps& props)
+bool GraphicsDeviceManager::CreateWindowSurface(const WindowProps& props)
 {
 #ifdef _WINDOWS
 	// this needs to happen before glfwInit in order to override GLFW behavior
@@ -35,9 +35,9 @@ bool Window::CreateWindowSurface(const WindowProps& props)
 	//GLFW by default format 
 	//TODO: Add more formats to the  window creatin with glfwWindowHint and probably more configurations here
 
-	if(m_API != rhi::GraphicsAPI::OPENGL)
-	{
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	if(!ConfigureSpecificHintsGLFW()){
+		IFNITY_LOG(LogApp, ERROR, "Failed to configure GLFW hints");
+		return false;
 	}
 	
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);   // Ignored for fullscreen
@@ -78,7 +78,7 @@ bool Window::CreateWindowSurface(const WindowProps& props)
 }
 
 
-bool Window::CreateInstance()
+bool GraphicsDeviceManager::CreateInstance()
 {
 	// Initialize the library
 	if(m_InstanceCreated)
@@ -97,7 +97,7 @@ bool Window::CreateInstance()
 
 }
 // Create Window 
-Window* Window::Create(rhi::GraphicsAPI api, const WindowProps& props)
+GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api, const WindowProps& props)
 {
 
 	//Check the API type
@@ -128,7 +128,7 @@ Window* Window::Create(rhi::GraphicsAPI api, const WindowProps& props)
 		}
 }
 
-void Window::SetGLFWCallbacks()
+void GraphicsDeviceManager::SetGLFWCallbacks()
 {
 	// Set GLFW callbacks
 

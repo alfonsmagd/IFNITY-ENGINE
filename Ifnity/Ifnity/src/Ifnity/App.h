@@ -1,7 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include "Core.h"
-#include "Window.h"
+#include "GraphicsDeviceManager.h"
 
 #include "LayerStack.hpp"
 
@@ -27,7 +27,7 @@ IFNITY_NAMESPACE
 		void SetEventBus(GLFWEventSource* eventBus) { m_EventBus = eventBus; }
 	private:
 		
-		std::unique_ptr<Window> m_Window;
+		std::unique_ptr<GraphicsDeviceManager> m_Window;
 		std::unique_ptr<GLFWEventListener> m_GLFWEventListener;
 		std::unique_ptr<EventCameraListener> m_CameraEventListener;
 

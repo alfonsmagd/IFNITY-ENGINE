@@ -1,5 +1,5 @@
 #pragma once
-#include "Ifnity\Window.h"
+#include "Ifnity\GraphicsDeviceManager.h"
 #include <Ifnity\Event\WindowEvent.h>
 #include <glad\glad.h>
 
@@ -7,7 +7,7 @@
 
 IFNITY_NAMESPACE
 
-class WindowOpengl final : public Window
+class WindowOpengl final : public GraphicsDeviceManager
 {
 
 public:
@@ -32,6 +32,7 @@ public:
 
 protected:
 	bool InitInternalInstance() override { return true; } //TODO: Implement this function in .cpp file.
+	bool ConfigureSpecificHintsGLFW() const  override;
 	bool CreateAPISurface() override;
 private:
 	void Init();
