@@ -17,7 +17,6 @@
 
 
 
-
 IFNITY_NAMESPACE
 
 
@@ -41,6 +40,20 @@ struct WindowProps
 };
 
 
+// Define the possible states of the graphics device
+enum class StateGraphicsDevice : uint8_t
+{
+	INITIALIZED,         // The graphics device has been initialized
+	NOT_INITIALIZED,     // The graphics device has not been initialized
+	CHANGING_API,        // The graphics device is changing its API
+	API_CHANGED,         // The API change has been completed
+	API_NOT_CHANGED,     // The API change has not been performed
+	API_NOT_SUPPORTED,   // The requested API is not supported
+	API_NOT_FOUND        // The requested API was not found
+};
+
+
+
 class IFNITY_API GraphicsDeviceManager
 {
 public:
@@ -61,6 +74,10 @@ public:
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowProps& props);
 	bool CreateInstance();
+
+
+	//Base Methods virtual 
+	virtual void Shutdown();
 	//Get GLFWEventSourceBus to connect Listeners
 	GLFWEventSource* GetGLFWEventSource()  { return &m_Props.GLFWEventSourceBus; }
 	
@@ -84,6 +101,7 @@ protected:
 
 private:
 	void SetGLFWCallbacks();
+	void SetGraphicsDeviceState(StateGraphicsDevice state) { m_StateGraphicsDevice = state; }
 	template<typename WindowType, typename... Args>
 	static WindowType* BuildWindow(Args&&... args)
 	{
@@ -93,6 +111,7 @@ private:
 private:
 	
 	rhi::GraphicsAPI m_API{ rhi::GraphicsAPI::OPENGL }; // By default opengl is the api 
+	StateGraphicsDevice m_StateGraphicsDevice{ StateGraphicsDevice::NOT_INITIALIZED };
 };
 
 

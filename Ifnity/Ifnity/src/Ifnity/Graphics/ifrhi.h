@@ -17,6 +17,9 @@ IFNITY_NAMESPACE namespace rhi {
         MAX_GRAPHICS_API
     };
 
+    
+    
+
 
 }
 IFNITY_END_NAMESPACE

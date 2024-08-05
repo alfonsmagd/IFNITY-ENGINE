@@ -1,5 +1,5 @@
 #include "GraphicsDeviceManager.h"
-#include "Platform\Windows\WindowOpengl.h"
+#include "Platform\Windows\DeviceOpengl.h"
 
 
 #ifdef _WINDOWS
@@ -72,6 +72,8 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowProps& props)
 	}
 
 	glfwShowWindow(m_Window);
+
+	SetGraphicsDeviceState(StateGraphicsDevice::INITIALIZED);
 	return true;
 
 
@@ -96,6 +98,28 @@ bool GraphicsDeviceManager::CreateInstance()
 	m_InstanceCreated = InitInternalInstance();
 
 }
+void GraphicsDeviceManager::Shutdown()
+{
+	// Chek if Shutdown its provide when API is initialized
+	if(m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED){
+
+		IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
+		glfwDestroyWindow(m_Window);
+		m_Window = nullptr;
+		glfwTerminate();
+
+		SetGraphicsDeviceState(StateGraphicsDevice::NOT_INITIALIZED);
+
+		m_InstanceCreated = false;
+	}
+	else
+	{
+		IFNITY_LOG(LogApp, ERROR, "Graphics Device Manager is not initialized");
+	}
+	
+	
+
+}
 // Create Window 
 GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api, const WindowProps& props)
 {
@@ -105,7 +129,7 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api, const
 	{
 	case rhi::GraphicsAPI::OPENGL:
 		{
-			return BuildWindow<WindowOpengl>(props);
+			return BuildWindow<DeviceOpengl>(props);
 			
 		} // Fin del ámbito para OPENGL
 		break;
@@ -124,7 +148,7 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api, const
 		
 
 		default:
-			 return BuildWindow<WindowOpengl>(props);
+			 return BuildWindow<DeviceOpengl>(props);
 		}
 }
 

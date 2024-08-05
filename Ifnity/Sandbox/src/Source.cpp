@@ -48,11 +48,6 @@ public:
 };
 
 
-void printf(const char* str)
-{
-	std::cout << str << std::endl;
-};
-
 class Source: public IFNITY::App
 {
 public:

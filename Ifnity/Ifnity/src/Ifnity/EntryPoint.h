@@ -24,6 +24,8 @@ int main(int argc, char** argv)
 	
 	IFNITY::App* source = IFNITY::CreateApp();
 	source->run();
+
+
 	
 	delete source;
 

@@ -7,12 +7,12 @@
 
 IFNITY_NAMESPACE
 
-class WindowOpengl final : public GraphicsDeviceManager
+class DeviceOpengl final : public GraphicsDeviceManager
 {
 
 public:
-	WindowOpengl(const WindowProps& props);
-	virtual ~WindowOpengl();
+	DeviceOpengl(const WindowProps& props);
+	virtual ~DeviceOpengl();
 
 	void OnUpdate() override;
 
@@ -38,7 +38,6 @@ private:
 	void Init();
 	void InitializeGLAD();
 	std::string GetOpenGLInfo();
-	void Shutdown();
 
 private:
 	// Associate GLFW window with this class with unique pointer

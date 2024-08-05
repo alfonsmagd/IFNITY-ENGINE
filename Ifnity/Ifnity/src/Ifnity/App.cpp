@@ -71,6 +71,8 @@ namespace IFNITY
 
 		}
 		
+
+		m_Window->Shutdown();
 	}
 
 	void App::PushLayer(Layer* layer)

@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "WindowOpengl.h"
+#include "DeviceOpengl.h"
 #include <glm\glm.hpp>
 
 
@@ -11,7 +11,7 @@ static bool s_GLFWInitialized = false;
 ///Default Constructor
 ///
 /// @param props Window properties.
-WindowOpengl::WindowOpengl(const WindowProps& props) 
+DeviceOpengl::DeviceOpengl(const WindowProps& props) 
 {
 	//
 	glm::abs(0.0f);
@@ -22,13 +22,14 @@ WindowOpengl::WindowOpengl(const WindowProps& props)
 
 }
 
-WindowOpengl::~WindowOpengl()
+DeviceOpengl::~DeviceOpengl()
 {
 	// Shutdown the window and close GLFW
-	Shutdown();
+	//Other function to close the window
+
 }
 
-void WindowOpengl::OnUpdate()
+void DeviceOpengl::OnUpdate()
 {
 	glfwPollEvents();
 	glfwSwapBuffers(m_Window);
@@ -38,25 +39,25 @@ void WindowOpengl::OnUpdate()
 /// This function sets the VSync in glfw window.
 /// </summary>
 /// <param name="enabled"> true enable Vsync, false disenabled Vsync.</param>
-void WindowOpengl::SetVSync(bool enabled)
+void DeviceOpengl::SetVSync(bool enabled)
 {
 	//GLFW function to enable or disable VSync
 	enabled ? glfwSwapInterval(1) : glfwSwapInterval(0);
 }
 
-bool WindowOpengl::IsVSync() const
+bool DeviceOpengl::IsVSync() const
 {
 	return false;
 }
 
-bool WindowOpengl::ConfigureSpecificHintsGLFW() const
+bool DeviceOpengl::ConfigureSpecificHintsGLFW() const
 {
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
 
 	return true;
 }
 
-bool WindowOpengl::CreateAPISurface()
+bool DeviceOpengl::CreateAPISurface()
 {
 	if(m_Window == nullptr)
 	{
@@ -81,7 +82,7 @@ bool WindowOpengl::CreateAPISurface()
 
 }
 
-void WindowOpengl::Init()
+void DeviceOpengl::Init()
 {
 	// Create the window 
 	IFNITY_LOG(LogApp, TRACE, "Initialize Window {0}", m_WindowData.Title.c_str());
@@ -189,7 +190,7 @@ void WindowOpengl::Init()
 	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
 }
 
-void WindowOpengl::InitializeGLAD()
+void DeviceOpengl::InitializeGLAD()
 {
 	// Initialize glad
 	if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -205,7 +206,7 @@ void WindowOpengl::InitializeGLAD()
 	}
 }
 
-std::string WindowOpengl::GetOpenGLInfo()
+std::string DeviceOpengl::GetOpenGLInfo()
 {
 
 		std::ostringstream oss;
@@ -234,14 +235,7 @@ std::string WindowOpengl::GetOpenGLInfo()
 	
 }
 
-void WindowOpengl::Shutdown()
-{
-	// Destroy the window
-	glfwDestroyWindow(m_Window);
-	// Terminate GLFW
-	glfwTerminate();
 
-}
 
 
 IFNITY_END_NAMESPACE
