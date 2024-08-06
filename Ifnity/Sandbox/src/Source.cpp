@@ -4,9 +4,7 @@
 #include "pch.h"
 #include <Ifnity.h>
 
-//Helper And Macros. 
-#define CONNECT_EVENT_LAYER(eventType, eventBus) \
-    IFNITY::events::connect<IFNITY::eventType>(*eventBus, *this)
+
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
@@ -16,7 +14,7 @@ public:
 
 	void OnUpdate() override
 	{
-		IFNITY_LOG(LogApp, TRACE, "Update App");
+		IFNITY_LOG(LogApp, INFO, "Update App");
 	}
 
 
@@ -54,6 +52,7 @@ public:
 	Source()
 	{
 		PushLayer(new ExampleLayer());
+		PushOverlay(new IFNITY::ImguiLayer());
 	}
 	~Source() {}
 };

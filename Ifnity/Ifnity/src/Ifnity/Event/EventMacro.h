@@ -125,3 +125,8 @@ EVENT_TOSTRING3(EventType, Parameter1Name, Parameter2Name, Parameter3Name) \
 EVENT_DESTRUCTOR(EventType) \
 EVENT_END()
 
+
+
+//Helper And Macros. 
+#define CONNECT_EVENT_LAYER(eventType, eventBus) \
+    IFNITY::events::connect<IFNITY::eventType>(*eventBus, *this)

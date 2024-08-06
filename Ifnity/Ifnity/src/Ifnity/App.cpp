@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "App.h"
-#include "Log.h"
 #include "GraphicsDeviceManager.h"
 #include <glad\glad.h>
 #include <GLFW/glfw3.h>
@@ -60,15 +59,17 @@ namespace IFNITY
 
 		while(isRunning())
 		{
+		
 			glClearColor(1, 0.6, 0.6, 0.3);
 			glClear(GL_COLOR_BUFFER_BIT);
-			m_Window->OnUpdate();
 
 			for(Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate();
 			}
 
+			
+			m_Window->OnUpdate();
 		}
 		
 
@@ -79,6 +80,7 @@ namespace IFNITY
 	{
 		
 		m_LayerStack.PushLayer(layer);
+		layer->OnAttach();
 
 	
 	}
@@ -86,6 +88,7 @@ namespace IFNITY
 	void App::PushOverlay(Layer* overlay)
 	{
 		m_LayerStack.PushOverlay(overlay);
+		overlay->OnAttach();
 
 	}
 

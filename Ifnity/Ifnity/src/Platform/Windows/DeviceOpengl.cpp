@@ -82,6 +82,7 @@ bool DeviceOpengl::CreateAPISurface()
 
 }
 
+//NOT USE ..
 void DeviceOpengl::Init()
 {
 	// Create the window 

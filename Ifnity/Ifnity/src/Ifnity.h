@@ -5,6 +5,7 @@
 #include "Ifnity/App.h"
 #include "Ifnity/Layer.hpp"
 #include "Ifnity/Event/WindowEvent.h"
+#include "Ifnity/Layers/ImguiLayer.h"
 #include "Ifnity/Log.h"
 
 //wOMDPW

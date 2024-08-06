@@ -28,11 +28,14 @@ void LayerStack::PushLayer(Layer* layer)
 	
 }
 
-void LayerStack::PushOverlay(Layer* overlay)
+void LayerStack::PushOverlay(Layer* layer)
 {
 
 	//Insert overlay at the end of the layer stack. 
-	m_Layers.emplace_back(overlay);
+	m_Layers.emplace_back(layer);
+	
+	
+
 }
 
 void LayerStack::PopLayer(Layer* layer)
