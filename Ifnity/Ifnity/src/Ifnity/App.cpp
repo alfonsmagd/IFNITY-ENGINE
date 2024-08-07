@@ -64,7 +64,7 @@ namespace IFNITY
 		while(isRunning())
 		{
 		
-			glClearColor(1, 0.6, 0.6, 0.3);
+			glClearColor(0.0, 0.1, 0.1, 0.3);
 			glClear(GL_COLOR_BUFFER_BIT);
 
 			for(Layer* layer : m_LayerStack)

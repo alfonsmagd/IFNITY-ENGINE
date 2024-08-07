@@ -50,8 +50,8 @@ void ImguiLayer::OnAttach()
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
 	io.ConfigFlags |= ImGuiBackendFlags_HasSetMousePos; // Enable SetMousePos.
-
-	ImGui::StyleColorsClassic();							// Clasic color style. 
+	io.FontGlobalScale = 1.2f;
+	ImGui::StyleInfity();					// Clasic color style. 
 
 	//Classic version  1.87 see IMGUI_DISABLE_OBSOLETE_KEYIO in new version 
 	// not necessary intialization maps for keys. 
