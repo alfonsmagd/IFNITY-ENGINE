@@ -54,7 +54,7 @@ public:
 		PushLayer(new ExampleLayer());
 		PushOverlay(new IFNITY::ImguiLayer());
 	}
-	~Source() {}
+	~Source() override {}
 };
 
 

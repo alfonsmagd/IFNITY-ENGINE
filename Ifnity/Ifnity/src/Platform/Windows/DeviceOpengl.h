@@ -17,20 +17,16 @@ public:
 	void OnUpdate() override;
 
 
-	unsigned int GetWidth() const override { return m_WindowData.props.Width; }
-	unsigned int GetHeight() const override { return m_WindowData.props.Height; }
-
-	// Window attributes
-	void SetVSync(bool enabled) override;
-	bool IsVSync() const override;
+	inline unsigned int GetWidth() const override { return m_WindowData.props.Width; }
+	inline unsigned int GetHeight() const override { return m_WindowData.props.Height; }
 
 	
 
-	//TODO: Implement this function
-	void* GetNativeWindow() const override { return nullptr; }
-
 
 protected:
+	// Window attributes
+	void SetVSync(bool enabled) override;
+	bool IsVSync() const override;
 	bool InitInternalInstance() override { return true; } //TODO: Implement this function in .cpp file.
 	bool ConfigureSpecificHintsGLFW() const  override;
 	bool CreateAPISurface() override;

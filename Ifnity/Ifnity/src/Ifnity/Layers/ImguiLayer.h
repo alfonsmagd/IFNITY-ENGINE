@@ -22,7 +22,7 @@ public:
 		void OnDetach() override;
 		void OnUpdate() override;
 
-
+		void onEventReceived(const WindowResize& event) override;
 		void onEventReceived(const KeyPressed& event) override;
 		void onEventReceived(const KeyRelease& event)override;
 		void onEventReceived(const MouseMove& event) override;

@@ -130,3 +130,6 @@ EVENT_END()
 //Helper And Macros. 
 #define CONNECT_EVENT_LAYER(eventType, eventBus) \
     IFNITY::events::connect<IFNITY::eventType>(*eventBus, *this)
+
+
+#define CONNECT_EVENT(x) ConnectEvent<x>()

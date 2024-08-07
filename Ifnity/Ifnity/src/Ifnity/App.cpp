@@ -10,15 +10,13 @@
 
 namespace IFNITY
 {
-	//#define BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
-	// Reload Function 
-
-	#define CONNECT_EVENT(x) ConnectEvent<x>()
-
+	//Static member  declaration
+	App* App::s_Instance = nullptr;
 	//Default Constructor;
 	App::App()
 	{
+		s_Instance = this;
 
 		m_Window = std::unique_ptr<GraphicsDeviceManager>(GraphicsDeviceManager::Create());
 
@@ -45,8 +43,14 @@ namespace IFNITY
 	}
 	App::~App()
 	{
-		printf("~App() \n");
-
+		
+		//OnDetach all layers
+		for(Layer* layer : m_LayerStack)
+		{
+			layer->OnDetach();
+		}
+		s_Instance = nullptr;
+		IFNITY_LOG(LogApp, INFO, "App is destroyed");
 
 	}
 

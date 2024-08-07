@@ -6,6 +6,7 @@
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include <GLFW\glfw3.h>
 
+#include "../App.h"
 
 
 IFNITY_NAMESPACE
@@ -47,8 +48,8 @@ void ImguiLayer::OnAttach()
 	
 
 	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
+	io.ConfigFlags |= ImGuiBackendFlags_HasSetMousePos; // Enable SetMousePos.
 
 	ImGui::StyleColorsClassic();							// Clasic color style. 
 
@@ -62,21 +63,21 @@ void ImguiLayer::OnAttach()
 
 void ImguiLayer::OnDetach()
 {
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui::DestroyContext();
 }
 
 void ImguiLayer::OnUpdate()
 {
     
 	ImGuiIO& io = ImGui::GetIO();
-	io.DisplaySize = ImVec2((float)1280, (float)720);
+	App& app = App::GetApp();
+	
+	io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 
 	float time = (float)glfwGetTime();
 
 	io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
-
-	
-
-
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui::NewFrame();
 
@@ -85,7 +86,12 @@ void ImguiLayer::OnUpdate()
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-
+void ImguiLayer::onEventReceived(const WindowResize& event)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.DisplaySize = ImVec2((float)event.getWidth(), (float)event.getHeight());
+	io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+}
 void ImguiLayer::onEventReceived(const KeyPressed& event)
 {}
 
@@ -93,13 +99,22 @@ void ImguiLayer::onEventReceived(const KeyRelease & event)
 {}
 
 void ImguiLayer::onEventReceived(const MouseMove & event)
-{}
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMousePosEvent((float)event.getX(), (float)event.getY());
+
+}
 
 void ImguiLayer::onEventReceived(const ScrollMouseMove & event)
 {}
 
 void ImguiLayer::onEventReceived(const MouseClick & event)
-{}
+{
+	ImGuiIO& io = ImGui::GetIO();
+	io.AddMouseButtonEvent(event.getButton(), event.getState());
+
+
+}
 
 
 IFNITY_END_NAMESPACE

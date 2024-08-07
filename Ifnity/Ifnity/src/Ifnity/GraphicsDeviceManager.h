@@ -65,11 +65,8 @@ public:
 	virtual unsigned int GetWidth() const = 0;
 	virtual unsigned int GetHeight() const = 0;
 
-	// GraphicsDeviceManager attributes
-	virtual void SetVSync(bool enabled) = 0;
-	virtual bool IsVSync() const = 0;
 	
-	virtual void* GetNativeWindow() const = 0;
+	
 
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowProps& props);
@@ -92,6 +89,9 @@ protected:
 	virtual bool InitInternalInstance() = 0;
 	virtual bool CreateAPISurface() = 0;
 	virtual bool ConfigureSpecificHintsGLFW()  const = 0;
+	// GraphicsDeviceManager attributes
+	virtual void SetVSync(bool enabled) = 0;
+	virtual bool IsVSync() const = 0;
 
 protected:
 	WindowProps m_Props;

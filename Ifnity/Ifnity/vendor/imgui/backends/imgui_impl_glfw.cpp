@@ -172,7 +172,7 @@ struct ImGui_ImplGlfw_Data
 // FIXME: some shared resources (mouse cursor shape, gamepad) are mishandled when using multi-context.
 static ImGui_ImplGlfw_Data* ImGui_ImplGlfw_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplGlfw_Data*)ImGui::GetIO().BackendPlatformUserData : nullptr;
+    return ImGui::GetCurrentContext() ? (ImGui_ImplGlfw_Data *)ImGui::GetIO().BackendPlatformUserData : nullptr;
 }
 
 // Functions

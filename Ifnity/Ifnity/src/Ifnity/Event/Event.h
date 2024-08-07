@@ -7,7 +7,7 @@
 namespace IFNITY {
     
     // Event Creating . 
-	EVENT3(MouseClick, int, Button, int, X, int, Y)
+	EVENT3(MouseClick, int, Button, int, State, int, Mods)
 	EVENT2(MouseMove, int, X, int, Y);
     EVENT2(WindowResize, int, Width, int, Height);
     EVENT2(KeyPressed, int, Key, int, Repeat);
