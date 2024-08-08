@@ -22,13 +22,13 @@ IFNITY_NAMESPACE
 
 class GraphicsDeviceManager;
 
-struct WindowProps
+struct WindowData
 {
 	std::string Title;
 	unsigned int Width;
 	unsigned int Height;
 
-	WindowProps(const std::string& title = "Ifnity Engine",
+	WindowData(const std::string& title = "Ifnity Engine",
 		unsigned int width = 1280,
 		unsigned int height = 720)
 		: Title(title), Width(width), Height(height)
@@ -58,6 +58,7 @@ class IFNITY_API GraphicsDeviceManager
 {
 public:
 
+	GraphicsDeviceManager() = default;
 	virtual ~GraphicsDeviceManager() = default;
 
 	virtual void OnUpdate() = 0;
@@ -69,7 +70,7 @@ public:
 	
 
 	//Base Methods to build in glfw window process with no API specified by default. 
-	bool CreateWindowSurface(const WindowProps& props);
+	bool CreateWindowSurface(const WindowData& props);
 	bool CreateInstance();
 
 
@@ -82,7 +83,7 @@ public:
 
 
 	//Factory method to create a window
-	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::OPENGL, const WindowProps& props = WindowProps());
+	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::OPENGL);
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
@@ -94,7 +95,7 @@ protected:
 	virtual bool IsVSync() const = 0;
 
 protected:
-	WindowProps m_Props;
+	WindowData m_Props;
 	bool m_IsNvidia = false;
 	GLFWwindow* m_Window = nullptr;
 	bool m_InstanceCreated = false;

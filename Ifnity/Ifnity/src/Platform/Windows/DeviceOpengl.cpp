@@ -8,19 +8,7 @@ IFNITY_NAMESPACE
 ///Static variable to check if GLFW is initialized.
 static bool s_GLFWInitialized = false;
 
-///Default Constructor
-///
-/// @param props Window properties.
-DeviceOpengl::DeviceOpengl(const WindowProps& props) 
-{
-	//
-	glm::abs(0.0f);
-	m_WindowData.props = props;
-	m_WindowData.Title = props.Title;
-	m_WindowData.VSync = false;
-	
 
-}
 
 DeviceOpengl::~DeviceOpengl()
 {
@@ -85,110 +73,7 @@ bool DeviceOpengl::CreateAPISurface()
 //NOT USE ..
 void DeviceOpengl::Init()
 {
-	// Create the window 
-	IFNITY_LOG(LogApp, TRACE, "Initialize Window {0}", m_WindowData.Title.c_str());
-
-	//Check if GLFW is initialized before.
-	if(!s_GLFWInitialized)
-	{
-		// Initialize the library
-		if(!glfwInit())
-		{
-			IFNITY_LOG(LogApp, ERROR, "Cant Initialize GLFW Library ");
-		}
-		else
-		{
-			s_GLFWInitialized = true;
-		}
-	}
 	
-	
-
-	// Create a windowed mode window glfwCreateWindow
-	m_Window = glfwCreateWindow(
-		m_WindowData.props.Width,
-		m_WindowData.props.Height,
-		m_WindowData.Title.c_str(), 
-		NULL,
-		NULL);
-	
-	glfwMakeContextCurrent(m_Window);
-
-	
-
-
-	//Take a pointer to the window data information to then return in callbaks. 
-	glfwSetWindowUserPointer(m_Window, &m_WindowData);
-	
-	SetVSync(true);  
-
-	// Set GLFW callbacks
-
-	glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			data.props.Width = width;
-			data.props.Height = height;
-
-			//data.GLFWEventSourceBus.triggerWindowResize(width, height);
-			data.GLFWEventSourceBus.triggerEvent<WindowResize>(width, height);
-
-			
-		});
-
-	glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
-			//data.GLFWEventSourceBus.triggerWindowClose();
-			data.GLFWEventSourceBus.triggerEvent<WindowClose>();
-		});
-
-	glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
-			switch(action)
-			{
-			case GLFW_PRESS:
-				//data.GLFWEventSourceBus.triggerKeyPressed(key, 0);
-				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, 0);
-				break;
-			case GLFW_RELEASE:
-				//data.GLFWEventSourceBus.triggerKeyReleased(key);
-				data.GLFWEventSourceBus.triggerEvent<KeyRelease>(key);
-				break;
-			case GLFW_REPEAT:
-				//data.GLFWEventSourceBus.triggerKeyPressed(key, 1);
-				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, 1);
-				break;
-			}
-		});
-	
-	glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			
-			data.GLFWEventSourceBus.triggerEvent<MouseMove>(xpos, ypos);
-		});
-
-	glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			data.GLFWEventSourceBus.triggerEvent<ScrollMouseMove>(xoffset, yoffset);
-		});
-
-	glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			data.GLFWEventSourceBus.triggerEvent<MouseClick>(button, action, mods);
-		});
-
-	//Initialize GLAD
-	InitializeGLAD();
-
-	//Print OpenGL information
-	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
 }
 
 void DeviceOpengl::InitializeGLAD()

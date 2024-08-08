@@ -17,10 +17,12 @@ namespace IFNITY
 	App::App()
 	{
 		s_Instance = this;
+		// Create windows props 
+		WindowData props;
 
-		m_Window = std::unique_ptr<GraphicsDeviceManager>(GraphicsDeviceManager::Create());
+		m_Window = std::unique_ptr<GraphicsDeviceManager>(GraphicsDeviceManager::Create(rhi::GraphicsAPI::OPENGL));
 
-		m_Window->CreateWindowSurface(WindowProps());
+		m_Window->CreateWindowSurface(props);
 		//Intialize the EventListenerControler 
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
 		

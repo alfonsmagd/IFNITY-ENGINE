@@ -50,7 +50,7 @@ void ImguiLayer::OnAttach()
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
 	io.ConfigFlags |= ImGuiBackendFlags_HasSetMousePos; // Enable SetMousePos.
-	io.FontGlobalScale = 1.2f;
+	io.FontGlobalScale = 1.0f;
 	ImGui::StyleInfity();					// Clasic color style. 
 
 	//Classic version  1.87 see IMGUI_DISABLE_OBSOLETE_KEYIO in new version 
@@ -74,6 +74,7 @@ void ImguiLayer::OnUpdate()
 	App& app = App::GetApp();
 	
 	io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
+	IFNITY_LOG(LogApp, INFO, "Width: " + std::to_string(app.GetWindow().GetWidth()) + " Height: " + std::to_string(app.GetWindow().GetHeight()));
 
 	float time = (float)glfwGetTime();
 
@@ -91,6 +92,10 @@ void ImguiLayer::onEventReceived(const WindowResize& event)
 	ImGuiIO& io = ImGui::GetIO();
 	io.DisplaySize = ImVec2((float)event.getWidth(), (float)event.getHeight());
 	io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+
+	glViewport(0, 0, event.getWidth(), event.getHeight());
+
+
 }
 void ImguiLayer::onEventReceived(const KeyPressed& event)
 {}
@@ -106,7 +111,13 @@ void ImguiLayer::onEventReceived(const MouseMove & event)
 }
 
 void ImguiLayer::onEventReceived(const ScrollMouseMove & event)
-{}
+{
+		ImGuiIO& io = ImGui::GetIO();
+	io.AddMouseWheelEvent((float)event.getX(), (float)event.getY());
+
+
+
+}
 
 void ImguiLayer::onEventReceived(const MouseClick & event)
 {

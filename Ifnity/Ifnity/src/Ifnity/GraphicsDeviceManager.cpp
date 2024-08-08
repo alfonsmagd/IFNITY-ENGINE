@@ -10,7 +10,7 @@
 IFNITY_NAMESPACE
 
 
-bool GraphicsDeviceManager::CreateWindowSurface(const WindowProps& props)
+bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 {
 #ifdef _WINDOWS
 	// this needs to happen before glfwInit in order to override GLFW behavior
@@ -121,7 +121,7 @@ void GraphicsDeviceManager::Shutdown()
 
 }
 // Create Window 
-GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api, const WindowProps& props)
+GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 {
 
 	//Check the API type
@@ -129,7 +129,7 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api, const
 	{
 	case rhi::GraphicsAPI::OPENGL:
 		{
-			return BuildWindow<DeviceOpengl>(props);
+			return BuildWindow<DeviceOpengl>();
 			
 		} // Fin del ámbito para OPENGL
 		break;
@@ -148,7 +148,7 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api, const
 		
 
 		default:
-			 return BuildWindow<DeviceOpengl>(props);
+			 return BuildWindow<DeviceOpengl>();
 		}
 }
 
@@ -158,7 +158,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 
 	glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 		{
-			WindowProps& data = *(WindowProps*)glfwGetWindowUserPointer(window);
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			data.Width = width;
 			data.Height = height;
 
@@ -170,7 +170,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 
 	glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
 		{
-			WindowProps& data = *(WindowProps*)glfwGetWindowUserPointer(window);
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
 			//data.GLFWEventSourceBus.triggerWindowClose();
 			data.GLFWEventSourceBus.triggerEvent<WindowClose>();
@@ -178,7 +178,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 
 	glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
-			WindowProps& data = *(WindowProps*)glfwGetWindowUserPointer(window);
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
 			switch (action)
 			{
@@ -199,20 +199,20 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 
 	glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos)
 		{
-			WindowProps& data = *(WindowProps*)glfwGetWindowUserPointer(window);
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
 			data.GLFWEventSourceBus.triggerEvent<MouseMove>(xpos, ypos);
 		});
 
 	glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
 		{
-			WindowProps& data = *(WindowProps*)glfwGetWindowUserPointer(window);
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			data.GLFWEventSourceBus.triggerEvent<ScrollMouseMove>(xoffset, yoffset);
 		});
 
 	glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
 		{
-			WindowProps& data = *(WindowProps*)glfwGetWindowUserPointer(window);
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			data.GLFWEventSourceBus.triggerEvent<MouseClick>(button, action, mods);
 		});
 

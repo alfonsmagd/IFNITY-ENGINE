@@ -11,14 +11,13 @@ class DeviceOpengl final : public GraphicsDeviceManager
 {
 
 public:
-	DeviceOpengl(const WindowProps& props);
 	virtual ~DeviceOpengl();
 
 	void OnUpdate() override;
 
 
-	inline unsigned int GetWidth() const override { return m_WindowData.props.Width; }
-	inline unsigned int GetHeight() const override { return m_WindowData.props.Height; }
+	inline unsigned int GetWidth() const override { return m_Props.Width; }
+	inline unsigned int GetHeight() const override { return m_Props.Height; }
 
 	
 
@@ -42,14 +41,7 @@ private:
 	//Create a EventSource for the WindowGroup
 
 	// Struct to hold window data
-	struct WindowData
-	{
-		std::string Title;
-		WindowProps props;
-		bool VSync;
-
-		GLFWEventSource  GLFWEventSourceBus;
-	}m_WindowData;
+	
 
 };
 

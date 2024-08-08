@@ -87,6 +87,7 @@ namespace IFNITY {
 		bool getRunning() { return m_running; }
 	private:
 		bool m_running = true;
+		
 	
 		///Loggin function Event. 
 		template<typename EventType>
