@@ -31,7 +31,7 @@ class NvmlMonitor;
 class IFNITY_API IDisplayBenchMark
 {
 public:
-    virtual void display(const NvmlMonitor& monitor) = 0;
+    virtual void display(const NvmlMonitor& monitor) const  = 0;
     //Destructor 
     virtual ~IDisplayBenchMark() {}
 
@@ -236,7 +236,7 @@ public:
 class IFNITY_API LoggerDisplayMonitor: public IDisplayBenchMark
 {
 public:
-    void display(const  NvmlMonitor& monitor) override
+    void display(const  NvmlMonitor& monitor) const override 
     {
 		std::stringstream logStream;
 		// Display the GPU information
@@ -263,5 +263,42 @@ public:
 
 	//Destructor LoggerDisplayMonitor
 	virtual ~LoggerDisplayMonitor() {}
+
+};
+
+class IFNITY_API ImguiNVML: public IDisplayBenchMark
+{
+public:
+   
+        void display(const NvmlMonitor & monitor) const override
+        {
+            // Display the GPU information
+            for(unsigned int i = 0; i < monitor.getGpuCount(); i++)
+            {
+                const auto& deviceInfo = monitor.getDeviceInfo(i);
+                const auto& deviceMemory = monitor.getDeviceMemory(i);
+                const auto& deviceUtilization = monitor.getDeviceUtilization(i);
+                const auto& devicePerformanceState = monitor.getDevicePerformanceState(i);
+                const auto& devicePowerState = monitor.getDevicePowerState(i);
+
+                // Create a new ImGui window for each GPU
+                ImGui::Begin(("GPU " + std::to_string(i)).c_str());
+
+                // Display the GPU information
+                ImGui::Text("GPU %d: %s", i, deviceInfo.deviceName.get().c_str());
+                ImGui::Text("  Driver: %s", deviceInfo.currentDriverModel.get().c_str());
+                ImGui::Text("  Compute Capability: %d.%d", deviceInfo.computeCapabilityMajor.get(), deviceInfo.computeCapabilityMinor.get());
+                ImGui::Text("  Memory: %llu / %llu", deviceMemory.memoryUsed.get()[ 1 ], deviceMemory.memoryTotal.get());
+                ImGui::Text("  Utilization: %u %% GPU, %u %% Memory", deviceUtilization.gpuUtilization.get()[ 1 ], deviceUtilization.memUtilization.get()[ 1 ]);
+                ImGui::Text("  Performance State: %u MHz GPU, %u MHz Memory", devicePerformanceState.clockGraphics.get()[ 1 ], devicePerformanceState.clockMem.get()[ 1 ]);
+                ImGui::Text("  Power: %u W, %u C, %u %% Fan", devicePowerState.power.get()[ 1 ], devicePowerState.temperature.get()[ 1 ], devicePowerState.fanSpeed.get()[ 1 ]);
+
+                ImGui::End();
+            }
+        
+    }
+
+    //Destructor LoggerDisplayMonitor
+    virtual ~ImguiNVML() {}
 
 };

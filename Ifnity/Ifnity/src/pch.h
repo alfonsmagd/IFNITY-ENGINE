@@ -14,6 +14,7 @@
 #include <utility>
 #include <sstream>
 #include <ifnity/Log.h>
+#include "../vendor/imgui/imgui.h"
 
 #ifdef _WIN64
 	#include  <Windows.h>

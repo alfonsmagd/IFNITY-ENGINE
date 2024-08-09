@@ -491,7 +491,7 @@ void NvmlMonitor::DeviceUtilization::init(uint32_t maxElements)
 
 }
 
-void NvmlMonitor::DeviceUtilization::refresh(void* dev, uint32_t offset)
+void NvmlMonitor::DeviceUtilization::refresh(void* dev,  uint32_t offset)
 {
     #if defined(NVP_SUPPORTS_NVML)
     nvmlDevice_t device = reinterpret_cast<nvmlDevice_t>(dev);

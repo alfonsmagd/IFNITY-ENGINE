@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "Ifnity/Layer.hpp"
 #include "Ifnity/Event/WindowEvent.h"
+#include <BenchMark\NvmlMonitor.hpp>
 
 
 
@@ -31,7 +32,8 @@ public:
 		
 private:
 	 float m_Time = 0.0f;
-
+	 NvmlMonitor m_monitor{ 100,5 };
+	 ImguiNVML m_NvmlDisplayMonitor;
 };
 
 

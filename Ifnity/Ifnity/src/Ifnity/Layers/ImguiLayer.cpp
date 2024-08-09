@@ -43,6 +43,10 @@ void ImguiLayer::ConnectToEventBusImpl(void* bus)
 
 void ImguiLayer::OnAttach()
 {
+
+	
+	m_monitor.setDisplay(&m_NvmlDisplayMonitor);
+
 	// Initialize ImGui
 	ImGui::CreateContext();
 	
@@ -69,7 +73,7 @@ void ImguiLayer::OnDetach()
 
 void ImguiLayer::OnUpdate()
 {
-    
+    m_monitor.refresh();
 	ImGuiIO& io = ImGui::GetIO();
 	App& app = App::GetApp();
 	
@@ -81,9 +85,16 @@ void ImguiLayer::OnUpdate()
 	io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui::NewFrame();
-
+	ImGui::Text("Hello, world %d", 123);
+	if(ImGui::Button("Save"))
 	static bool show = true;
-	ImGui::ShowDemoWindow(&show);
+	//Mostrar numeros aleatorios en imgui en texto 
+	
+			//Crear aleatorio 
+	int random = rand() % 100 + 1;
+	ImGui::Text("Random number: %d", random);
+	m_monitor.display();
+	//ImGui::ShowDebugLogWindow();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
@@ -98,7 +109,13 @@ void ImguiLayer::onEventReceived(const WindowResize& event)
 
 }
 void ImguiLayer::onEventReceived(const KeyPressed& event)
-{}
+{
+	//Key pressed imgui 
+	auto& io = ImGui::GetIO();
+
+	io.AddInputCharacter(event.getKey());
+
+}
 
 void ImguiLayer::onEventReceived(const KeyRelease & event)
 {}
