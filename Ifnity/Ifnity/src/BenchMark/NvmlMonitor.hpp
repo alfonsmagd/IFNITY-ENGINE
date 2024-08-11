@@ -293,8 +293,38 @@ public:
                 ImGui::Text("  Performance State: %u MHz GPU, %u MHz Memory", devicePerformanceState.clockGraphics.get()[ 1 ], devicePerformanceState.clockMem.get()[ 1 ]);
                 ImGui::Text("  Power: %u W, %u C, %u %% Fan", devicePowerState.power.get()[ 1 ], devicePowerState.temperature.get()[ 1 ], devicePowerState.fanSpeed.get()[ 1 ]);
 
+                // Additional GPU information
+                ImGui::Text("  Board ID: %u", deviceInfo.boardId.get());
+                ImGui::Text("  Part Number: %s", deviceInfo.partNumber.get().c_str());
+                ImGui::Text("  Brand: %s", deviceInfo.brand.get().c_str());
+                ImGui::Text("  CPU Affinity: %llu", deviceInfo.cpuAffinity.get());
+                ImGui::Text("  Compute Mode: %s", deviceInfo.computeMode.get().c_str());
+                ImGui::Text("  PCIe Link Gen: %u", deviceInfo.pcieLinkGen.get());
+                ImGui::Text("  PCIe Link Width: %u", deviceInfo.pcieLinkWidth.get());
+                ImGui::Text("  ECC Mode: %s", deviceInfo.currentEccMode.get() ? "Enabled" : "Disabled");
+                ImGui::Text("  Encoder Capacity H264: %u", deviceInfo.encoderCapacityH264.get());
+                ImGui::Text("  Encoder Capacity HEVC: %u", deviceInfo.encoderCapacityHEVC.get());
+                ImGui::Text("  VBIOS Version: %s", deviceInfo.vbiosVersion.get().c_str());
+                ImGui::Text("  Max Link Gen: %u", deviceInfo.maxLinkGen.get());
+                ImGui::Text("  Max Link Width: %u", deviceInfo.maxLinkWidth.get());
+                ImGui::Text("  Minor Number: %u", deviceInfo.minorNumber.get());
+                ImGui::Text("  Multi-GPU: %s", deviceInfo.multiGpuBool.get() ? "Yes" : "No");
+
+                // Additional Memory Information
+                ImGui::Text("  BAR1 Total: %llu", deviceMemory.bar1Total.get());
+                ImGui::Text("  BAR1 Used: %llu", deviceMemory.bar1Used.get()[ 1 ]);
+                ImGui::Text("  BAR1 Free: %llu", deviceMemory.bar1Free.get()[ 1 ]);
+
                 ImGui::End();
             }
+            // Display CPU usage
+            ImGui::Begin("CPU Usage");
+            const auto& sysInfo = monitor.getSysInfo();
+            for(size_t i = 0; i < sysInfo.cpu.size(); ++i)
+            {
+                ImGui::Text("CPU Core %zu Usage: %.2f %%", i, sysInfo.cpu[ i ]);
+            }
+            ImGui::End();
         
     }
 

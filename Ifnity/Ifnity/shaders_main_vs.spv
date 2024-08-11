@@ -1,0 +1,49 @@
+; SPIR-V
+; Version: 1.0
+; Generator: Khronos Glslang Reference Front End; 10
+; Bound: 28
+; Schema: 0
+               OpCapability Shader
+          %1 = OpExtInstImport "GLSL.std.450"
+               OpMemoryModel Logical GLSL450
+               OpEntryPoint Vertex %4 "main" %11 %17
+               OpSource GLSL 460
+               OpName %4 "main"
+               OpName %11 "color"
+               OpName %17 "gl_Position"
+               OpName %21 "pos"
+               OpName %25 "col"
+               OpDecorate %11 Location 0
+               OpDecorate %17 BuiltIn Position
+       %void = OpTypeVoid
+          %3 = OpTypeFunction %void
+       %v3f32 = OpTypeVector %float 3
+%_ptr_Output_v3f32 = OpTypePointer Output %v3f32
+       %float = OpTypeFloat 32
+       %v2f32 = OpTypeVector %float 2
+%_arr_v2f32_uint_3 = OpTypeArray %v2f32 %uint_3
+%_ptr_Function__arr_v2f32_uint_3 = OpTypePointer Function %_arr_v2f32_uint_3
+%_arr_v3f32_uint_3 = OpTypeArray %v3f32 %uint_3
+%_ptr_Function__arr_v3f32_uint_3 = OpTypePointer Function %_arr_v3f32_uint_3
+%_ptr_Output_v4f32 = OpTypePointer Output %v4f32
+       %v4f32 = OpTypeVector %float 4
+       %uint = OpTypeInt 32 0
+     %uint_3 = OpConstant %uint 3
+%_ptr_Input_uint = OpTypePointer Input %uint
+%gl_VertexID = OpVariable %_ptr_Input_uint Input
+         %11 = OpVariable %_ptr_Output_v3f32 Output
+         %17 = OpVariable %_ptr_Output_v4f32 Output
+          %4 = OpFunction %void None %3
+          %5 = OpLabel
+         %21 = OpVariable %_ptr_Function__arr_v2f32_uint_3 Function
+         %25 = OpVariable %_ptr_Function__arr_v3f32_uint_3 Function
+         %22 = OpAccessChain %_ptr_Function_v2f32 %21 %uint_0
+         %23 = OpLoad %v2f32 %22
+         %24 = OpCompositeConstruct %v4f32 %23 %float_0 %float_1
+               OpStore %17 %24
+         %26 = OpAccessChain %_ptr_Function_v3f32 %25 %uint_0
+         %27 = OpLoad %v3f32 %26
+               OpStore %11 %27
+               OpReturn
+               OpFunctionEnd
+
