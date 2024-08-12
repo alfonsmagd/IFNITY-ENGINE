@@ -3,6 +3,7 @@
 #include "ImguiLayer.h"
 #include "Ifnity/Event/WindowEvent.h"
 #include "imgui.h"
+#include "ImPlot.h"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include <GLFW\glfw3.h>
 
@@ -85,6 +86,8 @@ void ImguiLayer::OnUpdate()
 	io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui::NewFrame();
+	ImPlot::CreateContext();
+	ImPlot::ShowDemoWindow();
 	ImGui::Text("Hello, world %d", 123);
 	if(ImGui::Button("Save"))
 	static bool show = true;

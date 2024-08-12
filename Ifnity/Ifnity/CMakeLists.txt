@@ -33,7 +33,7 @@ set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 
 # Add GLFW like a subdirectory to be built with the project
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
-add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/imgui)
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
 
 
 
@@ -49,6 +49,8 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/nvml)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/glad/include)
 #include imgui directory
 include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui) 
+#include implot directory
+include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
 
 
 
@@ -72,10 +74,8 @@ set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 # Add library
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
 
-
-
-
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/pch.h)
+
 # Check if SOURCE_FILES is empty
 if(NOT SOURCE_FILES)
     message(FATAL_ERROR "No source files given to target: ${PROJECT_NAME}")
@@ -85,6 +85,7 @@ endif()
 target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
+target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 
 
 if(NVML_LIBRARY)
