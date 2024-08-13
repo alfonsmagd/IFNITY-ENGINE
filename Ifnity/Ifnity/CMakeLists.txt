@@ -38,6 +38,7 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
 
 
 # Include directories
+include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 # La línea siguiente ya no es necesaria porque add_subdirectory se encargará de incluir los directorios necesarios

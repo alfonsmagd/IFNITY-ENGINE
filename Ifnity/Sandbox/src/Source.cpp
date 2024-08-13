@@ -4,7 +4,7 @@
 #include "pch.h"
 #include <Ifnity.h>
 
-#include "NVML_Layer.hpp"
+
 
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
@@ -89,10 +89,9 @@ public:
 		}
 
 		// Establecer el contexto de ImGui en la aplicación principal
-		ImGui::SetCurrentContext(context);
-		PushLayer(new NVMLLayer());
-		PushLayer(new NVML_Monitor());
-		PushOverlay(new IFNITY::ImguiLayer());
+		//ImGui::SetCurrentContext(context);
+		PushLayer(new   IFNITY::NVML_Monitor());
+		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
 		
 		
 

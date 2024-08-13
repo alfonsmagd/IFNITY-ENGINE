@@ -3,6 +3,8 @@
 #include "Core.h"
 #include "GraphicsDeviceManager.h"
 
+
+
 #include "LayerStack.hpp"
 #include "ImGuiContextManager.h"
 IFNITY_NAMESPACE
@@ -48,6 +50,8 @@ private:
 	void InitiateEventBusLayers();
 
 	bool isRunning() const;
+
+	float m_Time = 0;
 };
 
 App* CreateApp();

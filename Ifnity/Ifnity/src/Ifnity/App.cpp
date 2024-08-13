@@ -5,6 +5,8 @@
 #include <glad\glad.h>
 #include <GLFW/glfw3.h>
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
+#include "Ifnity/Layers/ExampleLayer.h" //TODO BORRAR , LO SUYO SU CPP CORRESPONDIENTE
+#include "Ifnity/Layers/NVML_Layer.hpp"
 
 
 
@@ -272,6 +274,33 @@ void main()
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 			glPopDebugGroup();
 		
+			//Imgui Render Frame 
+			{}
+			ImGuiIO& io = ImGui::GetIO();
+			App& app = App::GetApp();
+
+			io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
+			IFNITY_LOG(LogApp, INFO, "Width: " + std::to_string(app.GetWindow().GetWidth()) + " Height: " + std::to_string(app.GetWindow().GetHeight()));
+
+			float time = (float)glfwGetTime();
+
+			io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui::NewFrame();
+			ImPlot::CreateContext();
+			ImPlot::ShowDemoWindow();
+			ImGui::Text("Hello, world %d", 123);
+			if (ImGui::Button("Save"))
+				static bool show = true;
+			//Mostrar numeros aleatorios en imgui en texto 
+
+					//Crear aleatorio 
+			int random = rand() % 100 + 1;
+			ImGui::Text("Random number: %d", random);
+		
+
+
+
 			for(Layer* layer : m_LayerStack)
 			{
 				layer->OnUpdate();

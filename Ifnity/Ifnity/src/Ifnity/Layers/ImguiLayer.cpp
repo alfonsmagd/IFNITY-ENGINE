@@ -56,30 +56,30 @@ void ImguiLayer::OnDetach()
 
 void ImguiLayer::OnUpdate()
 {
-    m_monitor.refresh();
-	ImGuiIO& io = ImGui::GetIO();
-	App& app = App::GetApp();
-	
-	io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
-	IFNITY_LOG(LogApp, INFO, "Width: " + std::to_string(app.GetWindow().GetWidth()) + " Height: " + std::to_string(app.GetWindow().GetHeight()));
+ //   m_monitor.refresh();
+	//ImGuiIO& io = ImGui::GetIO();
+	//App& app = App::GetApp();
+	//
+	//io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
+	//IFNITY_LOG(LogApp, INFO, "Width: " + std::to_string(app.GetWindow().GetWidth()) + " Height: " + std::to_string(app.GetWindow().GetHeight()));
 
-	float time = (float)glfwGetTime();
+	//float time = (float)glfwGetTime();
 
-	io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui::NewFrame();
-	ImPlot::CreateContext();
-	ImPlot::ShowDemoWindow();
-	ImGui::Text("Hello, world %d", 123);
-	if(ImGui::Button("Save"))
-	static bool show = true;
-	//Mostrar numeros aleatorios en imgui en texto 
-	
-			//Crear aleatorio 
-	int random = rand() % 100 + 1;
-	ImGui::Text("Random number: %d", random);
-	m_monitor.display();
-	//ImGui::ShowDebugLogWindow();
+	//io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
+	//ImGui_ImplOpenGL3_NewFrame();
+	//ImGui::NewFrame();
+	//ImPlot::CreateContext();
+	//ImPlot::ShowDemoWindow();
+	//ImGui::Text("Hello, world %d", 123);
+	//if(ImGui::Button("Save"))
+	//static bool show = true;
+	////Mostrar numeros aleatorios en imgui en texto 
+	//
+	//		//Crear aleatorio 
+	//int random = rand() % 100 + 1;
+	//ImGui::Text("Random number: %d", random);
+	//m_monitor.display();
+	////ImGui::ShowDebugLogWindow();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

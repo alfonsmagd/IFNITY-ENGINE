@@ -44,7 +44,7 @@ public:
     ~NvmlMonitor();
 
     template <typename T>
-    struct NVMLField
+    struct  IFNITY_API NVMLField
     {
         T    data;
         bool isSupported;
@@ -61,7 +61,7 @@ public:
     };
 
 	/// Generate IRefreshable interface for the class
-	struct IRefreshable
+	struct  IRefreshable
 	{
 		virtual void refresh(void* device, uint32_t offset = 0) = 0;
 	};
@@ -69,7 +69,7 @@ public:
     /// <summary>
     /// Static device information 
     /// </summary>
-	struct DeviceInfo
+	struct  DeviceInfo
     {
         NVMLField<std::string> currentDriverModel;
         NVMLField<std::string> pendingDriverModel;
@@ -137,7 +137,7 @@ public:
     /// <summary>
     /// Device Memory Usage. 
     /// </summary>
-	struct DeviceMemory: public IRefreshable
+	struct   DeviceMemory: public IRefreshable
     {
         NVMLField<uint64_t>              bar1Total;
         NVMLField<std::vector<uint64_t>> bar1Used;
@@ -153,7 +153,7 @@ public:
 
 
     // Device performance state: clocks and throttling
-	struct DevicePerformanceState: public IRefreshable
+	struct  DevicePerformanceState: public IRefreshable
     {
         NVMLField<std::vector<uint32_t>> clockGraphics;
         NVMLField<std::vector<uint32_t>> clockSM;
@@ -169,7 +169,7 @@ public:
     };
 
     // Device utilization ratios
-	struct DeviceUtilization: public IRefreshable
+	struct  DeviceUtilization: public IRefreshable
     {
         NVMLField<std::vector<uint32_t>> gpuUtilization;
         NVMLField<std::vector<uint32_t>> memUtilization;
@@ -181,7 +181,7 @@ public:
     };
 
     // Device power and temperature
-	struct DevicePowerState: public IRefreshable
+	struct   DevicePowerState: public IRefreshable
     {
         NVMLField<std::vector<uint32_t>> power;
         NVMLField<std::vector<uint32_t>> temperature;
@@ -192,7 +192,7 @@ public:
     };
 
     // Other information
-    struct SysInfo
+    struct  SysInfo
     {
         std::vector<float> cpu;  // Load measurement [0, 100]
         std::string        driverVersion;
@@ -266,7 +266,7 @@ public:
 
 };
 
-class IFNITY_API ImguiNVML: public IDisplayBenchMark
+class IFNITY_API  ImguiNVML: public IDisplayBenchMark
 {
 public:
    

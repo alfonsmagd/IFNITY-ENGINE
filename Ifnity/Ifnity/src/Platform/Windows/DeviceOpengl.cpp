@@ -3,6 +3,7 @@
 #include <glm\glm.hpp>
 
 
+
 IFNITY_NAMESPACE
 
 ///Static variable to check if GLFW is initialized.

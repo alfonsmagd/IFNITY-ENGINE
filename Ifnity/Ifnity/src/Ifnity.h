@@ -6,10 +6,14 @@
 #include "Ifnity/Layer.hpp"
 #include "Ifnity/Event/WindowEvent.h"
 #include "Ifnity/Layers/ImguiLayer.h"
+#include "Ifnity/Layers/NVML_Layer.hpp"
+#include "Ifnity/Layers/ExampleLayer.h"
 #include "Ifnity/Log.h"
 
 //wOMDPW
 #include "BenchMark/NvmlMonitor.hpp"
 //Entry Point this include have put at the end of the file.
 #include "Ifnity/EntryPoint.h"
+
+
 
