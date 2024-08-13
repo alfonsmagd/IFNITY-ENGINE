@@ -13,6 +13,7 @@ file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 
 file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/src/*.h")
+file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/src/*.hpp")
 
 # Incluye directories
 include_directories(

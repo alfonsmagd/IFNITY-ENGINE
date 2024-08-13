@@ -4,7 +4,7 @@
 #include "GraphicsDeviceManager.h"
 
 #include "LayerStack.hpp"
-
+#include "ImGuiContextManager.h"
 IFNITY_NAMESPACE
 
 //forward declaration

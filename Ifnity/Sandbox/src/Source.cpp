@@ -4,6 +4,7 @@
 #include "pch.h"
 #include <Ifnity.h>
 
+#include "NVML_Layer.hpp"
 
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
@@ -79,8 +80,21 @@ class Source: public IFNITY::App
 public:
 	Source()
 	{
-		//PushLayer(new NVMLLayer());
+		// Obtener el contexto de ImGui desde IFNITY  DLL
+		ImGuiContext* context = GetImGuiContext();
+		if (context == nullptr)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
+			return;
+		}
+
+		// Establecer el contexto de ImGui en la aplicación principal
+		ImGui::SetCurrentContext(context);
+		PushLayer(new NVMLLayer());
+		PushLayer(new NVML_Monitor());
 		PushOverlay(new IFNITY::ImguiLayer());
+		
+		
 
 	}
 	~Source() override {}

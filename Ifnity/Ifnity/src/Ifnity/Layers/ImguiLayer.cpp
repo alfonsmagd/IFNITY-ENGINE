@@ -44,26 +44,8 @@ void ImguiLayer::ConnectToEventBusImpl(void* bus)
 
 void ImguiLayer::OnAttach()
 {
-
-	
 	m_monitor.setDisplay(&m_NvmlDisplayMonitor);
 
-	// Initialize ImGui
-	ImGui::CreateContext();
-	
-
-	ImGuiIO& io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
-	io.ConfigFlags |= ImGuiBackendFlags_HasSetMousePos; // Enable SetMousePos.
-	io.FontGlobalScale = 1.0f;
-	ImGui::StyleInfity();					// Clasic color style. 
-
-	//Classic version  1.87 see IMGUI_DISABLE_OBSOLETE_KEYIO in new version 
-	// not necessary intialization maps for keys. 
-	//io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;					
-
-	ImGui_ImplOpenGL3_Init("#version 450");
-	
 }
 
 void ImguiLayer::OnDetach()
