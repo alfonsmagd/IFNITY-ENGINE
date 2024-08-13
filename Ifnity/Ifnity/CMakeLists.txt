@@ -33,12 +33,12 @@ set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 
 # Add GLFW like a subdirectory to be built with the project
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
+#add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
 
 
 
 # Include directories
-include_directories(${PROJECT_SOURCE_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 # La línea siguiente ya no es necesaria porque add_subdirectory se encargará de incluir los directorios necesarios
@@ -87,6 +87,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC implot)
+target_link_libraries(${PROJECT_NAME} INTERFACE  glm)
 
 
 if(NVML_LIBRARY)

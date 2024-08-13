@@ -37,3 +37,17 @@ if (NOT TARGET implot)
   target_include_directories(implot PRIVATE ${IMGUI_DIR})
   set_property(TARGET implot PROPERTY FOLDER "ThirdParty")
 endif()
+
+### optional dependencies
+
+# glm
+add_library(glm INTERFACE)
+set(GLM_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glm)
+target_sources(glm INTERFACE ${GLM_DIR}/glm/glm.hpp)
+target_include_directories(glm INTERFACE ${GLM_DIR})
+
+target_compile_definitions(glm INTERFACE
+    GLM_FORCE_RADIANS
+    GLM_ENABLE_EXPERIMENTAL
+    GLM_FORCE_XYZW_ONLY
+)

@@ -22,7 +22,11 @@
 #include <vector>
 #include <chrono>
 #include <iostream>
+#include <pdh.h>
+#include <pdhmsg.h>
+#include <iostream>
 
+#pragma comment(lib, "pdh.lib")
 
 
 #if defined(NVP_SUPPORTS_NVML)
@@ -39,7 +43,7 @@
 #define CHECK_NVML_CALL()                                                                                              \
   if(res != NVML_SUCCESS)                                                                                              \
   {                                                                                                                    \
-    LOGE("NVML Error %s\n", nvmlErrorString(res));                                                                     \
+    IFNITY_LOG(LogCore,ERROR, "NVML Error %s\n", nvmlErrorString(res));                                                \
   }
 
 #define CHECK_NVML(fun)                                                                                                \
@@ -47,7 +51,7 @@
     nvmlReturn_t res = fun;                                                                                            \
     if(res != NVML_SUCCESS)                                                                                            \
     {                                                                                                                  \
-      LOGE("NVML Error in %s: %s\n", #fun, nvmlErrorString(res));                                                      \
+       IFNITY_LOG(LogCore,ERROR,"NVML Error in %s: %s\n", #fun, nvmlErrorString(res));                                 \
     }                                                                                                                  \
   }
 
@@ -247,6 +251,7 @@ static float getCpuLoad()
     s_previousTotalTicks = totalTicks;
     s_previousIdleTicks = idleTicks;
 
+    //If i use 100 by percentage more accuaricy. 
     return result * 100.f;
     #else
     return 0;

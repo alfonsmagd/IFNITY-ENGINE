@@ -6,18 +6,11 @@
 
 
 #include "Ifnity/Layer.hpp"
-#include "Ifnity/Log.h"
 #include "Imgui_Helper.h"
 
-//wOMDPW
 #include "BenchMark/NvmlMonitor.hpp"
 
 
-
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <implot.h>
-#include <sstream>
 
 
 IFNITY_NAMESPACE
@@ -74,10 +67,12 @@ struct AverageCircularBuffer
 {
 	int            offset = 0;
 	T              totValue = 0;
+    T			   lastValue = 0;
 	std::vector<T> data;
 	AverageCircularBuffer(int max_size = 100) { data.reserve(max_size); }
 	void addValue(T x)
 	{
+        lastValue = x;
 		if (data.size() < data.capacity())
 		{
 			data.push_back(x);
@@ -117,12 +112,14 @@ public:
 
 	void OnAttach() override
 	{
+        glm::vec3 color = { 0.0f, 0.0f, 0.0f };
 		addSettingsHandler();
 	}
 
 
     void OnUpdate() override
-	{
+	{   
+       
 		onUIRender();
 	}
 
@@ -459,7 +456,7 @@ private:
 			// Load
 			ImGui::Text("GPU: %s", gpuInfo.deviceName.get().c_str());
 			ImGuiH::PropertyEditor::begin();
-			ImGuiH::PropertyEditor::entry("Load", [&] {
+			ImGuiH::PropertyEditor::entry("Load GPU", [&] {
 				ImGui::PushStyleColor(ImGuiCol_PlotHistogram, (ImVec4)ImColor::HSV(0.3F, 0.5F, 0.5F));
 				ImGui::ProgressBar(deviceUtilization.gpuUtilization.get()[offset] / 100.F);
 				ImGui::PopStyleColor();
@@ -481,10 +478,17 @@ private:
 
 
 		ImGuiH::PropertyEditor::begin();
-		ImGuiH::PropertyEditor::entry("CPU", [&] {
+		ImGuiH::PropertyEditor::entry("CPU Average", [&] {
 			ImGui::ProgressBar(m_avgCpu.average() / 100.F);
 			return false;
 			});
+        ImGuiH::PropertyEditor::end();
+
+        ImGuiH::PropertyEditor::begin();
+        ImGuiH::PropertyEditor::entry("CPU Real  ", [&] {
+            ImGui::ProgressBar(m_avgCpu.lastValue / 100.F);
+            return false;
+            });
 		ImGuiH::PropertyEditor::end();
 #endif
 	}
