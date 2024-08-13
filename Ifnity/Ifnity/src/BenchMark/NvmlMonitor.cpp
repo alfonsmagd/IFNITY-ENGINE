@@ -17,18 +17,6 @@
 
 #include "NvmlMonitor.hpp"
 
-#include <iostream>
-#include <string>
-#include <vector>
-#include <chrono>
-#include <iostream>
-#include <pdh.h>
-#include <pdhmsg.h>
-#include <iostream>
-
-#pragma comment(lib, "pdh.lib")
-
-
 #if defined(NVP_SUPPORTS_NVML)
     #define NVML_NO_UNVERSIONED_FUNC_DEFS
     #include <nvml.h>
