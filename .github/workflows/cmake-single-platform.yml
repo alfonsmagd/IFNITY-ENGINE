@@ -1,4 +1,4 @@
-name: CMake on a single platform
+name: C++/C Cmake
 
 on:
   push:
