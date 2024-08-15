@@ -1,0 +1,3 @@
+[submodule "Ifnity/Ifnity/vendor/ShaderMake"]
+	path = Ifnity/Ifnity/vendor/ShaderMake
+	url = https://github.com/NVIDIAGameWorks/ShaderMake
