@@ -72,7 +72,7 @@ public:
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowData& props);
 	bool CreateInstance();
-
+	rhi::GraphicsAPI GetGraphicsAPI() const { return m_API; }
 
 	//Base Methods virtual 
 	virtual void Shutdown();

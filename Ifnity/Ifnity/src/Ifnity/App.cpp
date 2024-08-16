@@ -2,18 +2,13 @@
 
 #include "App.h"
 #include "GraphicsDeviceManager.h"
-#include <glad\glad.h>
-#include <GLFW/glfw3.h>
-#include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include "Ifnity/Layers/ExampleLayer.h" //TODO BORRAR , LO SUYO SU CPP CORRESPONDIENTE
 #include "Ifnity/Layers/NVML_Layer.hpp"
+#include "Platform/ImguiRender/ImguiOpenglRender.h"
+#include <GLFW/glfw3.h>
+#include <glad\glad.h>
 
-
-
-
-namespace IFNITY
-{
-
+namespace IFNITY {
 
 	static const char* shaderCodeVertex = R"(
 
@@ -52,23 +47,21 @@ void main()
 
 )";
 
-
-	//Static member  declaration
+	// Static member  declaration
 	App* App::s_Instance = nullptr;
-	//Default Constructor;
+	// Default Constructor;
 	App::App()
 	{
 		s_Instance = this;
-		// Create windows props 
+		// Create windows props
 		WindowData props;
 
-		m_Window = std::unique_ptr<GraphicsDeviceManager>(GraphicsDeviceManager::Create(rhi::GraphicsAPI::OPENGL));
+		m_Window = std::unique_ptr<GraphicsDeviceManager>(
+			GraphicsDeviceManager::Create(rhi::GraphicsAPI::OPENGL));
 
 		m_Window->CreateWindowSurface(props);
-		//Intialize the EventListenerControler 
+		// Intialize the EventListenerControler
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
-
-
 
 		SetEventBus(m_Window->GetGLFWEventSource());
 
@@ -80,38 +73,42 @@ void main()
 		CONNECT_EVENT(ScrollMouseMove);
 		CONNECT_EVENT(MouseClick);
 
-
 		// Initialize ImGui
-		
+
 		InitializeImGui();
+		SetImguiAPI(m_Window->GetGraphicsAPI());
 
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
-		io.ConfigFlags |= ImGuiBackendFlags_HasSetMousePos; // Enable SetMousePos.
+		io.ConfigFlags |= ImGuiBackendFlags_HasSetMousePos;  // Enable SetMousePos.
 		io.FontGlobalScale = 1.0f;
-		ImGui::StyleInfity();					// Clasic color style. 
+		ImGui::StyleInfity(); // Clasic color style.
 
-		//Classic version  1.87 see IMGUI_DISABLE_OBSOLETE_KEYIO in new version 
-		// not necessary intialization maps for keys. 
-		//io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;					
+		// Classic version  1.87 see IMGUI_DISABLE_OBSOLETE_KEYIO in new version
+		//  not necessary intialization maps for keys.
+		// io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
 
-		ImGui_ImplOpenGL3_Init("#version 450");
-
-
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::OPENGL] = []()
+			{
+				ImGui_ImplOpenGL3_NewFrame();
+				ImGui::NewFrame();
+				ImPlot::CreateContext();
+			};
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D11] = []() {};
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []() {};
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []() {};
 	}
 	App::~App()
 	{
 
-		//OnDetach all layers
-		for(Layer* layer : m_LayerStack)
+		// OnDetach all layers
+		for ( Layer* layer : m_LayerStack )
 		{
 			layer->OnDetach();
 		}
 		s_Instance = nullptr;
 		IFNITY_LOG(LogApp, INFO, "App is destroyed");
-
 	}
-
 
 	void App::run()
 	{
@@ -137,20 +134,20 @@ void main()
 		glBindVertexArray(vao);
 
 		//// Cargar y crear el programa de shader
-		//GLuint shaderProgram = CreateShaderProgram("D:\\IFNITY-ENGINE\\Ifnity\\Ifnity\\shaders_main_vs.bin", "D:\\IFNITY-ENGINE\\Ifnity\\Ifnity\\shaders_main_ps.bin");
-		//if(shaderProgram == 0)
+		// GLuint shaderProgram =
+		// CreateShaderProgram("D:\\IFNITY-ENGINE\\Ifnity\\Ifnity\\shaders_main_vs.bin",
+		// "D:\\IFNITY-ENGINE\\Ifnity\\Ifnity\\shaders_main_ps.bin"); if(shaderProgram
+		// == 0)
 		//{
 		//	std::cerr << "Error al crear el programa de shader" << std::endl;
-		//	
-		//}
-	
+		//
+		// }
 
 		//// Usar el programa de shader
-		//glUseProgram(shaderProgram);
+		// glUseProgram(shaderProgram);
 
-		
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		while(isRunning())
+		while ( isRunning() )
 		{
 			// Iniciar una sección de depuración
 			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Frame Start");
@@ -158,76 +155,94 @@ void main()
 			glClear(GL_COLOR_BUFFER_BIT);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 			glPopDebugGroup();
-		
-			//Imgui Render Frame 
-			{}
-			ImGuiIO& io = ImGui::GetIO();
-			App& app = App::GetApp();
 
-			io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
-			IFNITY_LOG(LogApp, INFO, "Width: " + std::to_string(app.GetWindow().GetWidth()) + " Height: " + std::to_string(app.GetWindow().GetHeight()));
+			RenderImGuiFrame();
 
-			float time = (float)glfwGetTime();
-
-			io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
-			ImGui_ImplOpenGL3_NewFrame();
-			ImGui::NewFrame();
-			ImPlot::CreateContext();
-			ImPlot::ShowDemoWindow();
-			ImGui::Text("Hello, world %d", 123);
-			if (ImGui::Button("Save"))
-				static bool show = true;
-			//Mostrar numeros aleatorios en imgui en texto 
-
-					//Crear aleatorio 
-			int random = rand() % 100 + 1;
-			ImGui::Text("Random number: %d", random);
-		
-
-
-
-			for(Layer* layer : m_LayerStack)
+			for ( Layer* layer : m_LayerStack )
 			{
 				layer->OnUpdate();
 			}
 
-
 			m_Window->OnUpdate();
 		}
-
 
 		m_Window->Shutdown();
 	}
 
 	void App::PushLayer(Layer* layer)
 	{
-		
+
 		m_LayerStack.PushLayer(layer);
 		layer->OnAttach();
-
-
 	}
 
 	void App::PushOverlay(Layer* overlay)
 	{
 		m_LayerStack.PushOverlay(overlay);
 		overlay->OnAttach();
-
 	}
 
-	void App::InitiateEventBusLayers()
+	void App::InitiateEventBusLayers() 
 	{
-		for(Layer* layer : m_LayerStack)
+		for ( Layer* layer : m_LayerStack )
 		{
 			layer->ConnectToEventBus(m_EventBus);
 		}
-
 	}
 
-	bool App::isRunning() const
+	bool App::isRunning() const { return m_GLFWEventListener->getRunning(); }
+
+	void App::SetImguiAPI(const rhi::GraphicsAPI& api) const
 	{
-		return m_GLFWEventListener->getRunning();
+
+		switch ( api )
+		{
+		case IFNITY::rhi::GraphicsAPI::OPENGL:
+
+			ImGui_ImplOpenGL3_Init(
+				"#version 450"); // TODO: Change version 450 to a variable that can be
+			// changed in the future.
+			IFNITY_LOG(LogCore, TRACE, "Imgui API is set to OpenGL");
+			break;
+		case IFNITY::rhi::GraphicsAPI::D3D11:
+			break;
+		case IFNITY::rhi::GraphicsAPI::D3D12:
+			break;
+		case IFNITY::rhi::GraphicsAPI::VULKAN:
+			break;
+		case IFNITY::rhi::GraphicsAPI::MAX_GRAPHICS_API:
+			break;
+		default:
+			break;
+		}
+	}
+
+	void App::RenderImGuiFrame() const
+	{
+		ImGuiIO& io = ImGui::GetIO();
+		App& app = App::GetApp();
+
+		io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
+		IFNITY_LOG(LogApp, INFO,
+			"Width: " + std::to_string(app.GetWindow().GetWidth()) +
+			" Height: " + std::to_string(app.GetWindow().GetHeight()));
+
+		float time = (float)glfwGetTime();
+
+		io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
+
+		// Render ImguiFrame
+		auto it = m_ImguiRenderFunctionMap.find(m_Window->GetGraphicsAPI());
+
+		if ( it != m_ImguiRenderFunctionMap.end() )
+		{
+			it->second();
+		}
+		else
+		{
+			IFNITY_LOG(LogApp, ERROR, "Imgui API not found, impossible to render");
+		}
 	}
 
 
-}
+} // namespace IFNITY
