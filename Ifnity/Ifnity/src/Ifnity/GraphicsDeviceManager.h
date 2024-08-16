@@ -15,7 +15,18 @@
 
 #include "Ifnity/Graphics/ifrhi.h"
 
+#ifdef _WIN32
+#include <wrl/client.h> //Handle COM objects.
+//D3D11
+#include <d3d11.h>
+#include <d3d11_1.h>
+#include <dxgi1_3.h>
+#include <dxgidebug.h>
 
+//D3D12
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#endif // _WIN32
 
 IFNITY_NAMESPACE
 
@@ -83,7 +94,7 @@ public:
 
 
 	//Factory method to create a window
-	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::OPENGL);
+	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::D3D11);
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.

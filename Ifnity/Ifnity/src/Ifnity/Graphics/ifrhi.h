@@ -7,6 +7,13 @@
 
 IFNITY_NAMESPACE namespace rhi {
 
+
+    static bool IsNvDeviceID(UINT id)
+    {
+        return id == 0x10DE;
+    }
+
+
     enum class GraphicsAPI : uint8_t
     {
         OPENGL,

@@ -1,6 +1,6 @@
 #include "GraphicsDeviceManager.h"
 #include "Platform\Windows\DeviceOpengl.h"
-
+#include "Platform\Windows\DeviceD3D11.h"
 
 #ifdef _WINDOWS
 #include <ShellScalingApi.h>
@@ -18,7 +18,7 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 #endif
 	m_Props = props;
 
-	if(!CreateInstance())
+	if ( !CreateInstance() )
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to create Window Instance");
 		return false;
@@ -26,30 +26,31 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 
 	// GLFW Configuration initialization //GLFW NO API YET SPECIFIED by default GLFW uses OPENGL API. 
 	glfwSetErrorCallback([](int error, const char* description)
-	{
-		IFNITY_LOG(LogApp, ERROR, "GLFW Error ({0}): {1}", error, description);
-	});
-	
+		{
+			IFNITY_LOG(LogApp, ERROR, "GLFW Error ({0}): {1}", error, description);
+		});
+
 	glfwDefaultWindowHints(); // optional, the current window hints are already the default
 
 	//GLFW by default format 
 	//TODO: Add more formats to the  window creatin with glfwWindowHint and probably more configurations here
 
-	if(!ConfigureSpecificHintsGLFW()){
+	if ( !ConfigureSpecificHintsGLFW() )
+	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to configure GLFW hints");
 		return false;
 	}
-	
+
 	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);   // Ignored for fullscreen
 
 	m_Window = glfwCreateWindow(props.Width, props.Height, props.Title.c_str(), nullptr, nullptr);
 
 	//Check if the window was created correctly
-	if(!m_Window)
+	if ( !m_Window )
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to create GLFW window");
 		glfwTerminate();
-		return false ;
+		return false;
 	}
 
 	//Configure differente properties of check if window is fullscreen, maximized, minimized, etc. 
@@ -65,7 +66,7 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 
 
 	// Set the swapchain and get the surface for API selected. 
-	if(!CreateAPISurface())
+	if ( !CreateAPISurface() )
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to create API Surface");
 		return false;
@@ -83,16 +84,16 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 bool GraphicsDeviceManager::CreateInstance()
 {
 	// Initialize the library
-	if(m_InstanceCreated)
+	if ( m_InstanceCreated )
 	{
 		IFNITY_LOG(LogApp, TRACE, "Window Instance already created");
 		return true;
 	}
 	// Check if GLFW can be initialized.
-	if(!glfwInit())
+	if ( !glfwInit() )
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to initialize GLFW");
-		return false ;
+		return false;
 	}
 
 	m_InstanceCreated = InitInternalInstance();
@@ -101,7 +102,8 @@ bool GraphicsDeviceManager::CreateInstance()
 void GraphicsDeviceManager::Shutdown()
 {
 	// Chek if Shutdown its provide when API is initialized
-	if(m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED){
+	if ( m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED )
+	{
 
 		IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
 		glfwDestroyWindow(m_Window);
@@ -116,8 +118,8 @@ void GraphicsDeviceManager::Shutdown()
 	{
 		IFNITY_LOG(LogApp, ERROR, "Graphics Device Manager is not initialized");
 	}
-	
-	
+
+
 
 }
 // Create Window 
@@ -125,31 +127,36 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 {
 
 	//Check the API type
-	switch(api)
+	switch ( api )
 	{
 	case rhi::GraphicsAPI::OPENGL:
-		{
-			return BuildWindow<DeviceOpengl>();
-			
-		} // Fin del ámbito para OPENGL
-		break;
+	{
+		return BuildWindow<DeviceOpengl>();
+
+	} // Fin del ámbito para OPENGL
+	break;
+
+	case rhi::GraphicsAPI::D3D11:
+	{
+		return BuildWindow<DeviceD3D11>();
+	} // Fin del ámbito para D3D11
 	case rhi::GraphicsAPI::D3D12:
-		{
+	{
 
 
-		} // Fin del ámbito para D3D12
-		break;
+	} // Fin del ámbito para D3D12
+	break;
 	case rhi::GraphicsAPI::VULKAN:
-		{
-		
-		}
-		break; 
+	{
 
-		
+	}
+	break;
 
-		default:
-			 return BuildWindow<DeviceOpengl>();
-		}
+
+
+	default:
+		return BuildWindow<DeviceOpengl>();
+	}
 }
 
 void GraphicsDeviceManager::SetGLFWCallbacks()
@@ -180,7 +187,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-			switch (action)
+			switch ( action )
 			{
 			case GLFW_PRESS:
 				//data.GLFWEventSourceBus.triggerKeyPressed(key, 0);
