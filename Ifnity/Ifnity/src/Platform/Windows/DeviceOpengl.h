@@ -18,8 +18,8 @@ public:
 
 	inline unsigned int GetWidth() const override { return m_Props.Width; }
 	inline unsigned int GetHeight() const override { return m_Props.Height; }
-
-	
+	static void DemoTriangle(const char* sv, const char* sp);
+	void RenderDemo(int w, int h) const override;
 
 
 protected:
@@ -29,9 +29,11 @@ protected:
 	bool InitInternalInstance() override { return true; } //TODO: Implement this function in .cpp file.
 	bool ConfigureSpecificHintsGLFW() const  override;
 	bool CreateAPISurface() override;
+	
 private:
 	void Init();
 	void InitializeGLAD();
+	
 	std::string GetOpenGLInfo();
 
 private:

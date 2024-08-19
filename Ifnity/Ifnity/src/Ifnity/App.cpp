@@ -2,11 +2,12 @@
 
 #include "App.h"
 #include "GraphicsDeviceManager.h"
-#include "Ifnity/Layers/ExampleLayer.h" //TODO BORRAR , LO SUYO SU CPP CORRESPONDIENTE
+#include "Ifnity/Layers/ExampleLayer.h" //TODO: BORRAR , your own cpp 
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include <GLFW/glfw3.h>
 #include <glad\glad.h>
+#include <Platform/Windows/DeviceOpengl.h>
 
 namespace IFNITY {
 
@@ -114,55 +115,27 @@ void main()
 	{
 		InitiateEventBusLayers();
 
-		const GLuint shaderVertex = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(shaderVertex, 1, &shaderCodeVertex, nullptr);
-		glCompileShader(shaderVertex);
+		// TODO: CHange this logic, now is usefull to debug  this should be in a layer. 
+		if ( m_Window->GetGraphicsAPI() == rhi::GraphicsAPI::OPENGL )
+		{
+			DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
-		const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(shaderFragment, 1, &shaderCodeFragment, nullptr);
-		glCompileShader(shaderFragment);
-
-		const GLuint program = glCreateProgram();
-		glAttachShader(program, shaderVertex);
-		glAttachShader(program, shaderFragment);
-
-		glLinkProgram(program);
-		glUseProgram(program);
-
-		GLuint vao;
-		glCreateVertexArrays(1, &vao);
-		glBindVertexArray(vao);
-
-		//// Cargar y crear el programa de shader
-		// GLuint shaderProgram =
-		// CreateShaderProgram("D:\\IFNITY-ENGINE\\Ifnity\\Ifnity\\shaders_main_vs.bin",
-		// "D:\\IFNITY-ENGINE\\Ifnity\\Ifnity\\shaders_main_ps.bin"); if(shaderProgram
-		// == 0)
-		//{
-		//	std::cerr << "Error al crear el programa de shader" << std::endl;
-		//
-		// }
-
-		//// Usar el programa de shader
-		// glUseProgram(shaderProgram);
-
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		}
 		while ( isRunning() )
 		{
 			// Iniciar una sección de depuración
-			glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Frame Start");
-			glViewport(0, 0, m_Window->GetWidth(), m_Window->GetHeight());
-			glClear(GL_COLOR_BUFFER_BIT);
-			glDrawArrays(GL_TRIANGLES, 0, 3);
-			glPopDebugGroup();
+			if ( m_Window->GetGraphicsAPI() == rhi::GraphicsAPI::OPENGL )
+			{
+				m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
+			}
 			RenderImGuiFrame();
 
 			for ( Layer* layer : m_LayerStack )
 			{
 				layer->OnUpdate();
 			}
-
+			//Device  OnUpdate
 			m_Window->OnUpdate();
 		}
 
@@ -182,7 +155,7 @@ void main()
 		overlay->OnAttach();
 	}
 
-	void App::InitiateEventBusLayers() 
+	void App::InitiateEventBusLayers()
 	{
 		for ( Layer* layer : m_LayerStack )
 		{
@@ -199,8 +172,7 @@ void main()
 		{
 		case IFNITY::rhi::GraphicsAPI::OPENGL:
 
-			ImGui_ImplOpenGL3_Init(
-				"#version 450"); // TODO: Change version 450 to a variable that can be
+			ImGui_ImplOpenGL3_Init("#version 450"); // TODO: Change version 450 to a variable that can be
 			// changed in the future.
 			IFNITY_LOG(LogCore, TRACE, "Imgui API is set to OpenGL");
 			break;

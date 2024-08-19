@@ -87,6 +87,7 @@ public:
 
 	//Base Methods virtual 
 	virtual void Shutdown();
+	virtual void RenderDemo(int w, int h) const; // Its a function to do test fast, its not part of solution now. 
 	//Get GLFWEventSourceBus to connect Listeners
 	GLFWEventSource* GetGLFWEventSource()  { return &m_Props.GLFWEventSourceBus; }
 	

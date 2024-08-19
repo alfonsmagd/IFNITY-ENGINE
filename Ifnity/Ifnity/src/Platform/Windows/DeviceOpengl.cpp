@@ -93,6 +93,41 @@ void DeviceOpengl::InitializeGLAD()
 	}
 }
 
+// sp is Shader Fragment. 
+void DeviceOpengl::DemoTriangle(const char* sv, const char* sp)
+{
+	const GLuint shaderVertex = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(shaderVertex, 1, &sv, nullptr);
+	glCompileShader(shaderVertex);
+
+	const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(shaderFragment, 1, &sp, nullptr);
+	glCompileShader(shaderFragment);
+
+	const GLuint program = glCreateProgram();
+	glAttachShader(program, shaderVertex);
+	glAttachShader(program, shaderFragment);
+
+	glLinkProgram(program);
+	glUseProgram(program);
+
+	GLuint vao;
+	glCreateVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+void DeviceOpengl::RenderDemo(int w,int h) const
+{
+
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Frame Start");
+	glViewport(0, 0,w , h);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glPopDebugGroup();
+}
+
+
 std::string DeviceOpengl::GetOpenGLInfo()
 {
 

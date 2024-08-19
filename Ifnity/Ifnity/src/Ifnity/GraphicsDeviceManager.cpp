@@ -122,6 +122,9 @@ void GraphicsDeviceManager::Shutdown()
 
 
 }
+
+void GraphicsDeviceManager::RenderDemo(int w, int h) const
+{}
 // Create Window 
 GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 {
