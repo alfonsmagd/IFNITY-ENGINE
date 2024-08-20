@@ -90,8 +90,8 @@ public:
 
 		// Establecer el contexto de ImGui en la aplicación principal
 		//ImGui::SetCurrentContext(context);
-		//PushLayer(new   IFNITY::NVML_Monitor());
-		//PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
+		PushLayer(new   IFNITY::NVML_Monitor());
+		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
 		
 		
 

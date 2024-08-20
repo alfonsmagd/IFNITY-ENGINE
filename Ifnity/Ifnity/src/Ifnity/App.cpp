@@ -5,9 +5,11 @@
 #include "Ifnity/Layers/ExampleLayer.h" //TODO: BORRAR , your own cpp 
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
+#include "Platform/ImguiRender/ImguiD3D11Render.h"
 #include <GLFW/glfw3.h>
 #include <glad\glad.h>
 #include <Platform/Windows/DeviceOpengl.h>
+#include <Platform/Windows/DeviceD3D11.h>
 
 
 namespace IFNITY {
@@ -98,6 +100,9 @@ void main()
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D11] = []()
 			{
+				ImGui_ImplDX11_NewFrame();
+				ImGui::NewFrame();
+				ImPlot::CreateContext();
 				
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []() {};
@@ -127,19 +132,27 @@ void main()
 		}
 		while ( isRunning() )
 		{
-			// Iniciar una sección de depuración
+			//
+			auto d3d11Manager = dynamic_cast<DeviceD3D11*>(m_Window.get());
+			if ( d3d11Manager )
+			{
+				d3d11Manager->ResizeSwapChain();
+			}
 
 			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
-
+			
 			// Render ImGui Frame
 			RenderImGuiFrame();
-			//ImGui::ShowDemoWindow();
+			ImGui::ShowDemoWindow();
 			//Layer Renders. 
 			for ( Layer* layer : m_LayerStack )
 			{
 				layer->OnUpdate();
 			}
+			ImGui::Render();
+			//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 			//Device  OnUpdate
 			m_Window->OnUpdate();
 		}
@@ -172,6 +185,7 @@ void main()
 
 	void App::SetImguiAPI(const rhi::GraphicsAPI& api) const
 	{
+		DeviceD3D11* d3d11Manager = nullptr; //
 
 		switch ( api )
 		{
@@ -182,6 +196,18 @@ void main()
 			IFNITY_LOG(LogCore, TRACE, "Imgui API is set to OpenGL");
 			break;
 		case IFNITY::rhi::GraphicsAPI::D3D11:
+			 d3d11Manager = dynamic_cast<DeviceD3D11*>(m_Window.get());
+			if ( d3d11Manager )
+			{
+				ImGui_ImplDX11_Init(d3d11Manager->GetDevice(), d3d11Manager->GetDeviceContext());
+				IFNITY_LOG(LogApp, TRACE, "Imgui API is set to D3D11");
+			}
+			else
+			{
+				IFNITY_LOG(LogApp, ERROR, "Imgui API istn initialize in IMGUI d3d1manner imposible to cast.");
+
+			}
+			
 			break;
 		case IFNITY::rhi::GraphicsAPI::D3D12:
 			break;
@@ -201,8 +227,8 @@ void main()
 
 		io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 		IFNITY_LOG(LogApp, INFO,
-			"Width: " + std::to_string(app.GetWindow().GetWidth()) +
-			" Height: " + std::to_string(app.GetWindow().GetHeight()));
+			"Width imgui : " + std::to_string(app.GetWindow().GetWidth()) +
+			" Height imgui : " + std::to_string(app.GetWindow().GetHeight()));
 
 		float time = (float)glfwGetTime();
 

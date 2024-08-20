@@ -47,8 +47,10 @@ public:
 
 	inline unsigned int GetWidth() const override { return m_Props.Width; }
 	inline unsigned int GetHeight() const override { return m_Props.Height; }
-
+	void ResizeSwapChain(); //change to private
 	void RenderDemo(int w, int h) const override;
+	[[nodiscard]] ID3D11Device* GetDevice() const { return m_Device.Get(); }
+	[[nodiscard]] ID3D11DeviceContext* GetDeviceContext() const { return m_ImmediateContext.Get(); }
 
 protected:
 	// Window attributes
@@ -68,7 +70,9 @@ private:
 	bool CreateSwapChainResources();
 	bool CreateRTV(const ComPtr<ID3D11Texture2D>& buffer);
 	void DestroySwapChainResources();
-	void ResizeSwapChain();
+	
+
+	
 };
 
 IFNITY_END_NAMESPACE

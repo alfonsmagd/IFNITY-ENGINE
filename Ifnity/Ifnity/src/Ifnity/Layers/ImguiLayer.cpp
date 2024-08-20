@@ -80,8 +80,8 @@ void ImguiLayer::OnUpdate()
 	//ImGui::Text("Random number: %d", random);
 	//m_monitor.display();
 	////ImGui::ShowDebugLogWindow();
-	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	//ImGui::Render();
+	//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 void ImguiLayer::onEventReceived(const WindowResize& event)
 {
