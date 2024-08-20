@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "App.h"
-#include "GraphicsDeviceManager.h"
+#include "GraphicsDeviceManager.hpp"
 #include "Ifnity/Layers/ExampleLayer.h" //TODO: BORRAR , your own cpp 
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
@@ -58,7 +58,7 @@ void main()
 		WindowData props;
 
 		m_Window = std::unique_ptr<GraphicsDeviceManager>(
-			GraphicsDeviceManager::Create(rhi::GraphicsAPI::OPENGL));
+			GraphicsDeviceManager::Create(rhi::GraphicsAPI::D3D11));
 
 		m_Window->CreateWindowSurface(props);
 		// Intialize the EventListenerControler
@@ -124,13 +124,14 @@ void main()
 		while ( isRunning() )
 		{
 			// Iniciar una sección de depuración
-			if ( m_Window->GetGraphicsAPI() == rhi::GraphicsAPI::OPENGL )
-			{
-				m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
+			
+			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
-			}
+			
+			// Render ImGui Frame
 			RenderImGuiFrame();
 
+			//Layer Renders. 
 			for ( Layer* layer : m_LayerStack )
 			{
 				layer->OnUpdate();

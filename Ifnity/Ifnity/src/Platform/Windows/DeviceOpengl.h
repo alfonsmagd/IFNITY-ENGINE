@@ -1,5 +1,5 @@
 #pragma once
-#include "Ifnity\GraphicsDeviceManager.h"
+#include "Ifnity\GraphicsDeviceManager.hpp"
 #include <Ifnity\Event\WindowEvent.h>
 #include <glad\glad.h>
 
@@ -28,7 +28,7 @@ protected:
 	bool IsVSync() const override;
 	bool InitInternalInstance() override { return true; } //TODO: Implement this function in .cpp file.
 	bool ConfigureSpecificHintsGLFW() const  override;
-	bool CreateAPISurface() override;
+	bool InitializeDeviceAndContext() override;
 	
 private:
 	void Init();

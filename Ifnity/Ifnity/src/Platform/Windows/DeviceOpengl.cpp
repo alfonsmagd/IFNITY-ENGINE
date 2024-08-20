@@ -46,11 +46,11 @@ bool DeviceOpengl::ConfigureSpecificHintsGLFW() const
 	return true;
 }
 
-bool DeviceOpengl::CreateAPISurface()
+bool DeviceOpengl::InitializeDeviceAndContext()
 {
 	if(m_Window == nullptr)
 	{
-		IFNITY_LOG(LogApp, ERROR, "Failed to get Window in OPENGL CreateAPISurface()");
+		IFNITY_LOG(LogApp, ERROR, "Failed to get Window in OPENGL InitializeDeviceAndContext()");
 		glfwTerminate();
 		return false;
 	}

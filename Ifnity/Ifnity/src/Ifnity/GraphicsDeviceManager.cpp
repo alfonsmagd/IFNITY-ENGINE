@@ -1,4 +1,4 @@
-#include "GraphicsDeviceManager.h"
+#include "GraphicsDeviceManager.hpp"
 #include "Platform\Windows\DeviceOpengl.h"
 #include "Platform\Windows\DeviceD3D11.h"
 
@@ -8,6 +8,10 @@
 #endif
 
 IFNITY_NAMESPACE
+
+
+// Definición del miembro estático
+rhi::GraphicsAPI GraphicsDeviceManager::m_API = rhi::GraphicsAPI::OPENGL;
 
 
 bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
@@ -60,13 +64,14 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 
 	//SET VSYCN .... IN THE FUTRE TODO
 
+	HWND hwnd = glfwGetWin32Window(m_Window);
 
 	// Set GLFW callbacks
 	SetGLFWCallbacks();
 
 
 	// Set the swapchain and get the surface for API selected. 
-	if ( !CreateAPISurface() )
+	if ( !InitializeDeviceAndContext() )
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to create API Surface");
 		return false;
@@ -128,12 +133,13 @@ void GraphicsDeviceManager::RenderDemo(int w, int h) const
 // Create Window 
 GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 {
-
+	GraphicsDeviceManager::m_API = api;
 	//Check the API type
 	switch ( api )
 	{
 	case rhi::GraphicsAPI::OPENGL:
 	{
+		
 		return BuildWindow<DeviceOpengl>();
 
 	} // Fin del ámbito para OPENGL

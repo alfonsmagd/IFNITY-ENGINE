@@ -100,7 +100,7 @@ public:
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
 	virtual bool InitInternalInstance() = 0;
-	virtual bool CreateAPISurface() = 0;
+	virtual bool InitializeDeviceAndContext() = 0;
 	virtual bool ConfigureSpecificHintsGLFW()  const = 0;
 	// GraphicsDeviceManager attributes
 	virtual void SetVSync(bool enabled) = 0;
@@ -123,7 +123,7 @@ private:
 
 private:
 	
-	rhi::GraphicsAPI m_API{ rhi::GraphicsAPI::OPENGL }; // By default opengl is the api 
+	static rhi::GraphicsAPI m_API; // By default opengl is the api 
 	StateGraphicsDevice m_StateGraphicsDevice{ StateGraphicsDevice::NOT_INITIALIZED };
 };
 

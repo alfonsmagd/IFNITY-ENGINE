@@ -1,7 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include "Core.h"
-#include "GraphicsDeviceManager.h"
+#include "GraphicsDeviceManager.hpp"
 
 
 

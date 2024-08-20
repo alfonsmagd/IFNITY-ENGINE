@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "pch.h"
-#include "Ifnity/GraphicsDeviceManager.h"
+#include "Ifnity/GraphicsDeviceManager.hpp"
 
 
 
@@ -15,12 +15,14 @@ private:
 	// D3D11 ComPtr Objects
 	ComPtr<ID3D11Device> m_Device = nullptr;
 	ComPtr<ID3D11DeviceContext> m_ImmediateContext = nullptr;
-	ComPtr<IDXGIFactory1> m_DxgiFactory = nullptr;
-	ComPtr<IDXGISwapChain> m_SwapChain = nullptr;
+	ComPtr<IDXGIFactory2> m_DxgiFactory = nullptr;
+	ComPtr<IDXGISwapChain1> m_SwapChain = nullptr;
 	ComPtr<ID3D11RenderTargetView> m_RenderTarget = nullptr;
 	ComPtr<IDXGIAdapter> m_DxgiAdapter = nullptr;
-	DXGI_SWAP_CHAIN_DESC m_SwapChainDesc{};
+	DXGI_SWAP_CHAIN_DESC1 m_SwapChainDesc{};
 	HWND m_hWnd = nullptr;
+
+	ComPtr<ID3D11Texture2D> m_backBuffer = nullptr;
 
 
 	std::string m_RendererString;
@@ -46,20 +48,27 @@ public:
 	inline unsigned int GetWidth() const override { return m_Props.Width; }
 	inline unsigned int GetHeight() const override { return m_Props.Height; }
 
+	void RenderDemo(int w, int h) const override;
+
 protected:
 	// Window attributes
 	void SetVSync(bool enabled) override;
 	bool IsVSync() const override;
 	bool InitInternalInstance() override; //TODO: Implement this function in .cpp file.
 	bool ConfigureSpecificHintsGLFW() const  override;
-	bool CreateAPISurface() override;
+	bool InitializeDeviceAndContext() override;
+	
 
 
 private:
 	void Init();
 	void InitializeD3D11();
 	std::string GetD3D11Info();
-
+	bool CreateSwapChain();
+	bool CreateSwapChainResources();
+	bool CreateRTV(const ComPtr<ID3D11Texture2D>& buffer);
+	void DestroySwapChainResources();
+	void ResizeSwapChain();
 };
 
 IFNITY_END_NAMESPACE
