@@ -9,7 +9,7 @@ IFNITY_NAMESPACE
 #pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "dxguid.lib")
 
-
+using namespace DirectX;
 DeviceD3D11::~DeviceD3D11()
 {
 	m_ImmediateContext->Flush();
@@ -39,7 +39,7 @@ void DeviceD3D11::RenderDemo(int w, int h) const
 	vp.TopLeftX = 0.0f;
 	vp.TopLeftY = 0.0f;
 
-	m_ImmediateContext->ClearRenderTargetView(m_RenderTarget.Get(), DirectX::Colors::CornflowerBlue); // Clear the back buffer to a solid color
+	m_ImmediateContext->ClearRenderTargetView(m_RenderTarget.Get(), Colors::Azure); // Clear the back buffer to a solid color
 	m_ImmediateContext->RSSetViewports(1, &vp); // Set the viewport 
 	m_ImmediateContext->OMSetRenderTargets(1, m_RenderTarget.GetAddressOf(), nullptr); // depth stencil view not used nullptr.
 

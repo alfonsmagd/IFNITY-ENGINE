@@ -9,6 +9,7 @@
 #include <glad\glad.h>
 #include <Platform/Windows/DeviceOpengl.h>
 
+
 namespace IFNITY {
 
 	static const char* shaderCodeVertex = R"(
@@ -95,7 +96,10 @@ void main()
 				ImGui::NewFrame();
 				ImPlot::CreateContext();
 			};
-		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D11] = []() {};
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D11] = []()
+			{
+				
+			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []() {};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []() {};
 	}
@@ -124,13 +128,13 @@ void main()
 		while ( isRunning() )
 		{
 			// Iniciar una sección de depuración
-			
+
 			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
-			
+
 			// Render ImGui Frame
 			RenderImGuiFrame();
-
+			//ImGui::ShowDemoWindow();
 			//Layer Renders. 
 			for ( Layer* layer : m_LayerStack )
 			{
@@ -207,6 +211,7 @@ void main()
 		// Render ImguiFrame
 		auto it = m_ImguiRenderFunctionMap.find(m_Window->GetGraphicsAPI());
 
+		//Todo change this because its not optimal , better a function pointer and setting and the initialize .
 		if ( it != m_ImguiRenderFunctionMap.end() )
 		{
 			it->second();

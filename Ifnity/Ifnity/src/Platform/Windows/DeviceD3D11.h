@@ -54,7 +54,7 @@ protected:
 	// Window attributes
 	void SetVSync(bool enabled) override;
 	bool IsVSync() const override;
-	bool InitInternalInstance() override; //TODO: Implement this function in .cpp file.
+	bool InitInternalInstance() override; 
 	bool ConfigureSpecificHintsGLFW() const  override;
 	bool InitializeDeviceAndContext() override;
 	
