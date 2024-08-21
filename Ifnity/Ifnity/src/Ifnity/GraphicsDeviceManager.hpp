@@ -83,7 +83,8 @@ public:
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowData& props);
 	bool CreateInstance();
-	rhi::GraphicsAPI GetGraphicsAPI() const { return m_API; }
+	// Método estático para obtener la API gráfica
+	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }
 
 	//Base Methods virtual 
 	virtual void Shutdown();
@@ -105,6 +106,7 @@ protected:
 	// GraphicsDeviceManager attributes
 	virtual void SetVSync(bool enabled) = 0;
 	virtual bool IsVSync() const = 0;
+	virtual void ResizeSwapChain() = 0;
 
 protected:
 	WindowData m_Props;
@@ -123,7 +125,7 @@ private:
 
 private:
 	
-	static rhi::GraphicsAPI m_API; // By default opengl is the api 
+	static rhi::GraphicsAPI g_API; // By default opengl is the api 
 	StateGraphicsDevice m_StateGraphicsDevice{ StateGraphicsDevice::NOT_INITIALIZED };
 };
 

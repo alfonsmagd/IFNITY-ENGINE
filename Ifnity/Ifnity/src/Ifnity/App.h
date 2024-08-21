@@ -33,6 +33,7 @@ public:
 	
 	inline GraphicsDeviceManager& GetWindow() { return *m_Window; }
 	inline static App& GetApp()				  { return *s_Instance; }
+	inline rhi::GraphicsAPI GetGraphicsAPI() const { return m_graphicsAPI; }
 	
 
 
@@ -64,6 +65,7 @@ private:
 	bool isRunning() const;
 
 	float m_Time = 0;
+	rhi::GraphicsAPI m_graphicsAPI;
 };
 
 App* CreateApp();

@@ -11,7 +11,8 @@ IFNITY_NAMESPACE
 
 
 // Definición del miembro estático
-rhi::GraphicsAPI GraphicsDeviceManager::m_API = rhi::GraphicsAPI::OPENGL;
+rhi::GraphicsAPI GraphicsDeviceManager::g_API = rhi::GraphicsAPI::OPENGL;
+
 
 
 bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
@@ -133,7 +134,7 @@ void GraphicsDeviceManager::RenderDemo(int w, int h) const
 // Create Window 
 GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 {
-	GraphicsDeviceManager::m_API = api;
+	GraphicsDeviceManager::g_API = api;
 	//Check the API type
 	switch ( api )
 	{
@@ -181,6 +182,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 			//data.GLFWEventSourceBus.triggerWindowResize(width, height);
 			data.GLFWEventSourceBus.triggerEvent<WindowResize>(width, height);
 
+			
 
 		});
 

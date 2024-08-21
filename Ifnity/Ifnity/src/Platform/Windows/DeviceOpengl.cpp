@@ -71,6 +71,9 @@ bool DeviceOpengl::InitializeDeviceAndContext()
 
 }
 
+void DeviceOpengl::ResizeSwapChain()
+{}
+
 //NOT USE ..
 void DeviceOpengl::Init()
 {

@@ -23,3 +23,7 @@
 #define IFNITY_NAMESPACE namespace IFNITY {
 #define IFNITY_END_NAMESPACE }
 
+
+#define IN      // This help you to understand that the variable is input in the function.
+#define OUT    // This help you to understand that the variable change in the function.
+

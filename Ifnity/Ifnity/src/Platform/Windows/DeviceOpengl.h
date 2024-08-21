@@ -29,7 +29,7 @@ protected:
 	bool InitInternalInstance() override { return true; } //TODO: Implement this function in .cpp file.
 	bool ConfigureSpecificHintsGLFW() const  override;
 	bool InitializeDeviceAndContext() override;
-	
+	void ResizeSwapChain() override;
 private:
 	void Init();
 	void InitializeGLAD();

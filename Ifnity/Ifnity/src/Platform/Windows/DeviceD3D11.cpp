@@ -30,6 +30,11 @@ void DeviceD3D11::OnUpdate()
 	//Swap the buffers
 	
 	glfwPollEvents();
+
+	// TODO: NOT DO THIS HERE, NOW ITS A TEST CODE SOLUTION, BUT ALL ITS NEED WHEN RESIZE EVENTS ITS TRIGGERED;
+	ResizeSwapChain();
+
+
 }
 
 void DeviceD3D11::RenderDemo(int w, int h) const
@@ -168,12 +173,12 @@ bool DeviceD3D11::CreateSwapChain()
 
 	// Create the swap chain
 	if ( FAILED(m_DxgiFactory->CreateSwapChainForHwnd(
-		m_Device.Get(),     // Device
-		m_hWnd,             // Window handle
-		&m_SwapChainDesc,   // Swap chain description
-		&fsSwapChainDesc,   // Fullscreen swap chain description
+		IN m_Device.Get(),     // Device
+		IN m_hWnd,             // Window handle
+		IN &m_SwapChainDesc,   // Swap chain description
+		IN &fsSwapChainDesc,   // Fullscreen swap chain description
 		nullptr,            // Restrict output to a single output
-		&m_SwapChain)) )	// Swap chain
+		OUT &m_SwapChain)) )	// Swap chain
 	{
 		IFNITY_LOG(LogCore, ERROR, " DXGI:Failed to create swap chain for HWND. D3D11");
 		return false;
@@ -194,7 +199,7 @@ bool DeviceD3D11::CreateSwapChain()
 bool DeviceD3D11::CreateSwapChainResources()
 {
 
-	if ( FAILED(m_SwapChain->GetBuffer(0, IID_PPV_ARGS(&m_backBuffer))) )
+	if ( FAILED(m_SwapChain->GetBuffer(0, OUT IID_PPV_ARGS(&m_backBuffer))) )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get swap chain buffer D3D11.");
 		return false;
@@ -213,13 +218,13 @@ bool DeviceD3D11::CreateSwapChainResources()
 	return true;
 }
 
-bool DeviceD3D11::CreateRTV(const ComPtr<ID3D11Texture2D>& buffer)
+bool DeviceD3D11::CreateRTV(IN const ComPtr<ID3D11Texture2D>& buffer)
 {
 
 	if ( FAILED(m_Device->CreateRenderTargetView(
-		buffer.Get(),
+		IN buffer.Get(),
 		nullptr,
-		&m_RenderTarget)) )
+		OUT &m_RenderTarget)) )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create RTV  from back Buffer D3D11.");
 		return false;
@@ -244,7 +249,7 @@ void DeviceD3D11::ResizeSwapChain()
 		m_Props.Width,
 		m_Props.Height,
 		DXGI_FORMAT::DXGI_FORMAT_B8G8R8A8_UNORM,
-		0)) )
+		0)) )// NO flags
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to resize swap chain buffers D3D11.");
 		return;

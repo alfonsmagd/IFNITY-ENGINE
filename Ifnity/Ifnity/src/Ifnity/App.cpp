@@ -14,6 +14,10 @@
 
 namespace IFNITY {
 
+	
+
+
+
 	static const char* shaderCodeVertex = R"(
 
 #version 450
@@ -59,7 +63,7 @@ void main()
 		s_Instance = this;
 		// Create windows props
 		WindowData props;
-
+	
 		m_Window = std::unique_ptr<GraphicsDeviceManager>(
 			GraphicsDeviceManager::Create(rhi::GraphicsAPI::D3D11));
 
@@ -77,10 +81,11 @@ void main()
 		CONNECT_EVENT(ScrollMouseMove);
 		CONNECT_EVENT(MouseClick);
 
-		// Initialize ImGui
-
+		// Initialize ImGui and set m_graphicsAPI; 
 		InitializeImGui();
-		SetImguiAPI(m_Window->GetGraphicsAPI());
+		m_graphicsAPI = GraphicsDeviceManager::GetStaticGraphicsAPI();
+
+		SetImguiAPI(GraphicsDeviceManager::GetStaticGraphicsAPI());
 
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
@@ -125,19 +130,19 @@ void main()
 		InitiateEventBusLayers();
 
 		// TODO: CHange this logic, now is usefull to debug  this should be in a layer. 
-		if ( m_Window->GetGraphicsAPI() == rhi::GraphicsAPI::OPENGL )
+		if ( m_graphicsAPI == rhi::GraphicsAPI::OPENGL )
 		{
 			DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
 		}
 		while ( isRunning() )
 		{
-			//
-			auto d3d11Manager = dynamic_cast<DeviceD3D11*>(m_Window.get());
+			//if use D3D11 resize the swapchain this is in other place. 
+			/*auto d3d11Manager = dynamic_cast<DeviceD3D11*>(m_Window.get());
 			if ( d3d11Manager )
 			{
 				d3d11Manager->ResizeSwapChain();
-			}
+			}*/
 
 			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
@@ -150,10 +155,7 @@ void main()
 			{
 				layer->OnUpdate();
 			}
-			ImGui::Render();
-			//ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-			//Device  OnUpdate
+			
 			m_Window->OnUpdate();
 		}
 
@@ -185,7 +187,7 @@ void main()
 
 	void App::SetImguiAPI(const rhi::GraphicsAPI& api) const
 	{
-		DeviceD3D11* d3d11Manager = nullptr; //
+		DeviceD3D11* d3d11Manager; //
 
 		switch ( api )
 		{
@@ -235,7 +237,7 @@ void main()
 		io.DeltaTime = m_Time > 0.0 ? (float)(time - m_Time) : (float)(1.0f / 60.0f);
 
 		// Render ImguiFrame
-		auto it = m_ImguiRenderFunctionMap.find(m_Window->GetGraphicsAPI());
+		auto it = m_ImguiRenderFunctionMap.find(m_graphicsAPI);
 
 		//Todo change this because its not optimal , better a function pointer and setting and the initialize .
 		if ( it != m_ImguiRenderFunctionMap.end() )

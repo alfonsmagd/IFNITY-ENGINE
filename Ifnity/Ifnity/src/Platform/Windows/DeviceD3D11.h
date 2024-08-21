@@ -47,7 +47,7 @@ public:
 
 	inline unsigned int GetWidth() const override { return m_Props.Width; }
 	inline unsigned int GetHeight() const override { return m_Props.Height; }
-	void ResizeSwapChain(); //change to private
+	 //change to private
 	void RenderDemo(int w, int h) const override;
 	[[nodiscard]] ID3D11Device* GetDevice() const { return m_Device.Get(); }
 	[[nodiscard]] ID3D11DeviceContext* GetDeviceContext() const { return m_ImmediateContext.Get(); }
@@ -59,7 +59,7 @@ protected:
 	bool InitInternalInstance() override; 
 	bool ConfigureSpecificHintsGLFW() const  override;
 	bool InitializeDeviceAndContext() override;
-	
+	void ResizeSwapChain() override;
 
 
 private:
@@ -68,7 +68,7 @@ private:
 	std::string GetD3D11Info();
 	bool CreateSwapChain();
 	bool CreateSwapChainResources();
-	bool CreateRTV(const ComPtr<ID3D11Texture2D>& buffer);
+	bool CreateRTV(IN const ComPtr<ID3D11Texture2D>& buffer);
 	void DestroySwapChainResources();
 	
 
