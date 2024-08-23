@@ -46,11 +46,11 @@ bool DeviceOpengl::ConfigureSpecificHintsGLFW() const
 	return true;
 }
 
-bool DeviceOpengl::CreateAPISurface()
+bool DeviceOpengl::InitializeDeviceAndContext()
 {
 	if(m_Window == nullptr)
 	{
-		IFNITY_LOG(LogApp, ERROR, "Failed to get Window in OPENGL CreateAPISurface()");
+		IFNITY_LOG(LogApp, ERROR, "Failed to get Window in OPENGL InitializeDeviceAndContext()");
 		glfwTerminate();
 		return false;
 	}
@@ -70,6 +70,9 @@ bool DeviceOpengl::CreateAPISurface()
 	
 
 }
+
+void DeviceOpengl::ResizeSwapChain()
+{}
 
 //NOT USE ..
 void DeviceOpengl::Init()
@@ -92,6 +95,41 @@ void DeviceOpengl::InitializeGLAD()
 		m_IsNvidia = (std::string(reinterpret_cast<const char*>(vendor)).find("NVIDIA") != std::string::npos);
 	}
 }
+
+// sp is Shader Fragment. 
+void DeviceOpengl::DemoTriangle(const char* sv, const char* sp)
+{
+	const GLuint shaderVertex = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(shaderVertex, 1, &sv, nullptr);
+	glCompileShader(shaderVertex);
+
+	const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(shaderFragment, 1, &sp, nullptr);
+	glCompileShader(shaderFragment);
+
+	const GLuint program = glCreateProgram();
+	glAttachShader(program, shaderVertex);
+	glAttachShader(program, shaderFragment);
+
+	glLinkProgram(program);
+	glUseProgram(program);
+
+	GLuint vao;
+	glCreateVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+void DeviceOpengl::RenderDemo(int w,int h) const
+{
+
+	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Frame Start");
+	glViewport(0, 0,w , h);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glPopDebugGroup();
+}
+
 
 std::string DeviceOpengl::GetOpenGLInfo()
 {

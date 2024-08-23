@@ -15,7 +15,18 @@
 
 #include "Ifnity/Graphics/ifrhi.h"
 
+#ifdef _WIN32
+#include <wrl/client.h> //Handle COM objects.
+//D3D11
+#include <d3d11.h>
+#include <d3d11_1.h>
+#include <dxgi1_3.h>
+#include <dxgidebug.h>
 
+//D3D12
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#endif // _WIN32
 
 IFNITY_NAMESPACE
 
@@ -72,10 +83,12 @@ public:
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowData& props);
 	bool CreateInstance();
-
+	// Método estático para obtener la API gráfica
+	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }
 
 	//Base Methods virtual 
 	virtual void Shutdown();
+	virtual void RenderDemo(int w, int h) const; // Its a function to do test fast, its not part of solution now. 
 	//Get GLFWEventSourceBus to connect Listeners
 	GLFWEventSource* GetGLFWEventSource()  { return &m_Props.GLFWEventSourceBus; }
 	
@@ -83,16 +96,17 @@ public:
 
 
 	//Factory method to create a window
-	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::OPENGL);
+	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::D3D11);
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
 	virtual bool InitInternalInstance() = 0;
-	virtual bool CreateAPISurface() = 0;
+	virtual bool InitializeDeviceAndContext() = 0;
 	virtual bool ConfigureSpecificHintsGLFW()  const = 0;
 	// GraphicsDeviceManager attributes
 	virtual void SetVSync(bool enabled) = 0;
 	virtual bool IsVSync() const = 0;
+	virtual void ResizeSwapChain() = 0;
 
 protected:
 	WindowData m_Props;
@@ -111,7 +125,7 @@ private:
 
 private:
 	
-	rhi::GraphicsAPI m_API{ rhi::GraphicsAPI::OPENGL }; // By default opengl is the api 
+	static rhi::GraphicsAPI g_API; // By default opengl is the api 
 	StateGraphicsDevice m_StateGraphicsDevice{ StateGraphicsDevice::NOT_INITIALIZED };
 };
 

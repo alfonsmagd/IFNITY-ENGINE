@@ -1,5 +1,5 @@
 #pragma once
-#include "Ifnity\GraphicsDeviceManager.h"
+#include "Ifnity\GraphicsDeviceManager.hpp"
 #include <Ifnity\Event\WindowEvent.h>
 #include <glad\glad.h>
 
@@ -18,8 +18,8 @@ public:
 
 	inline unsigned int GetWidth() const override { return m_Props.Width; }
 	inline unsigned int GetHeight() const override { return m_Props.Height; }
-
-	
+	static void DemoTriangle(const char* sv, const char* sp);
+	void RenderDemo(int w, int h) const override;
 
 
 protected:
@@ -28,10 +28,12 @@ protected:
 	bool IsVSync() const override;
 	bool InitInternalInstance() override { return true; } //TODO: Implement this function in .cpp file.
 	bool ConfigureSpecificHintsGLFW() const  override;
-	bool CreateAPISurface() override;
+	bool InitializeDeviceAndContext() override;
+	void ResizeSwapChain() override;
 private:
 	void Init();
 	void InitializeGLAD();
+	
 	std::string GetOpenGLInfo();
 
 private:
