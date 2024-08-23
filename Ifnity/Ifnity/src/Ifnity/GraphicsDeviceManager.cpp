@@ -23,7 +23,7 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 #endif
 	m_Props = props;
 
-	if ( !CreateInstance() )
+	if (!CreateInstance())
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to create Window Instance");
 		return false;
@@ -40,7 +40,7 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 	//GLFW by default format 
 	//TODO: Add more formats to the  window creatin with glfwWindowHint and probably more configurations here
 
-	if ( !ConfigureSpecificHintsGLFW() )
+	if (!ConfigureSpecificHintsGLFW())
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to configure GLFW hints");
 		return false;
@@ -51,7 +51,7 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 	m_Window = glfwCreateWindow(props.Width, props.Height, props.Title.c_str(), nullptr, nullptr);
 
 	//Check if the window was created correctly
-	if ( !m_Window )
+	if (!m_Window)
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to create GLFW window");
 		glfwTerminate();
@@ -72,7 +72,7 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 
 
 	// Set the swapchain and get the surface for API selected. 
-	if ( !InitializeDeviceAndContext() )
+	if (!InitializeDeviceAndContext())
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to create API Surface");
 		return false;
@@ -90,13 +90,13 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
 bool GraphicsDeviceManager::CreateInstance()
 {
 	// Initialize the library
-	if ( m_InstanceCreated )
+	if (m_InstanceCreated)
 	{
 		IFNITY_LOG(LogApp, TRACE, "Window Instance already created");
 		return true;
 	}
 	// Check if GLFW can be initialized.
-	if ( !glfwInit() )
+	if (!glfwInit())
 	{
 		IFNITY_LOG(LogApp, ERROR, "Failed to initialize GLFW");
 		return false;
@@ -108,7 +108,7 @@ bool GraphicsDeviceManager::CreateInstance()
 void GraphicsDeviceManager::Shutdown()
 {
 	// Chek if Shutdown its provide when API is initialized
-	if ( m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED )
+	if (m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED)
 	{
 
 		IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
@@ -136,11 +136,11 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 {
 	GraphicsDeviceManager::g_API = api;
 	//Check the API type
-	switch ( api )
+	switch (api)
 	{
 	case rhi::GraphicsAPI::OPENGL:
 	{
-		
+
 		return BuildWindow<DeviceOpengl>();
 
 	} // Fin del ámbito para OPENGL
@@ -182,7 +182,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 			//data.GLFWEventSourceBus.triggerWindowResize(width, height);
 			data.GLFWEventSourceBus.triggerEvent<WindowResize>(width, height);
 
-			
+
 
 		});
 
@@ -198,7 +198,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-			switch ( action )
+			switch (action)
 			{
 			case GLFW_PRESS:
 				//data.GLFWEventSourceBus.triggerKeyPressed(key, 0);
@@ -235,6 +235,12 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 		});
 
 
+}
+
+void GraphicsDeviceManager::InitImGui()
+{
+	//TODO: More verifications to initImgui, State 
+	InitializeGui();
 }
 
 IFNITY_END_NAMESPACE

@@ -92,8 +92,8 @@ public:
 	//Get GLFWEventSourceBus to connect Listeners
 	GLFWEventSource* GetGLFWEventSource()  { return &m_Props.GLFWEventSourceBus; }
 	
-	//Destructor for the WindowBuilder
-
+	
+	void InitImGui();
 
 	//Factory method to create a window
 	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::D3D11);
@@ -107,6 +107,8 @@ protected:
 	virtual void SetVSync(bool enabled) = 0;
 	virtual bool IsVSync() const = 0;
 	virtual void ResizeSwapChain() = 0;
+	virtual void InitializeGui() = 0;
+
 
 protected:
 	WindowData m_Props;

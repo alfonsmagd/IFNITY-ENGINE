@@ -46,14 +46,11 @@
 #define CHECK_NVML_SUPPORT(fun, field)                                                                                 \
   {                                                                                                                    \
     nvmlReturn_t res = fun;                                                                                            \
-    if(res != NVML_SUCCESS)                                                                                            \
+    if(res == NVML_SUCCESS)                                                                                            \
     {                                                                                                                  \
-      field.isSupported = false;                                                                                       \
+      field.isSupported = true;                                                                                       \
     }                                                                                                                  \
-    else                                                                                                               \
-    {                                                                                                                  \
-      field.isSupported = true;                                                                                        \
-    }                                                                                                                  \
+                                                                                                                  \
   }
 
 

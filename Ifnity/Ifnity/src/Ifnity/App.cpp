@@ -65,7 +65,7 @@ void main()
 		WindowData props;
 	
 		m_Window = std::unique_ptr<GraphicsDeviceManager>(
-			GraphicsDeviceManager::Create(rhi::GraphicsAPI::D3D11));
+			GraphicsDeviceManager::Create(rhi::GraphicsAPI::OPENGL));
 
 		m_Window->CreateWindowSurface(props);
 		// Intialize the EventListenerControler
@@ -85,7 +85,7 @@ void main()
 		InitializeImGui();
 		m_graphicsAPI = GraphicsDeviceManager::GetStaticGraphicsAPI();
 
-		SetImguiAPI(GraphicsDeviceManager::GetStaticGraphicsAPI());
+		SetImguiAPI();
 
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
@@ -96,7 +96,7 @@ void main()
 		// Classic version  1.87 see IMGUI_DISABLE_OBSOLETE_KEYIO in new version
 		//  not necessary intialization maps for keys.
 		// io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
-
+		//TODO: Move this in Gharpics Device Manager. 
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::OPENGL] = []()
 			{
 				ImGui_ImplOpenGL3_NewFrame();
@@ -185,41 +185,11 @@ void main()
 
 	bool App::isRunning() const { return m_GLFWEventListener->getRunning(); }
 
-	void App::SetImguiAPI(const rhi::GraphicsAPI& api) const
+	void App::SetImguiAPI() const
 	{
-		DeviceD3D11* d3d11Manager; //
-
-		switch ( api )
-		{
-		case IFNITY::rhi::GraphicsAPI::OPENGL:
-
-			ImGui_ImplOpenGL3_Init("#version 450"); // TODO: Change version 450 to a variable that can be
-			// changed in the future.
-			IFNITY_LOG(LogCore, TRACE, "Imgui API is set to OpenGL");
-			break;
-		case IFNITY::rhi::GraphicsAPI::D3D11:
-			 d3d11Manager = dynamic_cast<DeviceD3D11*>(m_Window.get());
-			if ( d3d11Manager )
-			{
-				ImGui_ImplDX11_Init(d3d11Manager->GetDevice(), d3d11Manager->GetDeviceContext());
-				IFNITY_LOG(LogApp, TRACE, "Imgui API is set to D3D11");
-			}
-			else
-			{
-				IFNITY_LOG(LogApp, ERROR, "Imgui API istn initialize in IMGUI d3d1manner imposible to cast.");
-
-			}
-			
-			break;
-		case IFNITY::rhi::GraphicsAPI::D3D12:
-			break;
-		case IFNITY::rhi::GraphicsAPI::VULKAN:
-			break;
-		case IFNITY::rhi::GraphicsAPI::MAX_GRAPHICS_API:
-			break;
-		default:
-			break;
-		}
+		// If you use other different lib, api or framework to generate a window , you should change this.
+		m_Window->InitImGui();
+		
 	}
 
 	void App::RenderImGuiFrame() const

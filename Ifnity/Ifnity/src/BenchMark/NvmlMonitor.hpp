@@ -44,10 +44,12 @@ public:
     ~NvmlMonitor();
 
     template <typename T>
-    struct  IFNITY_API NVMLField
+    struct IFNITY_API NVMLField
     {
-        T    data;
+        T data;
         bool isSupported;
+
+        NVMLField() : data{}, isSupported{ false } {} // Constructor que inicializa explícitamente
 
         operator T& () { return data; }
         T& get() { return data; }

@@ -30,6 +30,7 @@ protected:
 	bool ConfigureSpecificHintsGLFW() const  override;
 	bool InitializeDeviceAndContext() override;
 	void ResizeSwapChain() override;
+	void InitializeGui() override;
 private:
 	void Init();
 	void InitializeGLAD();

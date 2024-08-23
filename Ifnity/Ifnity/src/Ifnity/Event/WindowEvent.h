@@ -40,7 +40,7 @@ namespace IFNITY {
 	/// <summary>
 	/// This class is an example of how 
 	/// </summary>
-	class GLFWEventListener: public WindowGroupListenerEvent
+	class IFNITY_API GLFWEventListener: public WindowGroupListenerEvent
 	{
 	public:
 		

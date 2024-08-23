@@ -29,7 +29,7 @@ public:
 
 	//Imgui manage functions.
 
-	void SetImguiAPI(const rhi::GraphicsAPI& api) const;
+	void SetImguiAPI() const;
 	
 	inline GraphicsDeviceManager& GetWindow() { return *m_Window; }
 	inline static App& GetApp()				  { return *s_Instance; }
