@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "DeviceOpengl.h"
+#include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include <glm\glm.hpp>
 
 
@@ -73,6 +74,13 @@ bool DeviceOpengl::InitializeDeviceAndContext()
 
 void DeviceOpengl::ResizeSwapChain()
 {}
+
+void DeviceOpengl::InitializeGui()
+{
+	ImGui_ImplOpenGL3_Init("#version 450"); // TODO: Change version 450 to a variable that can be
+	// changed in the future.
+	IFNITY_LOG(LogCore, TRACE, "Imgui API is set to OpenGL");
+}
 
 //NOT USE ..
 void DeviceOpengl::Init()

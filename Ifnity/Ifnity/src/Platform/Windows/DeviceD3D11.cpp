@@ -1,4 +1,5 @@
 #include "DeviceD3D11.h"
+#include "Platform/ImguiRender/ImguiD3D11Render.h"
 #include <DirectXColors.h> // TODO: All colors move in rhi namespace
 IFNITY_NAMESPACE
 
@@ -260,6 +261,12 @@ void DeviceD3D11::ResizeSwapChain()
 
 
 
+}
+
+void DeviceD3D11::InitializeGui()
+{
+	ImGui_ImplDX11_Init(m_Device.Get(),m_ImmediateContext.Get());
+	IFNITY_LOG(LogApp, TRACE, "Imgui API is set to D3D11");
 }
 
 

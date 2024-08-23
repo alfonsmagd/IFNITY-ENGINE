@@ -15,7 +15,7 @@
 
 IFNITY_NAMESPACE
 
-#define NVP_SUPPORTS_NVML   //TODO:: Propagate this to the CMakeLists.txt in source files. 
+
 
 
 #define SAMPLING_NUM 100       // Show 100 measurements
