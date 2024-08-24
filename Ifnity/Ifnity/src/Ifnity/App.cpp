@@ -65,13 +65,15 @@ void main()
 		WindowData props;
 	
 		m_Window = std::unique_ptr<GraphicsDeviceManager>(
-			GraphicsDeviceManager::Create(rhi::GraphicsAPI::OPENGL));
+			GraphicsDeviceManager::Create(rhi::GraphicsAPI::D3D11));
 
 		m_Window->CreateWindowSurface(props);
 		// Intialize the EventListenerControler
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
 
 		SetEventBus(m_Window->GetGLFWEventSource());
+
+		//events::connect<MouseMove>(*m_Window->GetGLFWEventSource(), *m_CameraEventListener);
 
 		CONNECT_EVENT(WindowResize);
 		CONNECT_EVENT(WindowClose);

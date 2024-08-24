@@ -5,7 +5,7 @@
 #include <Ifnity.h>
 
 
-
+using namespace IFNITY::rhi;
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
@@ -75,6 +75,90 @@ private:
 };
 
 
+
+class ImGuiTestLayer : public IFNITY::Layer
+{
+public:
+	ImGuiTestLayer() : Layer("ImGuiTest") {}
+	~ImGuiTestLayer() {}
+
+	void OnAttach() override
+	{
+		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
+	}
+
+	void OnUpdate() override
+	{
+		ImGuiContext* context = GetImGuiContext();
+		if (context == nullptr)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
+			return;
+		}
+		ImGui::SetCurrentContext(context);
+
+		MiVentana();
+		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
+	}
+	// Heredado vía Layer
+	void ConnectToEventBusImpl(void* bus) override
+	{
+		
+
+	}
+private:
+	// Una función que se llama al hacer clic en el botón
+	void AccionPorOpcion(int opcionSeleccionada) {
+
+		GraphicsAPI api = IFNITY::App::GetApp().GetGraphicsAPI();
+		switch (opcionSeleccionada) {
+		case 0:
+			// Acción para la opción 1
+			IFNITY_LOG(LogApp, INFO, "OPENGL");
+			
+
+			IFNITY::App::GetApp()
+				.SetGraphicsAPI(GraphicsAPI::OPENGL,api == GraphicsAPI::OPENGL);
+			break;
+		case 1:
+			// Acción para la opción 2
+			IFNITY_LOG(LogApp, INFO, "D3D11");
+			IFNITY::App::GetApp()
+				.SetGraphicsAPI(GraphicsAPI::D3D11, api == GraphicsAPI::D3D11);
+			break;
+		default:
+			IFNITY_LOG(LogApp, INFO, "No option ");
+			break;
+		}
+	}
+
+	void MiVentana() {
+		static int opcionSeleccionada = 0;
+		const char* opciones[] = { "Optionn 1", "Option 2"};
+
+		ImGui::Begin("Mi Ventana");  // Comienza la creación de la ventana
+
+		// Combo box con las opciones
+		if (ImGui::Combo("Chouse option ", &opcionSeleccionada, opciones, IM_ARRAYSIZE(opciones))) {
+			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
+		}
+
+		// Botón que ejecuta la función cuando se hace clic
+		if (ImGui::Button("Ejecutar accin")) {
+			AccionPorOpcion(opcionSeleccionada);
+		}
+
+		ImGui::End();  // Termina la creación de la ventana
+	}
+
+
+
+
+
+
+	
+};
+
 class Source: public IFNITY::App
 {
 public:
@@ -91,6 +175,7 @@ public:
 		// Establecer el contexto de ImGui en la aplicación principal
 		//ImGui::SetCurrentContext(context);
 		PushLayer(new   IFNITY::NVML_Monitor());
+		PushLayer(new ImGuiTestLayer());
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
 		
 		

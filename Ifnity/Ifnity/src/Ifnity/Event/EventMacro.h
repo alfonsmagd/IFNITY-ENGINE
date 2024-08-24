@@ -131,5 +131,9 @@ EVENT_END()
 #define CONNECT_EVENT_LAYER(eventType, eventBus) \
     IFNITY::events::connect<IFNITY::eventType>(*eventBus, *this)
 
+//Helper And 
+#define CONNECT_SINGLE_EVENT(eventType, eventBus) \
+    IFNITY::events::connect<IFNITY::eventType>(*eventBus, *this)
+
 
 #define CONNECT_EVENT(x) ConnectEvent<x>()

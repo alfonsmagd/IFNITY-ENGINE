@@ -30,17 +30,24 @@ public:
 	//Imgui manage functions.
 
 	void SetImguiAPI() const;
-	
-	inline GraphicsDeviceManager& GetWindow() { return *m_Window; }
-	inline static App& GetApp()				  { return *s_Instance; }
-	inline rhi::GraphicsAPI GetGraphicsAPI() const { return m_graphicsAPI; }
-	
 
+	inline GraphicsDeviceManager& GetWindow() { return *m_Window; }
+	inline static App& GetApp() { return *s_Instance; }
+	inline rhi::GraphicsAPI GetGraphicsAPI() const { return m_graphicsAPI; }
+	inline void SetGraphicsAPI(rhi::GraphicsAPI api, bool flagChange = false)
+	{
+
+		m_graphicsAPI = api;
+		m_FlagChangeAPI = flagChange;
+	}
 
 protected:
 	void SetEventBus(GLFWEventSource* eventBus) { m_EventBus = eventBus; }
-private:
 
+
+
+
+private:
 	using ImGuiRenderFunction = std::function<void()>;
 
 	std::unordered_map<rhi::GraphicsAPI, ImGuiRenderFunction> m_ImguiRenderFunctionMap;
@@ -52,13 +59,16 @@ private:
 	GLFWEventSource* m_EventBus = nullptr;
 	rhi::GraphicsAPI m_API;
 
-   static App* s_Instance;
+
+	bool m_FlagChangeAPI = false;
+
+	static App* s_Instance;
 
 private:
 	//TODO : Implement this function in app.tpp. this is only sugar sintax to reduce time to use. 
 	template<typename EvenType>
 	void ConnectEvent() const;
-	
+
 
 	void InitiateEventBusLayers();
 	void RenderImGuiFrame() const;
