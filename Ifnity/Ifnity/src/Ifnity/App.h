@@ -19,6 +19,8 @@ class IFNITY_API App
 public:
 	App();
 	virtual ~App();
+
+	void InitApp(rhi::GraphicsAPI api);
 	void run();
 
 
@@ -62,18 +64,21 @@ private:
 
 	bool m_FlagChangeAPI = false;
 
+
 	static App* s_Instance;
 
 private:
 	//TODO : Implement this function in app.tpp. this is only sugar sintax to reduce time to use. 
 	template<typename EvenType>
 	void ConnectEvent() const;
-
-
+	void InitConfigurationImGui();
+	void InitEventBusAndListeners();
 	void InitiateEventBusLayers();
 	void RenderImGuiFrame() const;
 	bool isRunning() const;
-
+	void ForceOnAttachLayers() ;
+	void ForceOnDetachLayers();
+	void ResetAppEvents();
 	float m_Time = 0;
 	rhi::GraphicsAPI m_graphicsAPI;
 };

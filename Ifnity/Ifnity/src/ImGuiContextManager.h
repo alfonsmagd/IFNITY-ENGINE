@@ -9,5 +9,6 @@
 
 IFNITY_API void InitializeImGui();
 IFNITY_API ImGuiContext* GetImGuiContext();
+IFNITY_API void DestroyImGuiContext();
 
 

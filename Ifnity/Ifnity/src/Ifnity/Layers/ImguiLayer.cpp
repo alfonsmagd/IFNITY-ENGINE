@@ -82,7 +82,8 @@ void ImguiLayer::OnAttach()
 void ImguiLayer::OnDetach()
 {
 	ImGuiOnDetach();
-	ImGui::DestroyContext();
+	DestroyImGuiContext();
+	
 }
 
 void ImguiLayer::OnUpdate()

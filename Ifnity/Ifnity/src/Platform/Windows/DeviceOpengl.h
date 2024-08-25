@@ -11,7 +11,7 @@ class DeviceOpengl final : public GraphicsDeviceManager
 {
 
 public:
-	virtual ~DeviceOpengl();
+	  ~DeviceOpengl() override;
 
 	void OnUpdate() override;
 
@@ -31,11 +31,14 @@ protected:
 	bool InitializeDeviceAndContext() override;
 	void ResizeSwapChain() override;
 	void InitializeGui() override;
+	void Shutdown() override;
 private:
 	void Init();
 	void InitializeGLAD();
 	
-	std::string GetOpenGLInfo();
+	std::string GetOpenGLInfo() const ;
+
+
 
 private:
 	// Associate GLFW window with this class with unique pointer

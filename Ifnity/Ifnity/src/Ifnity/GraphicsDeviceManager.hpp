@@ -70,7 +70,7 @@ class IFNITY_API GraphicsDeviceManager
 public:
 
 	GraphicsDeviceManager() = default;
-	virtual ~GraphicsDeviceManager() = default;
+	 virtual ~GraphicsDeviceManager() = default;
 
 	virtual void OnUpdate() = 0;
 
@@ -81,7 +81,7 @@ public:
 	
 
 	//Base Methods to build in glfw window process with no API specified by default. 
-	bool CreateWindowSurface(const WindowData& props);
+	bool CreateWindowSurface(const WindowData&& props);
 	bool CreateInstance();
 	// Método estático para obtener la API gráfica
 	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }

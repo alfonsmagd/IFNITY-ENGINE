@@ -20,6 +20,7 @@ DeviceD3D11::~DeviceD3D11()
 	m_DxgiFactory.Reset();
 	m_DxgiAdapter.Reset();
 	m_Device.Reset();
+	IFNITY_LOG(LogApp, WARNING, "DeviceD3D11 destroyed");
 }
 
 
@@ -238,6 +239,12 @@ void DeviceD3D11::DestroySwapChainResources()
 	m_backBuffer.Reset();
 	m_RenderTarget.Reset();
 
+}
+
+void DeviceD3D11::Shutdown()
+{
+	IFNITY_LOG(LogApp, WARNING, "Shutdown Process D3D11");
+	GraphicsDeviceManager::Shutdown();
 }
 
 void DeviceD3D11::ResizeSwapChain()

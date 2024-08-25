@@ -16,7 +16,7 @@ DeviceOpengl::~DeviceOpengl()
 {
 	// Shutdown the window and close GLFW
 	//Other function to close the window
-
+	IFNITY_LOG(LogApp, WARNING, "DeviceOpenGL destroyed");
 }
 
 void DeviceOpengl::OnUpdate()
@@ -139,7 +139,7 @@ void DeviceOpengl::RenderDemo(int w,int h) const
 }
 
 
-std::string DeviceOpengl::GetOpenGLInfo()
+std::string DeviceOpengl::GetOpenGLInfo() const
 {
 
 		std::ostringstream oss;
@@ -168,6 +168,12 @@ std::string DeviceOpengl::GetOpenGLInfo()
 	
 }
 
+void DeviceOpengl::Shutdown()
+{
+	IFNITY_LOG(LogApp, WARNING, "Shutdown Init OPENGL");
+	GraphicsDeviceManager::Shutdown();
+
+}
 
 
 

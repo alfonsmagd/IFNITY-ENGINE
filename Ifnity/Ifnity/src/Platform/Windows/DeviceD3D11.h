@@ -41,7 +41,7 @@ private:
 
 
 public:
-		virtual ~DeviceD3D11();
+		 ~DeviceD3D11() override ;
 
 	void OnUpdate() override;
 
@@ -71,6 +71,7 @@ private:
 	bool CreateSwapChainResources();
 	bool CreateRTV(IN const ComPtr<ID3D11Texture2D>& buffer);
 	void DestroySwapChainResources();
+	void Shutdown() override;
 	
 
 	

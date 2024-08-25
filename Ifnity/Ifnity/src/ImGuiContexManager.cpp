@@ -23,3 +23,13 @@ IFNITY_API void InitializeImGui()
 {
     return g_ImGuiContext;
 }
+
+ // Function to destroy ImGui context.
+ IFNITY_API void DestroyImGuiContext()
+ {
+     if (g_ImGuiContext != nullptr)
+     {
+         ImGui::DestroyContext(g_ImGuiContext);
+         g_ImGuiContext = nullptr;
+     }
+ }

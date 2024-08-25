@@ -15,13 +15,13 @@ rhi::GraphicsAPI GraphicsDeviceManager::g_API = rhi::GraphicsAPI::OPENGL;
 
 
 
-bool GraphicsDeviceManager::CreateWindowSurface(const WindowData& props)
+bool GraphicsDeviceManager::CreateWindowSurface(const WindowData&& props)
 {
 #ifdef _WINDOWS
 	// this needs to happen before glfwInit in order to override GLFW behavior
 	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
 #endif
-	m_Props = props;
+	m_Props = std::move(props);
 
 	if (!CreateInstance())
 	{
