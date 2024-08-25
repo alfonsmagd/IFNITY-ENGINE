@@ -55,7 +55,7 @@ void ImguiLayer::ConnectToEventBusImpl(void* bus)
 //TODO : If exist more functions, translate this switch case to extern global function OpenGl to easy maintenance.
 void ImguiLayer::OnAttach()
 {
-	m_monitor.setDisplay(&m_NvmlDisplayMonitor);
+	//m_monitor.setDisplay(&m_NvmlDisplayMonitor);
 
 	switch ( App::GetApp().GetGraphicsAPI() )
 	{

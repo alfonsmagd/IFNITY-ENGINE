@@ -113,7 +113,8 @@ public:
 	void OnAttach() override
 	{
         glm::vec3 color = { 0.0f, 0.0f, 0.0f };
-		addSettingsHandler();
+        addSettingsHandler();
+        
 	}
 
 
@@ -123,6 +124,11 @@ public:
 		onUIRender();
 	}
 
+    void OnDetach() override
+    {
+		
+		
+    }
 
 
 private:
@@ -473,23 +479,23 @@ private:
 				return false;
 				});
 
-			ImGuiH::PropertyEditor::end();
+			
+            ImGuiH::PropertyEditor::entry("CPU Average", [&]
+                {
+                    ImGui::ProgressBar(m_avgCpu.average() / 100.F);
+                    return false;
+                });
+           
+            ImGuiH::PropertyEditor::entry("CPU Real  ", [&]
+                {
+                    ImGui::ProgressBar(m_avgCpu.lastValue / 100.F);
+                    return false;
+                });
+            ImGuiH::PropertyEditor::end();
 		}
 
 
-		ImGuiH::PropertyEditor::begin();
-		ImGuiH::PropertyEditor::entry("CPU Average", [&] {
-			ImGui::ProgressBar(m_avgCpu.average() / 100.F);
-			return false;
-			});
-        ImGuiH::PropertyEditor::end();
-
-        ImGuiH::PropertyEditor::begin();
-        ImGuiH::PropertyEditor::entry("CPU Real  ", [&] {
-            ImGui::ProgressBar(m_avgCpu.lastValue / 100.F);
-            return false;
-            });
-		ImGuiH::PropertyEditor::end();
+		
 #endif
 	}
 

@@ -106,7 +106,7 @@ void main()
 	{
 		s_Instance = this;
 
-		InitApp(rhi::GraphicsAPI::D3D11);
+		InitApp(rhi::GraphicsAPI::OPENGL);
 		
 	}
 

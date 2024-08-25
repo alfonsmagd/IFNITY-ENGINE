@@ -33,7 +33,7 @@ public:
 		
 private:
 	 float m_Time = 0.0f;
-	 NvmlMonitor m_monitor{ 100,5 };
+	 //NvmlMonitor m_monitor{ 100,5 };
 	 ImguiNVML m_NvmlDisplayMonitor;
 };
 
