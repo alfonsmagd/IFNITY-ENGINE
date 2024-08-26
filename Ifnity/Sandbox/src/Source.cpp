@@ -118,13 +118,13 @@ private:
 			
 
 			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::OPENGL,api == GraphicsAPI::OPENGL);
+				.SetGraphicsAPI(GraphicsAPI::OPENGL,api != GraphicsAPI::OPENGL);
 			break;
 		case 1:
 			// Acción para la opción 2
 			IFNITY_LOG(LogApp, INFO, "D3D11");
 			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::D3D11, api == GraphicsAPI::D3D11);
+				.SetGraphicsAPI(GraphicsAPI::D3D11, api != GraphicsAPI::D3D11);
 			break;
 		default:
 			IFNITY_LOG(LogApp, INFO, "No option ");

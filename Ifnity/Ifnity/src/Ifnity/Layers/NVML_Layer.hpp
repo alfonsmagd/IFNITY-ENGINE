@@ -87,6 +87,8 @@ struct AverageCircularBuffer
 		}
 	}
 
+	void clear() { data.clear();  }
+
 	T average() { return totValue / data.size(); }
 };
 
@@ -104,7 +106,8 @@ public:
 		m_nvmlMonitor = std::make_unique<NvmlMonitor>(SAMPLING_INTERVAL, SAMPLING_NUM);
 #endif
 	
-
+        glm::vec3 color = { 0.0f, 0.0f, 0.0f };
+        addSettingsHandler();
 	}
       ~NVML_Monitor() {};
 
@@ -112,9 +115,8 @@ public:
 
 	void OnAttach() override
 	{
-        glm::vec3 color = { 0.0f, 0.0f, 0.0f };
-        addSettingsHandler();
-        
+       
+         s_refreshRate = ImGui::GetTime();
 	}
 
 
@@ -158,11 +160,13 @@ private:
             const NvmlMonitor::SysInfo& cpuMeasure = m_nvmlMonitor->getSysInfo();
 
             {  // Averaging the CPU sampling, but limit the
-                static double s_refreshRate = ImGui::GetTime();
-                if ((ImGui::GetTime() - s_refreshRate) > SAMPLING_INTERVAL / 1000.0)
+               // static double s_refreshRate = ImGui::GetTime();
+                if ((ImGui::GetTime() - s_refreshRate ) > SAMPLING_INTERVAL / 1000.0)
                 {
                     m_avgCpu.addValue(cpuMeasure.cpu[m_nvmlMonitor->getOffset()]);
                     s_refreshRate = ImGui::GetTime();
+
+
                 }
             }
 
@@ -1164,6 +1168,7 @@ private:
 #if defined(NVP_SUPPORTS_NVML)
 	std::unique_ptr<NvmlMonitor> m_nvmlMonitor;
 	AverageCircularBuffer<float> m_avgCpu = { SAMPLING_NUM };
+    inline static double s_refreshRate{ 0 };
 #endif
 
 };
