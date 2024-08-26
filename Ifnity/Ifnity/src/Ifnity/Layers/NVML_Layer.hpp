@@ -1161,12 +1161,12 @@ private:
 
 	uint32_t m_selectedMemClock{ 0u };
 	uint32_t m_selectedGraphicsClock{ 0u };
-
+	inline static double s_refreshRate{ 0 };
 
 #if defined(NVP_SUPPORTS_NVML)
 	std::unique_ptr<NvmlMonitor> m_nvmlMonitor;
 	AverageCircularBuffer<float> m_avgCpu = { SAMPLING_NUM };
-    inline static double s_refreshRate{ 0 };
+  
 #endif
 
 };
