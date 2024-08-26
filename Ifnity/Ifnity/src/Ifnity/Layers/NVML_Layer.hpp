@@ -165,8 +165,6 @@ private:
                 {
                     m_avgCpu.addValue(cpuMeasure.cpu[m_nvmlMonitor->getOffset()]);
                     s_refreshRate = ImGui::GetTime();
-
-
                 }
             }
 
