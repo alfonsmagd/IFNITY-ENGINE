@@ -76,16 +76,9 @@ public:
 
 	virtual unsigned int GetWidth() const = 0;
 	virtual unsigned int GetHeight() const = 0;
-
-	
-	
-
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowData&& props);
 	bool CreateInstance();
-	// Método estático para obtener la API gráfica
-	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }
-
 	//Base Methods virtual 
 	virtual void Shutdown();
 	virtual void RenderDemo(int w, int h) const; // Its a function to do test fast, its not part of solution now. 
@@ -97,6 +90,8 @@ public:
 
 	//Factory method to create a window
 	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::D3D11);
+	// Método estático para obtener la API gráfica
+	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.

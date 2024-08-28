@@ -108,8 +108,6 @@ bool DeviceD3D11::InitializeDeviceAndContext()
 	{
 		DXGI_ADAPTER_DESC aDesc;
 		m_DxgiAdapter->GetDesc(&aDesc);
-
-
 		m_IsNvidia = rhi::IsNvDeviceID(aDesc.VendorId);
 	}
 

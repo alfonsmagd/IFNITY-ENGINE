@@ -1,6 +1,7 @@
 #include "GraphicsDeviceManager.hpp"
 #include "Platform\Windows\DeviceOpengl.h"
 #include "Platform\Windows\DeviceD3D11.h"
+#include "Platform\Windows\DeviceD3D12.h"
 
 #ifdef _WINDOWS
 #include <ShellScalingApi.h>
@@ -152,7 +153,7 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 	} // Fin del ámbito para D3D11
 	case rhi::GraphicsAPI::D3D12:
 	{
-
+		return BuildWindow<DeviceD3D12>();
 
 	} // Fin del ámbito para D3D12
 	break;

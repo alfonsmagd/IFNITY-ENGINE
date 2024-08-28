@@ -97,7 +97,7 @@ public:
 		}
 		ImGui::SetCurrentContext(context);
 
-		MiVentana();
+		ChooseApi();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
 	// Heredado vía Layer
@@ -126,25 +126,32 @@ private:
 			IFNITY::App::GetApp()
 				.SetGraphicsAPI(GraphicsAPI::D3D11, api != GraphicsAPI::D3D11);
 			break;
+
+		case 2:
+			// Acción para la opción 3
+			IFNITY_LOG(LogApp, INFO, "D3D12");
+			//IFNITY::App::GetApp()
+			//	.SetGraphicsAPI(GraphicsAPI::D3D12, api != GraphicsAPI::D3D12);
+			break;
 		default:
 			IFNITY_LOG(LogApp, INFO, "No option ");
 			break;
 		}
 	}
 
-	void MiVentana() {
+	void ChooseApi() {
 		static int opcionSeleccionada = 0;
-		const char* opciones[] = { "Optionn 1", "Option 2"};
+		const char* opciones[] = { "OPENGL", "D3D11","D3D12"};
 
-		ImGui::Begin("Mi Ventana");  // Comienza la creación de la ventana
+		ImGui::Begin("API WINDOW");  // Comienza la creación de la ventana
 
 		// Combo box con las opciones
-		if (ImGui::Combo("Chouse option ", &opcionSeleccionada, opciones, IM_ARRAYSIZE(opciones))) {
+		if (ImGui::Combo("Choose Option ", &opcionSeleccionada, opciones, IM_ARRAYSIZE(opciones))) {
 			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
 		}
 
 		// Botón que ejecuta la función cuando se hace clic
-		if (ImGui::Button("Ejecutar accin")) {
+		if (ImGui::Button("OK")) {
 			AccionPorOpcion(opcionSeleccionada);
 		}
 
