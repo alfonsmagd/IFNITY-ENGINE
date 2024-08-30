@@ -3,6 +3,20 @@
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 IFNITY_NAMESPACE
+
+
+void CaptureDXGIMessagesToConsole();
+
+
+void EnableConsole()
+{
+	AllocConsole();
+	freopen("CONOUT$", "w", stdout);
+	freopen("CONOUT$", "w", stderr);
+	std::cout.clear();
+	std::cerr.clear();
+}
+
 DeviceD3D12::~DeviceD3D12()
 {
 }
@@ -38,6 +52,19 @@ bool DeviceD3D12::InitInternalInstance()
 		debugController->EnableDebugLayer();
 		debugFlags = DXGI_CREATE_FACTORY_DEBUG;
 		IFNITY_LOG(LogCore, TRACE, "Enable Debug Layer D3D12");
+
+		ComPtr<IDXGIDebug> debugDXGI;
+		ComPtr<IDXGIDebug1> debugDXGI1;
+		// Debug DXGI
+		ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(OUT & debugDXGI)));
+		debugDXGI->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+		IFNITY_LOG(LogCore, TRACE, "Enable Debug Layer DXGI");
+
+		// Debug DXGI 1
+		ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(OUT & debugDXGI1)));
+		debugDXGI1->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+	
+		
 	}
 	//Build the DXGI Factory
 	if (!m_DxgiFactory)
@@ -120,19 +147,32 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 			filter.DenyList.NumIDs = sizeof(disableMessageIDs) / sizeof(disableMessageIDs[0]);
 			pInfoQueue->AddStorageFilterEntries(&filter);
 		}
+
+
+		ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
+		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiInfoQueue))))
+		{
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE);
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING, TRUE);
+		}
+
+
+
+
 	}
 
 #ifdef _DEBUG
 	LogAdaptersD3D12();
 #endif
-
-
 	// Create Fence and obtain descriptor sizes.
 	CreateFenceAndDescriptorSizes();
 	// Create CommandQueue 
 	CreateCommandQueue();
 	//Create SwapChain
 	CreateSwapChain();
+	CaptureDXGIMessagesToConsole();
+	CaptureD3D12DebugMessages();
 
 	return true;
 }
@@ -226,7 +266,7 @@ bool DeviceD3D12::CreateSwapChain()
 	DXGI_SAMPLE_DESC sampleDesc = {};					 
 	sampleDesc.Count =									 m_MsaaState ? 4 : 1; // Activate MSSA 4X , by default is false. 												   
 	sampleDesc.Quality =								CheckMSAAQualitySupport(sampleDesc.Count,
-																				bufferDesc.Format) - 1; // Its importa													to substract 1 because the quality level is 0 based.
+																				bufferDesc.Format) -1; // Its importa													to substract 1 because the quality level is 0 based.
 
 	DXGI_SWAP_CHAIN_DESC sd = {};
 	sd.BufferDesc =                                     bufferDesc;
@@ -247,6 +287,7 @@ bool DeviceD3D12::CreateSwapChain()
 
 	ThrowIfFailed(swapChain.As(&m_SwapChain));
 
+	OutputDebugString(L"SwapChain Created\n");
 	return true;
 
 
@@ -277,9 +318,47 @@ void DeviceD3D12::CreateCommandQueue()
 	m_CommandList->Close();
 
 
+}
 
+void DeviceD3D12::CaptureD3D12DebugMessages()
+{
+	if (m_DeviceParams.enableDebugRuntime)
+	{
+		ComPtr<ID3D12InfoQueue> pInfoQueue;
+		if (SUCCEEDED(m_Device->QueryInterface(IID_PPV_ARGS(&pInfoQueue))))
+		{
+			UINT64 messageCount = pInfoQueue->GetNumStoredMessagesAllowedByRetrievalFilter();
+			for (UINT64 i = 0; i < messageCount; ++i)
+			{
+				SIZE_T messageLength = 0;
+				pInfoQueue->GetMessage(i, nullptr, &messageLength);
+				std::vector<char> messageData(messageLength);
+				D3D12_MESSAGE* pMessage = reinterpret_cast<D3D12_MESSAGE*>(messageData.data());
+				pInfoQueue->GetMessage(i, pMessage, &messageLength);
 
-
+				switch (pMessage->Severity)
+				{
+				case D3D12_MESSAGE_SEVERITY_INFO:
+					IFNITY_LOG(LogCore, INFO, "D3D12 INFO: " + std::string(pMessage->pDescription));
+					break;
+				case D3D12_MESSAGE_SEVERITY_WARNING:
+					IFNITY_LOG(LogCore, WARNING, "D3D12 WARNING: " + std::string(pMessage->pDescription));
+					break;
+				case D3D12_MESSAGE_SEVERITY_ERROR:
+					IFNITY_LOG(LogCore, ERROR, "D3D12 ERROR: " + std::string(pMessage->pDescription));
+					break;
+				case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+					IFNITY_LOG(LogCore, ERROR, "D3D12 CORRUPTION: " + std::string(pMessage->pDescription));
+					break;
+				default:
+					IFNITY_LOG(LogCore, TRACE, "D3D12 Message: " + std::string(pMessage->pDescription));
+					break;
+				}
+			}
+		}
+	}
 
 }
+
+
 IFNITY_END_NAMESPACE

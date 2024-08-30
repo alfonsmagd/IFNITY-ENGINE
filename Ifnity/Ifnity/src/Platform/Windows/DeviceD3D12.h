@@ -70,6 +70,8 @@ private:
 	bool CreateSwapChain();
 	void CreateCommandQueue();
 
+	void CaptureD3D12DebugMessages();
+
 
 	
 
@@ -80,6 +82,51 @@ private:
 
 //--------	D3D12 Utils. ---------------------------------------------------------------------------------------//
 //---------------------------------------------------------------------------------------	//
+
+inline void CaptureDXGIMessagesToConsole()
+{
+	ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
+	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiInfoQueue))))
+	{
+		DXGI_INFO_QUEUE_MESSAGE* pMessage = nullptr;
+		SIZE_T messageLength = 0;
+
+		for (UINT i = 0; i < dxgiInfoQueue->GetNumStoredMessages(DXGI_DEBUG_ALL); ++i)
+		{
+			dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, nullptr, &messageLength);
+			pMessage = (DXGI_INFO_QUEUE_MESSAGE*)malloc(messageLength);
+			dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, pMessage, &messageLength);
+			//Pass to IFNITY_LOG and clasify by category.
+
+			switch (pMessage->Severity)
+			{
+				// Help 
+			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_INFO:
+				IFNITY_LOG(LogCore, INFO, "INFO: " + std::string(pMessage->pDescription));
+				break;
+				// Warning
+			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING:
+				IFNITY_LOG(LogCore, WARNING, "WARNING: " + std::string(pMessage->pDescription));
+				break;
+				// Error
+			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR:
+				IFNITY_LOG(LogCore, ERROR, "ERROR: " + std::string(pMessage->pDescription));
+				break;
+			case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION:
+				IFNITY_LOG(LogCore, ERROR, "CORRUPTION: " + std::string(pMessage->pDescription));
+				break;
+			default:
+				IFNITY_LOG(LogCore, TRACE, "DXGI Message: " + std::string(pMessage->pDescription));
+				break;
+			}
+			//
+			
+			free(pMessage);
+		}
+	}
+	
+}
+
 
 
 inline std::string GetDXErrorMessage(HRESULT hr)
@@ -122,6 +169,7 @@ inline void ThrowIfFailed(HRESULT hr)
 {
 	if (FAILED(hr))
 	{
+		CaptureDXGIMessagesToConsole();
 		throw HrException(hr);
 	}
 }
