@@ -15,6 +15,16 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 	ComPtr<ID3D12Device>  m_Device = nullptr;
 	ComPtr<IDXGIAdapter>  m_DxgiAdapter = nullptr;
 	ComPtr<ID3D12Fence>   m_Fence = nullptr;
+	ComPtr<ID3D12CommandQueue> m_CommandQueue = nullptr;
+	ComPtr<ID3D12CommandAllocator> m_DirectCmdListAlloc = nullptr;
+	ComPtr<ID3D12GraphicsCommandList> m_CommandList = nullptr;
+	ComPtr<IDXGISwapChain3> m_SwapChain = nullptr;
+	HWND m_hWnd = nullptr;
+
+
+	//States 
+	bool m_MsaaState = false;
+	bool m_SwapChainBufferCount = 2;    // Double buffering SwapChain move to DeviceManager TODO:
 
 	struct DescritporSizes
 	{
@@ -57,7 +67,8 @@ private:
 	void LogAdaptersD3D12();
 	void CreateFenceAndDescriptorSizes();
 	UINT CheckMSAAQualitySupport(UINT SampleCount, DXGI_FORMAT format);
-
+	bool CreateSwapChain();
+	void CreateCommandQueue();
 
 
 	
@@ -69,12 +80,30 @@ private:
 
 //--------	D3D12 Utils. ---------------------------------------------------------------------------------------//
 //---------------------------------------------------------------------------------------	//
+
+
+inline std::string GetDXErrorMessage(HRESULT hr)
+{
+	auto it = rhi::hrErrorMap.find(hr);
+	if (it != rhi::hrErrorMap.end())
+	{
+		return std::string(it->second);
+	}
+	else
+	{
+		return "Unknown error";
+	}
+}
+
+
+
 inline std::string HrToString(HRESULT hr)
 {
 	char s_str[64] = {};
 	sprintf_s(s_str, "HRESULT of 0x%08X", static_cast<UINT>(hr));
 	std::string s(s_str);
 	IFNITY_LOG(LogCore, ERROR, s);
+	IFNITY_LOG(LogCore, ERROR, GetDXErrorMessage(hr));
 	return std::string(s_str);
 }
 
@@ -96,6 +125,8 @@ inline void ThrowIfFailed(HRESULT hr)
 		throw HrException(hr);
 	}
 }
+
+
 
 
 //--------	--------------	----------------------------------------D3D12 Utils.

@@ -129,7 +129,10 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	// Create Fence and obtain descriptor sizes.
 	CreateFenceAndDescriptorSizes();
-
+	// Create CommandQueue 
+	CreateCommandQueue();
+	//Create SwapChain
+	CreateSwapChain();
 
 	return true;
 }
@@ -200,8 +203,83 @@ UINT DeviceD3D12::CheckMSAAQualitySupport(UINT SampleCount, DXGI_FORMAT format)
 		sizeof(msQualityLevels)));
 
 	assert(msQualityLevels.NumQualityLevels > 0 && "Unexpected MSAA quality level.");
-	IFNITY_LOG(LogCore, INFO, "MSAA Quality Level: %d", msQualityLevels.NumQualityLevels);
+	IFNITY_LOG(LogCore, INFO, "MSAA Quality Level: " + std::to_string(msQualityLevels.NumQualityLevels));
 	 
 	return msQualityLevels.NumQualityLevels;
+}
+bool DeviceD3D12::CreateSwapChain()
+{
+	// Obtener el handle de la ventana desde GLFW
+	m_hWnd = glfwGetWin32Window(m_Window);
+
+
+	// Describe and create the swap chain.
+	DXGI_MODE_DESC bufferDesc = {};
+	bufferDesc.Width  =                                  GetWidth();
+	bufferDesc.Height =								     GetHeight();
+	bufferDesc.RefreshRate.Numerator =					 60;
+	bufferDesc.RefreshRate.Denominator =				 1;
+	bufferDesc.Format =									 DXGI_FORMAT_R8G8B8A8_UNORM;
+	bufferDesc.ScanlineOrdering =						 DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	bufferDesc.Scaling =								 DXGI_MODE_SCALING_UNSPECIFIED;
+														 
+	DXGI_SAMPLE_DESC sampleDesc = {};					 
+	sampleDesc.Count =									 m_MsaaState ? 4 : 1; // Activate MSSA 4X , by default is false. 												   
+	sampleDesc.Quality =								CheckMSAAQualitySupport(sampleDesc.Count,
+																				bufferDesc.Format) - 1; // Its importa													to substract 1 because the quality level is 0 based.
+
+	DXGI_SWAP_CHAIN_DESC sd = {};
+	sd.BufferDesc =                                     bufferDesc;
+	sd.SampleDesc =                                     sampleDesc;
+	sd.BufferUsage =                                    DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	sd.BufferCount =                                    2;
+	sd.OutputWindow =                                   m_hWnd;
+	sd.Windowed =                                       true;
+	sd.SwapEffect =                                     DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	sd.Flags =                                          DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+	ComPtr<IDXGISwapChain> swapChain;
+	ThrowIfFailed(m_DxgiFactory->CreateSwapChain(
+		m_CommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+		&sd,
+		&swapChain
+	));
+
+	ThrowIfFailed(swapChain.As(&m_SwapChain));
+
+	return true;
+
+
+
+
+}
+void DeviceD3D12::CreateCommandQueue()
+{
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;  // Direct command list can execute all grapchis commands.
+	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_CommandQueue)));
+
+	ThrowIfFailed(m_Device->CreateCommandAllocator(
+		D3D12_COMMAND_LIST_TYPE_DIRECT,
+		IID_PPV_ARGS(m_DirectCmdListAlloc.GetAddressOf())));
+
+	ThrowIfFailed(m_Device->CreateCommandList(
+		0,							  // Predeterminate value Priority Level. 
+		D3D12_COMMAND_LIST_TYPE_DIRECT,
+		m_DirectCmdListAlloc.Get(), // Associated command allocator
+		nullptr,                   // Initial PipelineStateObject
+		IID_PPV_ARGS(m_CommandList.GetAddressOf())));
+
+	// Start off in a closed state.  This is because the first time we refer 
+	// to the command list we will Reset it, and it needs to be closed before
+	// calling Reset.
+	m_CommandList->Close();
+
+
+
+
+
+
 }
 IFNITY_END_NAMESPACE

@@ -71,9 +71,6 @@ void main()
 
 
 
-
-
-
 	}
 
 	void App::InitEventBusAndListeners()
@@ -106,7 +103,7 @@ void main()
 	{
 		s_Instance = this;
 
-		InitApp(rhi::GraphicsAPI::OPENGL);
+		InitApp(rhi::GraphicsAPI::D3D12);
 		
 	}
 
@@ -290,6 +287,8 @@ void main()
 		{
 			IFNITY_LOG(LogApp, ERROR, "Imgui API not found, impossible to render");
 		}
+
+
 	}
 
 	void App::ResetAppEvents()
