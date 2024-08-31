@@ -114,6 +114,7 @@ protected:
 private:
 	void SetGLFWCallbacks();
 	void SetGraphicsDeviceState(StateGraphicsDevice state) { m_StateGraphicsDevice = state; }
+	void SetWindowIcon();
 	template<typename WindowType, typename... Args>
 	static WindowType* BuildWindow(Args&&... args)
 	{

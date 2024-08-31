@@ -52,6 +52,8 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/glad/include)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui) 
 #include implot directory
 include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
+#include stb_image 
+include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
 
 
 
@@ -88,6 +90,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 target_link_libraries(${PROJECT_NAME} INTERFACE  glm)
+target_link_libraries(${PROJECT_NAME} INTERFACE  stb_image)
 
 
 if(NVML_LIBRARY)

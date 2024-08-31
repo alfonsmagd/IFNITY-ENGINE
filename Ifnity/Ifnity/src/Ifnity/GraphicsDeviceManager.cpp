@@ -1,8 +1,10 @@
+
 #include "GraphicsDeviceManager.hpp"
 #include "Platform\Windows\DeviceOpengl.h"
 #include "Platform\Windows\DeviceD3D11.h"
 #include "Platform\Windows\DeviceD3D12.h"
-
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #ifdef _WINDOWS
 #include <ShellScalingApi.h>
 #pragma comment(lib, "shcore.lib")
@@ -79,6 +81,8 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData&& props)
 		return false;
 	}
 
+	//Load Image_Icon. 
+	SetWindowIcon();
 	glfwShowWindow(m_Window);
 
 	SetGraphicsDeviceState(StateGraphicsDevice::INITIALIZED);
@@ -242,6 +246,26 @@ void GraphicsDeviceManager::InitImGui()
 {
 	//TODO: More verifications to initImgui, State 
 	InitializeGui();
+}
+
+void GraphicsDeviceManager::SetWindowIcon()
+{
+	// Load image with stb_image
+	int width, height, channels;
+	stbi_uc* pixels = stbi_load("logo3.png", &width, &height, &channels, STBI_rgb_alpha);
+
+	// Set GLFW icon
+	GLFWimage images[1];
+	images[0].width = width;
+	images[0].height = height;
+	images[0].pixels = pixels;
+	glfwSetWindowIcon(m_Window, 1, images);
+
+	// Free image
+	stbi_image_free(pixels);
+
+	//LOG 
+	IFNITY_LOG(LogApp, INFO, "Window Icon setted");
 }
 
 IFNITY_END_NAMESPACE
