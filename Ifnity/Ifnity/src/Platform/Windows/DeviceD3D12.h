@@ -24,7 +24,24 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 
 	//States 
 	bool m_MsaaState = false;
-	bool m_SwapChainBufferCount = 2;    // Double buffering SwapChain move to DeviceManager TODO:
+	UINT  m_SwapChainBufferCount = 2;    // Double buffering SwapChain move to DeviceManager TODO:
+	UINT m_CurrentBackBufferIndex = 0;
+	UINT m_CurrentFence = 0;
+	HANDLE m_FenceEvent = nullptr;
+
+	//Descriptor Heaps
+	ComPtr<ID3D12DescriptorHeap> m_RtvHeap = nullptr;
+	ComPtr<ID3D12DescriptorHeap> m_DsvHeap = nullptr;
+
+	//Resources 
+	std::array<ComPtr<ID3D12Resource>, 2> m_SwapChainBuffer;
+	ComPtr<ID3D12Resource>				  m_DepthStencilBuffer = nullptr;
+
+
+
+	D3D_DRIVER_TYPE m_D3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
+	DXGI_FORMAT m_BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
+	DXGI_FORMAT m_DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
 	struct DescritporSizes
 	{
@@ -40,7 +57,8 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 		bool enableDebugRuntime = true;
 	} m_DeviceParams;
 
-
+	D3D12_VIEWPORT m_ScreenViewport;
+	D3D12_RECT m_ScissorRect;
 
 public:
 	~DeviceD3D12() override;
@@ -69,9 +87,13 @@ private:
 	UINT CheckMSAAQualitySupport(UINT SampleCount, DXGI_FORMAT format);
 	bool CreateSwapChain();
 	void CreateCommandQueue();
-
-	void CaptureD3D12DebugMessages();
-
+	void CaptureD3D12DebugMessages() const ;
+	ID3D12Resource* CurrentBackBuffer() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
+	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
+	void CreateRtvAndDsvDescriptorHeaps();
+	void OnResize();                         //Todo: Move to Protected. 
+	void FlushCommandQueue();
 
 	
 

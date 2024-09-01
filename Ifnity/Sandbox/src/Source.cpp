@@ -191,11 +191,22 @@ public:
 	~Source() override {}
 };
 
+class Source_TestD3D12 : public IFNITY::App
+{
+public:
+	Source_TestD3D12()
+	{
+		
+	}
+	~Source_TestD3D12() override
+	{
+	}
+};
 
 
 IFNITY::App* IFNITY::CreateApp()
 {
-
-	return new Source();
+	return new Source_TestD3D12();
+	//return new Source();
 }
 

@@ -26,6 +26,7 @@
 //D3D12
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include "Platform/Windows/d3dx12.h"
 #endif // _WIN32
 
 IFNITY_NAMESPACE

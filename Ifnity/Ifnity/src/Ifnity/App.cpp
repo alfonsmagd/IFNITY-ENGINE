@@ -67,7 +67,7 @@ void main()
 
 
 		InitEventBusAndListeners();
-		InitConfigurationImGui();
+		//InitConfigurationImGui();
 
 
 
@@ -165,17 +165,17 @@ void main()
 		bool init = false;
 		if (m_graphicsAPI == rhi::GraphicsAPI::OPENGL && !init)
 		{
-			DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
+			//DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
 		}
 		while (isRunning())
 		{
-			
+			glfwPollEvents();
 			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
 			// Render ImGui Frame
-			RenderImGuiFrame();
-			ImGui::ShowDemoWindow();
+			//RenderImGuiFrame();
+			//ImGui::ShowDemoWindow();
 			//Layer Renders. 
 			for (Layer* layer : m_LayerStack)
 			{
@@ -185,6 +185,7 @@ void main()
 			m_Window->OnUpdate();
 
 
+			// Change API 
 			if (m_FlagChangeAPI)
 			{
 				//Delete and destroy windows. 

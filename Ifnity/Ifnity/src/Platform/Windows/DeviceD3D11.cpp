@@ -1,6 +1,6 @@
 #include "DeviceD3D11.h"
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
-#include <DirectXColors.h> // TODO: All colors move in rhi namespace
+
 IFNITY_NAMESPACE
 
 

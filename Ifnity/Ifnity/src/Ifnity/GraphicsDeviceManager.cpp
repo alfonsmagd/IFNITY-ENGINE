@@ -254,6 +254,11 @@ void GraphicsDeviceManager::SetWindowIcon()
 	int width, height, channels;
 	stbi_uc* pixels = stbi_load("logo3.png", &width, &height, &channels, STBI_rgb_alpha);
 
+	if (!pixels)
+	{
+		IFNITY_LOG(LogApp, ERROR, "Failed to load window icon image ");
+		return;
+	}
 	// Set GLFW icon
 	GLFWimage images[1];
 	images[0].width = width;
