@@ -130,8 +130,8 @@ private:
 		case 2:
 			// Acción para la opción 3
 			IFNITY_LOG(LogApp, INFO, "D3D12");
-			//IFNITY::App::GetApp()
-			//	.SetGraphicsAPI(GraphicsAPI::D3D12, api != GraphicsAPI::D3D12);
+			IFNITY::App::GetApp()
+				.SetGraphicsAPI(GraphicsAPI::D3D12, api != GraphicsAPI::D3D12);
 			break;
 		default:
 			IFNITY_LOG(LogApp, INFO, "No option ");
@@ -206,8 +206,8 @@ public:
 
 IFNITY::App* IFNITY::CreateApp()
 {
-	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
-	return new Source_TestD3D12(api);
-	//return new Source();
+	auto api = IFNITY::rhi::GraphicsAPI::D3D11;
+	//return new Source_TestD3D12(api);
+	return new Source(api);
 }
 

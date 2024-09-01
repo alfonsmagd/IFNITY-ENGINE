@@ -131,6 +131,7 @@ IFNITY_NAMESPACE namespace rhi {
 
 
 	DECLARE_RENDERER_FUNCTION(void, ImGuiRenderDrawData, ImDrawData* draw_data);
+    DECLARE_RENDERER_FUNCTION(void, ImguiRenderDrawDataD3D12, ImDrawData* draw_data, ID3D12GraphicsCommandList* ctx)
 	DECLARE_RENDERER_FUNCTION(void, ImGuiOnDetach);
 
 

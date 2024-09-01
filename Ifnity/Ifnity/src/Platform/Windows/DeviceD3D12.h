@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "Ifnity/GraphicsDeviceManager.hpp"
+#include "Platform/ImguiRender/ImguiD3D12Render.h"
 
 IFNITY_NAMESPACE
 
@@ -9,8 +10,8 @@ using namespace Microsoft::WRL;
 
 class DeviceD3D12 final : public GraphicsDeviceManager
 {
-
-
+	ImDrawData* m_DrawData = nullptr;
+	
 	ComPtr<IDXGIFactory4> m_DxgiFactory = nullptr;
 	ComPtr<ID3D12Device>  m_Device = nullptr;
 	ComPtr<IDXGIAdapter>  m_DxgiAdapter = nullptr;
@@ -32,6 +33,7 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 	//Descriptor Heaps
 	ComPtr<ID3D12DescriptorHeap> m_RtvHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap> m_DsvHeap = nullptr;
+	ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavHeap = nullptr;
 
 	//Resources 
 	std::array<ComPtr<ID3D12Resource>, 2> m_SwapChainBuffer;
@@ -70,6 +72,7 @@ public:
 	//change to private
 	void RenderDemo(int w, int h) const override;
 	
+	void* Wrapper_ptr_data() override;
 
 protected:
 	// Window attributes
@@ -94,6 +97,8 @@ private:
 	void CreateRtvAndDsvDescriptorHeaps();
 	void OnResize();                         //Todo: Move to Protected. 
 	void FlushCommandQueue();
+	
+
 
 	
 

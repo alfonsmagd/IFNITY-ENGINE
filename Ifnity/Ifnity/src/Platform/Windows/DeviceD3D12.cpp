@@ -1,5 +1,7 @@
 #include "DeviceD3D12.h"
 
+
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 IFNITY_NAMESPACE
@@ -36,17 +38,12 @@ DeviceD3D12::~DeviceD3D12()
 
 void DeviceD3D12::OnUpdate()
 {
-	// Reuse the memory associated with command recording.
-	// We can only reset when the associated command lists have finished execution on the GPU.
-	ThrowIfFailed(m_DirectCmdListAlloc->Reset());
-
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
-	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
+	
 
 	// Indicate a state transition on the resource usage.
 	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
 
 	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
 	m_CommandList->RSSetViewports(1, &m_ScreenViewport);
@@ -58,8 +55,14 @@ void DeviceD3D12::OnUpdate()
 
 	// Specify the buffers we are going to render to.
 	m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-
+	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
 	// Indicate a state transition on the resource usage.
+
+	// Aquí es donde enganchas el renderizado de ImGui.
+	//ImGui::Render();
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
+
+
 	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
 
@@ -76,11 +79,28 @@ void DeviceD3D12::OnUpdate()
 	FlushCommandQueue();
 
 
+	// Reuse the memory associated with command recording.
+	// We can only reset when the associated command lists have finished execution on the GPU.
+	ThrowIfFailed(m_DirectCmdListAlloc->Reset());
+
+	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
+	// Reusing the command list reuses memory.
+	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
+	
+	
+
+	// 
+
 
 }
 
 void DeviceD3D12::RenderDemo(int w, int h) const
 {
+}
+
+void* DeviceD3D12::Wrapper_ptr_data()
+{
+	return reinterpret_cast<void*>(m_CommandList.GetAddressOf());
 }
 
 void DeviceD3D12::SetVSync(bool enabled)
@@ -246,6 +266,29 @@ void DeviceD3D12::ResizeSwapChain()
 
 void DeviceD3D12::InitializeGui()
 {
+	// Reuse the memory associated with command recording.
+	// We can only reset when the associated command lists have finished execution on the GPU.
+	
+
+	//
+	//Initialize ImGui D3D12
+	ImGui_ImplDX12_Init(m_Device.Get(), m_SwapChainBufferCount,
+		m_BackBufferFormat,
+		m_CbvSrvUavHeap.Get(),
+		m_CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(),
+		m_CbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
+
+	FlushCommandQueue();
+
+	ThrowIfFailed(m_DirectCmdListAlloc->Reset());
+
+	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
+	// Reusing the command list reuses memory.
+	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
+
+	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
+
+	
 }
 void DeviceD3D12::LogAdaptersD3D12()
 {
@@ -473,6 +516,15 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	ThrowIfFailed(m_Device->CreateDescriptorHeap(
 		&dsvHeapDesc, IID_PPV_ARGS(OUT m_DsvHeap.GetAddressOf())));
 
+
+	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	desc.NumDescriptors = 1;
+	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	desc.NodeMask = 0;
+	ThrowIfFailed(m_Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(OUT m_CbvSrvUavHeap.GetAddressOf())));
+		
+
 }
 
 void DeviceD3D12::OnResize()
@@ -597,6 +649,10 @@ void DeviceD3D12::FlushCommandQueue()
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
 	}
+}
+
+void ImguiRenderDrawDataD3D12Wrapper(ImDrawData* drawData)
+{
 }
 
 

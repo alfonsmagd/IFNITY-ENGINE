@@ -6,6 +6,7 @@
 #include "ImPlot.h"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
+#include "Platform/ImguiRender/ImguiD3D12Render.h"
 #include <GLFW\glfw3.h>
 
 #include "../App.h"
@@ -17,11 +18,11 @@ IFNITY_NAMESPACE
 
 //Api Function 
 
-rhi::ImGuiRenderDrawDataFn   ImGuiRenderDrawData;
-rhi::ImGuiOnDetachFn         ImGuiOnDetach;
+rhi::ImGuiRenderDrawDataFn       ImGuiRenderDrawData;
+rhi::ImGuiOnDetachFn             ImGuiOnDetach;
+rhi::ImguiRenderDrawDataD3D12Fn  ImGuiRenderDrawDataD3D12;
 
-
-
+extern void ImguiRenderDrawDataD3D12Wrapper(ImDrawData* drawData);
 
 ImguiLayer::ImguiLayer() : Layer("ImguiLayer")
 {}
@@ -68,7 +69,8 @@ void ImguiLayer::OnAttach()
 		ImGuiOnDetach = ImGui_ImplDX11_Shutdown;
 		break;
 	case rhi::GraphicsAPI::D3D12:
-		IFNITY_LOG(LogApp, ERROR, "D3D12 not implemented");
+		ImGuiRenderDrawData = [](ImDrawData* drawData) {};
+		ImGuiOnDetach = ImGui_ImplDX12_Shutdown;
 		break;
 	case rhi::GraphicsAPI::VULKAN:
 		IFNITY_LOG(LogApp, ERROR, "Vulkan not implemented");
@@ -91,6 +93,7 @@ void ImguiLayer::OnUpdate()
 
 	ImGui::Render();
 	ImGuiRenderDrawData(ImGui::GetDrawData());
+	
 }
 void ImguiLayer::onEventReceived(const WindowResize& event)
 {

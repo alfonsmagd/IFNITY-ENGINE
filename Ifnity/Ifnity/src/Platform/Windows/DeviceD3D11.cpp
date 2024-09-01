@@ -34,7 +34,7 @@ void DeviceD3D11::OnUpdate()
 	glfwPollEvents();
 
 	// TODO: NOT DO THIS HERE, NOW ITS A TEST CODE SOLUTION, BUT ALL ITS NEED WHEN RESIZE EVENTS ITS TRIGGERED;
-	ResizeSwapChain();
+	//ResizeSwapChain();
 
 
 }

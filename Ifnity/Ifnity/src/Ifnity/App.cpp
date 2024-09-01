@@ -6,6 +6,7 @@
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
+#include "Platform/ImguiRender/ImguiD3D12Render.h"
 #include <GLFW/glfw3.h>
 #include <glad\glad.h>
 #include <Platform/Windows/DeviceOpengl.h>
@@ -67,7 +68,7 @@ void main()
 
 
 		InitEventBusAndListeners();
-		//InitConfigurationImGui();
+		InitConfigurationImGui();
 
 
 
@@ -120,7 +121,7 @@ void main()
 		io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
 		io.ConfigFlags |= ImGuiBackendFlags_HasSetMousePos;  // Enable SetMousePos.
 		io.FontGlobalScale = 1.0f;
-		ImGui::StyleInfity(); // Clasic color style.
+		//ImGui::StyleInfity(); // Clasic color style.
 
 		// Classic version  1.87 see IMGUI_DISABLE_OBSOLETE_KEYIO in new version
 		//  not necessary intialization maps for keys.
@@ -139,7 +140,14 @@ void main()
 				ImPlot::CreateContext();
 
 			};
-		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []() {};
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []()
+			{
+			
+				ImGui_ImplDX12_NewFrame();
+				ImGui::NewFrame();
+				ImPlot::CreateContext();
+			
+			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []() {};
 
 
@@ -165,7 +173,7 @@ void main()
 		bool init = false;
 		if (m_graphicsAPI == rhi::GraphicsAPI::OPENGL && !init)
 		{
-			//DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
+			DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
 		}
 		while (isRunning())
@@ -174,7 +182,7 @@ void main()
 			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
 			// Render ImGui Frame
-			//RenderImGuiFrame();
+			RenderImGuiFrame();
 			//ImGui::ShowDemoWindow();
 			//Layer Renders. 
 			for (Layer* layer : m_LayerStack)

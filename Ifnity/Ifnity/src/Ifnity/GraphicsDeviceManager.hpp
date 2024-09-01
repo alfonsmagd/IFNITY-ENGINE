@@ -94,6 +94,8 @@ public:
 	// Método estático para obtener la API gráfica
 	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }
 
+	virtual void* Wrapper_ptr_data() { return 0; };
+
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
 	virtual bool InitInternalInstance() = 0;
