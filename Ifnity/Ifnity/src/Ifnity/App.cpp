@@ -99,11 +99,11 @@ void main()
 	// Static member  declaration
 	App* App::s_Instance = nullptr;
 	// Default Constructor;
-	App::App()
+	App::App(rhi::GraphicsAPI api) : m_graphicsAPI(api)
 	{
 		s_Instance = this;
 
-		InitApp(rhi::GraphicsAPI::D3D12);
+		InitApp(m_graphicsAPI);
 		
 	}
 

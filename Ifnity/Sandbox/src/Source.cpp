@@ -169,7 +169,7 @@ private:
 class Source: public IFNITY::App
 {
 public:
-	Source()
+	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
 	{
 		// Obtener el contexto de ImGui desde IFNITY  DLL
 		/*ImGuiContext* context = GetImGuiContext();
@@ -194,7 +194,7 @@ public:
 class Source_TestD3D12 : public IFNITY::App
 {
 public:
-	Source_TestD3D12()
+	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
 	{
 		
 	}
@@ -206,7 +206,8 @@ public:
 
 IFNITY::App* IFNITY::CreateApp()
 {
-	return new Source_TestD3D12();
+	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
+	return new Source_TestD3D12(api);
 	//return new Source();
 }
 

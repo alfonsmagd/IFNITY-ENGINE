@@ -17,12 +17,13 @@ class WindowCloseEvent;
 class IFNITY_API App
 {
 public:
-	App();
+	App(rhi::GraphicsAPI api);
 	virtual ~App();
 
 	void InitApp(rhi::GraphicsAPI api);
 	void run();
 
+	
 
 
 	//Layer manage functions.
