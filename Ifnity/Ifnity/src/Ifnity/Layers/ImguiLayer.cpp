@@ -22,7 +22,7 @@ rhi::ImGuiRenderDrawDataFn       ImGuiRenderDrawData;
 rhi::ImGuiOnDetachFn             ImGuiOnDetach;
 rhi::ImguiRenderDrawDataD3D12Fn  ImGuiRenderDrawDataD3D12;
 
-extern void ImguiRenderDrawDataD3D12Wrapper(ImDrawData* drawData);
+
 
 ImguiLayer::ImguiLayer() : Layer("ImguiLayer")
 {}

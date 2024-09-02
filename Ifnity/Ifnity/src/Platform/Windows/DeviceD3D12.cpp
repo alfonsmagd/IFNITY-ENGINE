@@ -9,36 +9,69 @@ IFNITY_NAMESPACE
 using namespace DirectX;
 void CaptureDXGIMessagesToConsole();
 
-
+// Definir el callback de depuración
+void CALLBACK DebugMessageCallback(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
+{
+	switch (Severity)
+	{
+	case D3D12_MESSAGE_SEVERITY_INFO:
+		IFNITY_LOG(LogCore, INFO, "D3D12 INFO: " + std::string(pDescription));
+		break;
+	case D3D12_MESSAGE_SEVERITY_WARNING:
+		IFNITY_LOG(LogCore, WARNING, "D3D12 WARNING: " + std::string(pDescription));
+		break;
+	case D3D12_MESSAGE_SEVERITY_ERROR:
+		IFNITY_LOG(LogCore, ERROR, "D3D12 ERROR: " + std::string(pDescription));
+		break;
+	case D3D12_MESSAGE_SEVERITY_CORRUPTION:
+		IFNITY_LOG(LogCore, ERROR, "D3D12 CORRUPTION: " + std::string(pDescription));
+		break;
+	default:
+		IFNITY_LOG(LogCore, TRACE, "D3D12 Message: " + std::string(pDescription));
+		break;
+	}
+}
 DeviceD3D12::~DeviceD3D12()
 {
 	FlushCommandQueue();
+
+
+	CloseHandle(m_FenceEvent);
+
+	m_CommandQueue.Reset();
+	m_CommandList.Reset(); 
+
+	m_DsvHeap.Reset();
+	m_DepthStencilBuffer.Reset();
+	m_DepthStencilAllocation->Release(); m_DepthStencilAllocation = nullptr;
+	m_RtvHeap.Reset();
 	
-	m_SwapChain.Reset();
+	m_DirectCmdListAlloc.Reset();
+	m_Fence.Reset();
+
+
 	for (int i = 0; i < m_SwapChainBufferCount; ++i)
 	{
 		m_SwapChainBuffer[i].Reset();
 	}
-	m_DepthStencilBuffer.Reset();
-	m_RtvHeap.Reset();
-	m_DsvHeap.Reset();
-	m_CommandQueue.Reset();
-	m_CommandList.Reset();
-	m_DirectCmdListAlloc.Reset();
-	m_Fence.Reset();
-	m_DxgiFactory.Reset();
-	m_DxgiAdapter.Reset();
+
+	
+	g_Allocator.Reset(); 
+
+	m_DxgiFactory.Reset(); 
+	m_DxgiAdapter.Reset(); 
 	m_Device.Reset();
+	m_SwapChain.Reset();
 
 	IFNITY_LOG(LogApp, WARNING, "DeviceD3D12 destroyed");
-	
+
 }
 
 
 
 void DeviceD3D12::OnUpdate()
 {
-	
+
 
 	// Indicate a state transition on the resource usage.
 	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
@@ -86,8 +119,8 @@ void DeviceD3D12::OnUpdate()
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
 	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
-	
-	
+
+
 
 	// 
 
@@ -136,30 +169,25 @@ bool DeviceD3D12::InitInternalInstance()
 		ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(OUT & debugDXGI1)));
 		debugDXGI1->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
 
+		
 
-	}
-	//Build the DXGI Factory
-	if (!m_DxgiFactory)
-	{
-		HRESULT hres = CreateDXGIFactory2(debugFlags, IID_PPV_ARGS(OUT & m_DxgiFactory));
-		if (hres != S_OK)
+
+		//Build the DXGI Factory
+		if (!m_DxgiFactory)
 		{
-			IFNITY_LOG(LogCore, ERROR, "ERROR in CreateDXGIFactory2.\n"
-				"For more info, get log from debug D3D runtime: (1) Install DX SDK, and enable Debug D3D from DX Control Panel Utility. (2) Install and start DbgView. (3) Try running the program again.\n");
-			return false;
+			HRESULT hres = CreateDXGIFactory2(debugFlags, IID_PPV_ARGS(OUT & m_DxgiFactory));
+			if (hres != S_OK)
+			{
+				IFNITY_LOG(LogCore, ERROR, "ERROR in CreateDXGIFactory2.\n"
+					"For more info, get log from debug D3D runtime: (1) Install DX SDK, and enable Debug D3D from DX Control Panel Utility. (2) Install and start DbgView. (3) Try running the program again.\n");
+				return false;
+			}
 		}
-	}
 
-	// Crear el evento de la fence
-	m_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-	if (m_FenceEvent == nullptr)
-	{
-		ThrowIfFailed(HRESULT_FROM_WIN32(GetLastError()));
 	}
 
 	return true;
 }
-
 bool DeviceD3D12::ConfigureSpecificHintsGLFW() const
 {
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -190,16 +218,27 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	}
 
 	//Create the D3D12 device
-	HRESULT hr = D3D12CreateDevice(
+	 ThrowIfFailed( D3D12CreateDevice(
 		IN m_DxgiAdapter.Get(),
 		m_DeviceParams.featureLevel,
-		IID_PPV_ARGS(OUT & m_Device));
+		IID_PPV_ARGS(OUT & m_Device)));
 
-	if (FAILED(hr))
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to create D3D12 device.");
-		return false;
-	}
+	 {
+		 D3D12MA::ALLOCATOR_DESC desc = {};
+		 desc.Flags = D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED |		                  D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_SINGLETHREADED;
+		 desc.pDevice = m_Device.Get();
+		 desc.pAdapter = m_DxgiAdapter.Get();
+
+		/* if (ENABLE_CPU_ALLOCATION_CALLBACKS)
+		 {
+			 g_AllocationCallbacks.pAllocate = &CustomAllocate;
+			 g_AllocationCallbacks.pFree = &CustomFree;
+			 g_AllocationCallbacks.pPrivateData = CUSTOM_ALLOCATION_PRIVATE_DATA;
+			 desc.pAllocationCallbacks = &g_AllocationCallbacks;
+		 }*/
+
+		 ThrowIfFailed(D3D12MA::CreateAllocator(&desc, &g_Allocator));
+	 }
 
 	//Check if the debug layer when is enabled
 	if (m_DeviceParams.enableDebugRuntime)
@@ -214,6 +253,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
 			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, true);
+
 #endif
 
 			D3D12_MESSAGE_ID disableMessageIDs[] = {
@@ -235,9 +275,6 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, TRUE);
 			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING, TRUE);
 		}
-
-
-
 
 	}
 
@@ -268,7 +305,7 @@ void DeviceD3D12::InitializeGui()
 {
 	// Reuse the memory associated with command recording.
 	// We can only reset when the associated command lists have finished execution on the GPU.
-	
+
 
 	//
 	//Initialize ImGui D3D12
@@ -288,7 +325,7 @@ void DeviceD3D12::InitializeGui()
 
 	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
 
-	
+
 }
 void DeviceD3D12::LogAdaptersD3D12()
 {
@@ -523,7 +560,7 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	desc.NodeMask = 0;
 	ThrowIfFailed(m_Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(OUT m_CbvSrvUavHeap.GetAddressOf())));
-		
+
 
 }
 
@@ -547,82 +584,113 @@ void DeviceD3D12::OnResize()
 	height = GetHeight();
 
 	//Create RTV Descriptor Heap
-	
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
-		for (UINT i = 0; i < m_SwapChainBufferCount; i++)
-		{
-			ThrowIfFailed(m_SwapChain->GetBuffer(i, IID_PPV_ARGS(&m_SwapChainBuffer[i])));
-			m_Device->CreateRenderTargetView(m_SwapChainBuffer[i].Get(), nullptr, rtvHeapHandle);
-			rtvHeapHandle.Offset(1, m_DescritporSizes.Rtv); //1 is the offset to the next descriptor in the heap.
-		}
-		
-		// Create the depth/stencil buffer and view.
-		D3D12_RESOURCE_DESC depthStencilDesc;
-		depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-		depthStencilDesc.Alignment = 0;
-		depthStencilDesc.Width = width;
-		depthStencilDesc.Height = height;
-		depthStencilDesc.DepthOrArraySize = 1;
-		depthStencilDesc.MipLevels = 1;
 
-		// Correction 11/12/2016: SSAO chapter requires an SRV to the depth buffer to read from 
-		// the depth buffer.  Therefore, because we need to create two views to the same resource:
-		//   1. SRV format: DXGI_FORMAT_R24_UNORM_X8_TYPELESS
-		//   2. DSV Format: DXGI_FORMAT_D24_UNORM_S8_UINT
-		// we need to create the depth buffer resource with a typeless format.  
-		depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-		//TODO CHANGE: 
-		depthStencilDesc.SampleDesc.Count = 1;
-		depthStencilDesc.SampleDesc.Quality = 0;
-		depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-		depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
+	for (UINT i = 0; i < m_SwapChainBufferCount; i++)
+	{
+		ThrowIfFailed(m_SwapChain->GetBuffer(i, IID_PPV_ARGS(&m_SwapChainBuffer[i])));
+		m_Device->CreateRenderTargetView(m_SwapChainBuffer[i].Get(), nullptr, rtvHeapHandle);
+		rtvHeapHandle.Offset(1, m_DescritporSizes.Rtv); //1 is the offset to the next descriptor in the heap.
+	}
 
-		D3D12_CLEAR_VALUE optClear;
-		optClear.Format = m_DepthStencilFormat;
-		optClear.DepthStencil.Depth = 1.0f;
-		optClear.DepthStencil.Stencil = 0;
-		ThrowIfFailed(m_Device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-			D3D12_HEAP_FLAG_NONE,
-			IN &depthStencilDesc,
-			D3D12_RESOURCE_STATE_COMMON,
-			IN &optClear,
-			IID_PPV_ARGS(OUT m_DepthStencilBuffer.GetAddressOf())));
+	// Create the depth/stencil buffer and view.
+	D3D12_RESOURCE_DESC depthStencilDesc;
+	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthStencilDesc.Alignment = 0;
+	depthStencilDesc.Width = width;
+	depthStencilDesc.Height = height;
+	depthStencilDesc.DepthOrArraySize = 1;
+	depthStencilDesc.MipLevels = 1;
 
-		// Create descriptor to mip level 0 of entire resource using the format of the resource.
-		D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-		dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-		dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-		dsvDesc.Format = m_DepthStencilFormat;
-		dsvDesc.Texture2D.MipSlice = 0;
-		m_Device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
+	// Correction 11/12/2016: SSAO chapter requires an SRV to the depth buffer to read from 
+	// the depth buffer.  Therefore, because we need to create two views to the same resource:
+	//   1. SRV format: DXGI_FORMAT_R24_UNORM_X8_TYPELESS
+	//   2. DSV Format: DXGI_FORMAT_D24_UNORM_S8_UINT
+	// we need to create the depth buffer resource with a typeless format.  
+	depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	//TODO CHANGE: 
+	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Quality = 0;
+	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+
+	D3D12_CLEAR_VALUE optClear;
+	optClear.Format = m_DepthStencilFormat;
+	optClear.DepthStencil.Depth = 1.0f;
+	optClear.DepthStencil.Stencil = 0;
+
+	// Allocate a 2-D surface as the depth/stencil buffer FORMAT D3D12MA::ALLOCTION_DESC
+
+	D3D12MA::ALLOCATION_DESC depthStencilAllocDesc = {};
+	depthStencilAllocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_RESOURCE_DESC depthStencilResourceDesc = {};
+	depthStencilResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+	depthStencilResourceDesc.Alignment = 0;
+	depthStencilResourceDesc.Width = width;
+	depthStencilResourceDesc.Height = height;
+	depthStencilResourceDesc.DepthOrArraySize = 1;
+	depthStencilResourceDesc.MipLevels = 1;
+	depthStencilResourceDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	depthStencilResourceDesc.SampleDesc.Count = 1;
+	depthStencilResourceDesc.SampleDesc.Quality = 0;
+	depthStencilResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+	depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 
-		// Transition the resource from its initial state to be used as a depth buffer.
-		m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-			D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	ThrowIfFailed(g_Allocator->CreateResource(
+		&depthStencilAllocDesc,
+		&depthStencilResourceDesc,
+		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		&optClear,
+		&m_DepthStencilAllocation,
+		IID_PPV_ARGS(&m_DepthStencilBuffer)
+	));
 
-		// Execute the resize commands.
-		ThrowIfFailed(m_CommandList->Close());
-		ID3D12CommandList* cmdsLists[] = { m_CommandList.Get() };
-		m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	ThrowIfFailed(m_DepthStencilBuffer->SetName(L"Depth/Stencil Resource Heap"));
+	m_DepthStencilAllocation->SetName(L"Depth/Stencil Resource Heap");
+	//ThrowIfFailed(m_Device->CreateCommittedResource(
+	//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+	//	D3D12_HEAP_FLAG_NONE,
+	//	IN & depthStencilDesc,
+	//	D3D12_RESOURCE_STATE_COMMON,
+	//	IN & optClear,
+	//	IID_PPV_ARGS(OUT m_DepthStencilBuffer.GetAddressOf())));
 
-		// Wait until resize is complete.
-		//FlushCommandQueue();
+	// Create descriptor to mip level 0 of entire resource using the format of the resource.
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Format = m_DepthStencilFormat;
+	dsvDesc.Texture2D.MipSlice = 0;
+	m_Device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
 
-	
 
-		// Update the viewport transform to cover the client area.
-		m_ScreenViewport.TopLeftX = 0;
-		m_ScreenViewport.TopLeftY = 0;
-		m_ScreenViewport.Width = static_cast<float>(height);
-		m_ScreenViewport.Height = static_cast<float>(width);
-		m_ScreenViewport.MinDepth = 0.0f;
-		m_ScreenViewport.MaxDepth = 1.0f;
+	// Transition the resource from its initial state to be used as a depth buffer.
+	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
+		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
-		m_ScissorRect = { 0, 0, static_cast<int>(width), static_cast<int>(height)};
-	
-	
+	// Execute the resize commands.
+	ThrowIfFailed(m_CommandList->Close());
+	ID3D12CommandList* cmdsLists[] = { m_CommandList.Get() };
+	m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+	// Wait until resize is complete.
+	//FlushCommandQueue();
+
+
+
+	// Update the viewport transform to cover the client area.
+	m_ScreenViewport.TopLeftX = 0;
+	m_ScreenViewport.TopLeftY = 0;
+	m_ScreenViewport.Width = static_cast<float>(height);
+	m_ScreenViewport.Height = static_cast<float>(width);
+	m_ScreenViewport.MinDepth = 0.0f;
+	m_ScreenViewport.MaxDepth = 1.0f;
+
+	m_ScissorRect = { 0, 0, static_cast<int>(width), static_cast<int>(height) };
+
+
 
 
 }
@@ -644,16 +712,13 @@ void DeviceD3D12::FlushCommandQueue()
 
 		// Fire event when GPU hits current fence.  
 		ThrowIfFailed(m_Fence->SetEventOnCompletion(m_CurrentFence, eventHandle));
-		
+
 		// Wait until the GPU hits current fence event is fired.
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
 	}
 }
 
-void ImguiRenderDrawDataD3D12Wrapper(ImDrawData* drawData)
-{
-}
 
 
 IFNITY_END_NAMESPACE

@@ -3,6 +3,7 @@
 #include "pch.h"
 #include "Ifnity/GraphicsDeviceManager.hpp"
 #include "Platform/ImguiRender/ImguiD3D12Render.h"
+#include "D3D12MemAlloc.h"
 
 IFNITY_NAMESPACE
 
@@ -22,6 +23,7 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 	ComPtr<IDXGISwapChain3> m_SwapChain = nullptr;
 	HWND m_hWnd = nullptr;
 
+	ComPtr<D3D12MA::Allocator> g_Allocator;
 
 	//States 
 	bool m_MsaaState = false;
@@ -37,8 +39,8 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 
 	//Resources 
 	std::array<ComPtr<ID3D12Resource>, 2> m_SwapChainBuffer;
-	ComPtr<ID3D12Resource>				  m_DepthStencilBuffer = nullptr;
-
+	ComPtr<ID3D12Resource>				  m_DepthStencilBuffer;
+	D3D12MA::Allocation*				  m_DepthStencilAllocation;
 
 
 	D3D_DRIVER_TYPE m_D3dDriverType = D3D_DRIVER_TYPE_HARDWARE;

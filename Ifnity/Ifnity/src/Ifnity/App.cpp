@@ -198,10 +198,12 @@ void main()
 			{
 				//Delete and destroy windows. 
 				m_Window->Shutdown();
-				m_Window.reset();
+				
 
 				//OnDetach all layers
 				ForceOnDetachLayers();
+				m_Window.reset();
+
 				ResetAppEvents();
 
 				InitApp(m_graphicsAPI);
