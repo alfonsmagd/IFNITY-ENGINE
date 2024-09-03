@@ -2,6 +2,7 @@
 
 
 
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 IFNITY_NAMESPACE
@@ -39,13 +40,13 @@ DeviceD3D12::~DeviceD3D12()
 	CloseHandle(m_FenceEvent);
 
 	m_CommandQueue.Reset();
-	m_CommandList.Reset(); 
+	m_CommandList.Reset();
 
 	m_DsvHeap.Reset();
 	m_DepthStencilBuffer.Reset();
 	m_DepthStencilAllocation->Release(); m_DepthStencilAllocation = nullptr;
 	m_RtvHeap.Reset();
-	
+
 	m_DirectCmdListAlloc.Reset();
 	m_Fence.Reset();
 
@@ -55,11 +56,11 @@ DeviceD3D12::~DeviceD3D12()
 		m_SwapChainBuffer[i].Reset();
 	}
 
-	
-	g_Allocator.Reset(); 
 
-	m_DxgiFactory.Reset(); 
-	m_DxgiAdapter.Reset(); 
+	g_Allocator.Reset();
+
+	m_DxgiFactory.Reset();
+	m_DxgiAdapter.Reset();
 	m_Device.Reset();
 	m_SwapChain.Reset();
 
@@ -111,6 +112,8 @@ void DeviceD3D12::OnUpdate()
 	m_CurrentBackBufferIndex = (m_CurrentBackBufferIndex + 1) % m_SwapChainBufferCount;
 	FlushCommandQueue();
 
+	CreateSwapChain();
+	OnResize();
 
 	// Reuse the memory associated with command recording.
 	// We can only reset when the associated command lists have finished execution on the GPU.
@@ -120,10 +123,9 @@ void DeviceD3D12::OnUpdate()
 	// Reusing the command list reuses memory.
 	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
 
+	
 
-
-	// 
-
+	
 
 }
 
@@ -225,17 +227,17 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	 {
 		 D3D12MA::ALLOCATOR_DESC desc = {};
-		 desc.Flags = D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED |		                  D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_SINGLETHREADED;
+		 desc.Flags = D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED | D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_SINGLETHREADED;
 		 desc.pDevice = m_Device.Get();
 		 desc.pAdapter = m_DxgiAdapter.Get();
 
-		/* if (ENABLE_CPU_ALLOCATION_CALLBACKS)
-		 {
-			 g_AllocationCallbacks.pAllocate = &CustomAllocate;
-			 g_AllocationCallbacks.pFree = &CustomFree;
-			 g_AllocationCallbacks.pPrivateData = CUSTOM_ALLOCATION_PRIVATE_DATA;
-			 desc.pAllocationCallbacks = &g_AllocationCallbacks;
-		 }*/
+		 /* if (ENABLE_CPU_ALLOCATION_CALLBACKS)
+		  {
+			  g_AllocationCallbacks.pAllocate = &CustomAllocate;
+			  g_AllocationCallbacks.pFree = &CustomFree;
+			  g_AllocationCallbacks.pPrivateData = CUSTOM_ALLOCATION_PRIVATE_DATA;
+			  desc.pAllocationCallbacks = &g_AllocationCallbacks;
+		  }*/
 
 		 ThrowIfFailed(D3D12MA::CreateAllocator(&desc, &g_Allocator));
 	 }
@@ -395,6 +397,16 @@ bool DeviceD3D12::CreateSwapChain()
 	// Obtener el handle de la ventana desde GLFW
 	m_hWnd = glfwGetWin32Window(m_Window);
 
+	// Release all previous resources.
+	for (int i = 0; i < m_SwapChainBufferCount; ++i)
+	{
+		m_SwapChainBuffer[i].Reset();
+	}
+
+	// Libera la swap chain anterior.
+	m_SwapChain.Reset();
+
+	FlushCommandQueue();
 
 	// Describe and create the swap chain.
 	DXGI_MODE_DESC bufferDesc = {};
@@ -425,10 +437,10 @@ bool DeviceD3D12::CreateSwapChain()
 	ThrowIfFailed(m_DxgiFactory->CreateSwapChain(
 		m_CommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
 		&sd,
-		&swapChain
+		m_SwapChain.GetAddressOf()
 	));
 
-	ThrowIfFailed(swapChain.As(&m_SwapChain));
+
 
 	OutputDebugString(L"SwapChain Created\n");
 	return true;
@@ -574,6 +586,12 @@ void DeviceD3D12::OnResize()
 
 
 	FlushCommandQueue();
+
+	
+	//Allocator desc creation. 
+
+
+
 	//Reuse the memory of the command list.
 	//Ensure the command list is in a clean state before recording new commands.
 	//Properly synchronize with the GPU to avoid overwriting commands that have not yet been executed.
@@ -582,6 +600,30 @@ void DeviceD3D12::OnResize()
 	UINT64 width, height;
 	width = GetWidth();
 	height = GetHeight();
+
+	// Release the previous resources we will be recreating.
+	for (int i = 0; i < m_SwapChainBufferCount; ++i)
+		m_SwapChainBuffer[i].Reset();
+
+	if (m_DepthStencilBuffer)
+	{
+		m_DepthStencilBuffer->Release();
+	}
+	if (m_DepthStencilAllocation)
+	{
+		m_DepthStencilAllocation->Release();
+	}
+
+
+	// Resize the swap chain.
+	ThrowIfFailed(m_SwapChain->ResizeBuffers(
+		m_SwapChainBufferCount,
+		width, height,
+		m_BackBufferFormat,
+		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
+
+	m_CurrentBackBufferIndex = 0;
+
 
 	//Create RTV Descriptor Heap
 
@@ -637,15 +679,18 @@ void DeviceD3D12::OnResize()
 	depthStencilResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
+	
 
 	ThrowIfFailed(g_Allocator->CreateResource(
 		&depthStencilAllocDesc,
 		&depthStencilResourceDesc,
-		D3D12_RESOURCE_STATE_DEPTH_WRITE,
+		D3D12_RESOURCE_STATE_COMMON,
 		&optClear,
 		&m_DepthStencilAllocation,
-		IID_PPV_ARGS(&m_DepthStencilBuffer)
+		IID_PPV_ARGS(m_DepthStencilBuffer.GetAddressOf())
 	));
+
+	
 
 	ThrowIfFailed(m_DepthStencilBuffer->SetName(L"Depth/Stencil Resource Heap"));
 	m_DepthStencilAllocation->SetName(L"Depth/Stencil Resource Heap");
@@ -657,7 +702,7 @@ void DeviceD3D12::OnResize()
 	//	IN & optClear,
 	//	IID_PPV_ARGS(OUT m_DepthStencilBuffer.GetAddressOf())));
 
-	// Create descriptor to mip level 0 of entire resource using the format of the resource.
+	 /*Create descriptor to mip level 0 of entire resource using the format of the resource.*/
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -666,9 +711,9 @@ void DeviceD3D12::OnResize()
 	m_Device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
 
 
-	// Transition the resource from its initial state to be used as a depth buffer.
-	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	//// Transition the resource from its initial state to be used as a depth buffer.
+	//m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
+	//	D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
 	// Execute the resize commands.
 	ThrowIfFailed(m_CommandList->Close());
@@ -676,7 +721,7 @@ void DeviceD3D12::OnResize()
 	m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// Wait until resize is complete.
-	//FlushCommandQueue();
+	FlushCommandQueue();
 
 
 

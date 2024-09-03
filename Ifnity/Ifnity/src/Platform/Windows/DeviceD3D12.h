@@ -20,7 +20,7 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 	ComPtr<ID3D12CommandQueue> m_CommandQueue = nullptr;
 	ComPtr<ID3D12CommandAllocator> m_DirectCmdListAlloc = nullptr;
 	ComPtr<ID3D12GraphicsCommandList> m_CommandList = nullptr;
-	ComPtr<IDXGISwapChain3> m_SwapChain = nullptr;
+	ComPtr<IDXGISwapChain> m_SwapChain = nullptr;
 	HWND m_hWnd = nullptr;
 
 	ComPtr<D3D12MA::Allocator> g_Allocator;
