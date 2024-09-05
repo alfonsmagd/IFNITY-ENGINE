@@ -4,15 +4,16 @@
 #include "Ifnity/GraphicsDeviceManager.hpp"
 #include "Platform/ImguiRender/ImguiD3D12Render.h"
 #include "D3D12MemAlloc.h"
-
+#include <d3dcompiler.h>
 IFNITY_NAMESPACE
 
 using namespace Microsoft::WRL;
 
 class DeviceD3D12 final : public GraphicsDeviceManager
 {
-	ImDrawData* m_DrawData = nullptr;
-	
+public:
+	//Pipeline Objects
+	ComPtr<ID3D12RootSignature> m_RootSignature = nullptr;
 	ComPtr<IDXGIFactory4> m_DxgiFactory = nullptr;
 	ComPtr<ID3D12Device>  m_Device = nullptr;
 	ComPtr<IDXGIAdapter>  m_DxgiAdapter = nullptr;
@@ -41,6 +42,12 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 	std::array<ComPtr<ID3D12Resource>, 2> m_SwapChainBuffer;
 	ComPtr<ID3D12Resource>				  m_DepthStencilBuffer;
 	D3D12MA::Allocation*				  m_DepthStencilAllocation;
+
+	//Shaders
+	ComPtr<ID3DBlob> m_VsByteCode = nullptr;
+	ComPtr<ID3DBlob> m_PsByteCode = nullptr;
+
+	std::vector<D3D12_INPUT_ELEMENT_DESC> m_InputLayout;
 
 
 	D3D_DRIVER_TYPE m_D3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
@@ -99,6 +106,12 @@ private:
 	void CreateRtvAndDsvDescriptorHeaps();
 	void OnResize();                         //Todo: Move to Protected. 
 	void FlushCommandQueue();
+
+	//Process load assets. 
+	void LoadAssetDemo();
+	void BuildRootSignature();
+	void BuildShadersAndInputLayout();
+	
 	
 
 
@@ -203,7 +216,31 @@ inline void ThrowIfFailed(HRESULT hr)
 	}
 }
 
+inline ComPtr<ID3DBlob> CompileShader(
+	const std::wstring& filename,
+	const D3D_SHADER_MACRO* defines,
+	const std::string& entrypoint,
+	const std::string& target)
+{
+	UINT compileFlags = 0;
+#if defined(DEBUG) || defined(_DEBUG)  
+	compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
 
+	HRESULT hr = S_OK;
+
+	ComPtr<ID3DBlob> byteCode = nullptr;
+	ComPtr<ID3DBlob> errors;
+	hr = D3DCompileFromFile(filename.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+		entrypoint.c_str(), target.c_str(), compileFlags, 0, &byteCode, &errors);
+
+	if (errors != nullptr)
+		OutputDebugStringA((char*)errors->GetBufferPointer());
+
+	ThrowIfFailed(hr);
+
+	return byteCode;
+}
 
 
 //--------	--------------	----------------------------------------D3D12 Utils.

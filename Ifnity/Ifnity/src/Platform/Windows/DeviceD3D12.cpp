@@ -3,6 +3,7 @@
 
 
 
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 IFNITY_NAMESPACE
@@ -320,6 +321,8 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	OnResize();
 
 	CaptureD3D12DebugMessages();
+
+	LoadAssetDemo();
 
 	return true;
 }
@@ -790,6 +793,71 @@ void DeviceD3D12::FlushCommandQueue()
 	}
 }
 
+void DeviceD3D12::BuildRootSignature()
+{
+	// Shader programs typically require resources as input (constant buffers,
+	// textures, samplers).  The root signature defines the resources the shader
+	// programs expect.  If we think of the shader programs as a function, and
+	// the input resources as function parameters, then the root signature can be
+	// thought of as defining the function signature. 
+	// Create an empty root signature. that shader will use to access resources in D3D12.
+	{
+		//Describe and create a root signature. The root signature describes the data an HLSL shader expects. AND
+		//D3D12_ROOT_SIGNATURE_DESC: can use input shader layout .
+		CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
+		rootSignatureDesc.Init(0,
+			nullptr,
+			0,
+			nullptr,
+			D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+		ComPtr<ID3DBlob> signature;
+		ComPtr<ID3DBlob> error;
+
+		ThrowIfFailed(D3D12SerializeRootSignature(IN & rootSignatureDesc,
+			D3D_ROOT_SIGNATURE_VERSION_1,
+			OUT & signature, OUT & error));
+
+		ThrowIfFailed(m_Device->CreateRootSignature(0,
+			signature->GetBufferPointer(),
+			signature->GetBufferSize(),
+			IID_PPV_ARGS(OUT & m_RootSignature)));
+
+
+
+#if defined(_DEBUG)
+		// Enable better shader debugging with the graphics debugging tools.
+		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+		UINT compileFlags = 0;
+#endif
+
+
+
+	}
+}
+
+void DeviceD3D12::BuildShadersAndInputLayout()
+{
+	HRESULT hr = S_OK;
+
+	m_VsByteCode = CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
+	m_PsByteCode = CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+
+	m_InputLayout =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
+	};
+}
+
+
+
+void DeviceD3D12::LoadAssetDemo()
+{
+	BuildRootSignature();
+	BuildShadersAndInputLayout();
+}
 
 
 IFNITY_END_NAMESPACE
