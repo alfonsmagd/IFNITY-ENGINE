@@ -57,7 +57,7 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 
 	struct DeviceParams
 	{
-		D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_11_0;
+		D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_0;
 		bool enableDebugRuntime = true;
 	} m_DeviceParams;
 

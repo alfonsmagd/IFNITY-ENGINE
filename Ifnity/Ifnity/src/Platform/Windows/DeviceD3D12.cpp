@@ -83,16 +83,25 @@ void DeviceD3D12::OnUpdate()
 	m_CommandList->RSSetViewports(1, &m_ScreenViewport);
 	m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
+	// Transition the depth/stencil buffer to be writable.
+	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
+		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+
+
 	// Clear the back buffer and depth buffer.
 	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
 	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+	// Transition the depth/stencil buffer back to its original state.
+	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
+		D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON));
 
 	// Specify the buffers we are going to render to.
 	m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
 	// Indicate a state transition on the resource usage.
 
-	// Aquí es donde enganchas el renderizado de ImGui.
+	
 	//ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
 
@@ -112,8 +121,11 @@ void DeviceD3D12::OnUpdate()
 	m_CurrentBackBufferIndex = (m_CurrentBackBufferIndex + 1) % m_SwapChainBufferCount;
 	FlushCommandQueue();
 
+#define RESIZE_D3D12 0
+#ifdef RESIZE_D3D12
 	CreateSwapChain();
 	OnResize();
+#endif
 
 	// Reuse the memory associated with command recording.
 	// We can only reset when the associated command lists have finished execution on the GPU.
@@ -220,10 +232,23 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	}
 
 	//Create the D3D12 device
-	 ThrowIfFailed( D3D12CreateDevice(
+	HRESULT result =  D3D12CreateDevice(
 		IN m_DxgiAdapter.Get(),
-		m_DeviceParams.featureLevel,
-		IID_PPV_ARGS(OUT & m_Device)));
+		IN m_DeviceParams.featureLevel,
+		IID_PPV_ARGS(OUT & m_Device));
+
+
+	 // Fallback to WARP device.
+	 if (FAILED(result))
+	 {
+		 ComPtr<IDXGIAdapter> pWarpAdapter;
+		 ThrowIfFailed(m_DxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
+
+		 ThrowIfFailed(D3D12CreateDevice(
+			 IN pWarpAdapter.Get(),
+			 IN D3D_FEATURE_LEVEL_11_0,
+			 IID_PPV_ARGS(OUT &m_Device)));
+	 }
 
 	 {
 		 D3D12MA::ALLOCATOR_DESC desc = {};
@@ -598,8 +623,9 @@ void DeviceD3D12::OnResize()
 	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
 
 	UINT64 width, height;
-	width = GetWidth();
-	height = GetHeight();
+	//TODO : Check if the width and height are greater than 0.
+	width = GetWidth() > 0 ? GetWidth() : 1;
+	height = GetHeight() > 0 ? GetHeight() : 1;
 
 	// Release the previous resources we will be recreating.
 	for (int i = 0; i < m_SwapChainBufferCount; ++i)
