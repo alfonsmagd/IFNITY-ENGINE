@@ -78,7 +78,7 @@ set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.cpp)
 set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/pch.h)
 

@@ -49,7 +49,8 @@ public:
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC> m_InputLayout;
 
-
+	//Pipeline State Objects
+	ComPtr<ID3D12PipelineState> m_PipelineState = nullptr;
 	D3D_DRIVER_TYPE m_D3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
 	DXGI_FORMAT m_BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 	DXGI_FORMAT m_DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -111,6 +112,7 @@ private:
 	void LoadAssetDemo();
 	void BuildRootSignature();
 	void BuildShadersAndInputLayout();
+	void BuildPipelineStage();
 	
 	
 

@@ -221,7 +221,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 		if (adapterIndex == 0)
 			IFNITY_LOG(LogCore, ERROR, "Cannot find any DXGI adapters in the system. D3D12");
 		else
-			IFNITY_LOG(LogCore, ERROR, "The specified DXGI adapter %d does not exist. D3D12", adapterIndex);
+			//IFNITY_LOG(LogCore, ERROR, "The specified DXGI adapter %d does not exist. D3D12", adapterIndex);
 
 		return false;
 	}
@@ -317,12 +317,13 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	CreateSwapChain();
 	//Crate RTV and DSV Descriptor Heaps
 	CreateRtvAndDsvDescriptorHeaps();
+	LoadAssetDemo();
 
 	OnResize();
 
 	CaptureD3D12DebugMessages();
 
-	LoadAssetDemo();
+	
 
 	return true;
 }
@@ -841,8 +842,8 @@ void DeviceD3D12::BuildShadersAndInputLayout()
 {
 	HRESULT hr = S_OK;
 
-	m_VsByteCode = CompileShader(L"Shaders\\color.hlsl", nullptr, "VS", "vs_5_0");
-	m_PsByteCode = CompileShader(L"Shaders\\color.hlsl", nullptr, "PS", "ps_5_0");
+	m_VsByteCode = CompileShader(L"Shaders\\shaders.hlsl", nullptr, "VSMain", "vs_5_0");
+	m_PsByteCode = CompileShader(L"Shaders\\shaders.hlsl", nullptr, "PSMain", "ps_5_0");
 
 	m_InputLayout =
 	{
@@ -851,12 +852,48 @@ void DeviceD3D12::BuildShadersAndInputLayout()
 	};
 }
 
+void DeviceD3D12::BuildPipelineStage()
+{
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
+	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
+	psoDesc.InputLayout = { m_InputLayout.data(), (UINT)m_InputLayout.size() };
+	psoDesc.pRootSignature = m_RootSignature.Get();
+	psoDesc.VS =
+	{
+		reinterpret_cast<BYTE*>(m_VsByteCode->GetBufferPointer()),
+		m_VsByteCode->GetBufferSize()
+	};
+	psoDesc.PS =
+	{
+		reinterpret_cast<BYTE*>(m_PsByteCode->GetBufferPointer()),
+		m_PsByteCode->GetBufferSize()
+	};
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = m_BackBufferFormat;
+	psoDesc.DSVFormat = m_DepthStencilFormat;
+	psoDesc.SampleDesc.Count = m_MsaaState ? 4 : 1; // Activate MSSA 4X , by default is false. 												   
+	psoDesc.SampleDesc.Quality = CheckMSAAQualitySupport(psoDesc.SampleDesc.Count,
+		m_BackBufferFormat) - 1; // Its importa													to substract 1 because the quality level is 0 based.
+	ThrowIfFailed(m_Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineState)));
+
+
+
+
+
+}
+
 
 
 void DeviceD3D12::LoadAssetDemo()
 {
 	BuildRootSignature();
 	BuildShadersAndInputLayout();
+	BuildPipelineStage();
 }
 
 
