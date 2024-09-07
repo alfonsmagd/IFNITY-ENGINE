@@ -76,7 +76,9 @@ IFNITY_NAMESPACE namespace rhi {
     { DXGI_ERROR_RESTRICT_TO_OUTPUT_STALE, "DXGI_ERROR_RESTRICT_TO_OUTPUT_STALE: The DXGI output (monitor) to which the swap chain content was restricted is now disconnected or changed." },
     { DXGI_ERROR_CANNOT_PROTECT_CONTENT, "DXGI_ERROR_CANNOT_PROTECT_CONTENT: DXGI can't provide content protection on the swap chain. This is typically caused by an older driver, or by the application using a swap chain that is incompatible with content protection." },
     { DXGI_ERROR_ACCESS_DENIED, "DXGI_ERROR_ACCESS_DENIED: You tried to use a resource to which you did not have the required access privileges." },
-    { DXGI_ERROR_MPO_UNPINNED, "DXGI_ERROR_MPO_UNPINNED: The application is trying to use a resource that is no longer available." },
+   #ifdef DXGI_ERROR_MPO_UNPINNED
+        { DXGI_ERROR_MPO_UNPINNED, "DXGI_ERROR_MPO_UNPINNED: The application is trying to use a resource that is no longer available." },
+    #endif
     { DXGI_ERROR_NOT_CURRENT, "DXGI_ERROR_NOT_CURRENT: The application is trying to use a resource that is no longer available." },
     { DXGI_ERROR_HW_PROTECTION_OUTOFMEMORY, "DXGI_ERROR_HW_PROTECTION_OUTOFMEMORY: The application is trying to use a resource that is no longer available." },
     { DXGI_ERROR_DYNAMIC_CODE_POLICY_VIOLATION, "DXGI_ERROR_DYNAMIC_CODE_POLICY_VIOLATION: The application is trying to use a resource that is no longer available." },
