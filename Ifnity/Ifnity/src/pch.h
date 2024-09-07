@@ -19,6 +19,7 @@
 #include <implot.h>
 #include <imgui_internal.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <Ifnity/Graphics/ifrhi.h>
 

@@ -51,3 +51,10 @@ target_compile_definitions(glm INTERFACE
     GLM_ENABLE_EXPERIMENTAL
     GLM_FORCE_XYZW_ONLY
 )
+
+#stb_image 
+set(STB_IMAGE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/stb_image")
+add_library(stb_image INTERFACE)
+target_sources(stb_image INTERFACE ${STB_IMAGE_DIR}/stb_image.h)
+target_include_directories(stb_image INTERFACE ${STB_IMAGE_DIR})
+set_property(TARGET stb_image PROPERTY FOLDER "ThirdParty")

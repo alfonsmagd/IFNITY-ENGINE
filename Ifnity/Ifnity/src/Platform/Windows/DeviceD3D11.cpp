@@ -1,6 +1,6 @@
 #include "DeviceD3D11.h"
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
-#include <DirectXColors.h> // TODO: All colors move in rhi namespace
+
 IFNITY_NAMESPACE
 
 
@@ -108,8 +108,6 @@ bool DeviceD3D11::InitializeDeviceAndContext()
 	{
 		DXGI_ADAPTER_DESC aDesc;
 		m_DxgiAdapter->GetDesc(&aDesc);
-
-
 		m_IsNvidia = rhi::IsNvDeviceID(aDesc.VendorId);
 	}
 

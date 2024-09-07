@@ -6,6 +6,7 @@
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
+#include "Platform/ImguiRender/ImguiD3D12Render.h"
 #include <GLFW/glfw3.h>
 #include <glad\glad.h>
 #include <Platform/Windows/DeviceOpengl.h>
@@ -71,9 +72,6 @@ void main()
 
 
 
-
-
-
 	}
 
 	void App::InitEventBusAndListeners()
@@ -102,11 +100,11 @@ void main()
 	// Static member  declaration
 	App* App::s_Instance = nullptr;
 	// Default Constructor;
-	App::App()
+	App::App(rhi::GraphicsAPI api) : m_graphicsAPI(api)
 	{
 		s_Instance = this;
 
-		InitApp(rhi::GraphicsAPI::OPENGL);
+		InitApp(m_graphicsAPI);
 		
 	}
 
@@ -123,7 +121,7 @@ void main()
 		io.ConfigFlags |= ImGuiBackendFlags_HasMouseCursors; // Enable SetMousePos.
 		io.ConfigFlags |= ImGuiBackendFlags_HasSetMousePos;  // Enable SetMousePos.
 		io.FontGlobalScale = 1.0f;
-		ImGui::StyleInfity(); // Clasic color style.
+		//ImGui::StyleInfity(); // Clasic color style.
 
 		// Classic version  1.87 see IMGUI_DISABLE_OBSOLETE_KEYIO in new version
 		//  not necessary intialization maps for keys.
@@ -142,7 +140,14 @@ void main()
 				ImPlot::CreateContext();
 
 			};
-		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []() {};
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []()
+			{
+			
+				ImGui_ImplDX12_NewFrame();
+				ImGui::NewFrame();
+				ImPlot::CreateContext();
+			
+			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []() {};
 
 
@@ -173,12 +178,12 @@ void main()
 		}
 		while (isRunning())
 		{
-			
+			glfwPollEvents();
 			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
 			// Render ImGui Frame
 			RenderImGuiFrame();
-			ImGui::ShowDemoWindow();
+			//ImGui::ShowDemoWindow();
 			//Layer Renders. 
 			for (Layer* layer : m_LayerStack)
 			{
@@ -188,14 +193,17 @@ void main()
 			m_Window->OnUpdate();
 
 
+			// Change API 
 			if (m_FlagChangeAPI)
 			{
 				//Delete and destroy windows. 
 				m_Window->Shutdown();
-				m_Window.reset();
+				
 
 				//OnDetach all layers
 				ForceOnDetachLayers();
+				m_Window.reset();
+
 				ResetAppEvents();
 
 				InitApp(m_graphicsAPI);
@@ -290,6 +298,8 @@ void main()
 		{
 			IFNITY_LOG(LogApp, ERROR, "Imgui API not found, impossible to render");
 		}
+
+
 	}
 
 	void App::ResetAppEvents()

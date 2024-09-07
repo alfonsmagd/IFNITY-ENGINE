@@ -23,6 +23,7 @@ private:
 	HWND m_hWnd = nullptr;
 
 	ComPtr<ID3D11Texture2D> m_backBuffer = nullptr;
+	
 
 
 	std::string m_RendererString;

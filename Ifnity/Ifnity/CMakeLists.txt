@@ -35,6 +35,8 @@ set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 #add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
+# add D3D12MemoryAllocator 
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator)
 
 
 
@@ -52,7 +54,10 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/glad/include)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui) 
 #include implot directory
 include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
-
+#include stb_image 
+include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
+#include d3d12mmemoryallocator 
+include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
@@ -73,7 +78,7 @@ set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.cpp)
 set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/pch.h)
 
@@ -88,6 +93,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 target_link_libraries(${PROJECT_NAME} INTERFACE  glm)
+target_link_libraries(${PROJECT_NAME} INTERFACE  stb_image)
+target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
 
 
 if(NVML_LIBRARY)

@@ -21,7 +21,7 @@ DeviceOpengl::~DeviceOpengl()
 
 void DeviceOpengl::OnUpdate()
 {
-	glfwPollEvents();
+	
 	glfwSwapBuffers(m_Window);
 }
 

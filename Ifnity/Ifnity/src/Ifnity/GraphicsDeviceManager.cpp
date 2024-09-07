@@ -1,7 +1,10 @@
+
 #include "GraphicsDeviceManager.hpp"
 #include "Platform\Windows\DeviceOpengl.h"
 #include "Platform\Windows\DeviceD3D11.h"
-
+#include "Platform\Windows\DeviceD3D12.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #ifdef _WINDOWS
 #include <ShellScalingApi.h>
 #pragma comment(lib, "shcore.lib")
@@ -78,6 +81,8 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData&& props)
 		return false;
 	}
 
+	//Load Image_Icon. 
+	SetWindowIcon();
 	glfwShowWindow(m_Window);
 
 	SetGraphicsDeviceState(StateGraphicsDevice::INITIALIZED);
@@ -152,7 +157,7 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 	} // Fin del ámbito para D3D11
 	case rhi::GraphicsAPI::D3D12:
 	{
-
+		return BuildWindow<DeviceD3D12>();
 
 	} // Fin del ámbito para D3D12
 	break;
@@ -241,6 +246,31 @@ void GraphicsDeviceManager::InitImGui()
 {
 	//TODO: More verifications to initImgui, State 
 	InitializeGui();
+}
+
+void GraphicsDeviceManager::SetWindowIcon()
+{
+	// Load image with stb_image
+	int width, height, channels;
+	stbi_uc* pixels = stbi_load("logo3.png", &width, &height, &channels, STBI_rgb_alpha);
+
+	if (!pixels)
+	{
+		IFNITY_LOG(LogApp, ERROR, "Failed to load window icon image ");
+		return;
+	}
+	// Set GLFW icon
+	GLFWimage images[1];
+	images[0].width = width;
+	images[0].height = height;
+	images[0].pixels = pixels;
+	glfwSetWindowIcon(m_Window, 1, images);
+
+	// Free image
+	stbi_image_free(pixels);
+
+	//LOG 
+	IFNITY_LOG(LogApp, INFO, "Window Icon setted");
 }
 
 IFNITY_END_NAMESPACE
