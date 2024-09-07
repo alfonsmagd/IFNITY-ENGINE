@@ -5,9 +5,11 @@
 #include "Platform/ImguiRender/ImguiD3D12Render.h"
 #include "D3D12MemAlloc.h"
 #include <d3dcompiler.h>
+#include <DirectXMath.h>
 IFNITY_NAMESPACE
 
 using namespace Microsoft::WRL;
+using namespace DirectX;
 
 class DeviceD3D12 final : public GraphicsDeviceManager
 {
@@ -41,7 +43,10 @@ public:
 	//Resources 
 	std::array<ComPtr<ID3D12Resource>, 2> m_SwapChainBuffer;
 	ComPtr<ID3D12Resource>				  m_DepthStencilBuffer;
+	ComPtr<ID3D12Resource>				  m_VertexBuffer;
 	D3D12MA::Allocation*				  m_DepthStencilAllocation;
+
+	D3D12MA::Allocation* m_VertexBufferAllocation;
 
 	//Shaders
 	ComPtr<ID3DBlob> m_VsByteCode = nullptr;
@@ -71,6 +76,7 @@ public:
 
 	D3D12_VIEWPORT m_ScreenViewport;
 	D3D12_RECT m_ScissorRect;
+	D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView;
 
 public:
 	~DeviceD3D12() override;
@@ -83,7 +89,7 @@ public:
 	void RenderDemo(int w, int h) const override;
 	
 	void* Wrapper_ptr_data() override;
-
+	float GetAspectRatio() { return static_cast<float>(GetWidth() / GetHeight()); }
 protected:
 	// Window attributes
 	void SetVSync(bool enabled) override;
@@ -115,13 +121,20 @@ private:
 	void BuildPipelineStage();
 	
 	
-
+	void PopulateCommandList();
 
 	
 
 
 
 
+};
+
+
+struct Vertex
+{
+	XMFLOAT3 position;
+	XMFLOAT4 color;
 };
 
 //--------	D3D12 Utils. ---------------------------------------------------------------------------------------//

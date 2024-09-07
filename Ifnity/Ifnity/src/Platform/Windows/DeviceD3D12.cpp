@@ -46,6 +46,7 @@ DeviceD3D12::~DeviceD3D12()
 	m_DsvHeap.Reset();
 	m_DepthStencilBuffer.Reset();
 	m_DepthStencilAllocation->Release(); m_DepthStencilAllocation = nullptr;
+	m_VertexBufferAllocation->Release(); m_VertexBufferAllocation = nullptr;
 	m_RtvHeap.Reset();
 
 	m_DirectCmdListAlloc.Reset();
@@ -75,33 +76,42 @@ void DeviceD3D12::OnUpdate()
 {
 
 
-	// Indicate a state transition on the resource usage.
-	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+	//// Indicate a state transition on the resource usage.
+	//m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+	//	D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
 
-	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
-	m_CommandList->RSSetViewports(1, &m_ScreenViewport);
-	m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
+	//// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
+	//m_CommandList->RSSetViewports(1, &m_ScreenViewport);
+	//m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
-	// Transition the depth/stencil buffer to be writable.
-	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	//// Transition the depth/stencil buffer to be writable.
+	//m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
+	//	D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
 
-	// Clear the back buffer and depth buffer.
-	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
-	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	//// Clear the back buffer and depth buffer.
+	//m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
+	//m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-	// Transition the depth/stencil buffer back to its original state.
-	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-		D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON));
+	//// Transition the depth/stencil buffer back to its original state.
+	//m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
+	//	D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON));
 
-	// Specify the buffers we are going to render to.
-	m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
-	// Indicate a state transition on the resource usage.
 
+
+
+	//// Specify the buffers we are going to render to.
+	//m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+	//m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
+	//// Set necessary state.
+	//m_CommandList->SetGraphicsRootSignature(m_RootSignature.Get());
+	//// Indicate a state transition on the resource usage.
+	//m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+	//m_CommandList->DrawInstanced(3, 1, 0, 0);
+
+	PopulateCommandList();
 	
 	//ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
@@ -122,23 +132,26 @@ void DeviceD3D12::OnUpdate()
 	m_CurrentBackBufferIndex = (m_CurrentBackBufferIndex + 1) % m_SwapChainBufferCount;
 	FlushCommandQueue();
 
-#define RESIZE_D3D12 0
+#define RESIZE_D3D12 1
 #ifdef RESIZE_D3D12
 	CreateSwapChain();
 	OnResize();
 #endif
 
-	// Reuse the memory associated with command recording.
-	// We can only reset when the associated command lists have finished execution on the GPU.
+	// Command list allocators can only be reset when the associated 
+   // command lists have finished execution on the GPU; apps should use 
+   // fences to determine GPU execution progress.
 	ThrowIfFailed(m_DirectCmdListAlloc->Reset());
 
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
-	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
+	// However, when ExecuteCommandList() is called on a particular command 
+	// list, that command list can then be reset at any time and must be before 
+	// re-recording.
+	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), m_PipelineState.Get()));
 
-	
 
-	
+
+
+
 
 }
 
@@ -184,7 +197,7 @@ bool DeviceD3D12::InitInternalInstance()
 		ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(OUT & debugDXGI1)));
 		debugDXGI1->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
 
-		
+
 
 
 		//Build the DXGI Factory
@@ -223,7 +236,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 		else
 			//IFNITY_LOG(LogCore, ERROR, "The specified DXGI adapter %d does not exist. D3D12", adapterIndex);
 
-		return false;
+			return false;
 	}
 
 	{
@@ -233,40 +246,40 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	}
 
 	//Create the D3D12 device
-	HRESULT result =  D3D12CreateDevice(
+	HRESULT result = D3D12CreateDevice(
 		IN m_DxgiAdapter.Get(),
 		IN m_DeviceParams.featureLevel,
 		IID_PPV_ARGS(OUT & m_Device));
 
 
-	 // Fallback to WARP device.
-	 if (FAILED(result))
-	 {
-		 ComPtr<IDXGIAdapter> pWarpAdapter;
-		 ThrowIfFailed(m_DxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
+	// Fallback to WARP device.
+	if (FAILED(result))
+	{
+		ComPtr<IDXGIAdapter> pWarpAdapter;
+		ThrowIfFailed(m_DxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
 
-		 ThrowIfFailed(D3D12CreateDevice(
-			 IN pWarpAdapter.Get(),
-			 IN D3D_FEATURE_LEVEL_11_0,
-			 IID_PPV_ARGS(OUT &m_Device)));
-	 }
+		ThrowIfFailed(D3D12CreateDevice(
+			IN pWarpAdapter.Get(),
+			IN D3D_FEATURE_LEVEL_11_0,
+			IID_PPV_ARGS(OUT & m_Device)));
+	}
 
-	 {
-		 D3D12MA::ALLOCATOR_DESC desc = {};
-		 desc.Flags = D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED | D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_SINGLETHREADED;
-		 desc.pDevice = m_Device.Get();
-		 desc.pAdapter = m_DxgiAdapter.Get();
+	{
+		D3D12MA::ALLOCATOR_DESC desc = {};
+		desc.Flags = D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED | D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_SINGLETHREADED;
+		desc.pDevice = m_Device.Get();
+		desc.pAdapter = m_DxgiAdapter.Get();
 
-		 /* if (ENABLE_CPU_ALLOCATION_CALLBACKS)
-		  {
-			  g_AllocationCallbacks.pAllocate = &CustomAllocate;
-			  g_AllocationCallbacks.pFree = &CustomFree;
-			  g_AllocationCallbacks.pPrivateData = CUSTOM_ALLOCATION_PRIVATE_DATA;
-			  desc.pAllocationCallbacks = &g_AllocationCallbacks;
-		  }*/
+		/* if (ENABLE_CPU_ALLOCATION_CALLBACKS)
+		 {
+			 g_AllocationCallbacks.pAllocate = &CustomAllocate;
+			 g_AllocationCallbacks.pFree = &CustomFree;
+			 g_AllocationCallbacks.pPrivateData = CUSTOM_ALLOCATION_PRIVATE_DATA;
+			 desc.pAllocationCallbacks = &g_AllocationCallbacks;
+		 }*/
 
-		 ThrowIfFailed(D3D12MA::CreateAllocator(&desc, &g_Allocator));
-	 }
+		ThrowIfFailed(D3D12MA::CreateAllocator(&desc, &g_Allocator));
+	}
 
 	//Check if the debug layer when is enabled
 	if (m_DeviceParams.enableDebugRuntime)
@@ -323,7 +336,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	CaptureD3D12DebugMessages();
 
-	
+
 
 	return true;
 }
@@ -616,7 +629,7 @@ void DeviceD3D12::OnResize()
 
 	FlushCommandQueue();
 
-	
+
 	//Allocator desc creation. 
 
 
@@ -709,7 +722,7 @@ void DeviceD3D12::OnResize()
 	depthStencilResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
-	
+
 
 	ThrowIfFailed(g_Allocator->CreateResource(
 		&depthStencilAllocDesc,
@@ -720,7 +733,7 @@ void DeviceD3D12::OnResize()
 		IID_PPV_ARGS(m_DepthStencilBuffer.GetAddressOf())
 	));
 
-	
+
 
 	ThrowIfFailed(m_DepthStencilBuffer->SetName(L"Depth/Stencil Resource Heap"));
 	m_DepthStencilAllocation->SetName(L"Depth/Stencil Resource Heap");
@@ -758,8 +771,8 @@ void DeviceD3D12::OnResize()
 	// Update the viewport transform to cover the client area.
 	m_ScreenViewport.TopLeftX = 0;
 	m_ScreenViewport.TopLeftY = 0;
-	m_ScreenViewport.Width = static_cast<float>(height);
-	m_ScreenViewport.Height = static_cast<float>(width);
+	m_ScreenViewport.Width = static_cast<float>(width);
+	m_ScreenViewport.Height = static_cast<float>(height);
 	m_ScreenViewport.MinDepth = 0.0f;
 	m_ScreenViewport.MaxDepth = 1.0f;
 
@@ -852,6 +865,8 @@ void DeviceD3D12::BuildShadersAndInputLayout()
 	};
 }
 
+
+
 void DeviceD3D12::BuildPipelineStage()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
@@ -882,19 +897,112 @@ void DeviceD3D12::BuildPipelineStage()
 	ThrowIfFailed(m_Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineState)));
 
 
+	ThrowIfFailed(m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_DirectCmdListAlloc.Get(), m_PipelineState.Get(), IID_PPV_ARGS(m_CommandList.GetAddressOf())));
 
+	m_CommandList->Close();
+	// Create the vertex buffer.
+	{
+		// Define the geometry for a triangle.
+		Vertex triangleVertices[] =
+		{
+			{ { -0.5f, -0.5f , 0.0f}, { 1.0f, 0.0f, 0.0f, 1.0f } },
+			{ { 0.0f, 0.5f , 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+			{ { 0.5f, -0.5f , 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+		};
 
+		const UINT vertexBufferSize = sizeof(triangleVertices);
 
+		// Note: using upload heaps to transfer static data like vert buffers is not 
+		// recommended. Every time the GPU needs it, the upload heap will be marshalled 
+		// over. Please read up on Default Heap usage. An upload heap is used here for 
+		// code simplicity and because there are very few verts to actually transfer.
+		/*ThrowIfFailed(m_Device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(&m_VertexBuffer)));*/
+		D3D12MA::ALLOCATION_DESC vertexBufferAllocDesc = {};
+		vertexBufferAllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+
+		D3D12_RESOURCE_DESC vertexBufferResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+
+		ThrowIfFailed(g_Allocator->CreateResource(
+			&vertexBufferAllocDesc,
+			&vertexBufferResourceDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			&m_VertexBufferAllocation,
+			IID_PPV_ARGS(m_VertexBuffer.GetAddressOf())
+		));
+
+		ThrowIfFailed(m_VertexBuffer->SetName(L"Vertex Buffer Resource Heap"));
+		m_VertexBufferAllocation->SetName(L"Vertex Buffer Allocation");
+
+		// Copy the triangle data to the vertex buffer.
+		UINT8* pVertexDataBegin;
+		CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
+		ThrowIfFailed(m_VertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
+		memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
+		m_VertexBuffer->Unmap(0, nullptr);
+
+		// Initialize the vertex buffer view.
+		m_VertexBufferView.BufferLocation = m_VertexBuffer->GetGPUVirtualAddress();
+		m_VertexBufferView.StrideInBytes = sizeof(Vertex);
+		m_VertexBufferView.SizeInBytes = vertexBufferSize;
+
+		FlushCommandQueue();
+
+	}
 }
+void DeviceD3D12::PopulateCommandList()
+{
+	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
+			D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+
+	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
+		m_CommandList->RSSetViewports(1, &m_ScreenViewport);
+		m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
+
+	// Transition the depth/stencil buffer to be writable.
+		m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
+		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	// Set necessary state.
+	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
+	m_CommandList->SetGraphicsRootSignature(m_RootSignature.Get());
+
+	
+
+	// Indicate that the back buffer will be used as a render target.
+	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+
+	m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+
+
+	// Record commands.
+	const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
+	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::CadetBlue, 0, nullptr);
+	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+	m_CommandList->DrawInstanced(3, 1, 0, 0);
 
 
 
+
+	
+}
 void DeviceD3D12::LoadAssetDemo()
 {
 	BuildRootSignature();
 	BuildShadersAndInputLayout();
 	BuildPipelineStage();
 }
+
+
+
 
 
 IFNITY_END_NAMESPACE
