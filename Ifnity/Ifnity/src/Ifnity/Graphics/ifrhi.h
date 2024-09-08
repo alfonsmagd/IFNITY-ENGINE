@@ -3,6 +3,7 @@
 #include "pch.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>
+#include <dxgi1_5.h>
  // TODO: All colors move in rhi namespace
 //Remember to simplfy the acces namespace RHI = Ifnity::rhi;
 #include <DirectXColors.h>
