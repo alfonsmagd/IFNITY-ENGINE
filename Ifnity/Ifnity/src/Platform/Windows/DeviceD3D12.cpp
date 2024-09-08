@@ -153,8 +153,7 @@ void DeviceD3D12::OnUpdate()
 	m_CurrentBackBufferIndex = (m_CurrentBackBufferIndex + 1) % m_SwapChainBufferCount;
 	FlushCommandQueue();
 
-
-#ifdef RESIZE_D3D12
+#ifdef RESIZE_D3D12 
 	CreateSwapChain();
 	OnResize();
 #endif
