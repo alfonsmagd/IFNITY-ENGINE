@@ -41,7 +41,7 @@ public:
 	ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavHeap = nullptr;
 
 	//Resources 
-	std::array<ComPtr<ID3D12Resource>, 2> m_SwapChainBuffer;
+	std::array<ID3D12Resource*, 2>        m_SwapChainBuffer;
 	ComPtr<ID3D12Resource>				  m_DepthStencilBuffer;
 	ComPtr<ID3D12Resource>				  m_VertexBuffer;
 	D3D12MA::Allocation*				  m_DepthStencilAllocation;
@@ -122,6 +122,8 @@ private:
 	
 	
 	void PopulateCommandList();
+
+	void ReportLiveObjects() const;
 
 	
 
