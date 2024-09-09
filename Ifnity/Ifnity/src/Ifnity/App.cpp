@@ -131,13 +131,13 @@ void main()
 			{
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui::NewFrame();
-				ImPlot::CreateContext();
+				
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D11] = []()
 			{
 				ImGui_ImplDX11_NewFrame();
 				ImGui::NewFrame();
-				ImPlot::CreateContext();
+				
 
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []()
@@ -145,7 +145,7 @@ void main()
 			
 				ImGui_ImplDX12_NewFrame();
 				ImGui::NewFrame();
-				ImPlot::CreateContext();
+				
 			
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []() {};

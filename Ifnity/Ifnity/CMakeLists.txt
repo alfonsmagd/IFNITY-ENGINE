@@ -14,6 +14,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/Dist)
 
 
+
 # Buscar nvml.dll en el sistema
 find_file(NVML_LIBRARY
     NAMES nvml.dll
@@ -27,6 +28,9 @@ else()
     message(STATUS "nvml.dll encontrado: ${NVML_LIBRARY}")
 endif()
 
+
+#Test if the system has vulkan,d3d11,d3d12,opengl. 
+include(${PROJECT_SOURCE_DIR}/FindGraphicsAPIs.cmake)
 
 #Rutas  nvml.lib 
 set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
@@ -58,6 +62,8 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
 #include d3d12mmemoryallocator 
 include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
+# Include Vulkan directories
+include_directories(${Vulkan_INCLUDE_DIRS})
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
@@ -95,7 +101,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 target_link_libraries(${PROJECT_NAME} INTERFACE  glm)
 target_link_libraries(${PROJECT_NAME} INTERFACE  stb_image)
 target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
-
+# Link Vulkan libraries
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 
 if(NVML_LIBRARY)
     message(STATUS "Enlazando nvml.lib ya que nvml.dll .")
@@ -127,7 +134,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # Copiar nvml.lib al directorio de enlace
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -137,5 +144,7 @@ add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}
 )
+
+
 
 
