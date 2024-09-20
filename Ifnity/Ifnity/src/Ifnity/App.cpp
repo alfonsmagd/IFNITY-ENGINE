@@ -1,7 +1,6 @@
 #include "pch.h"
 
 #include "App.h"
-#include "GraphicsDeviceManager.hpp"
 #include "Ifnity/Layers/ExampleLayer.h" //TODO: BORRAR , your own cpp 
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"

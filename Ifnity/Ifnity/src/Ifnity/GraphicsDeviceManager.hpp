@@ -1,9 +1,6 @@
 #pragma once
 
 #include "pch.h"
-
-#include "Ifnity/Core.h"
-#include "Ifnity/Event/Event.h"
 #include "Ifnity/Event/WindowEvent.h"
 
 #define GLFW_INCLUDE_NONE // Do not include any OpenGL headers

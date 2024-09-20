@@ -1,7 +1,7 @@
 #pragma once
 
 #include "pch.h"
-#include "Ifnity/Core.h"
+
 #include "Ifnity/Event/EventMacro.h"
 
 namespace IFNITY {

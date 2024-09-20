@@ -1,7 +1,7 @@
 
 
 // IFNITY.cp
-#include "pch.h"
+
 #include <Ifnity.h>
 
 
@@ -196,7 +196,7 @@ class Source_TestD3D12 : public IFNITY::App
 public:
 	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
 	{
-		
+		PushLayer(new ExampleLayer());
 	}
 	~Source_TestD3D12() override
 	{
@@ -206,6 +206,8 @@ public:
 
 IFNITY::App* IFNITY::CreateApp()
 {
+
+
 	auto api = IFNITY::rhi::GraphicsAPI::D3D12;
 	//return new Source_TestD3D12(api);
 	return new Source(api);
