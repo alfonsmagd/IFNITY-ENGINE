@@ -41,7 +41,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
 # add D3D12MemoryAllocator 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator)
-
+# add vulkan bootstrap
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 
 
 # Include directories
@@ -64,6 +65,8 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
 # Include Vulkan directories
 include_directories(${Vulkan_INCLUDE_DIRS})
+# Include VK-Bootstrap
+include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
@@ -72,6 +75,7 @@ file(GLOB_RECURSE SOURCE_FILES
     ${PROJECT_SOURCE_DIR}/src/*.h
     ${PROJECT_SOURCE_DIR}/src/*.hpp
     ${PROJECT_SOURCE_DIR}/src/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/*.c
 )
 
 # Vendor Source Files 
@@ -103,6 +107,8 @@ target_link_libraries(${PROJECT_NAME} INTERFACE  stb_image)
 target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
 # Link Vulkan libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
+# Link VK-Bootstrap
+target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 
 if(NVML_LIBRARY)
     message(STATUS "Enlazando nvml.lib ya que nvml.dll .")
