@@ -3,10 +3,18 @@
 #include "pch.h"
 #include "Ifnity/Event/WindowEvent.h"
 
+
+// GRAPHIC API
+#define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.h>
+#define GLFW_INCLUDE_VULKAN
 #define GLFW_INCLUDE_NONE // Do not include any OpenGL headers
 #include <GLFW/glfw3.h>
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
+
+
+
 #endif // _WIN32
 #include <GLFW/glfw3native.h>
 

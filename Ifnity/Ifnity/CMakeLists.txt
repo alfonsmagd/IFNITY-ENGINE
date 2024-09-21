@@ -61,7 +61,7 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
 #include stb_image 
 include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
-#include d3d12mmemoryallocator 
+#include d3d12mmemoryallocator and vkmemoryallocator
 include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
 # Include Vulkan directories
 include_directories(${Vulkan_INCLUDE_DIRS})
@@ -109,6 +109,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
+
+# Include Target Directories
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
 
 if(NVML_LIBRARY)
     message(STATUS "Enlazando nvml.lib ya que nvml.dll .")

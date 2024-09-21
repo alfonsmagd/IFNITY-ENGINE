@@ -3,6 +3,7 @@
 #include "Platform\Windows\DeviceOpengl.h"
 #include "Platform\Windows\DeviceD3D11.h"
 #include "Platform\Windows\DeviceD3D12.h"
+#include "Platform\Windows\DeviceVulkan.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #ifdef _WINDOWS
@@ -163,7 +164,7 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 	break;
 	case rhi::GraphicsAPI::VULKAN:
 	{
-
+		return BuildWindow<DeviceVulkan>();
 	}
 	break;
 
