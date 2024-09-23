@@ -30,6 +30,8 @@ private:
 	// Depth buffer
 	ImageBlock m_DepthBuffer;
 	
+	// Render pass
+	VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 
 protected:
 	// Heredado vía GraphicsDeviceManager
@@ -63,6 +65,7 @@ private:
 	bool CreateCommandPool();
 	bool DestroyCommandPool();
 	bool CreateDepthBuffer();
+	bool CreateRenderPass();
 
 };
 

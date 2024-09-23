@@ -57,6 +57,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		!CreateVmaAllocator()	||
 		!GetQueue()				||
 		!CreateSwapChain()		||
+		!CreateRenderPass()     || 
 		!CreateCommandPool())
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed Initialization Process ");
@@ -275,6 +276,72 @@ bool DeviceVulkan::CreateDepthBuffer()
 		Logger::log(1, "%s error: could not create depth buffer image view\n", __FUNCTION__);
 		return false;
 	}*/
+	return true;
+}
+
+bool DeviceVulkan::CreateRenderPass()
+{
+	//Single RenderPass with one subpass 
+
+	std::array<VkAttachmentDescription, 1> attachments = {};
+
+	// Color attachment
+	attachments[0].format = m_Swapchain.image_format;								// Use the color format selected by the swapchain
+	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;                                 // We don't use multi sampling in this example
+	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;                            // Clear this attachment at the start of the render pass
+	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;                          // Keep its contents after the render pass is finished (for displaying it)
+	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;                 // Similar to loadOp, but for stenciling (we don't use stencil here)
+	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;               // Similar to storeOp, but for stenciling (we don't use stencil here)
+	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                       // Layout at render pass start. Initial doesn't matter, so we use undefined
+	attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                   // Layout to which the attachment is transitioned when the render pass is finished
+																					// As we want to present the color attachment, we transition to PRESENT_KHR
+	// Setup attachment references
+	VkAttachmentReference colorReference = {};
+	colorReference.attachment = 0;                                                  // Attachment 0 is color
+	colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;               // Attachment layout used as color during the subpass
+
+	std::array<VkAttachmentReference, 1> attachmentref = { colorReference };
+
+	// Setup a single subpass reference
+	VkSubpassDescription subpassDescription = {};
+	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;         // Pipeline type subpass is to be bound to
+	subpassDescription.colorAttachmentCount = attachmentref.size();                 // Reference to the color attachment in this subpass
+	subpassDescription.pColorAttachments = attachmentref.data();                    // Reference to the color attachment in this subpass
+	subpassDescription.pDepthStencilAttachment = nullptr;							// (Depth attachments not used by this sample)
+	subpassDescription.inputAttachmentCount = 0;									// Input attachments can be used to sample from contents of a previous subpass
+	subpassDescription.pInputAttachments = nullptr;									// (Input attachments not used by this example)
+	subpassDescription.preserveAttachmentCount = 0;									// Preserved attachments can be used to loop (and preserve) attachments through subpasses
+	subpassDescription.pPreserveAttachments = nullptr;								// (Preserve attachments not used by this example)
+	subpassDescription.pResolveAttachments = nullptr;								// Resolve attachments are resolved at the end of a sub pass and can be used for e.g. multi sampling
+
+	// Setup subpass dependencies
+	std::array<VkSubpassDependency, 1> dependencies = {};
+
+	// Setup dependency and add implicit layout transition from final to initial layout for the color attachment.
+	// (The actual usage layout is preserved through the layout specified in the attachment reference).
+	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependencies[0].dstSubpass = 0;
+	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependencies[0].srcAccessMask = VK_ACCESS_NONE;
+	dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+
+
+	//Create the render pass
+
+	// Create the render pass object
+	VkRenderPassCreateInfo renderPassInfo = {};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());  // Number of attachments used by this render pass
+	renderPassInfo.pAttachments = attachments.data();                            // Descriptions of the attachments used by the render pass
+	renderPassInfo.subpassCount = 1;                                             // We only use one subpass in this example
+	renderPassInfo.pSubpasses = &subpassDescription;                             // Description of that subpass
+	renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size()); // Number of subpass dependencies
+	renderPassInfo.pDependencies = dependencies.data();                          // Subpass dependencies used by the render pass
+
+	VK_CHECK(vkCreateRenderPass(m_Device.device, &renderPassInfo, nullptr, &m_RenderPass), "Failed to create render pass");
+
+
 	return true;
 }
 

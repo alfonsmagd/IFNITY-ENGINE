@@ -8,6 +8,14 @@
 #include <vk_mem_alloc.h>
 
 
+#define VK_CHECK(result, errorMessage) \
+    if ((result) != VK_SUCCESS) { \
+        IFNITY_LOG(LogCore, ERROR, errorMessage); \
+        return false; \
+    }
+
+
+
 struct ImageBlock
 {
 	VkImage			image = VK_NULL_HANDLE;
