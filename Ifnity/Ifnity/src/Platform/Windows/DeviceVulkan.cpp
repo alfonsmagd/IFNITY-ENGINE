@@ -46,6 +46,26 @@ bool DeviceVulkan::InitInternalInstance()
 
 	// Store the instance.
 	m_Instance = inst_ret.value();
+
+
+	// Get extensions supported by the instance and store for later use
+	uint32_t count = 0;
+	vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
+	std::vector<VkExtensionProperties> instance_extensions;
+	std::vector<std::string> extensions_supported;
+
+	if (count > 0)
+	{
+		instance_extensions.resize(count);
+
+		if (vkEnumerateInstanceExtensionProperties(nullptr, &count, &instance_extensions.front()) == VK_SUCCESS)
+		{
+			for (size_t idx = 0; idx < instance_extensions.size(); idx++)
+			{
+				extensions_supported.push_back(instance_extensions[idx].extensionName);
+			}
+		}
+	}
 	return true;
 }
 
@@ -58,12 +78,17 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		!GetQueue()				||
 		!CreateSwapChain()		||
 		!CreateRenderPass()     || 
-		!CreateCommandPool())
+		!CreateFrameBuffer()    ||	
+		!CreateCommandPool()	||
+		!CreateCommandBuffers() ||
+		!CreateSyncObjects() 
+		)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed Initialization Process ");
 		return false;
 	}
 
+	IFNITY_LOG(LogCore, INFO, "Vulkan Device and Context Initialized");
 
 	return true;
 }
@@ -140,6 +165,7 @@ bool DeviceVulkan::CreateDevice()
 {
 	vkb::DeviceBuilder deviceBuilder{ m_PhysicalDevice };
 
+	
 	auto deviceRet = deviceBuilder.build();
 	if (!deviceRet)
 	{
@@ -147,6 +173,8 @@ bool DeviceVulkan::CreateDevice()
 		return false;
 	}
 	m_Device = deviceRet.value();
+
+	
 
 	return true;
 }
@@ -341,6 +369,89 @@ bool DeviceVulkan::CreateRenderPass()
 
 	VK_CHECK(vkCreateRenderPass(m_Device.device, &renderPassInfo, nullptr, &m_RenderPass), "Failed to create render pass");
 
+
+	return true;
+}
+
+bool DeviceVulkan::CreateFrameBuffer()
+{
+	VkImageView attachments[1] = {};
+
+
+	VkFramebufferCreateInfo frameBufferCreateInfo = {};
+	frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+	frameBufferCreateInfo.pNext = NULL;
+	frameBufferCreateInfo.renderPass = m_RenderPass;
+	frameBufferCreateInfo.attachmentCount = 1;
+	frameBufferCreateInfo.pAttachments = attachments;
+	frameBufferCreateInfo.width = m_Swapchain.extent.width;
+	frameBufferCreateInfo.height = m_Swapchain.extent.height;
+	frameBufferCreateInfo.layers = 1;
+	
+	//Create Framebuffers for each swapchain image view
+	m_Framebuffers.resize(m_Swapchain.get_image_views().value().size());
+
+	for (size_t i = 0; i < m_Framebuffers.size(); i++)
+	{
+		attachments[0] = m_Swapchain.get_image_views().value()[i];
+		VK_CHECK(vkCreateFramebuffer(m_Device.device, &frameBufferCreateInfo, nullptr, &m_Framebuffers[i]), "Failed to create framebuffer");
+
+	}
+
+	return true;
+}
+
+bool DeviceVulkan::CreateCommandBuffers()
+{
+	//Create one command buffer for each swap chain image
+	m_CommandBuffers.resize(m_Framebuffers.size());
+
+	//Allocate command buffers
+	VkCommandBufferAllocateInfo cmdBufferAllocInfo = {};
+	cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	cmdBufferAllocInfo.commandPool = m_CommandPool;
+	cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	cmdBufferAllocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
+
+	VK_CHECK(vkAllocateCommandBuffers(m_Device.device, &cmdBufferAllocInfo, m_CommandBuffers.data()), "Failed to allocate command buffers");
+
+	return true;
+}
+
+bool DeviceVulkan::CreateSyncObjects()
+{
+	//Create synchronization objects
+	VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	semaphoreCreateInfo.pNext = nullptr;
+
+	//Create a semaphore used to synchronize image presentation
+	VK_CHECK(vkCreateSemaphore(m_Device.device, &semaphoreCreateInfo, nullptr, &m_PresentSemaphore), "Failed to create present semaphore");
+
+	//Create a semaphore used to synchronize render completion
+	VK_CHECK(vkCreateSemaphore(m_Device.device, &semaphoreCreateInfo, nullptr, &m_RenderSemaphore), "Failed to create render semaphore");
+
+
+	return true;
+}
+
+bool DeviceVulkan::AcquireNextImage()
+{
+	//Get the index of the next available swapchain image
+	VkResult result = vkAcquireNextImageKHR(m_Device.device, m_Swapchain.swapchain, UINT64_MAX, m_PresentSemaphore, (VkFence)nullptr, &m_imageIndex);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		//Swapchain is out of date (e.g. the window was resized) and
+		//must be recreated:
+		ResizeSwapChain();
+		return false;
+	}
+	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to acquire next swapchain image");
+		return false;
+	}
 
 	return true;
 }
