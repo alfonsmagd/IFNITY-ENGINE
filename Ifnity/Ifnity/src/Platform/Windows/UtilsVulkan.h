@@ -11,7 +11,7 @@
 #define VK_CHECK(result, errorMessage) \
     if ((result) != VK_SUCCESS) { \
         IFNITY_LOG(LogCore, ERROR, errorMessage); \
-        return false; \
+        \
     }
 
 

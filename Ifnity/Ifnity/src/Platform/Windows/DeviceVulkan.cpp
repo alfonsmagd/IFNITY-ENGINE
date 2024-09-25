@@ -12,6 +12,25 @@ IFNITY_NAMESPACE
 
 void DeviceVulkan::OnUpdate()
 {
+	// Get the index of the next available image in the swap chain
+	
+	AcquireNextImage();
+
+	PopulateCommandBuffer();
+
+	SubmitCommandBuffer();
+
+	PresentImage();
+
+	// WAITING FOR THE GPU TO COMPLETE THE FRAME BEFORE CONTINUING IS NOT BEST PRACTICE.
+	// vkQueueWaitIdle is used for simplicity.
+	// (so that we can reuse the command buffer indexed with m_commandBufferIndex)
+	VK_CHECK(vkQueueWaitIdle(m_GraphicsQueue), "Failed to wait for queue to idle");
+
+	// Update command buffer index
+	m_commandBufferIndex = (m_commandBufferIndex + 1) % m_commandBufferCount;
+
+
 }
 
 unsigned int DeviceVulkan::GetWidth() const
@@ -231,6 +250,9 @@ bool DeviceVulkan::CreateSwapChain()
 
 	vkb::destroy_swapchain(m_Swapchain);
 	m_Swapchain= swapChainBuildRet.value();
+
+	//Get image_count 
+	m_commandBufferCount = m_Swapchain.image_count;
 
 	return true;
 }
@@ -454,6 +476,123 @@ bool DeviceVulkan::AcquireNextImage()
 	}
 
 	return true;
+}
+
+bool DeviceVulkan::PopulateCommandBuffer()
+{
+
+	VkCommandBufferBeginInfo cmdBufInfo = {};
+	cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cmdBufInfo.pNext = nullptr;
+	cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	// We use a single color attachment that is cleared at the start of the subpass.
+	VkClearValue clearValues[1];
+	clearValues[0].color = { { 0.0f, 0.2f, 0.4f, 1.0f } };
+
+	VkRenderPassBeginInfo renderPassBeginInfo = {};
+	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassBeginInfo.pNext = nullptr;
+	renderPassBeginInfo.renderPass = m_RenderPass;
+	renderPassBeginInfo.renderArea.offset.x = 0;
+	renderPassBeginInfo.renderArea.offset.y = 0;
+	renderPassBeginInfo.renderArea.extent.width = m_Swapchain.extent.width;
+	renderPassBeginInfo.renderArea.extent.height = m_Swapchain.extent.height;
+	renderPassBeginInfo.clearValueCount = 1;
+	renderPassBeginInfo.pClearValues = clearValues;
+	renderPassBeginInfo.framebuffer = m_Framebuffers[m_imageIndex]; // Set the frame buffer to specify the color attachment																	  // (render target) where to draw the current frame.
+	// Initialize begin command buffer 
+	VK_CHECK(vkBeginCommandBuffer(m_CommandBuffers[m_commandBufferIndex], &cmdBufInfo), "Fail beginCommandBuffer ");
+
+	//Command Scissors and Viewport
+	VkViewport viewport = {};
+	viewport.width = (float)m_Swapchain.extent.width;
+	viewport.height = (float)m_Swapchain.extent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+
+	vkCmdSetViewport(m_CommandBuffers[m_commandBufferIndex], 0, 1, &viewport);
+
+	//Set the scissor rectangle 
+
+	VkRect2D scissor = {};
+	scissor.extent.width = m_Swapchain.extent.width;
+	scissor.extent.height = m_Swapchain.extent.height;
+	scissor.offset.x = 0;
+	scissor.offset.y = 0;
+
+	vkCmdSetScissor(m_CommandBuffers[m_commandBufferIndex], 0, 1, &scissor);
+
+	// Start the main render pass cmd 
+	// Begin the render pass instance.
+	// This will clear the color attachment.
+	vkCmdBeginRenderPass(m_CommandBuffers[m_commandBufferIndex], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	
+
+	// End the render pass cmd
+
+	vkCmdEndRenderPass(m_CommandBuffers[m_commandBufferIndex]);
+
+	// End the command buffer 
+	VK_CHECK(vkEndCommandBuffer(m_CommandBuffers[m_commandBufferIndex]), "Fail endCommandBuffer ");
+
+
+	return false;
+}
+
+bool DeviceVulkan::SubmitCommandBuffer()
+{
+	// Pipeline stage at which the queue submission will wait(via pWaitSemaphores)
+	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	//VkSubmitCreate Info 
+	VkSubmitInfo submitInfo = {};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.pNext = nullptr;
+	submitInfo.waitSemaphoreCount = 1;				// One wait semaphore
+	submitInfo.pWaitDstStageMask = &waitStageMask;  // Pointer to the list of pipeline stages that the semaphore waits will occur at
+	submitInfo.commandBufferCount = 1;				// One command buffer
+	submitInfo.pCommandBuffers = &m_CommandBuffers[m_commandBufferIndex];
+	submitInfo.signalSemaphoreCount = 1;
+
+
+	submitInfo.pSignalSemaphores = &m_RenderSemaphore; // Semaphore(s) to be signaled when command buffers have completed
+	submitInfo.pWaitSemaphores = &m_PresentSemaphore;  // Semaphore(s) to wait upon before the submitted command buffers start executing
+
+	VK_CHECK(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE), "Failed to submit command buffer");
+
+	return false;
+}
+
+bool DeviceVulkan::PresentImage()
+{
+	// Present the current image to the presentation engine.
+	// Pass the semaphore from the submit info as the wait semaphore for swap chain presentation.
+	// This ensures that the image is not presented to the windowing system until all commands have been executed.
+	VkPresentInfoKHR presentInfo = {};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pNext = NULL;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &m_Swapchain.swapchain;
+	presentInfo.pImageIndices = &m_imageIndex;
+	// Check if a wait semaphore has been specified to wait for before presenting the image
+	if (m_RenderSemaphore != VK_NULL_HANDLE)
+	{
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &m_RenderSemaphore;
+	}
+
+	VkResult present = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
+	if (!((present == VK_SUCCESS) || (present == VK_SUBOPTIMAL_KHR)))
+	{
+		if (present == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			ResizeSwapChain();
+		}
+			
+	}
+	return false;
 }
 
 

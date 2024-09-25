@@ -12,6 +12,11 @@
 #include <Platform/Windows/DeviceD3D11.h>
 
 
+
+#define _MODO_TEST 1
+
+
+
 namespace IFNITY {
 
 
@@ -67,9 +72,10 @@ void main()
 
 
 		InitEventBusAndListeners();
+
+#ifndef _MODO_TEST
 		InitConfigurationImGui();
-
-
+#endif
 
 	}
 
@@ -168,6 +174,7 @@ void main()
 		//This part its because the initializacion process is in the constructor of the app, then source will be build LAYERS  after App constructor. We cant initiate EventBusLayers in App constructor. 
 		InitiateEventBusLayers();
 
+#ifndef _MODO_TEST 
 		// TODO: CHange this logic, now is usefull to debug  this should be in a layer. 
 		bool init = false;
 		if (m_graphicsAPI == rhi::GraphicsAPI::OPENGL && !init)
@@ -175,13 +182,16 @@ void main()
 			DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
 		}
+#endif
 		while (isRunning())
 		{
 			glfwPollEvents();
 			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
 			// Render ImGui Frame
+#ifndef _MODO_TEST
 			RenderImGuiFrame();
+#endif
 			//ImGui::ShowDemoWindow();
 			//Layer Renders. 
 			for (Layer* layer : m_LayerStack)
@@ -189,8 +199,9 @@ void main()
 				layer->OnUpdate();
 			}
 
-			m_Window->OnUpdate();
 
+			m_Window->OnUpdate();
+#ifndef _MODO_TEST
 
 			// Change API 
 			if (m_FlagChangeAPI)
@@ -217,8 +228,9 @@ void main()
 
 				}
 				
-			}
 
+			}
+#endif
 		}
 
 		m_Window->Shutdown();

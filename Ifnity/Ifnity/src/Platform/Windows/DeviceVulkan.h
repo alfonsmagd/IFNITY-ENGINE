@@ -48,6 +48,8 @@ private:
 
 	//Auxiliary 
 	uint32_t m_imageIndex = 0;
+	uint32_t m_commandBufferIndex = 0;
+	uint32_t m_commandBufferCount = 0;
 
 protected:
 	// Heredado vía GraphicsDeviceManager
@@ -91,6 +93,8 @@ private:
 	//OnRender private methods
 	bool AcquireNextImage();
 	bool PopulateCommandBuffer();
+	bool SubmitCommandBuffer();
+	bool PresentImage();
 };
 
 
