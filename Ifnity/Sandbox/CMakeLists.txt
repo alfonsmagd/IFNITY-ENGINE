@@ -26,7 +26,10 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 #Add Ifnity dependencies 
 add_dependencies(${PROJECT_NAME} Ifnity)
 
-
+if(BUILD_SHARED_IFNITY)
+    target_compile_definitions(Sandbox PRIVATE IFNITY_USE_SHARED)
+    message("IFNITY_USE_SHARED CREATE  = ON ")
+endif()
 
 # Link Ifnity library dll 
 target_link_libraries(${PROJECT_NAME} PUBLIC Ifnity)

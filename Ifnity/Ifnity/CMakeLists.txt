@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(Ifnity)
 
+
+#Options
+
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -88,7 +92,14 @@ set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.cpp)
 set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+if(BUILD_SHARED_IFNITY)
+	add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS BUILD_SHARED_IFNITY)
+     message("IFNITY LIKE DLL BUILD SHARED IFNITY = ON ")
+else()
+	add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+endif()
+
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/pch.h)
 

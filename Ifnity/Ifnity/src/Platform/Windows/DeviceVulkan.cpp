@@ -528,7 +528,8 @@ bool DeviceVulkan::PopulateCommandBuffer()
 	// This will clear the color attachment.
 	vkCmdBeginRenderPass(m_CommandBuffers[m_commandBufferIndex], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	
+	//Here i can render Imgui
+	//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_commandBufferIndex]);
 
 	// End the render pass cmd
 
@@ -592,6 +593,61 @@ bool DeviceVulkan::PresentImage()
 		}
 			
 	}
+	return false;
+}
+
+bool DeviceVulkan::InitGui()
+{
+	//// Setup Dear ImGui context
+	//// Create Descriptor Pool
+	//VkDescriptorPoolSize pool_sizes[] =
+	//{
+	//	{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+	//	{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+	//};
+	//VkDescriptorPoolCreateInfo pool_info = {};
+	//pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	//pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	//pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
+	//pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+	//pool_info.pPoolSizes = pool_sizes;
+	//VK_CHECK(vkCreateDescriptorPool(m_Device.device, &pool_info, nullptr, &m_DescriptorPool), "Failed to create descriptor pool");
+
+	//// Initialize ImGui context
+	//IMGUI_CHECKVERSION();
+	//ImGui::CreateContext();
+	//ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	//// Initialize ImGui for GLFW and Vulkan
+	//ImGui_ImplGlfw_InitForVulkan(m_Window, true);
+	//ImGui_ImplVulkan_InitInfo init_info = {};
+	//init_info.Instance = m_Instance;
+	//init_info.PhysicalDevice = m_PhysicalDevice.physical_device;
+	//init_info.Device = m_Device.device;
+	//init_info.QueueFamily = m_Device.get_queue_index(vkb::QueueType::graphics).value();
+	//init_info.Queue = m_GraphicsQueue;
+	//init_info.PipelineCache = VK_NULL_HANDLE;
+	//init_info.DescriptorPool = m_DescriptorPool;
+	//init_info.Allocator = nullptr;
+	//init_info.MinImageCount = 2;
+	//init_info.ImageCount = m_Swapchain.image_count;
+	//init_info.CheckVkResultFn = VK_CHECK;
+	//ImGui_ImplVulkan_Init(&init_info, m_RenderPass);
+
+	//// Upload Fonts
+	//VkCommandBuffer command_buffer = BeginSingleTimeCommands();
+	//ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+	//EndSingleTimeCommands(command_buffer);
+	//ImGui_ImplVulkan_DestroyFontUploadObjects();
 	return false;
 }
 

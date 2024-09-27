@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 project(IFNITYPROYECT)
 
+# Define la opción y propágala a los subdirectorios
+option(BUILD_SHARED_IFNITY "Build Ifnity as a shared library dll" OFF)
 # Asegurar modulos cmake
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 

@@ -95,6 +95,7 @@ private:
 	bool PopulateCommandBuffer();
 	bool SubmitCommandBuffer();
 	bool PresentImage();
+	bool InitGui();
 };
 
 
