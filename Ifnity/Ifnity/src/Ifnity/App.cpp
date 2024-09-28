@@ -6,6 +6,7 @@
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
 #include "Platform/ImguiRender/ImguiD3D12Render.h"
+#include "Platform/ImguiRender/ImguiVulkanRender.h"
 #include <GLFW/glfw3.h>
 #include <glad\glad.h>
 #include <Platform/Windows/DeviceOpengl.h>
@@ -13,7 +14,7 @@
 
 
 
-#define _MODO_TEST 1
+//#define _MODO_TEST 0
 
 
 
@@ -82,27 +83,27 @@ void main()
 	void App::InitEventBusAndListeners()
 	{
 		// Intialize the EventListenerControler
-		
-			m_GLFWEventListener = std::make_unique<GLFWEventListener>();
-		
-			SetEventBus(m_Window->GetGLFWEventSource());
 
-			// Connect Differents events. 
-			CONNECT_EVENT(WindowResize);
-			CONNECT_EVENT(WindowClose);
-			CONNECT_EVENT(KeyPressed);
-			CONNECT_EVENT(KeyRelease);
-			CONNECT_EVENT(MouseMove);
-			CONNECT_EVENT(ScrollMouseMove);
-			CONNECT_EVENT(MouseClick);
+		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
+
+		SetEventBus(m_Window->GetGLFWEventSource());
+
+		// Connect Differents events. 
+		CONNECT_EVENT(WindowResize);
+		CONNECT_EVENT(WindowClose);
+		CONNECT_EVENT(KeyPressed);
+		CONNECT_EVENT(KeyRelease);
+		CONNECT_EVENT(MouseMove);
+		CONNECT_EVENT(ScrollMouseMove);
+		CONNECT_EVENT(MouseClick);
 
 	}
-		//Example the simple event connect. 
+	//Example the simple event connect. 
 
-		//events::connect<MouseMove>(*m_Window->GetGLFWEventSource(), *m_CameraEventListener);
-	
+	//events::connect<MouseMove>(*m_Window->GetGLFWEventSource(), *m_CameraEventListener);
 
-	// Static member  declaration
+
+// Static member  declaration
 	App* App::s_Instance = nullptr;
 	// Default Constructor;
 	App::App(rhi::GraphicsAPI api) : m_graphicsAPI(api)
@@ -110,7 +111,7 @@ void main()
 		s_Instance = this;
 
 		InitApp(m_graphicsAPI);
-		
+
 	}
 
 	void App::InitConfigurationImGui()
@@ -136,24 +137,28 @@ void main()
 			{
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui::NewFrame();
-				
+
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D11] = []()
 			{
 				ImGui_ImplDX11_NewFrame();
 				ImGui::NewFrame();
-				
+
 
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []()
 			{
-			
+
 				ImGui_ImplDX12_NewFrame();
 				ImGui::NewFrame();
-				
-			
+
+
 			};
-		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []() {};
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []()
+			{
+				ImGui_ImplVulkan_NewFrame();
+				ImGui::NewFrame();
+			};
 
 
 	}
@@ -181,7 +186,7 @@ void main()
 		{
 			DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
-		}
+	}
 #endif
 		while (isRunning())
 		{
@@ -208,7 +213,7 @@ void main()
 			{
 				//Delete and destroy windows. 
 				m_Window->Shutdown();
-				
+
 
 				//OnDetach all layers
 				ForceOnDetachLayers();
@@ -217,7 +222,7 @@ void main()
 				ResetAppEvents();
 
 				InitApp(m_graphicsAPI);
-				
+
 				ForceOnAttachLayers();
 				InitiateEventBusLayers();
 				m_FlagChangeAPI = false;
@@ -227,11 +232,11 @@ void main()
 					DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
 				}
-				
 
-			}
-#endif
+
 		}
+#endif
+}
 
 		m_Window->Shutdown();
 	}
@@ -257,7 +262,7 @@ void main()
 		}
 	}
 
-	void App::ForceOnAttachLayers() 
+	void App::ForceOnAttachLayers()
 	{
 		for (Layer* layer : m_LayerStack)
 		{

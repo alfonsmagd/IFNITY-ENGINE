@@ -2,17 +2,73 @@
 
 #include "UtilsVulkan.h"
 #include "Ifnity/GraphicsDeviceManager.hpp"
+#include  "Platform/ImguiRender/ImguiVulkanRender.h"
 
 
 
 
 IFNITY_NAMESPACE
 
+
+static void check_vk_result(VkResult err)
+{
+	if (err == 0)
+		return;
+	fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
+	if (err < 0)
+		abort();
+}
+
+
+
+ IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
+	VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT             messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+	void* pUserData)
+{
+	// Select prefix depending on flags passed to the callback
+	std::string prefix("");
+
+	if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+	{
+		prefix = "VERBOSE: ";
+	}
+	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+	{
+		prefix = "INFO: ";
+	}
+	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+	{
+		prefix = "WARNING: ";
+	}
+	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+	{
+		prefix = "ERROR: ";
+	}
+
+	std::cerr << prefix << " validation layer: " << pCallbackData->pMessage << std::endl;
+
+	return VK_FALSE;
+}
+
+ IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
+{
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+	if (func != nullptr)
+	{
+		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+	}
+	else
+	{
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+}
+
 class DeviceVulkan final : public GraphicsDeviceManager
 {
 private:
 
-	
 
 	vkb::Instance  m_Instance;  // Vulkan instance 
 	VmaAllocator   m_Allocator; // Vulkan memory allocator
@@ -50,6 +106,20 @@ private:
 	uint32_t m_imageIndex = 0;
 	uint32_t m_commandBufferIndex = 0;
 	uint32_t m_commandBufferCount = 0;
+
+	//Descritpor Pool Imgui 
+	VkDescriptorPool m_ImGuiDescriptorPool = VK_NULL_HANDLE;
+
+	//DebugUtils
+	VkDebugUtilsMessengerEXT            debugUtilsMessenger;
+#ifdef _DEBUG
+	PFN_vkDebugMarkerSetObjectTagEXT  vkDebugMarkerSetObjectTag = VK_NULL_HANDLE;
+	PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectName = VK_NULL_HANDLE;
+	PFN_vkCmdDebugMarkerBeginEXT      vkCmdDebugMarkerBegin = VK_NULL_HANDLE;
+	PFN_vkCmdDebugMarkerEndEXT        vkCmdDebugMarkerEnd = VK_NULL_HANDLE;
+	PFN_vkCmdDebugMarkerInsertEXT     vkCmdDebugMarkerInsert = VK_NULL_HANDLE;
+	bool                              is_active = false;
+#endif
 
 protected:
 	// Heredado vía GraphicsDeviceManager
@@ -96,6 +166,14 @@ private:
 	bool SubmitCommandBuffer();
 	bool PresentImage();
 	bool InitGui();
+
+	//Imgui private methods
+	bool CreateImGuiDescriptorPool();
+
+	void FrameRender();
+
+	void setupCallbacks(VkDevice& i_device);
+
 };
 
 

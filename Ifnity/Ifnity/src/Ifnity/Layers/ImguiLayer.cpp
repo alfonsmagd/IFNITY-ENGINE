@@ -7,6 +7,7 @@
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
 #include "Platform/ImguiRender/ImguiD3D12Render.h"
+#include "Platform/ImguiRender/ImguiVulkanRender.h"
 #include <GLFW\glfw3.h>
 
 #include "../App.h"
@@ -69,11 +70,12 @@ void ImguiLayer::OnAttach()
 		ImGuiOnDetach = ImGui_ImplDX11_Shutdown;
 		break;
 	case rhi::GraphicsAPI::D3D12:
-		ImGuiRenderDrawData = [](ImDrawData* drawData) {};
+		ImGuiRenderDrawData = [](ImDrawData* drawData) {}; //This implement in D3D12Render
 		ImGuiOnDetach = ImGui_ImplDX12_Shutdown;
 		break;
 	case rhi::GraphicsAPI::VULKAN:
-		IFNITY_LOG(LogApp, ERROR, "Vulkan not implemented");
+		ImGuiRenderDrawData = [](ImDrawData* drawData) {}; // This implement in VulkanRender
+		ImGuiOnDetach = ImGui_ImplVulkan_Shutdown;
 		break;
 	default:
 		break;

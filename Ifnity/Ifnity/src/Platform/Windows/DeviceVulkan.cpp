@@ -17,7 +17,8 @@ void DeviceVulkan::OnUpdate()
 	AcquireNextImage();
 
 	PopulateCommandBuffer();
-
+	//Here i can render Imgui
+	
 	SubmitCommandBuffer();
 
 	PresentImage();
@@ -100,7 +101,8 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		!CreateFrameBuffer()    ||	
 		!CreateCommandPool()	||
 		!CreateCommandBuffers() ||
-		!CreateSyncObjects() 
+		!CreateSyncObjects()    
+		
 		)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed Initialization Process ");
@@ -139,6 +141,7 @@ void DeviceVulkan::ResizeSwapChain()
 
 void DeviceVulkan::InitializeGui()
 {
+	InitGui();
 }
 
 bool DeviceVulkan::CreateSurface()
@@ -169,11 +172,10 @@ bool DeviceVulkan::CreatePhysicalDevice()
 
 	VkPhysicalDeviceFeatures supportedFeatures;
 	vkGetPhysicalDeviceFeatures(m_PhysicalDevice.physical_device, &supportedFeatures);
+	
 
 	//To enable the features that we need available in the physical device.
 	m_PhysicalDevice.features = supportedFeatures;
-
-	IFNITY_LOG(LogCore, INFO, "Physical device selected " + std::string(m_PhysicalDevice.name.c_str()));
 
 
 
@@ -192,6 +194,27 @@ bool DeviceVulkan::CreateDevice()
 		return false;
 	}
 	m_Device = deviceRet.value();
+
+#ifdef _DEBUG
+	VkDebugUtilsMessengerCreateInfoEXT create_info;
+	create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	create_info.pfnUserCallback = debugUtilsMessengerCallback;
+	create_info.pNext = NULL;
+	create_info.flags = 0;
+
+
+	if (CreateDebugUtilsMessengerEXT(m_Instance, &create_info, nullptr, &debugUtilsMessenger) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to create debug utils messenger in Vulkan Device");
+		return false;
+		
+	}
+
+	setupCallbacks(m_Device.device);
+
+#endif
 
 	
 
@@ -528,8 +551,7 @@ bool DeviceVulkan::PopulateCommandBuffer()
 	// This will clear the color attachment.
 	vkCmdBeginRenderPass(m_CommandBuffers[m_commandBufferIndex], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-	//Here i can render Imgui
-	//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_commandBufferIndex]);
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_commandBufferIndex]);
 
 	// End the render pass cmd
 
@@ -598,57 +620,139 @@ bool DeviceVulkan::PresentImage()
 
 bool DeviceVulkan::InitGui()
 {
-	//// Setup Dear ImGui context
-	//// Create Descriptor Pool
-	//VkDescriptorPoolSize pool_sizes[] =
-	//{
-	//	{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-	//	{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-	//};
-	//VkDescriptorPoolCreateInfo pool_info = {};
-	//pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-	//pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-	//pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
-	//pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
-	//pool_info.pPoolSizes = pool_sizes;
-	//VK_CHECK(vkCreateDescriptorPool(m_Device.device, &pool_info, nullptr, &m_DescriptorPool), "Failed to create descriptor pool");
+	// Create descriptor pool
+	if (!CreateImGuiDescriptorPool())
+	{
+		return false;
+	}
 
-	//// Initialize ImGui context
-	//IMGUI_CHECKVERSION();
-	//ImGui::CreateContext();
-	//ImGuiIO& io = ImGui::GetIO(); (void)io;
+	
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = m_Instance;
+	init_info.PhysicalDevice = m_PhysicalDevice;
+	init_info.Device = m_Device;
+	init_info.Queue = m_GraphicsQueue;
+	init_info.PipelineCache = VK_NULL_HANDLE;
+	init_info.DescriptorPool = m_ImGuiDescriptorPool;
+	init_info.RenderPass = m_RenderPass;
+	init_info.Subpass = 0;
+	init_info.MinImageCount = 3;
+	init_info.ImageCount = 3;
+	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	init_info.CheckVkResultFn = check_vk_result;
+	ImGui_ImplVulkan_Init(&init_info);
 
-	//// Initialize ImGui for GLFW and Vulkan
-	//ImGui_ImplGlfw_InitForVulkan(m_Window, true);
-	//ImGui_ImplVulkan_InitInfo init_info = {};
-	//init_info.Instance = m_Instance;
-	//init_info.PhysicalDevice = m_PhysicalDevice.physical_device;
-	//init_info.Device = m_Device.device;
-	//init_info.QueueFamily = m_Device.get_queue_index(vkb::QueueType::graphics).value();
-	//init_info.Queue = m_GraphicsQueue;
-	//init_info.PipelineCache = VK_NULL_HANDLE;
-	//init_info.DescriptorPool = m_DescriptorPool;
-	//init_info.Allocator = nullptr;
-	//init_info.MinImageCount = 2;
-	//init_info.ImageCount = m_Swapchain.image_count;
-	//init_info.CheckVkResultFn = VK_CHECK;
-	//ImGui_ImplVulkan_Init(&init_info, m_RenderPass);
+	//Upload Fonts if this was needed.
 
-	//// Upload Fonts
-	//VkCommandBuffer command_buffer = BeginSingleTimeCommands();
-	//ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
-	//EndSingleTimeCommands(command_buffer);
-	//ImGui_ImplVulkan_DestroyFontUploadObjects();
-	return false;
+
+	return true;
+}
+
+bool DeviceVulkan::CreateImGuiDescriptorPool()
+{
+	VkDescriptorPoolSize pool_sizes[] =
+	{
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1 },
+	};
+	VkDescriptorPoolCreateInfo pool_info = {};
+	pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+	pool_info.maxSets = 1;
+	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+	pool_info.pPoolSizes = pool_sizes;
+	
+	if (vkCreateDescriptorPool(m_Device, &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to create descriptor pool for ImGui");
+		return false;
+	}
+
+	return true;
+}
+
+void DeviceVulkan::FrameRender()
+{
+
+		//VkResult err;
+
+		//VkSemaphore image_acquired_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].ImageAcquiredSemaphore;
+		//VkSemaphore render_complete_semaphore = wd->FrameSemaphores[wd->SemaphoreIndex].RenderCompleteSemaphore;
+		//err = vkAcquireNextImageKHR(g_Device, wd->Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &wd->FrameIndex);
+		//if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
+		//{
+		//	g_SwapChainRebuild = true;
+		//	return;
+		//}
+		//check_vk_result(err);
+
+		//ImGui_ImplVulkanH_Frame* fd = &wd->Frames[wd->FrameIndex];
+		//{
+		//	err = vkWaitForFences(g_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX);    // wait indefinitely instead of periodically checking
+		//	check_vk_result(err);
+
+		//	err = vkResetFences(g_Device, 1, &fd->Fence);
+		//	check_vk_result(err);
+		//}
+		//{
+		//	err = vkResetCommandPool(g_Device, fd->CommandPool, 0);
+		//	check_vk_result(err);
+		//	VkCommandBufferBeginInfo info = {};
+		//	info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		//	info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		//	err = vkBeginCommandBuffer(fd->CommandBuffer, &info);
+		//	check_vk_result(err);
+		//}
+		//{
+		//	VkRenderPassBeginInfo info = {};
+		//	info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		//	info.renderPass = wd->RenderPass;
+		//	info.framebuffer = fd->Framebuffer;
+		//	info.renderArea.extent.width = wd->Width;
+		//	info.renderArea.extent.height = wd->Height;
+		//	info.clearValueCount = 1;
+		//	info.pClearValues = &wd->ClearValue;
+		//	vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
+		//}
+
+		//// Record dear imgui primitives into command buffer
+		//ImGui_ImplVulkan_RenderDrawData(draw_data, fd->CommandBuffer);
+
+		//// Submit command buffer
+		//vkCmdEndRenderPass(fd->CommandBuffer);
+		//{
+		//	VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		//	VkSubmitInfo info = {};
+		//	info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		//	info.waitSemaphoreCount = 1;
+		//	info.pWaitSemaphores = &image_acquired_semaphore;
+		//	info.pWaitDstStageMask = &wait_stage;
+		//	info.commandBufferCount = 1;
+		//	info.pCommandBuffers = &fd->CommandBuffer;
+		//	info.signalSemaphoreCount = 1;
+		//	info.pSignalSemaphores = &render_complete_semaphore;
+
+		//	err = vkEndCommandBuffer(fd->CommandBuffer);
+		//	check_vk_result(err);
+		//	err = vkQueueSubmit(g_Queue, 1, &info, fd->Fence);
+		//	check_vk_result(err);
+		//}
+	
+}
+
+
+void DeviceVulkan::setupCallbacks(VkDevice& i_device)
+{
+#ifdef _DEBUG
+	//assert(false == is_active);
+
+	vkDebugMarkerSetObjectTag = (PFN_vkDebugMarkerSetObjectTagEXT)vkGetDeviceProcAddr(i_device, "vkDebugMarkerSetObjectTagEXT");
+	vkDebugMarkerSetObjectName = (PFN_vkDebugMarkerSetObjectNameEXT)vkGetDeviceProcAddr(i_device, "vkDebugMarkerSetObjectNameEXT");
+	vkCmdDebugMarkerBegin = (PFN_vkCmdDebugMarkerBeginEXT)vkGetDeviceProcAddr(i_device, "vkCmdDebugMarkerBeginEXT");
+	vkCmdDebugMarkerEnd = (PFN_vkCmdDebugMarkerEndEXT)vkGetDeviceProcAddr(i_device, "vkCmdDebugMarkerEndEXT");
+	vkCmdDebugMarkerInsert = (PFN_vkCmdDebugMarkerInsertEXT)vkGetDeviceProcAddr(i_device, "vkCmdDebugMarkerInsertEXT");
+
+	//is_active = (vkDebugMarkerSetObjectName != VK_NULL_HANDLE);
+#endif
 }
 
 
