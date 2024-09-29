@@ -97,7 +97,7 @@ private:
 	std::vector<VkFramebuffer> m_Framebuffers;
 
 	// Command buffers
-	std::vector<VkCommandBuffer> m_CommandBuffers;
+	VkCommandBuffer m_CommandBuffers;
 
 	// Sync objects
 	VkSemaphore m_PresentSemaphore = VK_NULL_HANDLE;
@@ -176,17 +176,6 @@ private:
 	void setupCallbacks(VkDevice& i_device);
 
 };
-
-
-
-
-
-
-
-
-
-
-
 
 
 

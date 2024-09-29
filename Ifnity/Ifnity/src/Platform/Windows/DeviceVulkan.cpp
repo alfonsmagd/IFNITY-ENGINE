@@ -4,12 +4,10 @@
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
-#define IMGUI_DEMO 
+//#define IMGUI_DEMO 
 
-IFNITY_NAMESPACE 
+IFNITY_NAMESPACE
 
-
-#ifdef IMGUI_DEMO
 static void check_vk_result(VkResult err)
 {
 	if (err == 0)
@@ -18,6 +16,8 @@ static void check_vk_result(VkResult err)
 	if (err < 0)
 		abort();
 }
+#ifdef IMGUI_DEMO
+
 
 static bool IsExtensionAvailable(const ImVector<VkExtensionProperties>& properties, const char* extension)
 {
@@ -355,26 +355,172 @@ static void InitGui_demo(ImGui_ImplVulkanH_Window* wd)
 
 void DeviceVulkan::OnUpdate()
 {
-	//// Get the index of the next available image in the swap chain
-	//
-	//AcquireNextImage();
+	if (vkWaitForFences(m_Device.device, 1, &rdRenderFence, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to wait for fences");
 
-	//PopulateCommandBuffer();
-	////Here i can render Imgui
-	//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_commandBufferIndex]);
-	//SubmitCommandBuffer();
+	}
 
-	//PresentImage();
+	if (vkResetFences(m_Device.device, 1, &rdRenderFence) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to reset fences");
 
-	//// WAITING FOR THE GPU TO COMPLETE THE FRAME BEFORE CONTINUING IS NOT BEST PRACTICE.
-	//// vkQueueWaitIdle is used for simplicity.
-	//// (so that we can reuse the command buffer indexed with m_commandBufferIndex)
-	//VK_CHECK(vkQueueWaitIdle(m_GraphicsQueue), "Failed to wait for queue to idle");
+	}
 
-	//// Update command buffer index
-	//m_commandBufferIndex = (m_commandBufferIndex + 1) % m_commandBufferCount;
-	 // Resize swap chain?
+	uint32_t imageIndex = 0;
+	VkResult result = vkAcquireNextImageKHR(m_Device.device,
+		m_Swapchain,
+		UINT64_MAX,
+		m_PresentSemaphore,
+		VK_NULL_HANDLE,
+		&imageIndex);
+
+	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		return ResizeSwapChain();
+	}
+	else
+	{
+		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+		{
+			IFNITY_LOG(LogCore, ERROR, "Failed to acquire next image");
+		}
+	}
+
+
+	if (vkResetCommandBuffer(m_CommandBuffers, 0) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to reset command buffer");
+	}
+
+	VkCommandBufferBeginInfo cmdBeginInfo{};
+	cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	if (vkBeginCommandBuffer(m_CommandBuffers, &cmdBeginInfo) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to begin command buffer");
+	}
+
+	VkClearValue colorClearValue;
+	colorClearValue.color = { { 0.1f, 0.1f, 0.1f, 1.0f } };
+
+	VkClearValue depthValue;
+	depthValue.depthStencil.depth = 1.0f;
+
+	VkClearValue clearValues[] = { colorClearValue, depthValue };
+
+	VkRenderPassBeginInfo rpInfo{};
+	rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	rpInfo.renderPass = m_RenderPass;
+
+	rpInfo.renderArea.offset.x = 0;
+	rpInfo.renderArea.offset.y = 0;
+	rpInfo.renderArea.extent = m_Swapchain.extent;
+	rpInfo.framebuffer = m_Framebuffers[imageIndex];
+
+	rpInfo.clearValueCount = 2;
+	rpInfo.pClearValues = clearValues;
+
+	VkViewport viewport{};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = static_cast<float>(m_Swapchain.extent.width);
+	viewport.height = static_cast<float>(m_Swapchain.extent.height);
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+
+	VkRect2D scissor{};
+	scissor.offset = { 0, 0 };
+	scissor.extent = m_Swapchain.extent;
+
+
+	vkCmdBeginRenderPass(m_CommandBuffers, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	///* the rendering itself happens here */
+	//if (!mUseChangedShader) {
+	//  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
+	//} else {
+	//  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
+	//}
+
+	///* required for dynamic viewport */
+	//vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
+	//vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
+
+	///* the triangle drawing itself */
+	//VkDeviceSize offset = 0;
+	//vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
+
+	//vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
+	//vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
+
+	//vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
+
+	// imgui overlay
 	
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers);
+
+	vkCmdEndRenderPass(m_CommandBuffers);
+
+	if (vkEndCommandBuffer(m_CommandBuffers) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to end command buffer ");
+		
+	}
+
+	///* upload UBO data after commands are created */
+	//void* data;
+	//vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc, &data);
+	//std::memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
+	//vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc);
+
+	/* submit command buffer */
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	submitInfo.pWaitDstStageMask = &waitStage;
+
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = &m_PresentSemaphore;
+
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = &m_RenderSemaphore;
+
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &m_CommandBuffers;
+
+	if (vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, rdRenderFence) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to submit command buffer");
+		
+	}
+
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = &m_RenderSemaphore;
+
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &m_Swapchain.swapchain;
+
+	presentInfo.pImageIndices = &imageIndex;
+
+	result = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+	{
+		return ResizeSwapChain();
+	}
+	else
+	{
+		if (result != VK_SUCCESS)
+		{
+			IFNITY_LOG(LogCore, ERROR, "Failed to present image");	
+		
+		}
+	}
+
 
 #ifdef IMGUI_DEMO
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -415,7 +561,7 @@ bool DeviceVulkan::InitInternalInstance()
 		.request_validation_layers()
 		.use_default_debug_messenger()
 		.build();
-	
+
 	if (!inst_ret)
 	{
 		//Report Error Log
@@ -455,32 +601,29 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 	SetupVulkanWindow(wd, surface, w, h);
 
 
-	
+
 #endif
 
 
-
-
-
-	/*if (!CreateSurface()        || 
+	if (!CreateSurface() ||
 		!CreatePhysicalDevice() ||
-		!CreateDevice()         ||
-		!CreateVmaAllocator()	||
-		!GetQueue()				||
-		!CreateSwapChain()		||
-		!CreateRenderPass()     || 
-		!CreateFrameBuffer()    ||	
-		!CreateCommandPool()	||
+		!CreateDevice() ||
+		!CreateVmaAllocator() ||
+		!GetQueue() ||
+		!CreateSwapChain() ||
+		!CreateCommandPool() ||
 		!CreateCommandBuffers() ||
-		!CreateSyncObjects()    
-		
+		!CreateRenderPass() ||
+		!CreateFrameBuffer() ||
+		!CreateSyncObjects()
+
 		)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed Initialization Process ");
 		return false;
 	}
 
-	IFNITY_LOG(LogCore, INFO, "Vulkan Device and Context Initialized");*/
+	IFNITY_LOG(LogCore, INFO, "Vulkan Device and Context Initialized");
 
 
 
@@ -496,7 +639,7 @@ bool DeviceVulkan::ConfigureSpecificHintsGLFW() const
 		return false;
 	}
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	return true; 
+	return true;
 }
 
 void DeviceVulkan::SetVSync(bool enabled)
@@ -514,12 +657,13 @@ void DeviceVulkan::ResizeSwapChain()
 
 void DeviceVulkan::InitializeGui()
 {
-	//InitGui();
+	InitGui();
 
 #ifdef IMGUI_DEMO
 	InitGui_demo(&g_MainWindowData);
 #endif
 }
+
 
 bool DeviceVulkan::CreateSurface()
 {
@@ -537,8 +681,8 @@ bool DeviceVulkan::CreateSurface()
 
 bool DeviceVulkan::CreatePhysicalDevice()
 {
-	
-	vkb::PhysicalDeviceSelector physicalDevSel{ m_Instance};
+
+	vkb::PhysicalDeviceSelector physicalDevSel{ m_Instance };
 	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface).select();
 	if (!physicalDevSelRet)
 	{
@@ -549,7 +693,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 
 	VkPhysicalDeviceFeatures supportedFeatures;
 	vkGetPhysicalDeviceFeatures(m_PhysicalDevice.physical_device, &supportedFeatures);
-	
+
 
 	//To enable the features that we need available in the physical device.
 	m_PhysicalDevice.features = supportedFeatures;
@@ -563,7 +707,7 @@ bool DeviceVulkan::CreateDevice()
 {
 	vkb::DeviceBuilder deviceBuilder{ m_PhysicalDevice };
 
-	
+
 	auto deviceRet = deviceBuilder.build();
 	if (!deviceRet)
 	{
@@ -586,14 +730,14 @@ bool DeviceVulkan::CreateDevice()
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create debug utils messenger in Vulkan Device");
 		return false;
-		
+
 	}
 
 	setupCallbacks(m_Device.device);
 
 #endif
 
-	
+
 
 	return true;
 }
@@ -630,7 +774,7 @@ bool DeviceVulkan::GetQueue()
 		return false;
 	}
 	m_PresentQueue = presentQueueRet.value();
-	
+
 
 
 	return true;
@@ -638,7 +782,7 @@ bool DeviceVulkan::GetQueue()
 
 bool DeviceVulkan::CreateSwapChain()
 {
-	vkb::SwapchainBuilder swapChainBuild{ m_Device};
+	vkb::SwapchainBuilder swapChainBuild{ m_Device };
 
 	/* VK_PRESENT_MODE_FIFO_KHR enables vsync */
 	auto swapChainBuildRet = swapChainBuild.set_old_swapchain(m_Swapchain).set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).build();
@@ -649,7 +793,7 @@ bool DeviceVulkan::CreateSwapChain()
 	}
 
 	vkb::destroy_swapchain(m_Swapchain);
-	m_Swapchain= swapChainBuildRet.value();
+	m_Swapchain = swapChainBuildRet.value();
 
 	//Get image_count 
 	m_commandBufferCount = m_Swapchain.image_count;
@@ -721,7 +865,7 @@ bool DeviceVulkan::CreateDepthBuffer()
 	depthImageViewinfo.subresourceRange.layerCount = 1;
 	depthImageViewinfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 
-	if (vkCreateImageView(mRenderData.rdVkbDevice.device, &depthImageViewinfo, nullptr, &mRenderData.rdDepthImageView) != VK_SUCCESS)
+	if (vkCreateImageView(m_Device.device, &depthImageViewinfo, nullptr, &mRenderData.rdDepthImageView) != VK_SUCCESS)
 	{
 		Logger::log(1, "%s error: could not create depth buffer image view\n", __FUNCTION__);
 		return false;
@@ -744,8 +888,8 @@ bool DeviceVulkan::CreateRenderPass()
 	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;               // Similar to storeOp, but for stenciling (we don't use stencil here)
 	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                       // Layout at render pass start. Initial doesn't matter, so we use undefined
 	attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                   // Layout to which the attachment is transitioned when the render pass is finished
-																					// As we want to present the color attachment, we transition to PRESENT_KHR
-	// Setup attachment references
+	// As we want to present the color attachment, we transition to PRESENT_KHR
+// Setup attachment references
 	VkAttachmentReference colorReference = {};
 	colorReference.attachment = 0;                                                  // Attachment 0 is color
 	colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;               // Attachment layout used as color during the subpass
@@ -809,7 +953,7 @@ bool DeviceVulkan::CreateFrameBuffer()
 	frameBufferCreateInfo.width = m_Swapchain.extent.width;
 	frameBufferCreateInfo.height = m_Swapchain.extent.height;
 	frameBufferCreateInfo.layers = 1;
-	
+
 	//Create Framebuffers for each swapchain image view
 	m_Framebuffers.resize(m_Swapchain.get_image_views().value().size());
 
@@ -825,33 +969,38 @@ bool DeviceVulkan::CreateFrameBuffer()
 
 bool DeviceVulkan::CreateCommandBuffers()
 {
-	//Create one command buffer for each swap chain image
-	m_CommandBuffers.resize(m_Framebuffers.size());
+	VkCommandBufferAllocateInfo bufferAllocInfo{};
+	bufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	bufferAllocInfo.commandPool = m_CommandPool;
+	bufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	bufferAllocInfo.commandBufferCount = 1;
 
-	//Allocate command buffers
-	VkCommandBufferAllocateInfo cmdBufferAllocInfo = {};
-	cmdBufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-	cmdBufferAllocInfo.commandPool = m_CommandPool;
-	cmdBufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	cmdBufferAllocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
-
-	VK_CHECK(vkAllocateCommandBuffers(m_Device.device, &cmdBufferAllocInfo, m_CommandBuffers.data()), "Failed to allocate command buffers");
+	if (vkAllocateCommandBuffers(m_Device.device, &bufferAllocInfo, &m_CommandBuffers) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to allocate command buffers");
+		return false;
+	}
 
 	return true;
 }
 
 bool DeviceVulkan::CreateSyncObjects()
 {
-	//Create synchronization objects
-	VkSemaphoreCreateInfo semaphoreCreateInfo = {};
-	semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-	semaphoreCreateInfo.pNext = nullptr;
+	VkFenceCreateInfo fenceInfo{};
+	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-	//Create a semaphore used to synchronize image presentation
-	VK_CHECK(vkCreateSemaphore(m_Device.device, &semaphoreCreateInfo, nullptr, &m_PresentSemaphore), "Failed to create present semaphore");
+	VkSemaphoreCreateInfo semaphoreInfo{};
+	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	//Create a semaphore used to synchronize render completion
-	VK_CHECK(vkCreateSemaphore(m_Device.device, &semaphoreCreateInfo, nullptr, &m_RenderSemaphore), "Failed to create render semaphore");
+	if (vkCreateSemaphore(m_Device.device, &semaphoreInfo, nullptr, &m_PresentSemaphore) != VK_SUCCESS ||
+		vkCreateSemaphore(m_Device.device, &semaphoreInfo, nullptr, &m_RenderSemaphore) != VK_SUCCESS ||
+		vkCreateFence(m_Device.device, &fenceInfo, nullptr, &rdRenderFence) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to create synchronization objects for a frame");
+		return false;
+	}
+	return true;
 
 
 	return true;
@@ -880,130 +1029,42 @@ bool DeviceVulkan::AcquireNextImage()
 
 bool DeviceVulkan::PopulateCommandBuffer()
 {
-	//Reset comand descriptor pool
-
-	// Reset the command buffer to the initial state (clear all previous commands)
-	//VK_CHECK(vkResetCommandBuffer(m_CommandBuffers[m_commandBufferIndex], 0), "Fail resetCommandBuffer ");
-
-	vkResetDescriptorPool(m_Device.device, m_ImGuiDescriptorPool, 0);
-
-	VkCommandBufferBeginInfo cmdBufInfo = {};
-	cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	cmdBufInfo.pNext = nullptr;
-	cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	// We use a single color attachment that is cleared at the start of the subpass.
-	VkClearValue clearValues[1];
-	clearValues[0].color = { { 0.0f, 0.2f, 0.4f, 1.0f } };
-
-	VkRenderPassBeginInfo renderPassBeginInfo = {};
-	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	renderPassBeginInfo.pNext = nullptr;
-	renderPassBeginInfo.renderPass = m_RenderPass;
-	renderPassBeginInfo.renderArea.offset.x = 0;
-	renderPassBeginInfo.renderArea.offset.y = 0;
-	renderPassBeginInfo.renderArea.extent.width = m_Swapchain.extent.width;
-	renderPassBeginInfo.renderArea.extent.height = m_Swapchain.extent.height;
-	renderPassBeginInfo.clearValueCount = 1;
-	renderPassBeginInfo.pClearValues = clearValues;
-	renderPassBeginInfo.framebuffer = m_Framebuffers[m_imageIndex]; // Set the frame buffer to specify the color attachment																	  // (render target) where to draw the current frame.
-	// Initialize begin command buffer 
-	VK_CHECK(vkBeginCommandBuffer(m_CommandBuffers[m_commandBufferIndex], &cmdBufInfo), "Fail beginCommandBuffer ");
-
-
-	
-	vkCmdBeginRenderPass(m_CommandBuffers[m_commandBufferIndex], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_commandBufferIndex]);
-
-	// End the render pass cmd
-
-	vkCmdEndRenderPass(m_CommandBuffers[m_commandBufferIndex]);
-
-	// End the command buffer 
-	VK_CHECK(vkEndCommandBuffer(m_CommandBuffers[m_commandBufferIndex]), "Fail endCommandBuffer ");
-
-
 	return false;
 }
 
 bool DeviceVulkan::SubmitCommandBuffer()
 {
-	// Pipeline stage at which the queue submission will wait(via pWaitSemaphores)
-	VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-
-	//VkSubmitCreate Info 
-	VkSubmitInfo submitInfo = {};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.pNext = nullptr;
-	submitInfo.waitSemaphoreCount = 1;				// One wait semaphore
-	submitInfo.pWaitDstStageMask = &waitStageMask;  // Pointer to the list of pipeline stages that the semaphore waits will occur at
-	submitInfo.commandBufferCount = 1;				// One command buffer
-	submitInfo.pCommandBuffers = &m_CommandBuffers[m_commandBufferIndex];
-	submitInfo.signalSemaphoreCount = 1;
-
-
-	submitInfo.pSignalSemaphores = &m_RenderSemaphore; // Semaphore(s) to be signaled when command buffers have completed
-	submitInfo.pWaitSemaphores = &m_PresentSemaphore;  // Semaphore(s) to wait upon before the submitted command buffers start executing
-
-	VK_CHECK(vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, VK_NULL_HANDLE), "Failed to submit command buffer");
-
 	return false;
 }
 
 bool DeviceVulkan::PresentImage()
 {
-	// Present the current image to the presentation engine.
-	// Pass the semaphore from the submit info as the wait semaphore for swap chain presentation.
-	// This ensures that the image is not presented to the windowing system until all commands have been executed.
-	VkPresentInfoKHR presentInfo = {};
-	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	presentInfo.pNext = NULL;
-	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &m_Swapchain.swapchain;
-	presentInfo.pImageIndices = &m_imageIndex;
-	// Check if a wait semaphore has been specified to wait for before presenting the image
-	if (m_RenderSemaphore != VK_NULL_HANDLE)
-	{
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_RenderSemaphore;
-	}
-
-	VkResult present = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
-	if (!((present == VK_SUCCESS) || (present == VK_SUBOPTIMAL_KHR)))
-	{
-		if (present == VK_ERROR_OUT_OF_DATE_KHR)
-		{
-			ResizeSwapChain();
-		}
-			
-	}
 	return false;
 }
 
 bool DeviceVulkan::InitGui()
 {
-	//// Create descriptor pool
-	//if (!CreateImGuiDescriptorPool())
-	//{
-	//	return false;
-	//}
+	// Create descriptor pool
+	if (!CreateImGuiDescriptorPool())
+	{
+		return false;
+	}
 
-	//
-	//ImGui_ImplVulkan_InitInfo init_info = {};
-	//init_info.Instance = m_Instance;
-	//init_info.PhysicalDevice = m_PhysicalDevice;
-	//init_info.Device = m_Device;
-	//init_info.Queue = m_GraphicsQueue;
-	//init_info.PipelineCache = VK_NULL_HANDLE;
-	//init_info.DescriptorPool = m_ImGuiDescriptorPool;
-	//init_info.RenderPass = m_RenderPass;
-	//init_info.Subpass = 0;
-	//init_info.MinImageCount = 3;
-	//init_info.ImageCount = 3;
-	//init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-	//init_info.CheckVkResultFn = check_vk_result;
-	//ImGui_ImplVulkan_Init(&init_info);
+
+	ImGui_ImplVulkan_InitInfo init_info = {};
+	init_info.Instance = m_Instance;
+	init_info.PhysicalDevice = m_PhysicalDevice;
+	init_info.Device = m_Device;
+	init_info.Queue = m_GraphicsQueue;
+	init_info.PipelineCache = VK_NULL_HANDLE;
+	init_info.DescriptorPool = m_ImGuiDescriptorPool;
+	init_info.RenderPass = m_RenderPass;
+	init_info.Subpass = 0;
+	init_info.MinImageCount = 3;
+	init_info.ImageCount = 3;
+	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+	init_info.CheckVkResultFn = check_vk_result;
+	ImGui_ImplVulkan_Init(&init_info);
 
 	//Upload Fonts if this was needed.
 
@@ -1023,7 +1084,7 @@ bool DeviceVulkan::CreateImGuiDescriptorPool()
 	pool_info.maxSets = 1;
 	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 	pool_info.pPoolSizes = pool_sizes;
-	
+
 	if (vkCreateDescriptorPool(m_Device, &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create descriptor pool for ImGui");
@@ -1053,9 +1114,6 @@ void DeviceVulkan::setupCallbacks(VkDevice& i_device)
 
 
 
-
-
-
-
-
 IFNITY_END_NAMESPACE
+
+
