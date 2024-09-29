@@ -70,11 +70,14 @@ void ImguiLayer::OnAttach()
 		ImGuiOnDetach = ImGui_ImplDX11_Shutdown;
 		break;
 	case rhi::GraphicsAPI::D3D12:
-		ImGuiRenderDrawData = [](ImDrawData* drawData) {}; //This implement in D3D12Render
+		ImGuiRenderDrawData = [](ImDrawData* drawData) {
+			ImDrawData* draw_data = ImGui::GetDrawData(); }; //This implement in D3D12Render
 		ImGuiOnDetach = ImGui_ImplDX12_Shutdown;
 		break;
 	case rhi::GraphicsAPI::VULKAN:
-		ImGuiRenderDrawData = [](ImDrawData* drawData) {}; // This implement in VulkanRender
+		ImGuiRenderDrawData = [](ImDrawData* drawData) {   // Obtén los datos de dibujo
+			ImDrawData* draw_data = ImGui::GetDrawData();
+			}; // This implement in VulkanRender
 		ImGuiOnDetach = ImGui_ImplVulkan_Shutdown;
 		break;
 	default:
