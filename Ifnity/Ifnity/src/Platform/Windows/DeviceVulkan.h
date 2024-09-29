@@ -97,12 +97,18 @@ private:
 	std::vector<VkFramebuffer> m_Framebuffers;
 
 	// Command buffers
-	VkCommandBuffer m_CommandBuffers;
+	std::vector<VkCommandBuffer> m_CommandBuffers;
+
+	// Sync objects
+	std::vector<VkSemaphore> m_ImageAvailableSemaphores;
+	std::vector<VkSemaphore> m_RenderFinishedSemaphores;
+	std::vector<VkFence>     m_InFlightFences;
 
 	// Sync objects
 	VkSemaphore m_PresentSemaphore = VK_NULL_HANDLE;
 	VkSemaphore m_RenderSemaphore = VK_NULL_HANDLE;
 	VkFence rdRenderFence = VK_NULL_HANDLE;
+	uint32_t m_CurrentFrame = 0;
 
 	//Auxiliary 
 	uint32_t m_imageIndex = 0;
@@ -114,14 +120,16 @@ private:
 
 	//DebugUtils
 	VkDebugUtilsMessengerEXT            debugUtilsMessenger;
-#ifdef _DEBUG
-	PFN_vkDebugMarkerSetObjectTagEXT  vkDebugMarkerSetObjectTag = VK_NULL_HANDLE;
-	PFN_vkDebugMarkerSetObjectNameEXT vkDebugMarkerSetObjectName = VK_NULL_HANDLE;
-	PFN_vkCmdDebugMarkerBeginEXT      vkCmdDebugMarkerBegin = VK_NULL_HANDLE;
-	PFN_vkCmdDebugMarkerEndEXT        vkCmdDebugMarkerEnd = VK_NULL_HANDLE;
-	PFN_vkCmdDebugMarkerInsertEXT     vkCmdDebugMarkerInsert = VK_NULL_HANDLE;
-	bool                              is_active = false;
-#endif
+	bool m_DebugUtilsSupported = false;
+	PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{ nullptr };
+	PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{ nullptr };
+	PFN_vkCmdBeginDebugUtilsLabelEXT vkCmdBeginDebugUtilsLabelEXT{ nullptr };
+	PFN_vkCmdInsertDebugUtilsLabelEXT vkCmdInsertDebugUtilsLabelEXT{ nullptr };
+	PFN_vkCmdEndDebugUtilsLabelEXT vkCmdEndDebugUtilsLabelEXT{ nullptr };
+	PFN_vkQueueBeginDebugUtilsLabelEXT vkQueueBeginDebugUtilsLabelEXT{ nullptr };
+	PFN_vkQueueInsertDebugUtilsLabelEXT vkQueueInsertDebugUtilsLabelEXT{ nullptr };
+	PFN_vkQueueEndDebugUtilsLabelEXT vkQueueEndDebugUtilsLabelEXT{ nullptr };
+	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT{ nullptr };
 
 protected:
 	// Heredado vía GraphicsDeviceManager
@@ -174,6 +182,10 @@ private:
 
 
 	void setupCallbacks(VkDevice& i_device);
+
+	void BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[4]);
+
+	void EndRenderDocTrace(VkCommandBuffer commandBuffer);
 
 };
 

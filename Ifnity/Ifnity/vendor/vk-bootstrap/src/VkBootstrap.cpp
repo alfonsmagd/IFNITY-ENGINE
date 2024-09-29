@@ -1929,6 +1929,21 @@ namespace vkb {
 		{
 			extensions_to_enable.push_back(ext.c_str());
 		}
+
+#ifdef _DEBUG
+		if (std::find(physical_device.extensions_to_enable.begin(), physical_device.extensions_to_enable.end(), VK_EXT_DEBUG_UTILS_EXTENSION_NAME) != physical_device.extensions_to_enable.end())
+		{
+			extensions_to_enable.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		}
+
+		bool is_markers_enabled = false;
+		if (std::find(physical_device.extensions_to_enable.begin(), physical_device.extensions_to_enable.end(), VK_EXT_DEBUG_MARKER_EXTENSION_NAME) != physical_device.extensions_to_enable.end())
+		{
+			is_markers_enabled = true;
+			extensions_to_enable.push_back(VK_EXT_DEBUG_MARKER_EXTENSION_NAME);
+		}
+#endif 
+
 		if (physical_device.surface != VK_NULL_HANDLE || physical_device.defer_surface_initialization)
 			extensions_to_enable.push_back({ VK_KHR_SWAPCHAIN_EXTENSION_NAME });
 
