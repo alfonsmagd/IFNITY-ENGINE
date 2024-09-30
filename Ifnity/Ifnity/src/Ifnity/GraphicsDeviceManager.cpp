@@ -117,11 +117,14 @@ void GraphicsDeviceManager::Shutdown()
 	if (m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED)
 	{
 
-		IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
-		glfwDestroyWindow(m_Window);
-		m_Window = nullptr;
-		glfwTerminate();
+		if (GraphicsDeviceManager::g_API != rhi::GraphicsAPI::VULKAN)
+		{
+			IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
+			glfwDestroyWindow(m_Window);
+			m_Window = nullptr;
+			glfwTerminate();
 
+		}
 		SetGraphicsDeviceState(StateGraphicsDevice::NOT_INITIALIZED);
 
 		m_InstanceCreated = false;

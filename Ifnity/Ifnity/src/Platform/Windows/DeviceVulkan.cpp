@@ -294,6 +294,36 @@ void DeviceVulkan::InitializeGui()
 }
 
 
+DeviceVulkan::~DeviceVulkan()
+{
+	//Destroy all Vulkan resources. 
+	vkDeviceWaitIdle(m_Device.device);
+
+	//Destroy Descriptor Pool 
+	vkDestroyDescriptorPool(m_Device.device, m_ImGuiDescriptorPool, nullptr);
+
+	//Destroy Sync Objects
+	DestroySyncObjects();
+	DestroyCommandBuffers();
+	DestroyCommandPool();
+	CleanFrameBuffers();
+	DestroyRenderPass();
+
+	//Destroy Vma Allocator
+	vmaDestroyAllocator(m_Allocator);
+
+	//Destroy VkBootStrap
+	m_Swapchain.destroy_image_views(m_SwapchainImageViews);
+
+	vkb::destroy_swapchain(m_Swapchain);
+	vkb::destroy_device(m_Device);
+	vkb::destroy_surface(m_Instance,m_Surface);
+	vkb::destroy_instance(m_Instance);
+
+	IFNITY_LOG(LogCore, INFO, "Delete Device Vulkan Render.");
+
+}
+
 bool DeviceVulkan::CreateSurface()
 {
 	VkResult result = VK_ERROR_UNKNOWN;
@@ -488,6 +518,39 @@ bool DeviceVulkan::DestroyCommandPool()
 {
 	vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
 	return false;
+}
+
+void DeviceVulkan::DestroySyncObjects()
+{
+	for (size_t i = 0; i < 3; i++)
+	{
+		vkDestroySemaphore(m_Device.device, m_ImageAvailableSemaphores[i], nullptr);
+		vkDestroySemaphore(m_Device.device, m_RenderFinishedSemaphores[i], nullptr);
+		vkDestroyFence(m_Device.device, m_InFlightFences[i], nullptr);
+	}
+	
+}
+
+void DeviceVulkan::DestroyCommandBuffers()
+{
+	vkFreeCommandBuffers(m_Device.device,
+		m_CommandPool, 
+		static_cast<uint32_t>(m_CommandBuffers.size()),
+		m_CommandBuffers.data());
+
+}
+
+void DeviceVulkan::CleanFrameBuffers()
+{
+	for (auto& framebuffer : m_Framebuffers)
+	{
+		vkDestroyFramebuffer(m_Device.device, framebuffer, nullptr);
+	}
+}
+
+void DeviceVulkan::DestroyRenderPass()
+{
+	vkDestroyRenderPass(m_Device.device, m_RenderPass, nullptr);
 }
 
 bool DeviceVulkan::CreateDepthBuffer()
