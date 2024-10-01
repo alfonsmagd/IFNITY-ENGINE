@@ -245,9 +245,9 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		!GetQueue() ||
 		!CreateSwapChain() ||
 		!CreateCommandPool() ||
-		!CreateCommandBuffers() ||
 		!CreateRenderPass() ||
 		!CreateFrameBuffer() ||
+		!CreateCommandBuffers() ||
 		!CreateSyncObjects() 
 
 		)
@@ -293,11 +293,16 @@ void DeviceVulkan::InitializeGui()
 	InitGui();
 }
 
+void DeviceVulkan::InternalPreDestroy()
+{
+	//Wait devide to finish and get idle state.
+	vkDeviceWaitIdle(m_Device.device);
+}
+
 
 DeviceVulkan::~DeviceVulkan()
 {
-	//Destroy all Vulkan resources. 
-	vkDeviceWaitIdle(m_Device.device);
+	
 
 	//Destroy Descriptor Pool 
 	vkDestroyDescriptorPool(m_Device.device, m_ImGuiDescriptorPool, nullptr);
@@ -312,13 +317,22 @@ DeviceVulkan::~DeviceVulkan()
 	//Destroy Vma Allocator
 	vmaDestroyAllocator(m_Allocator);
 
-	//Destroy VkBootStrap
+	// Destroy Debug Utils Messenger
+	if (debugUtilsMessenger != VK_NULL_HANDLE)
+	{
+		DestroyDebugUtilsMessengerEXT(m_Instance, debugUtilsMessenger, nullptr);
+	}
+	
+
+	// Destroy VkBootStrap
 	m_Swapchain.destroy_image_views(m_SwapchainImageViews);
 
 	vkb::destroy_swapchain(m_Swapchain);
 	vkb::destroy_device(m_Device);
-	vkb::destroy_surface(m_Instance,m_Surface);
+	vkb::destroy_surface(m_Instance, m_Surface);
 	vkb::destroy_instance(m_Instance);
+
+	
 
 	IFNITY_LOG(LogCore, INFO, "Delete Device Vulkan Render.");
 
@@ -671,6 +685,10 @@ bool DeviceVulkan::CreateRenderPass()
 
 bool DeviceVulkan::CreateFrameBuffer()
 {
+	m_SwapchainImages     = m_Swapchain.get_images().value();
+	m_SwapchainImageViews = m_Swapchain.get_image_views().value();
+
+
 	VkImageView attachments[1] = {};
 
 
@@ -685,11 +703,11 @@ bool DeviceVulkan::CreateFrameBuffer()
 	frameBufferCreateInfo.layers = 1;
 
 	//Create Framebuffers for each swapchain image view
-	m_Framebuffers.resize(m_Swapchain.get_image_views().value().size());
+	m_Framebuffers.resize(m_SwapchainImageViews.size());
 
 	for (size_t i = 0; i < m_Framebuffers.size(); i++)
 	{
-		attachments[0] = m_Swapchain.get_image_views().value()[i];
+		attachments[0] = m_SwapchainImageViews.at(i);
 		VK_CHECK(vkCreateFramebuffer(m_Device.device, &frameBufferCreateInfo, nullptr, &m_Framebuffers[i]), "Failed to create framebuffer");
 
 	}
@@ -699,7 +717,7 @@ bool DeviceVulkan::CreateFrameBuffer()
 
 bool DeviceVulkan::CreateCommandBuffers()
 {
-	m_CommandBuffers.resize(m_Swapchain.get_image_views().value().size());
+	m_CommandBuffers.resize(m_Framebuffers.size());
 
 	VkCommandBufferAllocateInfo bufferAllocInfo{};
 	bufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;

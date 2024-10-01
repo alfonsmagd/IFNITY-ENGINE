@@ -111,9 +111,10 @@ protected:
 	virtual bool IsVSync() const = 0;
 	virtual void ResizeSwapChain() = 0;
 	virtual void InitializeGui() = 0;
+	virtual void InternalPreDestroy() = 0;
 
 
-protected:
+
 	WindowData m_Props;
 	bool m_IsNvidia = false;
 	GLFWwindow* m_Window = nullptr;
@@ -129,7 +130,7 @@ private:
 		return new WindowType(std::forward<Args>(args)...);
 	}
 
-private:
+
 	
 	static rhi::GraphicsAPI g_API; // By default opengl is the api 
 	StateGraphicsDevice m_StateGraphicsDevice{ StateGraphicsDevice::NOT_INITIALIZED };

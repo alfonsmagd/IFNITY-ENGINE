@@ -116,15 +116,14 @@ void GraphicsDeviceManager::Shutdown()
 	// Chek if Shutdown its provide when API is initialized
 	if (m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED)
 	{
-
-		if (GraphicsDeviceManager::g_API != rhi::GraphicsAPI::VULKAN)
-		{
+		InternalPreDestroy();
+		
 			IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
 			glfwDestroyWindow(m_Window);
 			m_Window = nullptr;
 			glfwTerminate();
 
-		}
+		
 		SetGraphicsDeviceState(StateGraphicsDevice::NOT_INITIALIZED);
 
 		m_InstanceCreated = false;
@@ -278,3 +277,5 @@ void GraphicsDeviceManager::SetWindowIcon()
 }
 
 IFNITY_END_NAMESPACE
+
+

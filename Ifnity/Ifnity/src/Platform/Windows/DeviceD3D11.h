@@ -62,6 +62,7 @@ protected:
 	bool InitializeDeviceAndContext() override;
 	void ResizeSwapChain() override;
 	void InitializeGui() override;
+	void InternalPreDestroy() override;
 
 
 private:

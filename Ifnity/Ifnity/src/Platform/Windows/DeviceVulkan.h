@@ -54,6 +54,15 @@ IFNITY_NAMESPACE
 	}
 }
 
+IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+ {
+	 auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	 if (func != nullptr)
+	 {
+		 func(instance, debugMessenger, pAllocator);
+	 }
+ }
+
 class DeviceVulkan final : public GraphicsDeviceManager
 {
 private:
@@ -140,6 +149,8 @@ protected:
 
 	void InitializeGui() override;
 
+	void InternalPreDestroy() override;
+
 private:
 
 	~DeviceVulkan() override;
@@ -164,7 +175,7 @@ private:
 	void DestroyCommandBuffers();
 	void CleanFrameBuffers();
 	void DestroyRenderPass();
-
+	
 	//OnRender private methods
 	bool AcquireNextImage();
 	bool PopulateCommandBuffer();

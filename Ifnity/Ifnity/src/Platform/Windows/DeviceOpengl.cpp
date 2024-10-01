@@ -175,6 +175,10 @@ void DeviceOpengl::Shutdown()
 
 }
 
+void DeviceOpengl::InternalPreDestroy()
+{
+}
+
 
 
 IFNITY_END_NAMESPACE

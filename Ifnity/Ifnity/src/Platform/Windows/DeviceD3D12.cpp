@@ -381,6 +381,9 @@ void DeviceD3D12::InitializeGui()
 
 
 }
+void DeviceD3D12::InternalPreDestroy()
+{
+}
 void DeviceD3D12::LogAdaptersD3D12()
 {
 	UINT i = 0;

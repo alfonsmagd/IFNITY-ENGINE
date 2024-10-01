@@ -274,6 +274,10 @@ void DeviceD3D11::InitializeGui()
 	IFNITY_LOG(LogApp, TRACE, "Imgui API is set to D3D11");
 }
 
+void DeviceD3D11::InternalPreDestroy()
+{
+}
+
 
 
 void DeviceD3D11::Init()
