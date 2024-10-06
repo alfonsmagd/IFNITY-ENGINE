@@ -140,7 +140,6 @@ void DeviceD3D12::OnUpdate()
 
 	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
 	// Done recording commands.
 	ThrowIfFailed(m_CommandList->Close());
 
@@ -381,6 +380,9 @@ void DeviceD3D12::InitializeGui()
 	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
 
 
+}
+void DeviceD3D12::InternalPreDestroy()
+{
 }
 void DeviceD3D12::LogAdaptersD3D12()
 {
@@ -981,9 +983,8 @@ void DeviceD3D12::PopulateCommandList()
 		m_CommandList->RSSetViewports(1, &m_ScreenViewport);
 		m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
-
-	// Indicate that the back buffer will be used as a render target.
-	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+		auto  barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+		m_CommandList->ResourceBarrier(1, &barrier);
 
 	// Set necessary state.
 	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
@@ -993,6 +994,9 @@ void DeviceD3D12::PopulateCommandList()
 	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::CadetBlue, 0, nullptr);
 	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = CurrentBackBufferView();
+	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = DepthStencilView();
+	m_CommandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
 	m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
 	

@@ -1,8 +1,7 @@
 #pragma once 
 
 #include "pch.h"
-#include "Ifnity\Event\EventBus.h"
-#include "Ifnity\Event\Event.h"
+
 
 //This type of layer is based of Hazel Engine Layer. 
 

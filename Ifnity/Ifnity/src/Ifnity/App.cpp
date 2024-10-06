@@ -1,16 +1,21 @@
 #include "pch.h"
 
 #include "App.h"
-#include "GraphicsDeviceManager.hpp"
 #include "Ifnity/Layers/ExampleLayer.h" //TODO: BORRAR , your own cpp 
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
 #include "Platform/ImguiRender/ImguiD3D12Render.h"
+#include "Platform/ImguiRender/ImguiVulkanRender.h"
 #include <GLFW/glfw3.h>
 #include <glad\glad.h>
 #include <Platform/Windows/DeviceOpengl.h>
 #include <Platform/Windows/DeviceD3D11.h>
+
+
+
+//#define _MODO_TEST 0
+
 
 
 namespace IFNITY {
@@ -68,36 +73,37 @@ void main()
 
 
 		InitEventBusAndListeners();
+
+#ifndef _MODO_TEST
 		InitConfigurationImGui();
-
-
+#endif
 
 	}
 
 	void App::InitEventBusAndListeners()
 	{
 		// Intialize the EventListenerControler
-		
-			m_GLFWEventListener = std::make_unique<GLFWEventListener>();
-		
-			SetEventBus(m_Window->GetGLFWEventSource());
 
-			// Connect Differents events. 
-			CONNECT_EVENT(WindowResize);
-			CONNECT_EVENT(WindowClose);
-			CONNECT_EVENT(KeyPressed);
-			CONNECT_EVENT(KeyRelease);
-			CONNECT_EVENT(MouseMove);
-			CONNECT_EVENT(ScrollMouseMove);
-			CONNECT_EVENT(MouseClick);
+		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
+
+		SetEventBus(m_Window->GetGLFWEventSource());
+
+		// Connect Differents events. 
+		CONNECT_EVENT(WindowResize);
+		CONNECT_EVENT(WindowClose);
+		CONNECT_EVENT(KeyPressed);
+		CONNECT_EVENT(KeyRelease);
+		CONNECT_EVENT(MouseMove);
+		CONNECT_EVENT(ScrollMouseMove);
+		CONNECT_EVENT(MouseClick);
 
 	}
-		//Example the simple event connect. 
+	//Example the simple event connect. 
 
-		//events::connect<MouseMove>(*m_Window->GetGLFWEventSource(), *m_CameraEventListener);
-	
+	//events::connect<MouseMove>(*m_Window->GetGLFWEventSource(), *m_CameraEventListener);
 
-	// Static member  declaration
+
+// Static member  declaration
 	App* App::s_Instance = nullptr;
 	// Default Constructor;
 	App::App(rhi::GraphicsAPI api) : m_graphicsAPI(api)
@@ -105,7 +111,7 @@ void main()
 		s_Instance = this;
 
 		InitApp(m_graphicsAPI);
-		
+
 	}
 
 	void App::InitConfigurationImGui()
@@ -131,24 +137,28 @@ void main()
 			{
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui::NewFrame();
-				ImPlot::CreateContext();
+
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D11] = []()
 			{
 				ImGui_ImplDX11_NewFrame();
 				ImGui::NewFrame();
-				ImPlot::CreateContext();
+
 
 			};
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D12] = []()
 			{
-			
+
 				ImGui_ImplDX12_NewFrame();
 				ImGui::NewFrame();
-				ImPlot::CreateContext();
-			
+
+
 			};
-		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []() {};
+		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []()
+			{
+				ImGui_ImplVulkan_NewFrame();
+				ImGui::NewFrame();
+			};
 
 
 	}
@@ -169,20 +179,24 @@ void main()
 		//This part its because the initializacion process is in the constructor of the app, then source will be build LAYERS  after App constructor. We cant initiate EventBusLayers in App constructor. 
 		InitiateEventBusLayers();
 
+#ifndef _MODO_TEST 
 		// TODO: CHange this logic, now is usefull to debug  this should be in a layer. 
 		bool init = false;
 		if (m_graphicsAPI == rhi::GraphicsAPI::OPENGL && !init)
 		{
 			DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
-		}
+	}
+#endif
 		while (isRunning())
 		{
 			glfwPollEvents();
 			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
 
 			// Render ImGui Frame
+#ifndef _MODO_TEST
 			RenderImGuiFrame();
+#endif
 			//ImGui::ShowDemoWindow();
 			//Layer Renders. 
 			for (Layer* layer : m_LayerStack)
@@ -190,15 +204,16 @@ void main()
 				layer->OnUpdate();
 			}
 
-			m_Window->OnUpdate();
 
+			m_Window->OnUpdate();
+#ifndef _MODO_TEST
 
 			// Change API 
 			if (m_FlagChangeAPI)
 			{
 				//Delete and destroy windows. 
 				m_Window->Shutdown();
-				
+
 
 				//OnDetach all layers
 				ForceOnDetachLayers();
@@ -207,7 +222,7 @@ void main()
 				ResetAppEvents();
 
 				InitApp(m_graphicsAPI);
-				
+
 				ForceOnAttachLayers();
 				InitiateEventBusLayers();
 				m_FlagChangeAPI = false;
@@ -217,10 +232,11 @@ void main()
 					DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
 
 				}
-				
-			}
+
 
 		}
+#endif
+}
 
 		m_Window->Shutdown();
 	}
@@ -246,7 +262,7 @@ void main()
 		}
 	}
 
-	void App::ForceOnAttachLayers() 
+	void App::ForceOnAttachLayers()
 	{
 		for (Layer* layer : m_LayerStack)
 		{

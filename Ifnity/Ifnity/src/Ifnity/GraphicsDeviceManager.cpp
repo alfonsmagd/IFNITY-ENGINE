@@ -3,6 +3,7 @@
 #include "Platform\Windows\DeviceOpengl.h"
 #include "Platform\Windows\DeviceD3D11.h"
 #include "Platform\Windows\DeviceD3D12.h"
+#include "Platform\Windows\DeviceVulkan.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #ifdef _WINDOWS
@@ -115,12 +116,14 @@ void GraphicsDeviceManager::Shutdown()
 	// Chek if Shutdown its provide when API is initialized
 	if (m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED)
 	{
+		InternalPreDestroy();
+		
+			IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
+			glfwDestroyWindow(m_Window);
+			m_Window = nullptr;
+			glfwTerminate();
 
-		IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
-		glfwDestroyWindow(m_Window);
-		m_Window = nullptr;
-		glfwTerminate();
-
+		
 		SetGraphicsDeviceState(StateGraphicsDevice::NOT_INITIALIZED);
 
 		m_InstanceCreated = false;
@@ -163,7 +166,7 @@ GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
 	break;
 	case rhi::GraphicsAPI::VULKAN:
 	{
-
+		return BuildWindow<DeviceVulkan>();
 	}
 	break;
 
@@ -274,3 +277,5 @@ void GraphicsDeviceManager::SetWindowIcon()
 }
 
 IFNITY_END_NAMESPACE
+
+

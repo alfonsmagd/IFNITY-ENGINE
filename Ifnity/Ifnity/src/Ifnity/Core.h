@@ -3,11 +3,22 @@
 
 #pragma warning(disable : 4251) // disable warning for dll interface using in the same interface dll, if you want to use this dll in another dll you should use the same compiler and the same version of the compiler
 
-#ifdef IFNITY_EXPORTS_DLL
+
+
+
+
+#if defined(_WIN32) || defined(_WIN64)
+#if defined(BUILD_SHARED_IFNITY)
 #define IFNITY_API __declspec(dllexport)
-#else
+#elif defined(IFNITY_USE_SHARED)
 #define IFNITY_API __declspec(dllimport)
+#else
+#define IFNITY_API
 #endif
+#else
+#define IFNITY_API
+#endif
+
 
 #if defined(_MSC_VER) // Microsoft Visual Studio
 #define IFNITY_INLINE __forceinline

@@ -1,8 +1,9 @@
 
 
 // IFNITY.cp
-#include "pch.h"
+
 #include <Ifnity.h>
+
 
 
 using namespace IFNITY::rhi;
@@ -133,26 +134,33 @@ private:
 			IFNITY::App::GetApp()
 				.SetGraphicsAPI(GraphicsAPI::D3D12, api != GraphicsAPI::D3D12);
 			break;
+
+		case 3:
+			// Acción para la opción 3
+			IFNITY_LOG(LogApp, INFO, "VULKAN");
+			IFNITY::App::GetApp()
+				.SetGraphicsAPI(GraphicsAPI::VULKAN, api != GraphicsAPI::VULKAN);
+			break;
 		default:
-			IFNITY_LOG(LogApp, INFO, "No option ");
+		
 			break;
 		}
 	}
 
 	void ChooseApi() {
-		static int opcionSeleccionada = 0;
-		const char* opciones[] = { "OPENGL", "D3D11","D3D12"};
+		static int selectOption = 0;
+		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN"};
 
 		ImGui::Begin("API WINDOW");  // Comienza la creación de la ventana
 
 		// Combo box con las opciones
-		if (ImGui::Combo("Choose Option ", &opcionSeleccionada, opciones, IM_ARRAYSIZE(opciones))) {
+		if (ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options))) {
 			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
 		}
 
 		// Botón que ejecuta la función cuando se hace clic
 		if (ImGui::Button("OK")) {
-			AccionPorOpcion(opcionSeleccionada);
+			AccionPorOpcion(selectOption);
 		}
 
 		ImGui::End();  // Termina la creación de la ventana
@@ -196,7 +204,7 @@ class Source_TestD3D12 : public IFNITY::App
 public:
 	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
 	{
-		
+		PushLayer(new ExampleLayer());
 	}
 	~Source_TestD3D12() override
 	{
@@ -206,7 +214,11 @@ public:
 
 IFNITY::App* IFNITY::CreateApp()
 {
-	auto api = IFNITY::rhi::GraphicsAPI::D3D12;
+
+
+	auto api = IFNITY::rhi::GraphicsAPI::VULKAN;
+
+
 	//return new Source_TestD3D12(api);
 	return new Source(api);
 }

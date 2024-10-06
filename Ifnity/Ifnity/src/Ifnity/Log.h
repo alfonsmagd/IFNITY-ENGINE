@@ -8,18 +8,18 @@
 
 
 
-#define IFNITY_LOG(logger, level,  ...) \
-        do { \
+#define IFNITY_LOG(logger, level, fmt, ...) \
+    do { \
         if (level == WARNING) { \
-            logger->warn(__VA_ARGS__); \
+            logger->warn(fmt, __VA_ARGS__); \
         } else if (level == ERROR) { \
-            logger->error(__VA_ARGS__); \
+         logger->error(std::string(fmt) + " in function: " + __FUNCTION__, __VA_ARGS__); \
         } else if (level == TRACE) { \
-            logger->trace(__VA_ARGS__); \
+            logger->trace(fmt, __VA_ARGS__); \
         } else if (level == INFO) { \
-            logger->info(__VA_ARGS__); \
+            logger->info(fmt, __VA_ARGS__); \
         } else { \
-            logger->info(__VA_ARGS__); \
+            logger->info(fmt, __VA_ARGS__); \
         } \
     } while (0)
 namespace IFNITY

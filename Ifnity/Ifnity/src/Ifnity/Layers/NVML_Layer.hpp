@@ -268,7 +268,9 @@ private:
 
                     if (m_lastThrottleReason != currentThrottleReason)
                     {
-                        IFNITY_LOG(LogApp, ERROR, (message + "\n").c_str(), deviceIndex);
+                        std::string formattedMessage = fmt::format("{}\n", message);
+                        IFNITY_LOG(LogApp, ERROR, formattedMessage);
+
                     }
                     m_lastThrottleReason = currentThrottleReason;
                     m_throttleCooldownTimer.reset();
@@ -418,7 +420,7 @@ private:
 	{
 		if (ImGui::GetCurrentContext() == nullptr)
 		{
-			IFNITY_LOG(LogApp, ERROR, "IMGUI CONTEXT NOT INITIALIZED " , __FUNCTION__);
+			IFNITY_LOG(LogApp, ERROR, "IMGUI CONTEXT NOT INITIALIZED ");
 			return;
 		}
 		ImGuiSettingsHandler iniHandler{};

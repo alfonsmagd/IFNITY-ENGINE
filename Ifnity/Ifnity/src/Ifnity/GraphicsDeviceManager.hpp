@@ -1,15 +1,20 @@
 #pragma once
 
 #include "pch.h"
-
-#include "Ifnity/Core.h"
-#include "Ifnity/Event/Event.h"
 #include "Ifnity/Event/WindowEvent.h"
 
+
+// GRAPHIC API
+#define VK_USE_PLATFORM_WIN32_KHR
+#include <vulkan/vulkan.h>
+#define GLFW_INCLUDE_VULKAN
 #define GLFW_INCLUDE_NONE // Do not include any OpenGL headers
 #include <GLFW/glfw3.h>
 #ifdef _WIN32
 #define GLFW_EXPOSE_NATIVE_WIN32
+
+
+
 #endif // _WIN32
 #include <GLFW/glfw3native.h>
 
@@ -106,9 +111,10 @@ protected:
 	virtual bool IsVSync() const = 0;
 	virtual void ResizeSwapChain() = 0;
 	virtual void InitializeGui() = 0;
+	virtual void InternalPreDestroy() = 0;
 
 
-protected:
+
 	WindowData m_Props;
 	bool m_IsNvidia = false;
 	GLFWwindow* m_Window = nullptr;
@@ -124,7 +130,7 @@ private:
 		return new WindowType(std::forward<Args>(args)...);
 	}
 
-private:
+
 	
 	static rhi::GraphicsAPI g_API; // By default opengl is the api 
 	StateGraphicsDevice m_StateGraphicsDevice{ StateGraphicsDevice::NOT_INITIALIZED };

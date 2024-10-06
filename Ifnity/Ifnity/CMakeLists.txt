@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(Ifnity)
 
+
+#Options
+
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -12,6 +16,7 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/Dist)
+
 
 
 # Buscar nvml.dll en el sistema
@@ -28,6 +33,9 @@ else()
 endif()
 
 
+#Test if the system has vulkan,d3d11,d3d12,opengl. 
+include(${PROJECT_SOURCE_DIR}/FindGraphicsAPIs.cmake)
+
 #Rutas  nvml.lib 
 set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 
@@ -37,7 +45,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
 # add D3D12MemoryAllocator 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator)
-
+# add vulkan bootstrap
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 
 
 # Include directories
@@ -56,8 +65,12 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
 #include stb_image 
 include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
-#include d3d12mmemoryallocator 
+#include d3d12mmemoryallocator and vkmemoryallocator
 include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
+# Include Vulkan directories
+include_directories(${Vulkan_INCLUDE_DIRS})
+# Include VK-Bootstrap
+include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
@@ -66,6 +79,7 @@ file(GLOB_RECURSE SOURCE_FILES
     ${PROJECT_SOURCE_DIR}/src/*.h
     ${PROJECT_SOURCE_DIR}/src/*.hpp
     ${PROJECT_SOURCE_DIR}/src/*.cpp
+    ${PROJECT_SOURCE_DIR}/src/*.c
 )
 
 # Vendor Source Files 
@@ -78,7 +92,14 @@ set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.cpp)
 set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
-add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+if(BUILD_SHARED_IFNITY)
+	add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+    target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS BUILD_SHARED_IFNITY)
+     message("IFNITY LIKE DLL BUILD SHARED IFNITY = ON ")
+else()
+	add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+endif()
+
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/pch.h)
 
@@ -95,7 +116,13 @@ target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 target_link_libraries(${PROJECT_NAME} INTERFACE  glm)
 target_link_libraries(${PROJECT_NAME} INTERFACE  stb_image)
 target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
+# Link Vulkan libraries
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
+# Link VK-Bootstrap
+target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 
+# Include Target Directories
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
 
 if(NVML_LIBRARY)
     message(STATUS "Enlazando nvml.lib ya que nvml.dll .")
@@ -127,7 +154,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # Copiar nvml.lib al directorio de enlace
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -137,5 +164,7 @@ add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}
 )
+
+
 
 

@@ -32,6 +32,7 @@ protected:
 	void ResizeSwapChain() override;
 	void InitializeGui() override;
 	void Shutdown() override;
+	void InternalPreDestroy() override;
 private:
 	void Init();
 	void InitializeGLAD();
