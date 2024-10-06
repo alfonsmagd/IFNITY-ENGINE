@@ -12,10 +12,22 @@ env:
 
 jobs:
   build:
-    runs-on: self-hosted 
+    runs-on: windows-latest 
 
     steps:
     - uses: actions/checkout@v4
+    - name: Download Vulkan SDK
+      run: |
+          Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe -OutFile vulkan-sdk.exe
+          Start-Process .\vulkan-sdk.exe -ArgumentList '/S' -Wait
+          shell: powershell
+
+    - name: Set Vulkan SDK environment variables
+      run: |
+            $vulkanEnv = "C:\VulkanSDK\1.x.xx.x"  # Cambia la versión del SDK según sea necesario
+            echo "VULKAN_SDK=$vulkanEnv" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8
+            $env:VULKAN_SDK=$vulkanEnv
+            shell: powershell
         
     - name: Configure CMake
       run: cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
