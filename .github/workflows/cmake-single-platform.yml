@@ -16,12 +16,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Install Vulkan SDK
-      run: |
-          Invoke-WebRequest -Uri https://sdk.lunarg.com/sdk/download/latest/windows/vulkan-sdk.exe -OutFile vulkan-sdk.exe
-          Start-Process .\vulkan-sdk.exe -ArgumentList '/S' -Wait
-      shell: powershell
         
     - name: Configure CMake
       run: cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
