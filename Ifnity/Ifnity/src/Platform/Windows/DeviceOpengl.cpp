@@ -21,7 +21,8 @@ DeviceOpengl::~DeviceOpengl()
 
 void DeviceOpengl::OnUpdate()
 {
-	
+	//Clear the color buffer
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glfwSwapBuffers(m_Window);
 }
 

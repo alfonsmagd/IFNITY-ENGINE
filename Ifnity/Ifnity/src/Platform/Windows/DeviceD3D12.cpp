@@ -132,7 +132,27 @@ void DeviceD3D12::OnUpdate()
 	//m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
 	//m_CommandList->DrawInstanced(3, 1, 0, 0);
 
-	PopulateCommandList();
+
+	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
+	m_CommandList->RSSetViewports(1, &m_ScreenViewport);
+	m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
+
+	auto  barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	m_CommandList->ResourceBarrier(1, &barrier);
+
+	// Set necessary state.
+	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
+
+	//Clear the back buffer and depth buffer.
+	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::CadetBlue, 0, nullptr);
+	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = CurrentBackBufferView();
+	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = DepthStencilView();
+	m_CommandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
+	
+
+	//PopulateCommandList();
 	
 	//ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
@@ -1022,6 +1042,17 @@ void DeviceD3D12::ReportLiveObjects() const
 	// Debug DXGI 1
 	ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(OUT & debugDXGI1)));
 	debugDXGI1->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+}
+void DeviceD3D12::DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState, 
+	const ComPtr<ID3D12RootSignature>& rootSignature)
+{
+	m_CommandList->SetPipelineState(pipelineState.Get());
+	m_CommandList->SetGraphicsRootSignature(rootSignature.Get());
+
+	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+	m_CommandList->DrawInstanced(3, 1, 0, 0);
+	
 }
 void DeviceD3D12::LoadAssetDemo()
 {

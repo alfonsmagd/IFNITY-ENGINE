@@ -126,7 +126,9 @@ private:
 
 	void ReportLiveObjects() const;
 
-	
+	//void DrawElements(); 
+	void DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
+					  const ComPtr<ID3D12RootSignature>& rootSignature);
 
 
 

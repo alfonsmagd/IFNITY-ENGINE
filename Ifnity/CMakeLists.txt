@@ -9,9 +9,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 # Añade el subdirectorio que contiene el proyecto Ifnity
 add_subdirectory(Ifnity)
 
-# Añade el subdirectorio que contiene el proyecto Sandbox
+# Añade el subdirectorio que contiene el proyecto Sandbox Y EJEMPLOS 
 add_subdirectory(Sandbox)
-
+add_subdirectory(GPU_MONITOR)
 
 # El dll que genera Ifnity se copiará automáticamente a la carpeta de salida de Sandbox
 
