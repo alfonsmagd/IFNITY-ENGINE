@@ -33,6 +33,8 @@ protected:
 	void InitializeGui() override;
 	void Shutdown() override;
 	void InternalPreDestroy() override;
+
+	void ClearBackBuffer(float* color) override;
 private:
 	void Init();
 	void InitializeGLAD();
@@ -49,6 +51,7 @@ private:
 
 	// Struct to hold window data
 	
+	float m_Color[4] = { 1.0f,1.0f,1.0f,1.0f };
 
 };
 

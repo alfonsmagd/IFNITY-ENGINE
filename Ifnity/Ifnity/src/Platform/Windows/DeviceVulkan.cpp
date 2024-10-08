@@ -70,7 +70,7 @@ void DeviceVulkan::OnUpdate()
 	
 
 	VkClearValue colorClearValue;
-	colorClearValue.color = { { 0.1f, 0.1f, 0.1f, 1.0f } };
+    colorClearValue.color = { { m_Color[0], m_Color[1], m_Color[2], m_Color[3] } };
 
 	float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
 	
@@ -297,6 +297,11 @@ void DeviceVulkan::InternalPreDestroy()
 {
 	//Wait devide to finish and get idle state.
 	vkDeviceWaitIdle(m_Device.device);
+}
+
+void DeviceVulkan::ClearBackBuffer(float* color)
+{
+	std::copy(color, color + 4, m_Color);
 }
 
 

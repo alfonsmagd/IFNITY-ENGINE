@@ -41,7 +41,7 @@ void DeviceD3D11::OnUpdate()
 
 void DeviceD3D11::RenderDemo(int w, int h) const
 {
-	m_ImmediateContext->ClearRenderTargetView(m_RenderTarget.Get(), Colors::Azure); // Clear the back buffer to a 
+	m_ImmediateContext->ClearRenderTargetView(m_RenderTarget.Get(), m_ClearColor); // Clear the back buffer to a 
 
 	D3D11_VIEWPORT vp{};
 	vp.Width = static_cast<float>(w);
@@ -282,6 +282,11 @@ void DeviceD3D11::InternalPreDestroy()
 
 void DeviceD3D11::Init()
 {}
+
+void DeviceD3D11::ClearBackBuffer(float* color)
+{
+	m_ClearColor = color;
+}
 
 void DeviceD3D11::InitializeD3D11()
 {}

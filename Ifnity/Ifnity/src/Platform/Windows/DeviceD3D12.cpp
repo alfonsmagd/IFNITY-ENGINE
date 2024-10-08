@@ -144,7 +144,7 @@ void DeviceD3D12::OnUpdate()
 	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
 
 	//Clear the back buffer and depth buffer.
-	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::CadetBlue, 0, nullptr);
+	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), m_ClearColor, 0, nullptr);
 	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = CurrentBackBufferView();
@@ -201,6 +201,11 @@ void DeviceD3D12::RenderDemo(int w, int h) const
 void* DeviceD3D12::Wrapper_ptr_data()
 {
 	return reinterpret_cast<void*>(m_CommandList.GetAddressOf());
+}
+
+void DeviceD3D12::ClearBackBuffer(float* color)
+{
+	m_ClearColor = color;
 }
 
 void DeviceD3D12::SetVSync(bool enabled)

@@ -52,16 +52,19 @@ public:
 class ImGuiTestLayer : public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest") {}
+	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetWindow()) {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
 	{
+		
+		m_Device = &IFNITY::App::GetApp().GetWindow();
 		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
 	}
 
 	void OnUpdate() override
 	{
+		
 		ImGuiContext* context = GetImGuiContext();
 		if (context == nullptr)
 		{
@@ -71,13 +74,12 @@ public:
 		ImGui::SetCurrentContext(context);
 
 		ChooseApi();
+		ShowColorPiceckerWindow();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
 	// Heredado vía Layer
 	void ConnectToEventBusImpl(void* bus) override
 	{
-		
-
 	}
 private:
 	// Una función que se llama al hacer clic en el botón
@@ -138,6 +140,22 @@ private:
 		ImGui::End();  // Termina la creación de la ventana
 	}
 
+	void ShowColorPiceckerWindow()
+	{
+		ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
+		ImGui::Begin("Color Picker");
+		static float clearColor[4] = { 0.45f, 0.55f, 0.60f, 1.00f };
+		// Selector de color
+		if (ImGui::ColorEdit4("Clear Color", clearColor))
+		{
+			// Si el color cambia, actualiza el color del buffer de fondo
+			m_Device->ClearBackBuffer(clearColor);
+		}
+		ImGui::End();
+	}
+
+	IFNITY::GraphicsDeviceManager* m_Device;
 };
 
 class Source: public IFNITY::App
@@ -161,9 +179,9 @@ IFNITY::App* IFNITY::CreateApp()
 {
 
 
-	auto api = IFNITY::rhi::GraphicsAPI::VULKAN;
+	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
-
+	
 	//return new Source_TestD3D12(api);
 	return new Source(api);
 }

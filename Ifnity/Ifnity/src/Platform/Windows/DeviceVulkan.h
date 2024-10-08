@@ -127,6 +127,8 @@ private:
 	PFN_vkQueueEndDebugUtilsLabelEXT vkQueueEndDebugUtilsLabelEXT{ nullptr };
 	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT{ nullptr };
 
+	float m_Color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
 protected:
 	// Heredado vía GraphicsDeviceManager
 	void OnUpdate() override;
@@ -150,6 +152,8 @@ protected:
 	void InitializeGui() override;
 
 	void InternalPreDestroy() override;
+
+	void ClearBackBuffer(float* color) override;
 
 private:
 
