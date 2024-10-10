@@ -8,7 +8,48 @@
 //Remember to simplfy the acces namespace RHI = Ifnity::rhi;
 #include <DirectXColors.h>
 
-IFNITY_NAMESPACE namespace rhi {
+IFNITY_NAMESPACE 
+
+
+//BASIC TYPES COLOR// 
+struct Color
+{
+    float r, g, b, a;
+
+    Color() : r(0.f), g(0.f), b(0.f), a(0.f) {}
+    Color(float c) : r(c), g(c), b(c), a(c) {}
+    Color(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a) {}
+    Color(const float* color) : r(color[0]), g(color[1]), b(color[2]), a(color[3]) {}
+
+    bool operator ==(const Color& _b) const { return r == _b.r && g == _b.g && b == _b.b && a == _b.a; }
+    bool operator !=(const Color& _b) const { return !(*this == _b); }
+   
+    Color operator +(const Color& _b) const { return Color(r + _b.r, g + _b.g, b + _b.b, a + _b.a); }
+
+    
+    Color operator -(const Color& _b) const { return Color(r - _b.r, g - _b.g, b - _b.b, a - _b.a); }
+
+    
+    Color operator *(float scalar) const { return Color(r * scalar, g * scalar, b * scalar, a * scalar); }
+
+    Color operator /(float scalar) const
+    {
+		return Color(r / scalar, g / scalar, b / scalar, a / scalar);
+    }
+
+	// Cast to float* when needed in d3d12
+    operator const float* () const
+    {
+        return &r;
+    }
+};
+
+
+
+
+
+
+namespace rhi {
 
        // Definición de los errores de D3D12
    #define D3D12_ERROR_INVALID_DEVICE 0x887A0001

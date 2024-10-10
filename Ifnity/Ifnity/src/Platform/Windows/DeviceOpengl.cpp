@@ -21,7 +21,8 @@ DeviceOpengl::~DeviceOpengl()
 
 void DeviceOpengl::OnUpdate()
 {
-	
+	//Clear the color buffer
+	glClearColor(m_Color[0],m_Color[1], m_Color[2], m_Color[3]);
 	glfwSwapBuffers(m_Window);
 }
 
@@ -177,6 +178,11 @@ void DeviceOpengl::Shutdown()
 
 void DeviceOpengl::InternalPreDestroy()
 {
+}
+
+void DeviceOpengl::ClearBackBuffer(float* color) 
+{
+	std::copy(color, color + 4, m_Color);
 }
 
 

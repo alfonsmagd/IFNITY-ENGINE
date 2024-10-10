@@ -52,6 +52,9 @@ public:
 	void RenderDemo(int w, int h) const override;
 	[[nodiscard]] ID3D11Device* GetDevice() const { return m_Device.Get(); }
 	[[nodiscard]] ID3D11DeviceContext* GetDeviceContext() const { return m_ImmediateContext.Get(); }
+	void ClearBackBuffer(float* color);
+
+	Color m_ClearColor = { 0.0f, 0.2f, 0.4f, 1.0f };
 
 protected:
 	// Window attributes
@@ -67,6 +70,7 @@ protected:
 
 private:
 	void Init();
+
 	void InitializeD3D11();
 	std::string GetD3D11Info();
 	bool CreateSwapChain();

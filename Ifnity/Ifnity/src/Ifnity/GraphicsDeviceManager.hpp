@@ -76,7 +76,7 @@ class IFNITY_API GraphicsDeviceManager
 public:
 
 	GraphicsDeviceManager() = default;
-	 virtual ~GraphicsDeviceManager() = default;
+	virtual ~GraphicsDeviceManager() = default;
 
 	virtual void OnUpdate() = 0;
 
@@ -89,9 +89,9 @@ public:
 	virtual void Shutdown();
 	virtual void RenderDemo(int w, int h) const; // Its a function to do test fast, its not part of solution now. 
 	//Get GLFWEventSourceBus to connect Listeners
-	GLFWEventSource* GetGLFWEventSource()  { return &m_Props.GLFWEventSourceBus; }
-	
-	
+	GLFWEventSource* GetGLFWEventSource() { return &m_Props.GLFWEventSourceBus; }
+
+
 	void InitImGui();
 
 	//Factory method to create a window
@@ -100,6 +100,8 @@ public:
 	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }
 
 	virtual void* Wrapper_ptr_data() { return 0; };
+
+	virtual void ClearBackBuffer(float* color) {};
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
@@ -111,9 +113,9 @@ protected:
 	virtual bool IsVSync() const = 0;
 	virtual void ResizeSwapChain() = 0;
 	virtual void InitializeGui() = 0;
-	virtual void InternalPreDestroy() = 0;
+	virtual void InternalPreDestroy() = 0; 
 
-
+	
 
 	WindowData m_Props;
 	bool m_IsNvidia = false;

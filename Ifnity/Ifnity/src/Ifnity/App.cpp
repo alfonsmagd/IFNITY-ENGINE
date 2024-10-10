@@ -181,12 +181,6 @@ void main()
 
 #ifndef _MODO_TEST 
 		// TODO: CHange this logic, now is usefull to debug  this should be in a layer. 
-		bool init = false;
-		if (m_graphicsAPI == rhi::GraphicsAPI::OPENGL && !init)
-		{
-			DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
-
-	}
 #endif
 		while (isRunning())
 		{
@@ -226,14 +220,6 @@ void main()
 				ForceOnAttachLayers();
 				InitiateEventBusLayers();
 				m_FlagChangeAPI = false;
-
-				if (m_graphicsAPI == rhi::GraphicsAPI::OPENGL && !init)
-				{
-					DeviceOpengl::DemoTriangle(shaderCodeVertex, shaderCodeFragment);
-
-				}
-
-
 		}
 #endif
 }

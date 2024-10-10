@@ -78,6 +78,8 @@ public:
 	D3D12_RECT m_ScissorRect;
 	D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView;
 
+	Color m_ClearColor = { 0.0f, 0.2f, 0.4f, 1.0f };
+
 public:
 	~DeviceD3D12() override;
 
@@ -90,6 +92,8 @@ public:
 	
 	void* Wrapper_ptr_data() override;
 	float GetAspectRatio() { return static_cast<float>(GetWidth() / GetHeight()); }
+
+	void ClearBackBuffer(float* color) override;
 protected:
 	// Window attributes
 	void SetVSync(bool enabled) override;
@@ -126,7 +130,9 @@ private:
 
 	void ReportLiveObjects() const;
 
-	
+	//void DrawElements(); 
+	void DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
+					  const ComPtr<ID3D12RootSignature>& rootSignature);
 
 
 
