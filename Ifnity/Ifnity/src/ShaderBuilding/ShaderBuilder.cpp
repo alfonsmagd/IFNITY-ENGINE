@@ -2,6 +2,7 @@
 
 
 #include "ShaderBuilder.hpp"
+
 #include <iostream>
 #include <fstream>
 
@@ -10,8 +11,6 @@ IFNITY_NAMESPACE
 
 ComPtr<IDxcCompiler3> ShaderCompiler::m_compiler = nullptr;
 ComPtr<IDxcUtils> ShaderCompiler::m_utils = nullptr;
-
-
 
 
 bool ShaderCompiler::Initialize()

@@ -3,7 +3,7 @@
 // IFNITY.cp
 
 #include <Ifnity.h>
-#include <corecrt_wstring.h>
+#include <spirv_cross_c.h>
 
 
 using namespace IFNITY::rhi;
@@ -175,6 +175,37 @@ public:
 };
 
 
+std::vector<uint32_t> load_spirv_file(const std::string& filename)
+{
+	std::ifstream file(filename, std::ios::binary | std::ios::ate);
+	if (!file.is_open())
+	{
+		throw std::runtime_error("No se pudo abrir el archivo SPIR-V.");
+	}
+
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	if (size % 4 != 0)
+	{
+		throw std::runtime_error("El tamaño del archivo SPIR-V no es múltiplo de 4.");
+	}
+
+	std::vector<uint32_t> buffer(size / 4);
+	if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+	{
+		throw std::runtime_error("Error al leer el archivo SPIR-V.");
+	}
+
+	return buffer;
+}
+
+void error_callback(void*, const char* error_message)
+{
+	// Handle the error message here  
+	std::cerr << "Error: " << error_message << std::endl;
+}
+
 IFNITY::App* IFNITY::CreateApp()
 {
 
@@ -183,91 +214,91 @@ IFNITY::App* IFNITY::CreateApp()
 
 	IFNITY::ShaderCompiler::Initialize();
 
-	// Código HLSL para un simple pixel shader que devuelve color rojo
-	//std::wstring shaderSource = LR"(
-	//	float4 main() : SV_Target {
-	//	    return float4(1.0, 0.0, 0.0, 1.0);
-	//	}
-	//)";
-
-//	std::wstring shaderSource = LR"(
-//cbuffer UBO : register(b0)
-//{
-//    float4x4 projectionMatrix;
-//    float4x4 viewMatrix;
-//    float4x4 modelMatrix;
-//};
-//
-//struct VSInput
-//{
-//    float3 inPos : POSITION;
-//    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
-//};
-//
-//struct PSInput
-//{
-//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-//    float4 gl_Position : SV_POSITION;
-//};
-//
-//PSInput main(VSInput input)
-//{
-//    PSInput output;
-//
-//    output.outColor = input.inColor; // Asignar color de entrada
-//	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
-//                         
-//
-//    return output;
-//}
-//
-//	)";
-//
-//	std::wstring shaderSource2 = LR"(
-//struct PSInput
-//{
-//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-//};
-//
-//float4 main(PSInput input) : SV_TARGET
-//{
-//    return float4(input.outColor, 1.0); // Color con alpha = 1.0
-//}
-//
-//	)";
-
-			std::wstring shaderSource2 = LR"(
-struct PS_INPUT
-		{
-			float4 pos : SV_POSITION;
-			float3 color : COLOR;
-		};
-
-		float4 main(PS_INPUT input) : SV_Target
-		{
-			return float4(input.color, 1.0); // Convertimos el color de 3 componentes a 4 componentes con alpha = 1.0
+	 //Código HLSL para un simple pixel shader que devuelve color rojo
+	/*std::wstring shaderSource = LR"(
+		float4 main() : SV_Target {
+		    return float4(1.0, 0.0, 0.0, 1.0);
 		}
-	)";
+	)";*/
 
-
-
-		std::wstring shaderSource = LR"(
-static const float2 _31[3] = { float2(-0.5, 0.0), float2(0.0, 0.5), float2(0.5, -0.5) };
-static const float3 _35[3] = { float3(1.0, 0.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 0.0, 1.0) };
-
-struct VS_OUTPUT
+	std::wstring shaderSource = LR"(
+cbuffer UBO : register(b0)
 {
-    float4 pos : SV_POSITION;
-    float3 color : COLOR;
+    float4x4 projectionMatrix;
+    float4x4 viewMatrix;
+    float4x4 modelMatrix;
 };
 
-VS_OUTPUT main(uint id : SV_VertexID)
+struct VSInput
 {
-    VS_OUTPUT output;
-    output.pos = float4(_31[id], 0.0, 1.0);
-    output.color = _35[id];
+    float3 inPos : POSITION;
+    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
+};
+
+struct PSInput
+{
+    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
+    float4 gl_Position : SV_POSITION;
+};
+
+PSInput main(VSInput input)
+{
+    PSInput output;
+
+    output.outColor = input.inColor; // Asignar color de entrada
+	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
+                         
+
     return output;
-})";
+}
+
+	)";
+
+	std::wstring shaderSource2 = LR"(
+struct PSInput
+{
+    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
+};
+
+float4 main(PSInput input) : SV_TARGET
+{
+    return float4(input.outColor, 1.0); // Color con alpha = 1.0
+}
+
+	)";
+
+//			std::wstring shaderSource2 = LR"(
+//struct PS_INPUT
+//		{
+//			float4 pos : SV_POSITION;
+//			float3 color : COLOR;
+//		};
+//
+//		float4 main(PS_INPUT input) : SV_Target
+//		{
+//			return float4(input.color, 1.0); // Convertimos el color de 3 componentes a 4 componentes con alpha = 1.0
+//		}
+//	)";
+//
+//
+//
+//		std::wstring shaderSource = LR"(
+//static const float2 _31[3] = { float2(-0.5, 0.0), float2(0.0, 0.5), float2(0.5, -0.5) };
+//static const float3 _35[3] = { float3(1.0, 0.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 0.0, 1.0) };
+//
+//struct VS_OUTPUT
+//{
+//    float4 pos : SV_POSITION;
+//    float3 color : COLOR;
+//};
+//
+//VS_OUTPUT main(uint id : SV_VertexID)
+//{
+//    VS_OUTPUT output;
+//    output.pos = float4(_31[id], 0.0, 1.0);
+//    output.color = _35[id];
+//    return output;
+//})";
 
 
 		
@@ -283,7 +314,59 @@ VS_OUTPUT main(uint id : SV_VertexID)
 	hr = ShaderCompiler::CompileShader(shaderSource2, entryPoint, profile2, &blob1, "psSimple.spv");
 
 
+	// Leer SPIR-V desde el disco
+	std::vector<uint32_t> spirv_binary = load_spirv_file("vsSimple.spv");
+
+	spvc_context context = NULL;
+	spvc_parsed_ir ir = NULL;
+	spvc_compiler compiler_glsl = NULL;
+	spvc_compiler_options options = NULL;
+	spvc_resources resources = NULL;
+	const spvc_reflected_resource* list = NULL;
+	const char* result = NULL;
+	size_t count;
+	size_t i;
+
+	// Crear contexto
+	spvc_context_create(&context);
 	
+	// Establecer callback de error
+	spvc_context_set_error_callback(context, error_callback, nullptr);
+   
+
+
+	// Parsear el SPIR-V
+	spvc_context_parse_spirv(context, spirv_binary.data(), spirv_binary.size(), &ir);
+
+	// Crear una instancia del compilador y darle propiedad del IR
+	spvc_context_create_compiler(context, SPVC_BACKEND_GLSL, ir, SPVC_CAPTURE_MODE_TAKE_OWNERSHIP, &compiler_glsl);
+
+	// Realizar reflexión básica
+	spvc_compiler_create_shader_resources(compiler_glsl, &resources);
+	spvc_resources_get_resource_list_for_type(resources, SPVC_RESOURCE_TYPE_UNIFORM_BUFFER, &list, &count);
+
+	for (i = 0; i < count; i++)
+	{
+		printf("ID: %u, BaseTypeID: %u, TypeID: %u, Name: %s\n", list[i].id, list[i].base_type_id, list[i].type_id,
+			list[i].name);
+		printf("  Set: %u, Binding: %u\n",
+			spvc_compiler_get_decoration(compiler_glsl, list[i].id, SpvDecorationDescriptorSet),
+			spvc_compiler_get_decoration(compiler_glsl, list[i].id, SpvDecorationBinding));
+	}
+
+	// Modificar opciones
+	spvc_compiler_create_compiler_options(compiler_glsl, &options);
+	spvc_compiler_options_set_uint(options, SPVC_COMPILER_OPTION_GLSL_VERSION, 450);
+	spvc_compiler_options_set_bool(options, SPVC_COMPILER_OPTION_GLSL_ES, SPVC_TRUE);
+	spvc_compiler_install_compiler_options(compiler_glsl, options);
+
+	// Compilar a GLSL
+	spvc_compiler_compile(compiler_glsl, &result);
+	printf("Cross-compiled source: %s\n", result);
+
+	// Liberar toda la memoria asignada hasta ahora
+	spvc_context_destroy(context);
+
 	
 	//return new Source_TestD3D12(api);
 	return new Source(api);

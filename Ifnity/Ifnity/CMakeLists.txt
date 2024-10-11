@@ -131,7 +131,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
-target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-cpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
 
 # Include Target Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
