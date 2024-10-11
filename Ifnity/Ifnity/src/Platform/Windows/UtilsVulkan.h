@@ -6,6 +6,7 @@
 #include <vulkan/vulkan.h>
 #include <VkBootstrap.h>
 #include <vk_mem_alloc.h>
+#include <glslang\Include\glslang_c_interface.h>
 
 
 #define VK_CHECK(result, errorMessage) \

@@ -1,0 +1,3 @@
+[submodule "Ifnity/Ifnity/vendor/SPIRV-Cross"]
+	path = Ifnity/Ifnity/vendor/SPIRV-Cross
+	url = https://github.com/KhronosGroup/SPIRV-Cross.git
