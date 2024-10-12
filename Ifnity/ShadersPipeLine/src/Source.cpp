@@ -221,97 +221,132 @@ IFNITY::App* IFNITY::CreateApp()
 		}
 	)";*/
 
-	std::wstring shaderSource = LR"(
-cbuffer UBO : register(b0)
-{
-    float4x4 projectionMatrix;
-    float4x4 viewMatrix;
-    float4x4 modelMatrix;
-};
-
-struct VSInput
-{
-    float3 inPos : POSITION;
-    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
-};
-
-struct PSInput
-{
-    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-    float4 gl_Position : SV_POSITION;
-};
-
-PSInput main(VSInput input)
-{
-    PSInput output;
-
-    output.outColor = input.inColor; // Asignar color de entrada
-	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
-                         
-
-    return output;
-}
-
-	)";
-
-	std::wstring shaderSource2 = LR"(
-struct PSInput
-{
-    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-};
-
-float4 main(PSInput input) : SV_TARGET
-{
-    return float4(input.outColor, 1.0); // Color con alpha = 1.0
-}
-
-	)";
-
-//			std::wstring shaderSource2 = LR"(
-//struct PS_INPUT
-//		{
-//			float4 pos : SV_POSITION;
-//			float3 color : COLOR;
-//		};
-//
-//		float4 main(PS_INPUT input) : SV_Target
-//		{
-//			return float4(input.color, 1.0); // Convertimos el color de 3 componentes a 4 componentes con alpha = 1.0
-//		}
-//	)";
-//
-//
-//
-//		std::wstring shaderSource = LR"(
-//static const float2 _31[3] = { float2(-0.5, 0.0), float2(0.0, 0.5), float2(0.5, -0.5) };
-//static const float3 _35[3] = { float3(1.0, 0.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 0.0, 1.0) };
-//
-//struct VS_OUTPUT
+//	std::wstring shaderSource = LR"(
+//cbuffer UBO : register(b0)
 //{
-//    float4 pos : SV_POSITION;
-//    float3 color : COLOR;
+//    float4x4 projectionMatrix;
+//    float4x4 viewMatrix;
+//    float4x4 modelMatrix;
 //};
 //
-//VS_OUTPUT main(uint id : SV_VertexID)
+//struct VSInput
 //{
-//    VS_OUTPUT output;
-//    output.pos = float4(_31[id], 0.0, 1.0);
-//    output.color = _35[id];
+//    float3 inPos : POSITION;
+//    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
+//};
+//
+//struct PSInput
+//{
+//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
+//    float4 gl_Position : SV_POSITION;
+//};
+//
+//PSInput main(VSInput input)
+//{
+//    PSInput output;
+//
+//    output.outColor = input.inColor; // Asignar color de entrada
+//	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
+//                         
+//
 //    return output;
-//})";
+//}
+//
+//	)";
+//
+//	std::wstring shaderSource2 = LR"(
+//struct PSInput
+//{
+//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
+//};
+//
+//float4 main(PSInput input) : SV_TARGET
+//{
+//    return float4(input.outColor, 1.0); // Color con alpha = 1.0
+//}
+//
+//	)";
+
+			std::wstring shaderSource2 = LR"(
+struct PS_INPUT
+		{
+			float4 pos : SV_POSITION;
+			float3 color : COLOR;
+		};
+
+		float4 main(PS_INPUT input) : SV_Target
+		{
+			return float4(input.color, 1.0); // Convertimos el color de 3 componentes a 4 componentes con alpha = 1.0
+		}
+	)";
 
 
+
+		std::wstring shaderSource = LR"(
+static const float2 _31[3] = { float2(-0.5, 0.0), float2(0.0, 0.5), float2(0.5, -0.5) };
+static const float3 _35[3] = { float3(1.0, 0.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 0.0, 1.0) };
+
+struct VS_OUTPUT
+{
+    float4 pos : SV_POSITION;
+    float3 color : COLOR;
+};
+
+VS_OUTPUT main(uint id : SV_VertexID)
+{
+    VS_OUTPUT output;
+    output.pos = float4(_31[id], 0.0, 1.0);
+    output.color = _35[id];
+    return output;
+})";
+
+		std::wstring shaderSource3 = LR"(
+		static const float2 g_positions[] =
+		{
+			float2(-0.5, -0.5),
+				float2(0, 0.5),
+				float2(0.5, -0.5)
+		};
+
+		static const float3 g_colors[] =
+		{
+			float3(1, 0, 0),
+				float3(0, 1, 0),
+				float3(0, 0, 1)
+		};
+
+		void main_vs(
+			uint i_vertexId : SV_VertexID,
+			out float4 o_pos : SV_Position,
+			out float3 o_color : COLOR
+		)
+		{
+			o_pos = float4(g_positions[i_vertexId], 0, 1);
+			o_color = g_colors[i_vertexId];
+		}
+
+		void main_ps(
+			in float4 i_pos : SV_Position,
+			in float3 i_color : COLOR,
+			out float4 o_color : SV_Target0
+		)
+		{
+			o_color = float4(i_color, 1);
+		}
+	)";
 		
-	const std::wstring entryPoint = L"main";
+	const std::wstring entryPoint = L"main_vs";
+	const std::wstring entryPoint2 = L"main_ps";
+
 	const std::wstring profile = L"vs_6_0"; // Perfil del shader, por ejemplo, pixel shader 6.0
 	const std::wstring profile2 = L"ps_6_0"; // Perfil del shader, por ejemplo, pixel shader 6.0
 	
 	std::vector<uint32_t> spirv;
 	
 	ComPtr<IDxcBlob> blob1 = nullptr;
-    HRESULT hr = ShaderCompiler::CompileShader(shaderSource, entryPoint, profile,&blob1,"vsSimple.spv");
+    HRESULT hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint, profile,&blob1,"vsSimple.spv");
 	ComPtr<IDxcBlob> blob2 = nullptr;
-	hr = ShaderCompiler::CompileShader(shaderSource2, entryPoint, profile2, &blob1, "psSimple.spv");
+	hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint2, profile2, &blob1, "psSimple.spv");
 
 
 	// Leer SPIR-V desde el disco
@@ -357,12 +392,24 @@ float4 main(PSInput input) : SV_TARGET
 	// Modificar opciones
 	spvc_compiler_create_compiler_options(compiler_glsl, &options);
 	spvc_compiler_options_set_uint(options, SPVC_COMPILER_OPTION_GLSL_VERSION, 450);
-	spvc_compiler_options_set_bool(options, SPVC_COMPILER_OPTION_GLSL_ES, SPVC_TRUE);
 	spvc_compiler_install_compiler_options(compiler_glsl, options);
 
 	// Compilar a GLSL
 	spvc_compiler_compile(compiler_glsl, &result);
 	printf("Cross-compiled source: %s\n", result);
+
+	// Guardar la salida en un fichero
+	std::ofstream outFile("output_sample.glsl");
+	if (outFile.is_open())
+	{
+		outFile << result;
+		outFile.close();
+	}
+	else
+	{
+		std::cerr << "No se pudo abrir el archivo para escribir." << std::endl;
+	}
+
 
 	// Liberar toda la memoria asignada hasta ahora
 	spvc_context_destroy(context);
