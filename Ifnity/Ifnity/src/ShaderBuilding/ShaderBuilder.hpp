@@ -22,7 +22,9 @@ public:
     
     static HRESULT CompileShader(const std::wstring& shaderSource, const std::wstring& entryPoint, const std::wstring& profile, IDxcBlob** blob, std::string name);
 
-    static bool ShaderCompiler::CompileShaderHLSLtoSpriv(const std::vector<uint32_t>& spirv);
+    static bool ShaderCompiler::CompileSpirV2Glsl(const std::string& inputFilePath, const std::string& outputFilePath);
+
+    static std::vector<uint32_t>  ShaderCompiler::load_spirv_file(const std::string& filename);
 
 private:
     static ComPtr<IDxcCompiler3> m_compiler;
