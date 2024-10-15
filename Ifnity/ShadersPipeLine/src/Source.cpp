@@ -198,51 +198,51 @@ IFNITY::App* IFNITY::CreateApp()
 		}
 	)";*/
 
-//	std::wstring shaderSource = LR"(
-//cbuffer UBO : register(b0)
-//{
-//    float4x4 projectionMatrix;
-//    float4x4 viewMatrix;
-//    float4x4 modelMatrix;
-//};
-//
-//struct VSInput
-//{
-//    float3 inPos : POSITION;
-//    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
-//};
-//
-//struct PSInput
-//{
-//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-//    float4 gl_Position : SV_POSITION;
-//};
-//
-//PSInput main(VSInput input)
-//{
-//    PSInput output;
-//
-//    output.outColor = input.inColor; // Asignar color de entrada
-//	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
-//                         
-//
-//    return output;
-//}
-//
-//	)";
-//
-//	std::wstring shaderSource2 = LR"(
-//struct PSInput
-//{
-//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-//};
-//
-//float4 main(PSInput input) : SV_TARGET
-//{
-//    return float4(input.outColor, 1.0); // Color con alpha = 1.0
-//}
-//
-//	)";
+	std::wstring shaderSource5 = LR"(
+cbuffer UBO : register(b0)
+{
+    float4x4 projectionMatrix;
+    float4x4 viewMatrix;
+    float4x4 modelMatrix;
+};
+
+struct VSInput
+{
+    float3 inPos : POSITION;
+    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
+};
+
+struct PSInput
+{
+    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
+    float4 gl_Position : SV_POSITION;
+};
+
+PSInput main(VSInput input)
+{
+    PSInput output;
+
+    output.outColor = input.inColor; // Asignar color de entrada
+	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
+                         
+
+    return output;
+}
+
+	)";
+
+	std::wstring shaderSource6 = LR"(
+struct PSInput
+{
+    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
+};
+
+float4 main(PSInput input) : SV_TARGET
+{
+    return float4(input.outColor, 1.0); // Color con alpha = 1.0
+}
+
+	)";
 
 			std::wstring shaderSource2 = LR"(
 struct PS_INPUT
@@ -312,6 +312,10 @@ VS_OUTPUT main(uint id : SV_VertexID)
 		}
 	)";
 		
+		auto& vfs = IFNITY::VFS::GetInstance();
+
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::Shaders);
+
 	const std::wstring entryPoint = L"main_vs";
 	const std::wstring entryPoint2 = L"main_ps";
 
@@ -325,76 +329,24 @@ VS_OUTPUT main(uint id : SV_VertexID)
 	ComPtr<IDxcBlob> blob2 = nullptr;
 	hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint2, profile2, &blob1, "psSimple.spv");
 
+	ShaderCompiler::CompileShader(shaderSource5, L"main", profile, &blob1, "vsTriangle.spv");
+	ShaderCompiler::CompileShader(shaderSource6, L"main", profile2, &blob1, "psTriangle.spv");
 
 	ShaderCompiler::CompileSpirV2Glsl("psSimple.spv", "psSimple.glsl");
 
-	//// Leer SPIR-V desde el disco
-	//std::vector<uint32_t> spirv_binary = load_spirv_file("vsSimple.spv");
 
-	//spvc_context context = NULL;
-	//spvc_parsed_ir ir = NULL;
-	//spvc_compiler compiler_glsl = NULL;
-	//spvc_compiler_options options = NULL;
-	//spvc_resources resources = NULL;
-	//const spvc_reflected_resource* list = NULL;
-	//const char* result = NULL;
-	//size_t count;
-	//size_t i;
-
-	//// Crear contexto
-	//spvc_context_create(&context);
-	//
-	//// Establecer callback de error
-	//spvc_context_set_error_callback(context, error_callback, nullptr);
- //  
+	//Use filesystems to init 
+	std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
+	for (const auto& file : files)
+	{
+		std::cout << file << std::endl;
+	}
 
 
-	//// Parsear el SPIR-V
-	//spvc_context_parse_spirv(context, spirv_binary.data(), spirv_binary.size(), &ir);
-
-	//// Crear una instancia del compilador y darle propiedad del IR
-	//spvc_context_create_compiler(context, SPVC_BACKEND_GLSL, ir, SPVC_CAPTURE_MODE_TAKE_OWNERSHIP, &compiler_glsl);
-
-	//// Realizar reflexión básica
-	//spvc_compiler_create_shader_resources(compiler_glsl, &resources);
-	//spvc_resources_get_resource_list_for_type(resources, SPVC_RESOURCE_TYPE_UNIFORM_BUFFER, &list, &count);
-
-	//for (i = 0; i < count; i++)
-	//{
-	//	printf("ID: %u, BaseTypeID: %u, TypeID: %u, Name: %s\n", list[i].id, list[i].base_type_id, list[i].type_id,
-	//		list[i].name);
-	//	printf("  Set: %u, Binding: %u\n",
-	//		spvc_compiler_get_decoration(compiler_glsl, list[i].id, SpvDecorationDescriptorSet),
-	//		spvc_compiler_get_decoration(compiler_glsl, list[i].id, SpvDecorationBinding));
-	//}
-
-	//// Modificar opciones
-	//spvc_compiler_create_compiler_options(compiler_glsl, &options);
-	//spvc_compiler_options_set_uint(options, SPVC_COMPILER_OPTION_GLSL_VERSION, 450);
-	//spvc_compiler_install_compiler_options(compiler_glsl, options);
-
-	//// Compilar a GLSL
-	//spvc_compiler_compile(compiler_glsl, &result);
-	//printf("Cross-compiled source: %s\n", result);
-
-	//// Guardar la salida en un fichero
-	//std::ofstream outFile("output_sample.glsl");
-	//if (outFile.is_open())
-	//{
-	//	outFile << result;
-	//	outFile.close();
-	//}
-	//else
-	//{
-	//	std::cerr << "No se pudo abrir el archivo para escribir." << std::endl;
-	//}
 
 
-	//// Liberar toda la memoria asignada hasta ahora
-	//spvc_context_destroy(context);
 
-	
-	//return new Source_TestD3D12(api);
+
 	return new Source(api);
 }
 

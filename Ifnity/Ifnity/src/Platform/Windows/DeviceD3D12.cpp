@@ -153,7 +153,7 @@ void DeviceD3D12::OnUpdate()
 	
 
 	//PopulateCommandList();
-	
+	/*DrawElements(m_PipelineState,m_RootSignature);*/
 	//ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
 
@@ -403,6 +403,8 @@ void DeviceD3D12::InitializeGui()
 	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
 
 	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
+
+	// Help me create the pipeline state object.
 
 
 }

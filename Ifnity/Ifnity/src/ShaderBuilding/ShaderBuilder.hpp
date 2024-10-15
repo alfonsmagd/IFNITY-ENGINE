@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "pch.h"
-
+#include "Ifnity/Utils/VFS.hpp"
 #include <dxc/dxcapi.h>
 #include <wrl\client.h>
 #include <spirv_cross/spirv_cross.hpp>
@@ -15,7 +15,7 @@ IFNITY_NAMESPACE
 
 using  Microsoft::WRL::ComPtr;
 
-class  ShaderCompiler
+class IFNITY_API ShaderCompiler
 {
 public:
     static bool Initialize();
@@ -26,7 +26,12 @@ public:
 
     static std::vector<uint32_t>  ShaderCompiler::load_spirv_file(const std::string& filename);
 
+
 private:
+    static VFS& GetVFS();
+
+
+
     static ComPtr<IDxcCompiler3> m_compiler;
     static ComPtr<IDxcUtils> m_utils;
 };

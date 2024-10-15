@@ -2,6 +2,7 @@
 
 //IFNITY ENGINE USES
 
+#include "Ifnity/Utils/VFS.hpp"
 #include "Ifnity/App.h"
 #include "Ifnity/Layer.hpp"
 #include "Ifnity/Layers/ImguiLayer.h"
