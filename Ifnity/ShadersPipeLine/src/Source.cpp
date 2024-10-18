@@ -316,33 +316,55 @@ VS_OUTPUT main(uint id : SV_VertexID)
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::Shaders);
 
-	const std::wstring entryPoint = L"main_vs";
-	const std::wstring entryPoint2 = L"main_ps";
+	//const std::wstring entryPoint = L"main_vs";
+	//const std::wstring entryPoint2 = L"main_ps";
 
-	const std::wstring profile = L"vs_6_0"; // Perfil del shader, por ejemplo, pixel shader 6.0
-	const std::wstring profile2 = L"ps_6_0"; // Perfil del shader, por ejemplo, pixel shader 6.0
-	
-	std::vector<uint32_t> spirv;
-	
-	ComPtr<IDxcBlob> blob1 = nullptr;
-    HRESULT hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint, profile,&blob1,"vsSimple.spv");
-	ComPtr<IDxcBlob> blob2 = nullptr;
-	hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint2, profile2, &blob1, "psSimple.spv");
+	//const std::wstring profile = L"vs_6_0"; // Perfil del shader, por ejemplo, pixel shader 6.0
+	//const std::wstring profile2 = L"ps_6_0"; // Perfil del shader, por ejemplo, pixel shader 6.0
+	//
+	//std::vector<uint32_t> spirv;
+	//
+	//ComPtr<IDxcBlob> blob1 = nullptr;
+ //   HRESULT hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint, profile,&blob1,"vsSimple.spv");
+	//ComPtr<IDxcBlob> blob2 = nullptr;
+	//hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint2, profile2, &blob1, "psSimple.spv");
 
-	ShaderCompiler::CompileShader(shaderSource5, L"main", profile, &blob1, "vsTriangle.spv");
-	ShaderCompiler::CompileShader(shaderSource6, L"main", profile2, &blob1, "psTriangle.spv");
+	//ShaderCompiler::CompileShader(shaderSource5, L"main", profile, &blob1, "vsTriangle.spv");
+	//ShaderCompiler::CompileShader(shaderSource6, L"main", profile2, &blob1, "psTriangle.spv");
 
-	ShaderCompiler::CompileSpirV2Glsl("psSimple.spv", "psSimple.glsl");
-
-
-	//Use filesystems to init 
-	std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
-	for (const auto& file : files)
-	{
-		std::cout << file << std::endl;
-	}
+	//ShaderCompiler::CompileSpirV2Glsl("psSimple.spv", "psSimple.glsl");
 
 
+	////Use filesystems to init 
+	//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
+	//for (const auto& file : files)
+	//{
+	//	std::cout << file << std::endl;
+	//}
+		std::shared_ptr<IShader> shader_vs = std::make_shared<IShader>();
+		std::shared_ptr<IShader> shader_ps = std::make_shared<IShader>();
+
+		ShaderCreateDescription DescriptionShader;
+		{
+			DescriptionShader.EntryPoint = L"main_vs";
+			DescriptionShader.Profile = L"vs_6_0";
+			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "vsTriangle";
+			shader_vs->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.EntryPoint = L"main_ps";
+			DescriptionShader.Profile = L"ps_6_0";
+			DescriptionShader.Type = ShaderType::PIXEL_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "psTriangle";
+			shader_ps->SetShaderDescription(DescriptionShader);
+		}
+
+		ShaderCompiler::CompileShader(shader_vs.get());
 
 
 

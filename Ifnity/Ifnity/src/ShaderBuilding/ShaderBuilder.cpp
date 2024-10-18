@@ -23,6 +23,22 @@ VFS& ShaderCompiler::GetVFS()
 	return VFS::GetInstance();
 }
 
+bool ShaderCompiler::CheckInitialization()
+{
+	if(!m_compiler)
+	{
+		IFNITY_LOG(LogApp, ERROR, "El compilador DXC no está inicializado.");
+		return false;
+	}
+
+	if(!m_utils)
+	{
+		IFNITY_LOG(LogApp, ERROR, "Las utilidades DXC no están inicializadas.");
+		return false;
+	}
+
+	return true; 
+}
 bool ShaderCompiler::Initialize()
 {
 	ComPtr<IDxcCompiler3> compiler;
@@ -48,15 +64,8 @@ bool ShaderCompiler::Initialize()
 
 HRESULT ShaderCompiler::CompileShader(const std::wstring& shaderSource, const std::wstring& entryPoint, const std::wstring& profile, IDxcBlob** blob,std::string name)
 {
-	if (!m_compiler)
+	if(!CheckInitialization())
 	{
-		IFNITY_LOG(LogApp, ERROR, "El compilador DXC no está inicializado.");
-		return E_FAIL;
-	}
-
-	if (!m_utils)
-	{
-		IFNITY_LOG(LogApp, ERROR, "Las utilidades DXC no están inicializadas.");
 		return E_FAIL;
 	}
 
@@ -146,6 +155,90 @@ HRESULT ShaderCompiler::CompileShader(const std::wstring& shaderSource, const st
 	return S_OK;
 }
 
+HRESULT ShaderCompiler::CompileShader(IShader* shader)
+{
+	if(!CheckInitialization())
+	{
+		return E_FAIL;
+	}
+
+	//Get the description of the shader 
+	ShaderCreateDescription description = shader->GetShaderDescription();
+
+	// Cargar el archivo de shader
+	ComPtr<IDxcBlobEncoding> sourceBlob;
+	HRESULT hr = m_utils->CreateBlobFromPinned(description.ShaderSource.c_str(), static_cast<UINT32>(description.ShaderSource.size() * sizeof(wchar_t)), 1200, &sourceBlob);
+	if(FAILED(hr))
+	{
+		IFNITY_LOG(LogApp, ERROR, "Error al crear el blob del shader.");
+		return hr;
+	}
+	//Compile the shader 
+	// Crear argumentos de compilación
+	std::vector<const wchar_t*> args = shader->GetCompileArgs(description);
+
+	DxcBuffer sourceBuffer;
+	sourceBuffer.Ptr = sourceBlob->GetBufferPointer();
+	sourceBuffer.Size = sourceBlob->GetBufferSize();
+	sourceBuffer.Encoding = 1200; // ANSI code page
+
+	// Compilar el shader
+	ComPtr<IDxcResult> result;
+	hr = m_compiler->Compile(
+		&sourceBuffer,
+		args.data(),
+		static_cast<uint32_t>(args.size()),
+		nullptr,
+		IID_PPV_ARGS(&result)
+	);
+
+	// Verificar el estado de la compilación
+	HRESULT status;
+	hr = result->GetStatus(&status);
+	if(FAILED(hr))
+	{
+		IFNITY_LOG(LogApp, ERROR, "Error al obtener el estado de la compilación.");
+		return hr;
+	}
+
+	if(FAILED(status))
+	{
+		std::cerr << "La compilación del shader falló." << std::endl;
+		// Puedes obtener más detalles del error aquí si es necesario
+		return status;
+	}
+
+	// Obtener el resultado de la compilación en SPIR-V
+	ComPtr<IDxcBlob> spirvBlob;
+	hr = result->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&spirvBlob), nullptr);
+	if(FAILED(hr))
+	{
+		std::cerr << "Error al obtener el blob SPIR-V." << std::endl;
+		return hr;
+	}
+
+	// Guardar el resultado en vkShader 
+	VFS& vfs = GetVFS();
+	std::string path = vfs.ResolvePath("Shaders");
+
+	vfs.SaveFile(path, description.FileName,
+		std::vector<char>(reinterpret_cast<char*>(spirvBlob->GetBufferPointer()),
+			reinterpret_cast<char*>(spirvBlob->GetBufferPointer()) + spirvBlob->GetBufferSize()));
+
+	std::ofstream outFile(description.FileName, std::ios::binary);
+	if(!outFile)
+	{
+		std::cerr << "Error al abrir el archivo de salida." << std::endl;
+		return E_FAIL;
+	}
+
+	outFile.write(reinterpret_cast<const char*>(spirvBlob->GetBufferPointer()), spirvBlob->GetBufferSize());
+	outFile.close();
+
+
+	return S_OK;
+	
+}
 
 
 std::vector<uint32_t>  ShaderCompiler::load_spirv_file(const std::string& filename)

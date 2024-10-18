@@ -9,6 +9,7 @@
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Ifnity/Layers/ExampleLayer.h"
 #include "../ShaderBuilding/ShaderBuilder.hpp"
+#include  "Ifnity/Graphics/IShader.hpp"
 
 //wOMDPW
 //Entry Point this include have put at the end of the file.
