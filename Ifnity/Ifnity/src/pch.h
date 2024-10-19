@@ -5,7 +5,9 @@
 #define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING
 #include <xutility>
 
+#include <fstream>
 #include <iostream>
+#include <filesystem>
 #include <sstream>
 #include <memory>
 #include <string>

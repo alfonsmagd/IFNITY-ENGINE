@@ -19,6 +19,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/Dist)
 
 
 
+
+
+
 # Buscar nvml.dll en el sistema
 find_file(NVML_LIBRARY
     NAMES nvml.dll
@@ -47,6 +50,11 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator)
 # add vulkan bootstrap
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
+#add glslang 
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/SPIRV-Cross)
+
+
+
 
 
 # Include directories
@@ -71,6 +79,7 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
 include_directories(${Vulkan_INCLUDE_DIRS})
 # Include VK-Bootstrap
 include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
+
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
@@ -108,6 +117,8 @@ if(NOT SOURCE_FILES)
     message(FATAL_ERROR "No source files given to target: ${PROJECT_NAME}")
 endif()
 
+
+
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
@@ -120,6 +131,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
+target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
 
 # Include Target Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
@@ -143,6 +155,8 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist")
 
 # Antes de definir las propiedades del target, establece las banderas del enlazador para la configuración Dist
 set(CMAKE_SHARED_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
+
+
 
 # Flags for different configurations
 set_target_properties(${PROJECT_NAME} PROPERTIES
