@@ -35,8 +35,8 @@ jobs:
     - name: Install DXC (DirectX Shader Compiler)
       run: |
         curl -LO https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.8.2407/dxc_2024_07_31.zip
-        tar -xf dxc_2023_07_01.zip
-        mv dxc_2023_07_01 ${{github.workspace}}/dxc
+        tar -xf dxc_2024_07_31.zip
+        mv dxc_2024_07_31 ${{github.workspace}}/dxc
         
         # Verificar que el archivo ZIP se haya descargado correctamente
         if (Test-Path "dxc_2024_07_31.zip") {
