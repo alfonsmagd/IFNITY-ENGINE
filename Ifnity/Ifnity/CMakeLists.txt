@@ -17,7 +17,14 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/Dist)
 
+#DXC directories and variables 
+set(DXC_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/include")
+set(DXC_LIB_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/lib/x64/dxcompiler.lib")
+# Ruta al directorio de DLLs
+set(DXC_DLL_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/bin/x64")
 
+# Copiar todas las DLLs del directorio al directorio de salida
+file(GLOB DXC_DLLS "${DXC_DLL_DIR}/*.dll")
 
 
 
@@ -79,6 +86,9 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
 include_directories(${Vulkan_INCLUDE_DIRS})
 # Include VK-Bootstrap
 include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
+#Include DXC
+include_directories(${DXC_INCLUDE_DIR})
+
 
 
 
@@ -132,9 +142,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
+#Link dxc
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
 
 # Include Target Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
+# Include Target DXC Directories
+target_include_directories(${PROJECT_NAME} PUBLIC ${DXC_INCLUDE_DIR})
+
 
 if(NVML_LIBRARY)
     message(STATUS "Enlazando nvml.lib ya que nvml.dll .")
@@ -179,6 +194,22 @@ add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}
 )
 
-
+foreach(DLL_PATH IN LISTS DXC_DLLS)
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${DLL_PATH}
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
+    )
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${DLL_PATH}
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}
+    )
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        ${DLL_PATH}
+        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}
+    )
+endforeach()
 
 
