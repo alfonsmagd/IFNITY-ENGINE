@@ -22,6 +22,10 @@ jobs:
         fetch-depth: 0    # Clona el historial completo para los submódulos
 
     
+    - name: Install Windows SDK
+      uses: GuillaumeFalourd/setup-windows10-sdk-action@main
+      with:
+          sdk-version: 22621
 
     - name: Create DXC Directory
       run: |
