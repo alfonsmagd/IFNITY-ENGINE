@@ -27,19 +27,16 @@ jobs:
       run: |
         mkdir ${{github.workspace}}/dxc
 
-    - name: Install DXC (DirectX Shader Compiler)
+    - name: Download DXC
       run: |
+        # Descargar el archivo ZIP de DXC
         curl -LO https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.8.2407/dxc_2024_07_31.zip
-        tar -xf dxc_2024_07_31.zip
-        mv dxc_2024_07_31 ${{github.workspace}}/dxc
         
-        # Verificar que el archivo ZIP se haya descargado correctamente
-        if (Test-Path "dxc_2024_07_31.zip") {
-          # Expandir el archivo ZIP en la carpeta dxc
-          Expand-Archive -Path dxc_2024_07_31.zip -DestinationPath ${{github.workspace}}/dxc
-        } else {
-          Write-Error "No se pudo descargar el archivo dxc_2024_07_31.zip"
-        }
+        # Crear carpeta dxc si no existe
+        mkdir -p ${{github.workspace}}/dxc
+
+        # Extraer el archivo ZIP en la carpeta dxc
+        tar -xf dxc_2024_07_31.zip -C ${{github.workspace}}/dxc
 
     - name: Verify DXC Directory
       run: |
