@@ -33,10 +33,10 @@ jobs:
         curl -LO https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.8.2407/dxc_2024_07_31.zip
         
         # Crear carpeta dxc si no existe
-        mkdir -p ${{github.workspace}}/dxc
+        New-Item -ItemType Directory -Path ${{github.workspace}}/dxc -ErrorAction SilentlyContinue
 
         # Extraer el archivo ZIP en la carpeta dxc
-        tar -xf dxc_2024_07_31.zip -C ${{github.workspace}}/dxc
+        Expand-Archive -Path dxc_2024_07_31.zip -DestinationPath ${{github.workspace}}/dxc
 
     - name: Verify DXC Directory
       run: |
