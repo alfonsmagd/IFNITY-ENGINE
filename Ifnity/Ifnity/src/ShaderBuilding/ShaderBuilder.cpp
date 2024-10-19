@@ -156,36 +156,27 @@ HRESULT ShaderCompiler::CompileShader(const std::wstring& shaderSource, const st
 	return S_OK;
 }
 
-HRESULT ShaderCompiler::CompileShader(IShader* shader)
+
+
+HRESULT ShaderCompiler::CreateShaderBlob(const std::wstring& shaderSource, ComPtr<IDxcBlobEncoding>& sourceBlob)
 {
-	if(!CheckInitialization())
-	{
-		return E_FAIL;
-	}
-
-	//Get the description of the shader 
-	ShaderCreateDescription description = shader->GetShaderDescription();
-
-	// Cargar el archivo de shader
-	ComPtr<IDxcBlobEncoding> sourceBlob;
-	HRESULT hr = m_utils->CreateBlobFromPinned(description.ShaderSource.c_str(), static_cast<UINT32>(description.ShaderSource.size() * sizeof(wchar_t)), 1200, &sourceBlob);
+	HRESULT hr = m_utils->CreateBlobFromPinned(shaderSource.c_str(), static_cast<UINT32>(shaderSource.size() * sizeof(wchar_t)), 1200, &sourceBlob);
 	if(FAILED(hr))
 	{
 		IFNITY_LOG(LogApp, ERROR, "Error al crear el blob del shader.");
-		return hr;
 	}
-	//Compile the shader 
-	// Crear argumentos de compilación
-	std::vector<const wchar_t*> args = shader->GetCompileArgs(description);
+	return hr;
+}
 
+
+HRESULT ShaderCompiler::CompileShaderBlob(ComPtr<IDxcBlobEncoding>& sourceBlob,  std::vector<const wchar_t*>& args, ComPtr<IDxcResult>& result)
+{
 	DxcBuffer sourceBuffer;
 	sourceBuffer.Ptr = sourceBlob->GetBufferPointer();
 	sourceBuffer.Size = sourceBlob->GetBufferSize();
 	sourceBuffer.Encoding = 1200; // ANSI code page
 
-	// Compilar el shader
-	ComPtr<IDxcResult> result;
-	hr = m_compiler->Compile(
+	HRESULT hr = m_compiler->Compile(
 		&sourceBuffer,
 		args.data(),
 		static_cast<uint32_t>(args.size()),
@@ -193,7 +184,12 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 		IID_PPV_ARGS(&result)
 	);
 
-	// Verificar el estado de la compilación
+	if(FAILED(hr))
+	{
+		IFNITY_LOG(LogApp, ERROR, "Error al compilar el shader.");
+		return hr;
+	}
+
 	HRESULT status;
 	hr = result->GetStatus(&status);
 	if(FAILED(hr))
@@ -205,8 +201,44 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 	if(FAILED(status))
 	{
 		std::cerr << "La compilación del shader falló." << std::endl;
-		// Puedes obtener más detalles del error aquí si es necesario
 		return status;
+	}
+
+	return S_OK;
+}
+
+
+std::string ShaderCompiler::GetShaderFilePath(const VFS& vfs, const std::string& virtualPath, const std::string& subdirectory, const std::string& fileName, const std::string& extension)
+{
+	return vfs.ResolvePath(virtualPath, subdirectory) + "/" + fileName + "." + extension;	
+}
+
+
+HRESULT ShaderCompiler::CompileShader(IShader* shader)
+{
+	if(!CheckInitialization() || shader == nullptr)
+	{
+		return E_FAIL;
+	}
+
+	// Obtener la descripción del shader
+	ShaderCreateDescription description = shader->GetShaderDescription();
+	shader->AddShaderDescription(rhi::GraphicsAPI::D3D12, description);
+
+	// Crear el blob del shader
+	ComPtr<IDxcBlobEncoding> sourceBlob;
+	HRESULT hr = CreateShaderBlob(description.ShaderSource, sourceBlob);
+	if(FAILED(hr))
+	{
+		return hr;
+	}
+
+	// Compilar el shader
+	ComPtr<IDxcResult> result;
+	hr = CompileShaderBlob(sourceBlob, shader->GetCompileArgs(description), result);
+	if(FAILED(hr))
+	{
+		return hr;
 	}
 
 	// Obtener el resultado de la compilación en SPIR-V
@@ -218,28 +250,25 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 		return hr;
 	}
 
-	// Guardar el resultado en vkShader 
+	// Guardar el shader en SPIR-V
 	VFS& vfs = GetVFS();
-	std::string path = vfs.ResolvePath("Shaders");
+	std::string path = vfs.ResolvePath("Shaders");	
+	auto filepath = vfs.SaveFile(path, description.FileName + ".spv",
+								std::vector<char>(reinterpret_cast<char*>(spirvBlob->GetBufferPointer()),
+												  reinterpret_cast<char*>(spirvBlob->GetBufferPointer()) + spirvBlob->GetBufferSize()));
 
-	vfs.SaveFile(path, description.FileName + ".spv",
-		std::vector<char>(reinterpret_cast<char*>(spirvBlob->GetBufferPointer()),
-			reinterpret_cast<char*>(spirvBlob->GetBufferPointer()) + spirvBlob->GetBufferSize()));
+	description.Filepath = filepath;
+	shader->AddShaderDescription(rhi::GraphicsAPI::VULKAN, description);
 
-	std::ofstream outFile(description.FileName, std::ios::binary);
-	if(!outFile)
-	{
-		std::cerr << "Error al abrir el archivo de salida." << std::endl;
-		return E_FAIL;
-	}
-
-	outFile.write(reinterpret_cast<const char*>(spirvBlob->GetBufferPointer()), spirvBlob->GetBufferSize());
-	outFile.close();
-
-	if(!ShaderCompiler::CompileSpirV2Glsl((description.FileName + ".spv"), (description.FileName + ".glsl")))
+	// Compilar SPIR-V a GLSL
+	if(!ShaderCompiler::CompileSpirV2Glsl(description.FileName + ".spv", description.FileName + ".glsl"))
 	{
 		return E_FAIL;
 	}
+
+	// Guardar el shader en GLSL
+	description.Filepath = ShaderCompiler::GetShaderFilePath(vfs, "Shaders", "opengl", description.FileName, "glsl");
+	shader->AddShaderDescription(rhi::GraphicsAPI::OPENGL, description);
 
 	return S_OK;
 	

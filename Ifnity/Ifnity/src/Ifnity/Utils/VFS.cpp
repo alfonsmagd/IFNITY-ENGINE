@@ -17,9 +17,9 @@ VFS& VFS::GetInstance()
 
 bool VFS::Mount(const std::string& virtualPath, const std::string& physicalPath , FolderType type)
 {
-    auto& paths = m_mountPoints[virtualPath];
+    auto& paths = m_MountPoints[virtualPath];
 
-    if (type == FolderType::Shaders && !std::filesystem::exists(physicalPath))
+    if (type == FolderType::Shaders)
     {
         std::filesystem::create_directories(physicalPath + "/opengl");
         std::filesystem::create_directories(physicalPath + "/d3d12");
@@ -42,13 +42,13 @@ bool VFS::Mount(const std::string& virtualPath, const std::string& physicalPath 
 
 bool VFS::Unmount(const std::string& virtualPath)
 {
-    return m_mountPoints.erase(virtualPath) > 0;
+    return m_MountPoints.erase(virtualPath) > 0;
 }
 
 std::string VFS::ResolvePath(const std::string& virtualPath) const
 {
-    auto it = m_mountPoints.find(virtualPath);
-    if (it != m_mountPoints.end() && !it->second.empty())
+    auto it = m_MountPoints.find(virtualPath);
+    if (it != m_MountPoints.end() && !it->second.empty())
     {
         return it->second.front(); // Devuelve el primer path físico montado
     }
@@ -57,8 +57,8 @@ std::string VFS::ResolvePath(const std::string& virtualPath) const
 
 std::string VFS::ResolvePath(const std::string& virtualPath, const std::string& subdirectory) const
 {
-    auto it = m_mountPoints.find(virtualPath);
-    if(it != m_mountPoints.end() && !it->second.empty())
+    auto it = m_MountPoints.find(virtualPath);
+    if(it != m_MountPoints.end() && !it->second.empty())
     {
         for(const auto& physicalPath : it->second)
         {
@@ -72,7 +72,7 @@ std::string VFS::ResolvePath(const std::string& virtualPath, const std::string& 
     return "";
 }
 
-bool VFS::SaveFile(const std::string& virtualPath, const std::string& fileName, const std::vector<char>& data) const
+std::string VFS::SaveFile(const std::string& virtualPath, const std::string& fileName, const std::vector<char>& data) const
 {
     std::string physicalPath = ResolvePath(virtualPath);
     if (physicalPath.empty())
@@ -92,7 +92,7 @@ bool VFS::SaveFile(const std::string& virtualPath, const std::string& fileName, 
     {
         subdirectory = "d3d12";
     }
-    else if (extension == "spv" || extension == "spriv")
+    else if (extension == "spv" || extension == "spirv")
     {
         subdirectory = "vk";
     }
@@ -110,7 +110,7 @@ bool VFS::SaveFile(const std::string& virtualPath, const std::string& fileName, 
 
     outFile.write(data.data(), data.size());
     outFile.close();
-    return true;
+    return fullPath;
 }
 
 

@@ -73,7 +73,7 @@ public:
 		}
 		ImGui::SetCurrentContext(context);
 
-		ChooseApi();
+		//ChooseApi();
 		ShowColorPiceckerWindow();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
@@ -315,26 +315,6 @@ VS_OUTPUT main(uint id : SV_VertexID)
 		auto& vfs = IFNITY::VFS::GetInstance();
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::Shaders);
-
-	//const std::wstring entryPoint = L"main_vs";
-	//const std::wstring entryPoint2 = L"main_ps";
-
-	//const std::wstring profile = L"vs_6_0"; // Perfil del shader, por ejemplo, pixel shader 6.0
-	//const std::wstring profile2 = L"ps_6_0"; // Perfil del shader, por ejemplo, pixel shader 6.0
-	//
-	//std::vector<uint32_t> spirv;
-	//
-	//ComPtr<IDxcBlob> blob1 = nullptr;
- //   HRESULT hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint, profile,&blob1,"vsSimple.spv");
-	//ComPtr<IDxcBlob> blob2 = nullptr;
-	//hr = ShaderCompiler::CompileShader(shaderSource3, entryPoint2, profile2, &blob1, "psSimple.spv");
-
-	//ShaderCompiler::CompileShader(shaderSource5, L"main", profile, &blob1, "vsTriangle.spv");
-	//ShaderCompiler::CompileShader(shaderSource6, L"main", profile2, &blob1, "psTriangle.spv");
-
-	//ShaderCompiler::CompileSpirV2Glsl("psSimple.spv", "psSimple.glsl");
-
-
 	////Use filesystems to init 
 	//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
 	//for (const auto& file : files)
