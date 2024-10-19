@@ -314,7 +314,7 @@ VS_OUTPUT main(uint id : SV_VertexID)
 		
 		auto& vfs = IFNITY::VFS::GetInstance();
 
-		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::Shaders);
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
 	////Use filesystems to init 
 	//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
 	//for (const auto& file : files)
