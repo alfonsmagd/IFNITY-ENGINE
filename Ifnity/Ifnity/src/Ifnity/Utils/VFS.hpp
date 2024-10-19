@@ -13,10 +13,10 @@ IFNITY_NAMESPACE
  */
     enum class FolderType
 {
-    Shaders,
-    Mesh,
-    Scenes,
-    Cameras
+    SHADERS,
+    MESH,
+    SCENES,
+    CAMERAS
 };
 
 /**

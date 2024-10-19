@@ -19,7 +19,7 @@ bool VFS::Mount(const std::string& virtualPath, const std::string& physicalPath 
 {
     auto& paths = m_MountPoints[virtualPath];
 
-    if (type == FolderType::Shaders)
+    if (type == FolderType::SHADERS)
     {
         std::filesystem::create_directories(physicalPath + "/opengl");
         std::filesystem::create_directories(physicalPath + "/d3d12");
@@ -29,7 +29,7 @@ bool VFS::Mount(const std::string& virtualPath, const std::string& physicalPath 
     if (std::find(paths.begin(), paths.end(), physicalPath) == paths.end())
     {
         paths.push_back(physicalPath);
-        if (type == FolderType::Shaders)
+        if (type == FolderType::SHADERS)
         {
             paths.push_back(physicalPath + "/opengl");
             paths.push_back(physicalPath + "/d3d12");
