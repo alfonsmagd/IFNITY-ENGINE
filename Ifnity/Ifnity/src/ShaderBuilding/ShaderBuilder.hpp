@@ -3,17 +3,14 @@
 #include "pch.h"
 #include "Ifnity/Utils/VFS.hpp"
 #include "Ifnity/Graphics/IShader.hpp"
-#include <dxc/dxcapi.h>
+#include "../../vendor/dxc/inc/dxcapi.h"
 #include <wrl\client.h>
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
 
-
 #pragma comment(lib, "dxcompiler.lib")
+
 IFNITY_NAMESPACE
-
-
-
 
 
 using Microsoft::WRL::ComPtr;
