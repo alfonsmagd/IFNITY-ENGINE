@@ -86,6 +86,9 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
 include_directories(${Vulkan_INCLUDE_DIRS})
 # Include VK-Bootstrap
 include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
+#Include DXC
+include_directories(${DXC_INCLUDE_DIR})
+
 
 
 
@@ -139,12 +142,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
+#Link dxc
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
 
 # Include Target Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
+# Include Target DXC Directories
+target_include_directories(${PROJECT_NAME} PUBLIC ${DXC_INCLUDE_DIR})
 
-#Link DXC
-target_include_directories(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
 
 if(NVML_LIBRARY)
     message(STATUS "Enlazando nvml.lib ya que nvml.dll .")
