@@ -5,6 +5,7 @@
 #include <spirv_cross_c.h>
 #include <iostream>
 #include <fstream>
+#include <cassert>
 
 
 IFNITY_NAMESPACE
@@ -221,7 +222,7 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 	VFS& vfs = GetVFS();
 	std::string path = vfs.ResolvePath("Shaders");
 
-	vfs.SaveFile(path, description.FileName,
+	vfs.SaveFile(path, description.FileName + ".spv",
 		std::vector<char>(reinterpret_cast<char*>(spirvBlob->GetBufferPointer()),
 			reinterpret_cast<char*>(spirvBlob->GetBufferPointer()) + spirvBlob->GetBufferSize()));
 
@@ -235,6 +236,10 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 	outFile.write(reinterpret_cast<const char*>(spirvBlob->GetBufferPointer()), spirvBlob->GetBufferSize());
 	outFile.close();
 
+	if(!ShaderCompiler::CompileSpirV2Glsl((description.FileName + ".spv"), (description.FileName + ".glsl")))
+	{
+		return E_FAIL;
+	}
 
 	return S_OK;
 	
@@ -268,7 +273,15 @@ std::vector<uint32_t>  ShaderCompiler::load_spirv_file(const std::string& filena
 
 bool ShaderCompiler::CompileSpirV2Glsl(const std::string& inputFilePath, const std::string& outputFilePath)
 {
-	std::vector<uint32_t> spirv_binary = load_spirv_file(inputFilePath);
+
+	//GetPath to get the file in vk --> spriv,spv. 
+	VFS& vfs = GetVFS();
+	std::string path = vfs.ResolvePath("Shaders","vk");
+
+	// Complete 
+
+
+	std::vector<uint32_t> spirv_binary = load_spirv_file(path + "//" +inputFilePath);
 
 	spvc_context context = NULL;
 	spvc_parsed_ir ir = NULL;
@@ -313,8 +326,8 @@ bool ShaderCompiler::CompileSpirV2Glsl(const std::string& inputFilePath, const s
 
 
 	// Guardar el resultado en vkShader 
-	VFS& vfs = GetVFS();
-	std::string path = vfs.ResolvePath("Shaders");
+	
+	 path = vfs.ResolvePath("Shaders");
 
 	vfs.SaveFile(path, outputFilePath,
 		std::vector<char>(result,

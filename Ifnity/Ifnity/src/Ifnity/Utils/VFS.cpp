@@ -55,6 +55,23 @@ std::string VFS::ResolvePath(const std::string& virtualPath) const
     return "";
 }
 
+std::string VFS::ResolvePath(const std::string& virtualPath, const std::string& subdirectory) const
+{
+    auto it = m_mountPoints.find(virtualPath);
+    if(it != m_mountPoints.end() && !it->second.empty())
+    {
+        for(const auto& physicalPath : it->second)
+        {
+            std::string fullPath = physicalPath + (subdirectory.empty() ? "" : "/" + subdirectory);
+            if(std::filesystem::exists(fullPath))
+            {
+                return fullPath; // Devuelve la primera ruta física que existe
+            }
+        }
+    }
+    return "";
+}
+
 bool VFS::SaveFile(const std::string& virtualPath, const std::string& fileName, const std::vector<char>& data) const
 {
     std::string physicalPath = ResolvePath(virtualPath);

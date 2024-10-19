@@ -23,6 +23,8 @@ public:
     bool Mount(const std::string& virtualPath, const std::string& physicalPath, FolderType type);
     bool Unmount(const std::string& virtualPath);
     std::string ResolvePath(const std::string& virtualPath) const;
+    std::string VFS::ResolvePath(const std::string& virtualPath, const std::string& subdirectory) const;
+
     bool SaveFile(const std::string& virtualPath, const std::string& fileName, const std::vector<char>& data) const;
     std::vector<std::string> VFS::ListFiles(const std::string& virtualPath, const std::string& subdirectory) const;
 private:

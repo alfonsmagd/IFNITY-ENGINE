@@ -365,6 +365,7 @@ VS_OUTPUT main(uint id : SV_VertexID)
 		}
 
 		ShaderCompiler::CompileShader(shader_vs.get());
+		ShaderCompiler::CompileShader(shader_ps.get());
 
 
 
