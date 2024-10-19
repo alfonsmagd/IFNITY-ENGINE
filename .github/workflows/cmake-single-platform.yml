@@ -21,14 +21,43 @@ jobs:
         submodules: true  # Incluye los submódulos
         fetch-depth: 0    # Clona el historial completo para los submódulos
 
+    
+
+    - name: Create DXC Directory
+      run: |
+        mkdir ${{github.workspace}}/dxc
+
+    - name: Download DXC
+      run: |
+        # Descargar el archivo ZIP de DXC
+        curl -LO https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.8.2407/dxc_2024_07_31.zip
+        
+        # Crear carpeta dxc si no existe
+        New-Item -ItemType Directory -Path ${{github.workspace}}/dxc -ErrorAction SilentlyContinue
+
+        # Extraer el archivo ZIP en la carpeta dxc
+        Expand-Archive -Path dxc_2024_07_31.zip -DestinationPath ${{github.workspace}}/dxc
+
+    - name: Verify DXC Directory
+      run: |
+        dir ${{github.workspace}}/dxc
+
+    - name: Set up DXC environment variables
+      run: |
+        echo DXC_PATH=${{github.workspace}}/dxc >> $GITHUB_ENV
+        echo DXC_INCLUDE_DIR=${{github.workspace}}/dxc/inc >> $GITHUB_ENV
+        echo DXC_LIB_DIR=${{github.workspace}}/dxc/lib/x64 >> $GITHUB_ENV
+
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.0
       with:
         vulkan-query-version: 1.3.275.0
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
+
     - name: Configure CMake
-      run: cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_INCLUDE_PATH=${{env.DXC_INCLUDE_DIR}} -DCMAKE_LIBRARY_PATH=${{env.DXC_LIB_DIR}}
+
 
     - name: Build
       run: cmake --build ${{github.workspace}}/Ifnity/build --config ${{env.BUILD_TYPE}}
