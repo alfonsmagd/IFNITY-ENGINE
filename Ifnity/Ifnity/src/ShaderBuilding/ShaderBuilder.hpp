@@ -5,7 +5,7 @@
 #include "Ifnity/Graphics/IShader.hpp"
 #include <dxcapi.h>
 #include <wrl\client.h>
-#include <spirv_cross/spirv_glsl.hpp>
+
 
 //#pragma comment(lib, "dxcompiler.lib")
 
