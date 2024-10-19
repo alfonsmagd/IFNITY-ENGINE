@@ -15,7 +15,12 @@ jobs:
     runs-on: windows-latest 
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v4
+      with:
+        submodules: true  # Incluye los submódulos
+        fetch-depth: 0    # Clona el historial completo para los submódulos
+
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.0
       with:
