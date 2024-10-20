@@ -26,7 +26,12 @@ set(DXC_DLL_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/bin/x64")
 # Copiar todas las DLLs del directorio al directorio de salida
 file(GLOB DXC_DLLS "${DXC_DLL_DIR}/*.dll")
 
-
+set(SPIRV_SKIP_TESTS ON CACHE BOOL "Skip SPIRV tests")
+        set(SPIRV_BUILD_COMPRESSION OFF CACHE BOOL "Do not build SPIRV compressing codec")
+        set(SPIRV_SKIP_EXECUTABLES ON CACHE BOOL "Skip building SPIRV executable and tests along with the library")
+        set(SKIP_SPIRV_TOOLS_INSTALL ON CACHE BOOL "Skip SPIRV tools installation")
+        set(SPIRV_WERROR OFF CACHE BOOL "Do not enable error on warning")
+		set(SPIRV_CROSS_CLI  OFF CACHE BOOL "Build the CLI binary. Requires SPIRV_CROSS_STATIC.")
 
 
 # Buscar nvml.dll en el sistema
