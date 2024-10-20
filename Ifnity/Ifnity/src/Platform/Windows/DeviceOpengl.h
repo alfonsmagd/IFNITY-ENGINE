@@ -7,6 +7,10 @@
 
 IFNITY_NAMESPACE
 
+//forward declaration
+
+class IShader;
+
 class DeviceOpengl final : public GraphicsDeviceManager
 {
 
@@ -20,6 +24,7 @@ public:
 	inline unsigned int GetHeight() const override { return m_Props.Height; }
 	static void DemoTriangle(const char* sv, const char* sp);
 	void RenderDemo(int w, int h) const override;
+	
 
 
 protected:
@@ -33,12 +38,12 @@ protected:
 	void InitializeGui() override;
 	void Shutdown() override;
 	void InternalPreDestroy() override;
-
+	void LoadAppPipelineDescription() override; //TODO: ABSOLUTE. 
 	void ClearBackBuffer(float* color) override;
 private:
 	void Init();
 	void InitializeGLAD();
-	
+	void BuildGraphicsShaders();
 	std::string GetOpenGLInfo() const ;
 
 
@@ -52,6 +57,8 @@ private:
 	// Struct to hold window data
 	
 	float m_Color[4] = { 1.0f,1.0f,1.0f,1.0f };
+
+	// Shader
 
 };
 

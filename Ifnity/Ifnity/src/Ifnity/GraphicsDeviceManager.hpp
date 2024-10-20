@@ -2,6 +2,7 @@
 
 #include "pch.h"
 #include "Ifnity/Event/WindowEvent.h"
+#include "Ifnity\Graphics\IShader.hpp"
 
 
 // GRAPHIC API
@@ -98,10 +99,21 @@ public:
 	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::D3D11);
 	// Método estático para obtener la API gráfica
 	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }
+	
 
 	virtual void* Wrapper_ptr_data() { return 0; };
-
 	virtual void ClearBackBuffer(float* color) {};
+	virtual void LoadAppPipelineDescription() {}; //TODO: ABSOLUTE. 
+
+	
+
+
+	//APP user 
+	void LoadAppShaders(IShader* vs, IShader* ps) {
+		m_VS = vs; 
+		m_PS = ps; }
+	const IShader* GetVertexShader() { return nullptr; }
+	const IShader* GetPixelShader() {  return nullptr; }
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
@@ -114,13 +126,17 @@ protected:
 	virtual void ResizeSwapChain() = 0;
 	virtual void InitializeGui() = 0;
 	virtual void InternalPreDestroy() = 0; 
-
+	
+	
 	
 
 	WindowData m_Props;
 	bool m_IsNvidia = false;
 	GLFWwindow* m_Window = nullptr;
 	bool m_InstanceCreated = false;
+	
+	//Graphics Shaders
+	
 
 private:
 	void SetGLFWCallbacks();
@@ -136,6 +152,9 @@ private:
 	
 	static rhi::GraphicsAPI g_API; // By default opengl is the api 
 	StateGraphicsDevice m_StateGraphicsDevice{ StateGraphicsDevice::NOT_INITIALIZED };
+
+	IShader* m_VS = nullptr;
+	IShader* m_PS = nullptr;
 };
 
 

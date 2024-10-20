@@ -167,15 +167,20 @@ public:
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
-		
-		
 
+		
 	}
+
+	
 	~Source() override {}
+
+private:
+
 };
 
-
-
+//This is global 
+std::shared_ptr<IFNITY::IShader> shader_vs;
+std::shared_ptr<IFNITY::IShader> shader_ps;
 
 void error_callback(void*, const char* error_message)
 {
@@ -321,8 +326,8 @@ VS_OUTPUT main(uint id : SV_VertexID)
 	//{
 	//	std::cout << file << std::endl;
 	//}
-		std::shared_ptr<IShader> shader_vs = std::make_shared<IShader>();
-		std::shared_ptr<IShader> shader_ps = std::make_shared<IShader>();
+		 shader_vs = std::make_shared<IShader>();
+		 shader_ps = std::make_shared<IShader>();
 
 		ShaderCreateDescription DescriptionShader;
 		{
@@ -347,9 +352,14 @@ VS_OUTPUT main(uint id : SV_VertexID)
 		ShaderCompiler::CompileShader(shader_vs.get());
 		ShaderCompiler::CompileShader(shader_ps.get());
 
+		Source* source = new Source(api);
+		
+		// Almacenar los resultados de get() en variables temporales
+		
+
+		App::GetApp().GetWindow().LoadAppShaders(shader_vs.get(), shader_ps.get());
 
 
-
-	return new Source(api);
+		return source;
 }
 

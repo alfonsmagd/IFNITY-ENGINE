@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "DeviceOpengl.h"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
+#include "Ifnity\Graphics\IShader.hpp"
 #include <glm\glm.hpp>
 
 
@@ -67,6 +68,9 @@ bool DeviceOpengl::InitializeDeviceAndContext()
 	//Print OpenGL information
 	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
 
+
+
+
 	return true;
 
 	
@@ -105,6 +109,51 @@ void DeviceOpengl::InitializeGLAD()
 	}
 }
 
+void DeviceOpengl::BuildGraphicsShaders()
+{
+	if(GetVertexShader() == nullptr || GetPixelShader() == nullptr)
+	{
+		IFNITY_LOG(LogApp, WARNING, "Load GetPixelShader or VertexShader");
+		return;
+	}
+
+	// 1. retrieve the vertex/fragment source code from filePath
+    std::string vertexCode;
+    std::string fragmentCode;
+    std::ifstream vShaderFile;
+    std::ifstream fShaderFile;
+    // ensure ifstream objects can throw exceptions:
+    vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    try 
+    {
+		const auto& vsfile = GetVertexShader()->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
+		const auto& psfile = GetPixelShader()->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
+        vShaderFile.open(vsfile);
+        fShaderFile.open(psfile);
+        std::stringstream vShaderStream, fShaderStream;
+        // read file's buffer contents into streams
+        vShaderStream << vShaderFile.rdbuf();
+        fShaderStream << fShaderFile.rdbuf();		
+        // close file handlers
+        vShaderFile.close();
+        fShaderFile.close();
+        // convert stream into string
+        vertexCode   = vShaderStream.str();
+        fragmentCode = fShaderStream.str();		
+    }
+    catch(std::ifstream::failure e)
+    {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+    }
+    const char* vShaderCode = vertexCode.c_str();
+    const char* fShaderCode = fragmentCode.c_str();
+ 
+
+
+
+}
+
 // sp is Shader Fragment. 
 void DeviceOpengl::DemoTriangle(const char* sv, const char* sp)
 {
@@ -138,6 +187,8 @@ void DeviceOpengl::RenderDemo(int w,int h) const
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 	glPopDebugGroup();
 }
+
+
 
 
 std::string DeviceOpengl::GetOpenGLInfo() const
@@ -178,6 +229,13 @@ void DeviceOpengl::Shutdown()
 
 void DeviceOpengl::InternalPreDestroy()
 {
+}
+
+void DeviceOpengl::LoadAppPipelineDescription()
+{
+
+	BuildGraphicsShaders();
+
 }
 
 void DeviceOpengl::ClearBackBuffer(float* color) 

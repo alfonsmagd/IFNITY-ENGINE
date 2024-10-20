@@ -66,6 +66,8 @@ public:
 	void SetShaderDescription(const ShaderCreateDescription& description) { m_Description = description; }
 	
 	ShaderCreateDescription GetShaderDescription() const { return m_Description; }
+	const ShaderCreateDescription& GetShaderDescpritionbyAPI(rhi::GraphicsAPI api) const ;
+	
 	void AddShaderDescription(rhi::GraphicsAPI api, const ShaderCreateDescription& description);
 	
 

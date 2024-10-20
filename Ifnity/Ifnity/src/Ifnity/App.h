@@ -6,6 +6,7 @@
 
 #include "LayerStack.hpp"
 #include "ImGuiContextManager.h"
+#include "Graphics\IShader.hpp"
 
 
 
@@ -43,6 +44,7 @@ public:
 		m_FlagChangeAPI = flagChange;
 	}
 
+
 protected:
 	void SetEventBus(GLFWEventSource* eventBus) { m_EventBus = eventBus; }
 
@@ -66,6 +68,11 @@ private:
 
 
 	static App* s_Instance;
+
+	//IShaders 
+	IShader* m_VS = nullptr;
+	IShader* m_PS = nullptr;
+
 
 private:
 	//TODO : Implement this function in app.tpp. this is only sugar sintax to reduce time to use. 

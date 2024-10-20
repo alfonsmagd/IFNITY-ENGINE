@@ -69,6 +69,8 @@ void main()
 		m_Window = std::unique_ptr<GraphicsDeviceManager>(
 			GraphicsDeviceManager::Create(api));
 
+		//This method is more sintatic sugar, but its preferible to move in constructor problaby LoadApp will grew up 
+
 		m_Window->CreateWindowSurface(std::move(props));
 
 
@@ -176,6 +178,9 @@ void main()
 
 	void App::run()
 	{
+		//Initialize user pipelineload. 
+
+		m_Window->LoadAppPipelineDescription();
 		//This part its because the initializacion process is in the constructor of the app, then source will be build LAYERS  after App constructor. We cant initiate EventBusLayers in App constructor. 
 		InitiateEventBusLayers();
 
