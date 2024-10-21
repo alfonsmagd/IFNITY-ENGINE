@@ -22,7 +22,8 @@ DeviceOpengl::~DeviceOpengl()
 
 void DeviceOpengl::OnUpdate()
 {
-	//Clear the color buffer
+	glViewport(0, 0, GetWidth(), GetHeight());
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 	glClearColor(m_Color[0],m_Color[1], m_Color[2], m_Color[3]);
 	glfwSwapBuffers(m_Window);
 }
@@ -111,7 +112,7 @@ void DeviceOpengl::InitializeGLAD()
 
 void DeviceOpengl::BuildGraphicsShaders()
 {
-	if(GetVertexShader() == nullptr || GetPixelShader() == nullptr)
+	if( !GetVertexShader() || !GetPixelShader())
 	{
 		IFNITY_LOG(LogApp, WARNING, "Load GetPixelShader or VertexShader");
 		return;
@@ -148,11 +149,69 @@ void DeviceOpengl::BuildGraphicsShaders()
     }
     const char* vShaderCode = vertexCode.c_str();
     const char* fShaderCode = fragmentCode.c_str();
- 
+    
+	// 2. compile shaders 
+
+	CompileGraphicsShader(vShaderCode, fShaderCode);
 
 
 
 }
+
+void DeviceOpengl::CompileGraphicsShader(const char* vertexShader, const char* fragmentShader)
+{
+
+	
+	int success;
+	char infoLog[ 512 ];
+
+	// Complete the shader program
+	const GLuint shaderVertex = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(shaderVertex, 1, &vertexShader, nullptr);
+	glCompileShader(shaderVertex);
+
+	// print compile errors if any
+	glGetShaderiv(shaderVertex, GL_COMPILE_STATUS, &success);
+	if(!success)
+	{
+		glGetShaderInfoLog(shaderVertex, 512, NULL, infoLog);
+		IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" , infoLog);
+	};
+
+	const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(shaderFragment, 1, &fragmentShader, nullptr);
+	glCompileShader(shaderFragment);
+
+	glGetShaderiv(shaderFragment, GL_COMPILE_STATUS, &success);
+	if(!success)
+	{
+		glGetShaderInfoLog(shaderFragment, 512, NULL, infoLog);
+		IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n", infoLog);
+	};
+
+
+	const GLuint program = glCreateProgram();
+	glAttachShader(program, shaderVertex);
+	glAttachShader(program, shaderFragment);
+
+	glLinkProgram(program);
+
+	glGetProgramiv(program, GL_LINK_STATUS, &success);
+	if(!success)
+	{
+		glGetProgramInfoLog(program, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+	}
+	glUseProgram(program);
+
+	
+	glCreateVertexArrays(1, &m_VAO);
+	glBindVertexArray(m_VAO);
+
+}
+
+void DeviceOpengl::UseShader()
+{}
 
 // sp is Shader Fragment. 
 void DeviceOpengl::DemoTriangle(const char* sv, const char* sp)
@@ -220,6 +279,8 @@ std::string DeviceOpengl::GetOpenGLInfo() const
 	
 }
 
+
+
 void DeviceOpengl::Shutdown()
 {
 	IFNITY_LOG(LogApp, WARNING, "Shutdown Init OPENGL");
@@ -243,6 +304,23 @@ void DeviceOpengl::ClearBackBuffer(float* color)
 	std::copy(color, color + 4, m_Color);
 }
 
+
+auto renderCallback = [](int vertexCount,int width,int height)
+	{
+		// Código de renderizado personalizado
+		glViewport(0, 0, width, height);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+	};
+template<typename RenderCallback, typename... Args>
+void DeviceOpengl::Draw(RenderCallback renderCallback, Args&&... args)
+{
+	
+	
+	renderCallback(std::forward<Args>(args)...);
+
+
+}
 
 
 IFNITY_END_NAMESPACE

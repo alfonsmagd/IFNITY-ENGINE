@@ -292,7 +292,7 @@ VS_OUTPUT main(uint id : SV_VertexID)
 
 		static const float3 g_colors[] =
 		{
-			float3(1, 0, 0),
+			float3(1, 1, 1),
 				float3(0, 1, 0),
 				float3(0, 0, 1)
 		};

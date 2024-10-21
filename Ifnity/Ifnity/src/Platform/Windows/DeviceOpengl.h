@@ -44,8 +44,15 @@ private:
 	void Init();
 	void InitializeGLAD();
 	void BuildGraphicsShaders();
+	void CompileGraphicsShader(const char* vertexShader, const char* fragmentShader);
+	void UseShader();
 	std::string GetOpenGLInfo() const ;
 
+	template<typename RenderCallback, typename... Args>
+	void Draw(RenderCallback renderCallback, Args&&... args);
+	
+	
+	
 
 
 private:
@@ -57,7 +64,7 @@ private:
 	// Struct to hold window data
 	
 	float m_Color[4] = { 1.0f,1.0f,1.0f,1.0f };
-
+	GLuint m_VAO;
 	// Shader
 
 };

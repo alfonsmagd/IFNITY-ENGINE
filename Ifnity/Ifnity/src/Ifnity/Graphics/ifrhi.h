@@ -156,7 +156,20 @@ namespace rhi {
 
 
 
+    struct DrawDescription
+    {
+        uint32_t vertexCount = 0;
+        uint32_t instanceCount = 1;
+        uint32_t startIndexLocation = 0;
+        uint32_t startVertexLocation = 0;
+        uint32_t startInstanceLocation = 0;
 
+        constexpr DrawDescription& setVertexCount(uint32_t value) { vertexCount = value; return *this; }
+        constexpr DrawDescription& setInstanceCount(uint32_t value) { instanceCount = value; return *this; }
+        constexpr DrawDescription& setStartIndexLocation(uint32_t value) { startIndexLocation = value; return *this; }
+        constexpr DrawDescription& setStartVertexLocation(uint32_t value) { startVertexLocation = value; return *this; }
+        constexpr DrawDescription& setStartInstanceLocation(uint32_t value) { startInstanceLocation = value; return *this; }
+    };
 
 
 	// MacroDefinition to  IntelliSense Style based in the Forge Engine;

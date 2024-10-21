@@ -112,8 +112,8 @@ public:
 	void LoadAppShaders(IShader* vs, IShader* ps) {
 		m_VS = vs; 
 		m_PS = ps; }
-	const IShader* GetVertexShader() { return nullptr; }
-	const IShader* GetPixelShader() {  return nullptr; }
+	const IShader* GetVertexShader() { return m_VS; }
+	const IShader* GetPixelShader() {  return m_PS; }
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.

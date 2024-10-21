@@ -69,9 +69,6 @@ public:
 	const ShaderCreateDescription& GetShaderDescpritionbyAPI(rhi::GraphicsAPI api) const ;
 	
 	void AddShaderDescription(rhi::GraphicsAPI api, const ShaderCreateDescription& description);
-	
-
-
 	std::vector<const wchar_t*> GetCompileArgs(const ShaderCreateDescription& shaderDescription) const;
 	
 
