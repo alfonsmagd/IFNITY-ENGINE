@@ -52,13 +52,13 @@ public:
 class ImGuiTestLayer : public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetWindow()) {}
+	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetDevice()) {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
 	{
 		
-		m_Device = &IFNITY::App::GetApp().GetWindow();
+		m_Device = &IFNITY::App::GetApp().GetDevice();
 		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
 	}
 
@@ -169,6 +169,19 @@ public:
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
 		
 		
+
+	}
+
+	void Initialize() override
+	{
+
+	}
+	void Render() override
+	{
+		
+	}
+	void Animate()override
+	{
 
 	}
 	~Source() override {}

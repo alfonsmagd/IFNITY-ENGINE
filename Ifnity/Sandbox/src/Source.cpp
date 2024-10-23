@@ -196,6 +196,20 @@ public:
 		
 
 	}
+
+	void Initialize() override
+	{
+
+	}
+	
+	void Render() override
+	{
+		IFNITY_LOG(LogApp, INFO, "Render App");
+	}
+	void Animate() override
+	{
+		IFNITY_LOG(LogApp, INFO, "Animate App");
+	}
 	~Source() override {}
 };
 

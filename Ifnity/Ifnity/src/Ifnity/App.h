@@ -23,7 +23,13 @@ public:
 	void InitApp(rhi::GraphicsAPI api);
 	void run();
 
-	
+
+	//----------------------------------------------------------------------------------------------//
+	//INTEFACE FUNCTIONS
+	//----------------------------------------------------------------------------------------------//
+	virtual void Initialize() = 0;
+	virtual void Render() = 0;
+	virtual void Animate() = 0;
 
 
 	//Layer manage functions.
@@ -34,7 +40,10 @@ public:
 
 	void SetImguiAPI() const;
 
-	inline GraphicsDeviceManager& GetWindow() { return *m_Window; }
+	inline GraphicsDeviceManager& GetDevice() { return *m_RenderDevice; }
+	inline const GraphicsDeviceManager& GetDevice() const { return *m_RenderDevice; }
+	inline GraphicsDeviceManager* GetDevicePtr() { return m_RenderDevice.get(); }
+
 	inline static App& GetApp() { return *s_Instance; }
 	inline rhi::GraphicsAPI GetGraphicsAPI() const { return m_graphicsAPI; }
 	inline void SetGraphicsAPI(rhi::GraphicsAPI api, bool flagChange = false)
@@ -53,10 +62,9 @@ protected:
 
 private:
 	using ImGuiRenderFunction = std::function<void()>;
-
 	std::unordered_map<rhi::GraphicsAPI, ImGuiRenderFunction> m_ImguiRenderFunctionMap;
 
-	std::unique_ptr<GraphicsDeviceManager> m_Window;
+	std::unique_ptr<GraphicsDeviceManager> m_RenderDevice;
 	std::unique_ptr<GLFWEventListener> m_GLFWEventListener;
 	std::unique_ptr<EventCameraListener> m_CameraEventListener;
 	LayerStack m_LayerStack;

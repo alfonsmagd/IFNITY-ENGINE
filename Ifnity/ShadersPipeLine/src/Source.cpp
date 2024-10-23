@@ -5,7 +5,7 @@
 #include <Ifnity.h>
 
 
-
+using namespace IFNITY;
 using namespace IFNITY::rhi;
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
@@ -52,13 +52,13 @@ public:
 class ImGuiTestLayer : public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetWindow()) {}
+	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetDevice()) {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
 	{
 		
-		m_Device = &IFNITY::App::GetApp().GetWindow();
+		m_Device = &IFNITY::App::GetApp().GetDevice();
 		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
 	}
 
@@ -158,10 +158,13 @@ private:
 	IFNITY::GraphicsDeviceManager* m_Device;
 };
 
+
 class Source: public IFNITY::App
 {
+
 public:
-	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+
+	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_Device(IFNITY::App::GetApp().GetDevicePtr())
 	{
 		
 		PushLayer(new   IFNITY::NVML_Monitor());
@@ -171,117 +174,9 @@ public:
 		
 	}
 
-	
-	~Source() override {}
-
-private:
-
-};
-
-//This is global 
-std::shared_ptr<IFNITY::IShader> shader_vs;
-std::shared_ptr<IFNITY::IShader> shader_ps;
-
-void error_callback(void*, const char* error_message)
-{
-	// Handle the error message here  
-	std::cerr << "Error: " << error_message << std::endl;
-}
-
-IFNITY::App* IFNITY::CreateApp()
-{
-
-
-	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
-
-	IFNITY::ShaderCompiler::Initialize();
-
-	 //Código HLSL para un simple pixel shader que devuelve color rojo
-	/*std::wstring shaderSource = LR"(
-		float4 main() : SV_Target {
-		    return float4(1.0, 0.0, 0.0, 1.0);
-		}
-	)";*/
-
-	std::wstring shaderSource5 = LR"(
-cbuffer UBO : register(b0)
-{
-    float4x4 projectionMatrix;
-    float4x4 viewMatrix;
-    float4x4 modelMatrix;
-};
-
-struct VSInput
-{
-    float3 inPos : POSITION;
-    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
-};
-
-struct PSInput
-{
-    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-    float4 gl_Position : SV_POSITION;
-};
-
-PSInput main(VSInput input)
-{
-    PSInput output;
-
-    output.outColor = input.inColor; // Asignar color de entrada
-	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
-                         
-
-    return output;
-}
-
-	)";
-
-	std::wstring shaderSource6 = LR"(
-struct PSInput
-{
-    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-};
-
-float4 main(PSInput input) : SV_TARGET
-{
-    return float4(input.outColor, 1.0); // Color con alpha = 1.0
-}
-
-	)";
-
-			std::wstring shaderSource2 = LR"(
-struct PS_INPUT
-		{
-			float4 pos : SV_POSITION;
-			float3 color : COLOR;
-		};
-
-		float4 main(PS_INPUT input) : SV_Target
-		{
-			return float4(input.color, 1.0); // Convertimos el color de 3 componentes a 4 componentes con alpha = 1.0
-		}
-	)";
-
-
-
-		std::wstring shaderSource = LR"(
-static const float2 _31[3] = { float2(-0.5, 0.0), float2(0.0, 0.5), float2(0.5, -0.5) };
-static const float3 _35[3] = { float3(1.0, 0.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 0.0, 1.0) };
-
-struct VS_OUTPUT
-{
-    float4 pos : SV_POSITION;
-    float3 color : COLOR;
-};
-
-VS_OUTPUT main(uint id : SV_VertexID)
-{
-    VS_OUTPUT output;
-    output.pos = float4(_31[id], 0.0, 1.0);
-    output.color = _35[id];
-    return output;
-})";
-
+	void Initialize() override
+	{
+		IFNITY::ShaderCompiler::Initialize();
 		std::wstring shaderSource3 = LR"(
 		static const float2 g_positions[] =
 		{
@@ -316,18 +211,18 @@ VS_OUTPUT main(uint id : SV_VertexID)
 			o_color = float4(i_color, 1);
 		}
 	)";
-		
+
 		auto& vfs = IFNITY::VFS::GetInstance();
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
-	////Use filesystems to init 
-	//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
-	//for (const auto& file : files)
-	//{
-	//	std::cout << file << std::endl;
-	//}
-		 shader_vs = std::make_shared<IShader>();
-		 shader_ps = std::make_shared<IShader>();
+		////Use filesystems to init 
+		//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
+		//for (const auto& file : files)
+		//{
+		//	std::cout << file << std::endl;
+		//}
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
 
 		ShaderCreateDescription DescriptionShader;
 		{
@@ -337,7 +232,7 @@ VS_OUTPUT main(uint id : SV_VertexID)
 			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
 			DescriptionShader.ShaderSource = shaderSource3;
 			DescriptionShader.FileName = "vsTriangle";
-			shader_vs->SetShaderDescription(DescriptionShader);
+			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.EntryPoint = L"main_ps";
@@ -346,20 +241,141 @@ VS_OUTPUT main(uint id : SV_VertexID)
 			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
 			DescriptionShader.ShaderSource = shaderSource3;
 			DescriptionShader.FileName = "psTriangle";
-			shader_ps->SetShaderDescription(DescriptionShader);
+			m_ps->SetShaderDescription(DescriptionShader);
 		}
 
-		ShaderCompiler::CompileShader(shader_vs.get());
-		ShaderCompiler::CompileShader(shader_ps.get());
+		ShaderCompiler::CompileShader(m_vs.get());
+		ShaderCompiler::CompileShader(m_ps.get());
 
-		Source* source = new Source(api);
-		
+
 		// Almacenar los resultados de get() en variables temporales
+		App::GetApp().GetDevice().LoadAppShaders(m_vs.get(), m_ps.get());
+
+		
+	}
+
+	void Render() override
+	{
+		IFNITY_LOG(LogApp, INFO, "Render App");
+	}
+	void Animate() override
+	{
+		IFNITY_LOG(LogApp, INFO, "Animate App");
+	}
+	~Source() override {}
+
+private:
+	GraphicsDeviceManager* m_Device;
+	std::shared_ptr<IShader> m_vs;
+	std::shared_ptr<IShader> m_ps;
+};
+
+//This is global 
+
+
+void error_callback(void*, const char* error_message)
+{
+	// Handle the error message here  
+	std::cerr << "Error: " << error_message << std::endl;
+}
+
+IFNITY::App* IFNITY::CreateApp()
+{
+
+
+	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
+
+	
+
+	 //Código HLSL para un simple pixel shader que devuelve color rojo
+	/*std::wstring shaderSource = LR"(
+		float4 main() : SV_Target {
+		    return float4(1.0, 0.0, 0.0, 1.0);
+		}
+	)";*/
+
+//	std::wstring shaderSource5 = LR"(
+//cbuffer UBO : register(b0)
+//{
+//    float4x4 projectionMatrix;
+//    float4x4 viewMatrix;
+//    float4x4 modelMatrix;
+//};
+//
+//struct VSInput
+//{
+//    float3 inPos : POSITION;
+//    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
+//};
+//
+//struct PSInput
+//{
+//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
+//    float4 gl_Position : SV_POSITION;
+//};
+//
+//PSInput main(VSInput input)
+//{
+//    PSInput output;
+//
+//    output.outColor = input.inColor; // Asignar color de entrada
+//	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
+//                         
+//
+//    return output;
+//}
+//
+//	)";
+//
+//	std::wstring shaderSource6 = LR"(
+//struct PSInput
+//{
+//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
+//};
+//
+//float4 main(PSInput input) : SV_TARGET
+//{
+//    return float4(input.outColor, 1.0); // Color con alpha = 1.0
+//}
+//
+//	)";
+//
+//			std::wstring shaderSource2 = LR"(
+//struct PS_INPUT
+//		{
+//			float4 pos : SV_POSITION;
+//			float3 color : COLOR;
+//		};
+//
+//		float4 main(PS_INPUT input) : SV_Target
+//		{
+//			return float4(input.color, 1.0); // Convertimos el color de 3 componentes a 4 componentes con alpha = 1.0
+//		}
+//	)";
+//
+//
+//
+//		std::wstring shaderSource = LR"(
+//static const float2 _31[3] = { float2(-0.5, 0.0), float2(0.0, 0.5), float2(0.5, -0.5) };
+//static const float3 _35[3] = { float3(1.0, 0.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 0.0, 1.0) };
+//
+//struct VS_OUTPUT
+//{
+//    float4 pos : SV_POSITION;
+//    float3 color : COLOR;
+//};
+//
+//VS_OUTPUT main(uint id : SV_VertexID)
+//{
+//    VS_OUTPUT output;
+//    output.pos = float4(_31[id], 0.0, 1.0);
+//    output.color = _35[id];
+//    return output;
+//})";
+
 		
 
-		App::GetApp().GetWindow().LoadAppShaders(shader_vs.get(), shader_ps.get());
 
-
-		return source;
+		return new Source(api);
 }
 
