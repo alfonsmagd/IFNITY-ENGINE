@@ -11,6 +11,10 @@
 IFNITY_NAMESPACE 
 
 
+// types to simplify use
+
+
+
 //BASIC TYPES COLOR// 
 struct Color
 {
@@ -50,6 +54,15 @@ struct Color
 
 
 namespace rhi {
+
+    //TYPES 
+ 
+
+
+
+
+
+
 
        // Definición de los errores de D3D12
    #define D3D12_ERROR_INVALID_DEVICE 0x887A0001

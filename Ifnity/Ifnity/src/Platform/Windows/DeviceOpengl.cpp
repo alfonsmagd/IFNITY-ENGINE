@@ -73,7 +73,8 @@ bool DeviceOpengl::InitializeDeviceAndContext()
 	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
 
 
-
+	// Create m_RenderDevice based in OPENGL . 
+	m_RenderDevice = std::make_shared<OpenGL::Device>();
 
 	return true;
 
@@ -308,22 +309,7 @@ void DeviceOpengl::ClearBackBuffer(float* color)
 }
 
 
-auto renderCallback = [](int vertexCount,int width,int height)
-	{
-		// Código de renderizado personalizado
-		glViewport(0, 0, width, height);
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDrawArrays(GL_TRIANGLES, 0, vertexCount);
-	};
-template<typename RenderCallback, typename... Args>
-void DeviceOpengl::Draw(RenderCallback renderCallback, Args&&... args)
-{
-	
-	
-	renderCallback(std::forward<Args>(args)...);
 
-
-}
 
 
 IFNITY_END_NAMESPACE

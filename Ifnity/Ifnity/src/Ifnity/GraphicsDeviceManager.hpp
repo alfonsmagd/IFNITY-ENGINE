@@ -3,7 +3,7 @@
 #include "pch.h"
 #include "Ifnity/Event/WindowEvent.h"
 #include "Ifnity\Graphics\IShader.hpp"
-
+#include "Ifnity\Graphics\Interfaces\IDevice.hpp"
 
 // GRAPHIC API
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -83,6 +83,9 @@ public:
 
 	virtual unsigned int GetWidth() const = 0;
 	virtual unsigned int GetHeight() const = 0;
+	//To implment next.
+	[[nodiscard]] virtual IDevice* GetRenderDevice() const { return nullptr; }
+
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowData&& props);
 	bool CreateInstance();

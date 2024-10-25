@@ -1,6 +1,7 @@
 #pragma once
 #include "Ifnity\GraphicsDeviceManager.hpp"
 #include <Ifnity\Event\WindowEvent.h>
+#include "gl_backend.hpp"
 #include <glad\glad.h>
 
 
@@ -8,6 +9,10 @@
 IFNITY_NAMESPACE
 
 //forward declaration
+
+//and utils simplification types 
+
+using DeviceHandle = std::shared_ptr<IDevice>;
 
 class IShader;
 
@@ -25,6 +30,7 @@ public:
 	static void DemoTriangle(const char* sv, const char* sp);
 	void RenderDemo(int w, int h) const override;
 	
+	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
 
 
 protected:
@@ -66,6 +72,7 @@ private:
 	float m_Color[4] = { 1.0f,1.0f,1.0f,1.0f };
 	GLuint m_VAO;
 	// Shader
+	DeviceHandle m_RenderDevice;
 
 };
 

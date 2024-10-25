@@ -251,6 +251,9 @@ public:
 		// Almacenar los resultados de get() en variables temporales
 		App::GetApp().GetDevice().LoadAppShaders(m_vs.get(), m_ps.get());
 
+		auto* var = App::GetApp().GetDevice().GetRenderDevice();
+
+
 		
 	}
 
