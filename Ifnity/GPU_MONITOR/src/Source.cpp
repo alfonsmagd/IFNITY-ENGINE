@@ -52,13 +52,13 @@ public:
 class ImGuiTestLayer : public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetDevice()) {}
+	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetManagerDevice()) {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
 	{
 		
-		m_Device = &IFNITY::App::GetApp().GetDevice();
+		m_Device = &IFNITY::App::GetApp().GetManagerDevice();
 		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
 	}
 

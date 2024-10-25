@@ -40,9 +40,9 @@ public:
 
 	void SetImguiAPI() const;
 
-	inline GraphicsDeviceManager& GetDevice() { return *m_RenderDevice; }
-	inline const GraphicsDeviceManager& GetDevice() const { return *m_RenderDevice; }
-	inline GraphicsDeviceManager* GetDevicePtr() { return m_RenderDevice.get(); }
+	inline GraphicsDeviceManager& GetManagerDevice() { return *m_ManagerDevice; }
+	inline const GraphicsDeviceManager& GetManagerDevice() const { return *m_ManagerDevice; }
+	inline GraphicsDeviceManager* GetDevicePtr() { return m_ManagerDevice.get(); }
 
 	inline static App& GetApp() { return *s_Instance; }
 	inline rhi::GraphicsAPI GetGraphicsAPI() const { return m_graphicsAPI; }
@@ -64,7 +64,7 @@ private:
 	using ImGuiRenderFunction = std::function<void()>;
 	std::unordered_map<rhi::GraphicsAPI, ImGuiRenderFunction> m_ImguiRenderFunctionMap;
 
-	std::unique_ptr<GraphicsDeviceManager> m_RenderDevice;
+	std::unique_ptr<GraphicsDeviceManager> m_ManagerDevice;
 	std::unique_ptr<GLFWEventListener> m_GLFWEventListener;
 	std::unique_ptr<EventCameraListener> m_CameraEventListener;
 	LayerStack m_LayerStack;

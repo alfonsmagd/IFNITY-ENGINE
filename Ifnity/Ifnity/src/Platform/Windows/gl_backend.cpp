@@ -4,8 +4,12 @@
 IFNITY_NAMESPACE
 
 
+
 namespace OpenGL
 {
+
+	
+
 	Device::Device()
 	{}
 	Device::~Device()

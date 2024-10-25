@@ -8,11 +8,12 @@
 
 IFNITY_NAMESPACE
 
+
 //forward declaration
 
 //and utils simplification types 
 
-using DeviceHandle = std::shared_ptr<IDevice>;
+
 
 class IShader;
 

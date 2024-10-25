@@ -9,6 +9,8 @@
 
 IFNITY_NAMESPACE
 
+
+
 namespace OpenGL
 {
 
@@ -42,6 +44,12 @@ namespace OpenGL
     private:
     Program m_Program; ///< The program used by the device.
     };
+
+
+    inline DeviceHandle CreateDevice()
+    {
+        return std::make_shared<Device>();
+    }
 };
 
 

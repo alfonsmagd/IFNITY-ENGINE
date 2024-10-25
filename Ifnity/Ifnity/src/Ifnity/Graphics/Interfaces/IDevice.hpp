@@ -7,23 +7,23 @@
 IFNITY_NAMESPACE
 
 
-struct Program
+struct IFNITY_API Program
 {
     unsigned int id{};
 };
 
-struct GraphicsPipeline
+struct IFNITY_API GraphicsPipeline
 {
     Program program;
 };
 
-struct DrawDescription
+struct IFNITY_API DrawDescription
 {
     unsigned int size;
 };
 
 // Definition of the IDevice interface
-class IDevice {
+class IFNITY_API IDevice {
 public:
 
     /**
@@ -38,5 +38,8 @@ public:
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
 };
+
+
+using DeviceHandle = std::shared_ptr<IDevice>;
 
 IFNITY_END_NAMESPACE

@@ -52,13 +52,13 @@ public:
 class ImGuiTestLayer : public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetDevice()) {}
+	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetManagerDevice()) {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
 	{
 		
-		m_Device = &IFNITY::App::GetApp().GetDevice();
+		m_Device = &IFNITY::App::GetApp().GetManagerDevice();
 		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
 	}
 
@@ -249,9 +249,9 @@ public:
 
 
 		// Almacenar los resultados de get() en variables temporales
-		App::GetApp().GetDevice().LoadAppShaders(m_vs.get(), m_ps.get());
+		App::GetApp().GetManagerDevice().LoadAppShaders(m_vs.get(), m_ps.get());
 
-		auto* var = App::GetApp().GetDevice().GetRenderDevice();
+		auto* var = App::GetApp().GetManagerDevice().GetRenderDevice();
 
 
 		

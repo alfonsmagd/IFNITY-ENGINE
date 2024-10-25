@@ -74,7 +74,8 @@ bool DeviceOpengl::InitializeDeviceAndContext()
 
 
 	// Create m_RenderDevice based in OPENGL . 
-	m_RenderDevice = std::make_shared<OpenGL::Device>();
+	
+	m_RenderDevice = OpenGL::CreateDevice();
 
 	return true;
 
