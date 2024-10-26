@@ -164,7 +164,7 @@ class Source: public IFNITY::App
 
 public:
 
-	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_Device(IFNITY::App::GetApp().GetDevicePtr())
+	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
 		
 		PushLayer(new   IFNITY::NVML_Monitor());
@@ -176,41 +176,59 @@ public:
 
 	void Initialize() override
 	{
+		m_ManagerDevice = &App::GetApp().GetManagerDevice();
+
+
 		IFNITY::ShaderCompiler::Initialize();
 		std::wstring shaderSource3 = LR"(
-		static const float2 g_positions[] =
-		{
-			float2(-0.5, -0.5),
-				float2(0, 0.5),
-				float2(0.5, -0.5)
-		};
 
-		static const float3 g_colors[] =
-		{
-			float3(1, 1, 1),
-				float3(0, 1, 0),
-				float3(0, 0, 1)
-		};
+	cbuffer PerFrameData : register(b0)
+{
+    matrix MVP;
+    int isWireframe;
+};
 
-		void main_vs(
-			uint i_vertexId : SV_VertexID,
-			out float4 o_pos : SV_Position,
-			out float3 o_color : COLOR
-		)
-		{
-			o_pos = float4(g_positions[i_vertexId], 0, 1);
-			o_color = g_colors[i_vertexId];
-		}
+static const float2 g_positions[] =
+{
+    float2(-0.5, -0.5),
+    float2(0, 0.5),
+    float2(0.5, -0.5)
+};
 
-		void main_ps(
-			in float4 i_pos : SV_Position,
-			in float3 i_color : COLOR,
-			out float4 o_color : SV_Target0
-		)
-		{
-			o_color = float4(i_color, 1);
-		}
-	)";
+static const float3 g_colors[] =
+{
+    float3(1, 1, 1),
+    float3(0, 1, 0),
+    float3(0, 0, 1)
+};
+
+void main_vs(
+    uint i_vertexId : SV_VertexID,
+    out float4 o_pos : SV_Position,
+    out float3 o_color : COLOR
+)
+{
+    o_pos = float4(g_positions[i_vertexId], 0, 1);
+    o_color = g_colors[i_vertexId];
+}
+
+void main_ps(
+    in float4 i_pos : SV_Position,
+    in float3 i_color : COLOR,
+    out float4 o_color : SV_Target0
+)
+{
+    if (isWireframe == 1)
+    {
+        o_color = float4(1, 1, 1, 1); // Color blanco para wireframe
+    }
+    else
+    {
+        o_color = float4(i_color, 1);
+    }
+}
+)";
+
 
 		auto& vfs = IFNITY::VFS::GetInstance();
 
@@ -248,17 +266,25 @@ public:
 		ShaderCompiler::CompileShader(m_ps.get());
 
 
-		// Almacenar los resultados de get() en variables temporales
-		App::GetApp().GetManagerDevice().LoadAppShaders(m_vs.get(), m_ps.get());
+		GraphicsPipelineDescription gdesc;
+		gdesc.SetVertexShader(m_vs.get()).
+			  SetPixelShader(m_ps.get());
 
-		auto* var = App::GetApp().GetManagerDevice().GetRenderDevice();
-
-
+		 m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 		
+
 	}
 
 	void Render() override
 	{
+		//SetPipelineState
+
+
+		//Draw Description 
+		DrawDescription desc;
+		desc.size = 3;
+		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
 		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
 	void Animate() override
@@ -268,7 +294,9 @@ public:
 	~Source() override {}
 
 private:
-	GraphicsDeviceManager* m_Device;
+	
+	GraphicsDeviceManager* m_ManagerDevice;
+	GraphicsPipeline m_GraphicsPipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 };

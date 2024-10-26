@@ -18,15 +18,17 @@ DeviceOpengl::~DeviceOpengl()
 	// Shutdown the window and close GLFW
 	//Other function to close the window
 	IFNITY_LOG(LogApp, WARNING, "DeviceOpenGL destroyed");
+	m_RenderDevice.reset();
 }
 
 void DeviceOpengl::OnUpdate()
 {
-	glViewport(0, 0, GetWidth(), GetHeight());
-	
-	glDrawArrays(GL_TRIANGLES, 0, 3);
+	//glViewport(0, 0, GetWidth(), GetHeight());
+	//
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
 	glClearColor(m_Color[0],m_Color[1], m_Color[2], m_Color[3]);
-
+	//Imgui update Render 
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	glfwSwapBuffers(m_Window);
 	glClear(GL_COLOR_BUFFER_BIT);
 }

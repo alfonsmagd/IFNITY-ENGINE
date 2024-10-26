@@ -39,10 +39,16 @@ namespace OpenGL
     * 
     * @return A GraphicsPipeline object.
     */
-    GraphicsPipeline CreateGraphicsPipeline() override;
+    GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
 
     private:
-    Program m_Program; ///< The program used by the device.
+
+		Program CreateProgram(const char* vertexShader, const char* fragmentShader);
+
+
+        Program m_Program; ///< The program used by the device.
+
+	    unsigned int  m_VAO; ///< The vertex array object used by the device.
     };
 
 

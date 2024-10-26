@@ -62,7 +62,10 @@ void ImguiLayer::OnAttach()
 	switch ( App::GetApp().GetGraphicsAPI() )
 	{
 	case rhi::GraphicsAPI::OPENGL:
-		ImGuiRenderDrawData = ImGui_ImplOpenGL3_RenderDrawData;
+		ImGuiRenderDrawData = [](ImDrawData* drawData)
+			{
+				ImDrawData* draw_data = ImGui::GetDrawData();
+			};
 		ImGuiOnDetach = ImGui_ImplOpenGL3_Shutdown;
 		break;
 	case rhi::GraphicsAPI::D3D11:

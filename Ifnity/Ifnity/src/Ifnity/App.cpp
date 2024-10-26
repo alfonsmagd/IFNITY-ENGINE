@@ -112,6 +112,8 @@ void main()
 	{
 		s_Instance = this;
 
+		//Remakr that it this the basse. 
+
 		InitApp(m_graphicsAPI);
 
 	}
@@ -180,7 +182,9 @@ void main()
 	{
 		//Initialize user pipelineload. 
 
-		m_ManagerDevice->LoadAppPipelineDescription();
+		//m_ManagerDevice->LoadAppPipelineDescription();
+		
+		
 		//This part its because the initializacion process is in the constructor of the app, then source will be build LAYERS  after App constructor. We cant initiate EventBusLayers in App constructor. 
 		InitiateEventBusLayers();
 

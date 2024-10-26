@@ -3,19 +3,43 @@
 
 #pragma once
 #include "pch.h"
+#include "../IShader.hpp"
 
 IFNITY_NAMESPACE
 
 
 struct IFNITY_API Program
 {
-    unsigned int id{};
+     unsigned int id;
 };
 
 struct IFNITY_API GraphicsPipeline
 {
     Program program;
+    // Constructor por defecto
+	 GraphicsPipeline() = default;
 };
+
+
+struct IFNITY_API GraphicsPipelineDescription
+{
+ 
+	IShader* vs  = nullptr;
+	IShader* ps = nullptr;
+
+	 GraphicsPipelineDescription& SetVertexShader(IShader* shader)
+	{
+		vs = shader;
+		return *this;
+	}
+     GraphicsPipelineDescription& SetPixelShader(IShader* shader)
+    {
+		ps = shader;
+		return *this;
+    }
+
+};
+
 
 struct IFNITY_API DrawDescription
 {
@@ -33,7 +57,7 @@ public:
      */
     virtual void Draw(DrawDescription& desc) = 0;
 
-    virtual GraphicsPipeline CreateGraphicsPipeline() = 0;
+    virtual GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) = 0;
 
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
