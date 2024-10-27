@@ -5,7 +5,7 @@
 
 
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
-
+#include <glad\glad.h>
 
 IFNITY_NAMESPACE
 
@@ -41,6 +41,11 @@ namespace OpenGL
     */
     GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
 
+
+	BufferHandle CreateBuffer(BufferDescription& desc) override;
+
+	void WriteBuffer(BufferHandle& buffer, const void* data, size_t size) override;
+
     private:
 
 		Program CreateProgram(const char* vertexShader, const char* fragmentShader);
@@ -48,7 +53,26 @@ namespace OpenGL
 
         Program m_Program; ///< The program used by the device.
 
-	    unsigned int  m_VAO; ///< The vertex array object used by the device.
+        GLuint   m_VAO; ///< The vertex array object used by the device.
+    };
+
+    class Buffer final: public IBuffer
+    {
+    public:
+        //Constructor 
+		Buffer(GLuint bufferID, BufferDescription& desc): 
+            m_BufferID(bufferID),
+            m_Description(desc) {}
+		//Destructor
+		virtual ~Buffer() = default;
+
+
+		BufferDescription& GetBufferDescription()  override { return m_Description; }
+		const uint32_t GetBufferID() const override { return m_BufferID; }
+
+    private:
+		uint32_t m_BufferID; ///< The buffer ID.
+		BufferDescription m_Description; ///< The buffer description.
     };
 
 

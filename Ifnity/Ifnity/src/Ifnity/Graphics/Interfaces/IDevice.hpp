@@ -4,6 +4,7 @@
 #pragma once
 #include "pch.h"
 #include "IShader.hpp"
+#include "IBuffer.hpp"
 
 IFNITY_NAMESPACE
 
@@ -56,8 +57,11 @@ public:
      * @param desc Descripción del dibujo.
      */
     virtual void Draw(DrawDescription& desc) = 0;
-
     virtual GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) = 0;
+	virtual void WriteBuffer(BufferHandle& buffer, const void* data, size_t size) = 0;
+    
+
+	virtual BufferHandle CreateBuffer(BufferDescription& desc) = 0;
 
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
@@ -65,5 +69,6 @@ public:
 
 
 using DeviceHandle = std::shared_ptr<IDevice>;
+
 
 IFNITY_END_NAMESPACE

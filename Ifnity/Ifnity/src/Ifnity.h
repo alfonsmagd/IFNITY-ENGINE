@@ -10,6 +10,9 @@
 #include "Ifnity/Layers/ExampleLayer.h"
 #include "../ShaderBuilding/ShaderBuilder.hpp"
 
+//Maths
+
+#include "Ifnity/Maths/math.h"
 
 //wOMDPW
 //Entry Point this include have put at the end of the file.

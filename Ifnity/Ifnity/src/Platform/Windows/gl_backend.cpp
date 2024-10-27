@@ -1,5 +1,5 @@
 #include "gl_backend.hpp"
-#include <glad\glad.h>
+
 
 
 IFNITY_NAMESPACE
@@ -77,6 +77,36 @@ namespace OpenGL
 
 
 	}
+
+
+	BufferHandle Device::CreateBuffer(BufferDescription& desc)
+	{
+		const GLsizeiptr kBufferSize = desc.byteSize;
+
+		GLuint perFrameDataBuffer;
+		glCreateBuffers(1, &perFrameDataBuffer);
+		glNamedBufferStorage(perFrameDataBuffer, kBufferSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
+		//Now I only use a constan buffer in the future proably I will use other types of buffer.
+		glBindBufferRange( GL_UNIFORM_BUFFER ,
+			0, perFrameDataBuffer, 0, kBufferSize);
+			
+
+		Buffer* buffer = new Buffer(perFrameDataBuffer,desc);
+
+		return BufferHandle(buffer);
+	}
+
+	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size)
+	{
+
+
+		glBindBuffer(GL_UNIFORM_BUFFER, buffer->GetBufferID());
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
+
+	}
+
+
+
     Program Device::CreateProgram(const char* vertexShader, const char* fragmentShader)
     {
 		int success;
@@ -123,12 +153,17 @@ namespace OpenGL
 
 
 		glCreateVertexArrays(1, &m_VAO);
+		glBindVertexArray(m_VAO);
 	
 		m_Program.id = program;
 
 		return m_Program;
 		
     }
+
+
+
+
 };
 
 IFNITY_END_NAMESPACE

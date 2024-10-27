@@ -7,7 +7,8 @@
 
 using namespace IFNITY;
 using namespace IFNITY::rhi;
-
+using glm::vec3;
+using glm::mat4;
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
 public:
@@ -180,12 +181,14 @@ public:
 
 
 		IFNITY::ShaderCompiler::Initialize();
+
+
+
 		std::wstring shaderSource3 = LR"(
 
 	cbuffer PerFrameData : register(b0)
 {
     matrix MVP;
-    int isWireframe;
 };
 
 static const float2 g_positions[] =
@@ -208,7 +211,7 @@ void main_vs(
     out float3 o_color : COLOR
 )
 {
-    o_pos = float4(g_positions[i_vertexId], 0, 1);
+      o_pos = mul(float4(g_positions[i_vertexId], 0, 1),MVP);
     o_color = g_colors[i_vertexId];
 }
 
@@ -218,14 +221,9 @@ void main_ps(
     out float4 o_color : SV_Target0
 )
 {
-    if (isWireframe == 1)
-    {
-        o_color = float4(1, 1, 1, 1); // Color blanco para wireframe
-    }
-    else
-    {
+    
         o_color = float4(i_color, 1);
-    }
+    
 }
 )";
 
@@ -271,14 +269,39 @@ void main_ps(
 			  SetPixelShader(m_ps.get());
 
 		 m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
-		
+
+		 BufferDescription DescriptionBuffer;
+		 DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
+						  .SetByteSize(sizeof(mat4))
+						  .SetDebugName("UBO MVP")
+						  .SetStrideSize(0);
+
+		 m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
+			 
 
 	}
 
 	void Render() override
 	{
+		using namespace math;
 		//SetPipelineState
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
+		const mat4 mg = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 0.0f, -1.0f));
+		const mat4 fg = glm::ortho(-aspectRatio, aspectRatio, -1.f, 1.f, 1.f, -1.f);
+		const mat4 mvpg = fg * mg;
+
+
+
+		const float4x4 m = rotate(float4x4::identity(), (float)glfwGetTime(), float3(0.f, 0.f, 1.0f));
+		const float4x4 p = orthoProjOGLStyle(-aspectRatio, aspectRatio, -1.0f, 1.0f, 1.0f, -1.0f);
+		//
+		const float4x4 mvpd = m*p ;
+
+	
+		
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
+		//m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, mvpd.m_data, sizeof(mvpd));
 
 		//Draw Description 
 		DrawDescription desc;
@@ -294,7 +317,7 @@ void main_ps(
 	~Source() override {}
 
 private:
-	
+	BufferHandle m_UBO;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipeline m_GraphicsPipeline;
 	std::shared_ptr<IShader> m_vs;
@@ -317,96 +340,6 @@ IFNITY::App* IFNITY::CreateApp()
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
 	
-
-	 //Código HLSL para un simple pixel shader que devuelve color rojo
-	/*std::wstring shaderSource = LR"(
-		float4 main() : SV_Target {
-		    return float4(1.0, 0.0, 0.0, 1.0);
-		}
-	)";*/
-
-//	std::wstring shaderSource5 = LR"(
-//cbuffer UBO : register(b0)
-//{
-//    float4x4 projectionMatrix;
-//    float4x4 viewMatrix;
-//    float4x4 modelMatrix;
-//};
-//
-//struct VSInput
-//{
-//    float3 inPos : POSITION;
-//    float3 inColor : COLOR; // Asegúrate de que este tipo sea float3
-//};
-//
-//struct PSInput
-//{
-//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-//    float4 gl_Position : SV_POSITION;
-//};
-//
-//PSInput main(VSInput input)
-//{
-//    PSInput output;
-//
-//    output.outColor = input.inColor; // Asignar color de entrada
-//	output.gl_Position =  mul(mul(mul(float4(input.inPos, 1.0), modelMatrix), viewMatrix), projectionMatrix);
-//                         
-//
-//    return output;
-//}
-//
-//	)";
-//
-//	std::wstring shaderSource6 = LR"(
-//struct PSInput
-//{
-//    float3 outColor : COLOR; // Asegúrate de que este tipo sea float3
-//};
-//
-//float4 main(PSInput input) : SV_TARGET
-//{
-//    return float4(input.outColor, 1.0); // Color con alpha = 1.0
-//}
-//
-//	)";
-//
-//			std::wstring shaderSource2 = LR"(
-//struct PS_INPUT
-//		{
-//			float4 pos : SV_POSITION;
-//			float3 color : COLOR;
-//		};
-//
-//		float4 main(PS_INPUT input) : SV_Target
-//		{
-//			return float4(input.color, 1.0); // Convertimos el color de 3 componentes a 4 componentes con alpha = 1.0
-//		}
-//	)";
-//
-//
-//
-//		std::wstring shaderSource = LR"(
-//static const float2 _31[3] = { float2(-0.5, 0.0), float2(0.0, 0.5), float2(0.5, -0.5) };
-//static const float3 _35[3] = { float3(1.0, 0.0, 0.0), float3(0.0, 1.0, 0.0), float3(0.0, 0.0, 1.0) };
-//
-//struct VS_OUTPUT
-//{
-//    float4 pos : SV_POSITION;
-//    float3 color : COLOR;
-//};
-//
-//VS_OUTPUT main(uint id : SV_VertexID)
-//{
-//    VS_OUTPUT output;
-//    output.pos = float4(_31[id], 0.0, 1.0);
-//    output.color = _35[id];
-//    return output;
-//})";
-
-		
-
-
-		return new Source(api);
+	return new Source(api);
 }
 
