@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "DeviceOpengl.h"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
-#include "Ifnity\Graphics\IShader.hpp"
+#include "Ifnity/Graphics/Interfaces/IShader.hpp"
 #include <glm\glm.hpp>
 
 

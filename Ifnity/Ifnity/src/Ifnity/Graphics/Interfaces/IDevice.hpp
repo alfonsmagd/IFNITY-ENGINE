@@ -3,7 +3,7 @@
 
 #pragma once
 #include "pch.h"
-#include "../IShader.hpp"
+#include "IShader.hpp"
 
 IFNITY_NAMESPACE
 

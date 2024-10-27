@@ -2,7 +2,7 @@
 
 #include "pch.h"
 #include "Ifnity/Event/WindowEvent.h"
-#include "Ifnity\Graphics\IShader.hpp"
+#include "Ifnity\Graphics\Interfaces\IShader.hpp"
 #include "Ifnity\Graphics\Interfaces\IDevice.hpp"
 
 // GRAPHIC API

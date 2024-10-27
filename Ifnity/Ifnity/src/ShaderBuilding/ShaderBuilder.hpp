@@ -2,7 +2,7 @@
 
 #include "pch.h"
 #include "Ifnity/Utils/VFS.hpp"
-#include "Ifnity/Graphics/IShader.hpp"
+#include "Ifnity/Graphics/Interfaces/IShader.hpp"
 #include <dxcapi.h>
 #include <wrl\client.h>
 
