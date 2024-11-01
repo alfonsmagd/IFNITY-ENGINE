@@ -5,6 +5,7 @@
 #include <Ifnity.h>
 
 
+
 using namespace IFNITY;
 using namespace IFNITY::rhi;
 using glm::vec3;
@@ -50,24 +51,24 @@ public:
 
 
 
-class ImGuiTestLayer : public IFNITY::Layer
+class ImGuiTestLayer: public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetManagerDevice()) {}
+	ImGuiTestLayer(): Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetManagerDevice()) {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
 	{
-		
+
 		m_Device = &IFNITY::App::GetApp().GetManagerDevice();
 		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
 	}
 
 	void OnUpdate() override
 	{
-		
+
 		ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
+		if(context == nullptr)
 		{
 			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
 			return;
@@ -80,21 +81,22 @@ public:
 	}
 	// Heredado vía Layer
 	void ConnectToEventBusImpl(void* bus) override
-	{
-	}
+	{}
 private:
 	// Una función que se llama al hacer clic en el botón
-	void AccionPorOpcion(int opcionSeleccionada) {
+	void AccionPorOpcion(int opcionSeleccionada)
+	{
 
 		GraphicsAPI api = IFNITY::App::GetApp().GetGraphicsAPI();
-		switch (opcionSeleccionada) {
+		switch(opcionSeleccionada)
+		{
 		case 0:
 			// Acción para la opción 1
 			IFNITY_LOG(LogApp, INFO, "OPENGL");
-			
+
 
 			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::OPENGL,api != GraphicsAPI::OPENGL);
+				.SetGraphicsAPI(GraphicsAPI::OPENGL, api != GraphicsAPI::OPENGL);
 			break;
 		case 1:
 			// Acción para la opción 2
@@ -117,24 +119,27 @@ private:
 				.SetGraphicsAPI(GraphicsAPI::VULKAN, api != GraphicsAPI::VULKAN);
 			break;
 		default:
-		
+
 			break;
 		}
 	}
 
-	void ChooseApi() {
+	void ChooseApi()
+	{
 		static int selectOption = 0;
-		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN"};
+		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN" };
 
 		ImGui::Begin("API WINDOW");  // Comienza la creación de la ventana
 
 		// Combo box con las opciones
-		if (ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options))) {
+		if(ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options)))
+		{
 			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
 		}
 
 		// Botón que ejecuta la función cuando se hace clic
-		if (ImGui::Button("OK")) {
+		if(ImGui::Button("OK"))
+		{
 			AccionPorOpcion(selectOption);
 		}
 
@@ -146,9 +151,9 @@ private:
 		ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
 		ImGui::Begin("Color Picker");
-		static float clearColor[4] = { 0.45f, 0.55f, 0.60f, 1.00f };
+		static float clearColor[ 4 ] = { 0.45f, 0.55f, 0.60f, 1.00f };
 		// Selector de color
-		if (ImGui::ColorEdit4("Clear Color", clearColor))
+		if(ImGui::ColorEdit4("Clear Color", clearColor))
 		{
 			// Si el color cambia, actualiza el color del buffer de fondo
 			m_Device->ClearBackBuffer(clearColor);
@@ -160,19 +165,19 @@ private:
 };
 
 
-class Source: public IFNITY::App
+class Source_Cube: public IFNITY::App
 {
 
 public:
 
-	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	Source_Cube(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
-		
+
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
 
-		
+
 	}
 
 	void Initialize() override
@@ -183,49 +188,71 @@ public:
 		IFNITY::ShaderCompiler::Initialize();
 
 
-
 		std::wstring shaderSource3 = LR"(
 
-	cbuffer PerFrameData : register(b0)
+			cbuffer PerFrameData : register(b0)
 {
     matrix MVP;
 };
 
-static const float2 g_positions[] =
-{
-    float2(-0.5, -0.5),
-    float2(0, 0.5),
-    float2(0.5, -0.5)
+static const float3 g_positions[8] = {
+    float3(-1.0, -1.0, 1.0),
+    float3(1.0, -1.0, 1.0),
+    float3(1.0, 1.0, 1.0),
+    float3(-1.0, 1.0, 1.0),
+    float3(-1.0, -1.0, -1.0),
+    float3(1.0, -1.0, -1.0),
+    float3(1.0, 1.0, -1.0),
+    float3(-1.0, 1.0, -1.0)
 };
 
-static const float3 g_colors[] =
-{
-    float3(1, 1, 1),
-    float3(0, 1, 0),
-    float3(0, 0, 1)
+static const float3 g_colors[8] = {
+    float3(1.0, 0.0, 0.0),
+    float3(0.0, 1.0, 0.0),
+    float3(0.0, 0.0, 1.0),
+    float3(1.0, 1.0, 0.0),
+    float3(1.0, 1.0, 0.0),
+    float3(0.0, 0.0, 1.0),
+    float3(0.0, 1.0, 0.0),
+    float3(1.0, 0.0, 0.0)
 };
 
-void main_vs(
-    uint i_vertexId : SV_VertexID,
+static const uint indices[36] = {
+    // front
+    0, 1, 2, 2, 3, 0,
+    // right
+    1, 5, 6, 6, 2, 1,
+    // back
+    7, 6, 5, 5, 4, 7,
+    // left
+    4, 0, 3, 3, 7, 4,
+    // bottom
+    4, 5, 1, 1, 0, 4,
+    // top
+    3, 2, 6, 6, 7, 3
+};
+	void main_vs(
+		  uint i_vertexId : SV_VertexID,
     out float4 o_pos : SV_Position,
     out float3 o_color : COLOR
-)
-{
-      o_pos = mul(float4(g_positions[i_vertexId], 0, 1),MVP);
-    o_color = g_colors[i_vertexId];
-}
+	)
+	{
+		uint index = indices[i_vertexId];
+	    o_pos = mul(float4(g_positions[index], 1.0), MVP);
+	    o_color = g_colors[index];
+	}
 
-void main_ps(
+	void main_ps(
     in float4 i_pos : SV_Position,
     in float3 i_color : COLOR,
     out float4 o_color : SV_Target0
 )
 {
-    
-        o_color = float4(i_color, 1);
-    
+    o_color = float4(i_color, 1.0);
 }
-)";
+	)"
+			;
+
 
 
 		auto& vfs = IFNITY::VFS::GetInstance();
@@ -266,18 +293,321 @@ void main_ps(
 
 		GraphicsPipelineDescription gdesc;
 		gdesc.SetVertexShader(m_vs.get()).
-			  SetPixelShader(m_ps.get());
+			SetPixelShader(m_ps.get());
 
-		 m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 
-		 BufferDescription DescriptionBuffer;
-		 DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
-						  .SetByteSize(sizeof(mat4))
-						  .SetDebugName("UBO MVP")
-						  .SetStrideSize(0);
+		BufferDescription DescriptionBuffer;
+		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
+			.SetByteSize(sizeof(mat4))
+			.SetDebugName("UBO MVP")
+			.SetStrideSize(0);
 
-		 m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
-			 
+		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
+
+
+
+
+
+	}
+
+	void Render() override
+	{
+		using namespace math;
+		//SetPipelineState
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+
+		const mat4 mg = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+		const mat4 fg = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+		const mat4 mvpg = fg * mg;
+
+
+
+
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
+		//m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, mvpd.m_data, sizeof(mvpd));
+
+		//Draw Description 
+		DrawDescription desc;
+		desc.size = 42;
+		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
+		IFNITY_LOG(LogApp, INFO, "Render App");
+	}
+	void Animate() override
+	{
+		IFNITY_LOG(LogApp, INFO, "Animate App");
+	}
+	~Source_Cube() override {}
+
+private:
+	BufferHandle m_UBO;
+	GraphicsDeviceManager* m_ManagerDevice;
+	GraphicsPipeline m_GraphicsPipeline;
+	std::shared_ptr<IShader> m_vs;
+	std::shared_ptr<IShader> m_ps;
+};
+
+//This is global 
+
+
+class Source: public IFNITY::App
+{
+
+public:
+
+	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	{
+
+		PushLayer(new   IFNITY::NVML_Monitor());
+		PushLayer(new ImGuiTestLayer());
+		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
+
+
+	}
+
+	void Initialize() override
+	{
+		m_ManagerDevice = &App::GetApp().GetManagerDevice();
+
+
+		IFNITY::ShaderCompiler::Initialize();
+
+
+
+		/*	std::wstring shaderSource3 = LR"(
+
+		cbuffer PerFrameData : register(b0)
+	{
+		matrix MVP;
+	};
+
+	static const float2 g_positions[] =
+	{
+		float2(-0.5, -0.5),
+		float2(0, 0.5),
+		float2(0.5, -0.5),
+
+	};
+
+	static const float3 g_colors[] =
+	{
+		float3(1, 1, 1),
+		float3(0, 1, 0),
+		float3(0, 0, 1)
+
+	};
+
+	void main_vs(
+		uint i_vertexId : SV_VertexID,
+		out float4 o_pos : SV_Position,
+		out float3 o_color : COLOR
+	)
+	{
+		  o_pos = mul(float4(g_positions[i_vertexId], 0, 1),MVP);
+		o_color = g_colors[i_vertexId];
+	}
+
+	void main_ps(
+		in float4 i_pos : SV_Position,
+		in float3 i_color : COLOR,
+		out float4 o_color : SV_Target0
+	)
+	{
+
+			o_color = float4(i_color, 1);
+
+	}
+	)";*/
+	/*std::wstring shaderSource3 = LR"(
+
+cbuffer PerFrameData : register(b0)
+{
+	matrix MVP;
+};
+
+struct VertexInput
+{
+	float3 position : POSITION0;
+	float3 color : COLOR1;
+};
+
+static const float3 g_colors[] =
+{
+	float3(1, 1, 1),
+	float3(0, 1, 0),
+	float3(0, 0, 1)
+
+};
+
+void main_vs(
+	in VertexInput input,
+	uint i_vertexId : SV_VertexID,
+	out float4 o_pos : SV_Position,
+	out float3 o_color : COLOR
+)
+{
+	  o_pos = mul(float4(input.position, 1.0),MVP);
+	o_color = g_colors[i_vertexId];
+}
+
+void main_ps(
+	in float4 i_pos : SV_Position,
+	in float3 i_color : COLOR,
+	out float4 o_color : SV_Target0
+)
+{
+
+		o_color = float4(i_color, 1);
+
+}
+)";*/
+
+		std::wstring shaderSource3 = LR"(
+
+		cbuffer PerFrameData : register(b0)
+		{
+			matrix MVP;
+		};
+		
+		struct VertexInput
+		{
+		    float3 position : POSITION0;
+		    float3 color : COLOR1; // Color de entrada desde el vértice
+		};
+		
+		// Función del Vertex Shader
+		void main_vs(
+		    VertexInput input,                 // Entrada del vértice
+		    uint i_vertexId : SV_VertexID,     // ID del vértice
+		    out float4 o_pos : SV_Position,     // Salida de posición
+		    out float3 o_color : COLOR          // Salida de color
+		)
+		{
+		    // Multiplicar la posición por la matriz MVP
+		    o_pos = mul(float4(input.position, 1.0), MVP);
+		    // Asignar el color desde la entrada del vértice
+		    o_color = input.color; // Usa el color directamente de la entrada
+		}
+		
+		// Función del Pixel Shader
+		void main_ps(
+		    float4 i_pos : SV_Position,          // Entrada de posición (no se usa en este caso)
+		    float3 i_color : COLOR,              // Entrada de color
+		    out float4 o_color : SV_Target0       // Salida de color
+		)
+		{
+		    // Asignar el color a la salida del pixel
+		    o_color = float4(i_color, 1.0); 
+		}
+)";
+
+
+
+		auto& vfs = IFNITY::VFS::GetInstance();
+
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
+		////Use filesystems to init 
+		//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
+		//for (const auto& file : files)
+		//{
+		//	std::cout << file << std::endl;
+		//}
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
+
+		ShaderCreateDescription DescriptionShader;
+		{
+			DescriptionShader.EntryPoint = L"main_vs";
+			DescriptionShader.Profile = L"vs_6_0";
+			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "vsTriangle";
+			m_vs->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.EntryPoint = L"main_ps";
+			DescriptionShader.Profile = L"ps_6_0";
+			DescriptionShader.Type = ShaderType::PIXEL_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "psTriangle";
+			m_ps->SetShaderDescription(DescriptionShader);
+		}
+
+		ShaderCompiler::CompileShader(m_vs.get());
+		ShaderCompiler::CompileShader(m_ps.get());
+
+
+		GraphicsPipelineDescription gdesc;
+		gdesc.SetVertexShader(m_vs.get()).
+			SetPixelShader(m_ps.get());
+
+		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+
+		BufferDescription DescriptionBuffer;
+		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
+			.SetByteSize(sizeof(mat4))
+			.SetDebugName("UBO MVP")
+			.SetStrideSize(0);
+
+		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
+
+
+
+		// Definir las posiciones de los vértices
+		std::vector<vec3> vertexPositions = {
+			vec3(-0.5f, -0.5f, 0.0f),
+			vec3(1.0f, 0.5f, 0.0f),
+			vec3(0.5f, -0.5f, 0.0f)
+		};
+		std::vector<vec3> vertexColors = {
+			   vec3(1.0f, 0.0f, 0.0f),
+			   vec3(0.0f, 1.0f, 0.0f),
+			   vec3(0.0f, 0.0f, 1.0f)
+		};
+
+		struct Vertex
+		{
+			vec3 position;
+			vec3 color;
+		};
+
+		std::vector<Vertex> vertices = {
+		   {{0.0f,  0.5f, 0.0f},  {1.0f, 0.0f, 0.0f}},  // Vértice superior (rojo)
+		   {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 0.0f}}, // Vértice inferior izquierdo (verde)
+		   {{0.5f, -0.5f, 0.0f},  {.0f, .0f, 1.0f}}   // Vértice inferior derecho (azul)
+		};
+
+
+
+
+
+		VertexAttributeDescription vertexDescription;
+		vertexDescription.setName("Vertex Position")
+			.setOffset(0)
+			.setArraySize(3)
+			.setIsInstanced(false)
+			.setBufferIndexLocation(0)
+			.setElementStride(sizeof(Vertex))
+			.setSize(sizeof(vec3));
+
+		VertexAttributeDescription colorDescription;
+		colorDescription.setName("Vertex Color")
+			.setOffset(sizeof(vec3))           // Offset del color en la estructura Vertex
+			.setArraySize(3)                        // Número de componentes de color (r, g, b)
+			.setIsInstanced(false)
+			.setBufferIndexLocation(1)                      // bufferIndex 1
+			.setElementStride(sizeof(Vertex))       // *Stride* de cada vértice
+			.setSize(sizeof(vec3));
+
+		VertexAttributeDescription vertxAtt[ 2 ] = { vertexDescription,colorDescription };
+
+		m_ManagerDevice->GetRenderDevice()->BindingVertexAttributes(vertxAtt, 2, vertices.data(), vertices.size() * sizeof(Vertex));
+
+
+
 
 	}
 
@@ -292,14 +622,12 @@ void main_ps(
 		const mat4 mvpg = fg * mg;
 
 
-
 		const float4x4 m = rotate(float4x4::identity(), (float)glfwGetTime(), float3(0.f, 0.f, 1.0f));
 		const float4x4 p = orthoProjOGLStyle(-aspectRatio, aspectRatio, -1.0f, 1.0f, 1.0f, -1.0f);
 		//
-		const float4x4 mvpd = m*p ;
+		const float4x4 mvpd = m * p;
 
-	
-		
+
 		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
 		//m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, mvpd.m_data, sizeof(mvpd));
 
@@ -324,9 +652,6 @@ private:
 	std::shared_ptr<IShader> m_ps;
 };
 
-//This is global 
-
-
 void error_callback(void*, const char* error_message)
 {
 	// Handle the error message here  
@@ -339,7 +664,7 @@ IFNITY::App* IFNITY::CreateApp()
 
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
-	
+
 	return new Source(api);
 }
 

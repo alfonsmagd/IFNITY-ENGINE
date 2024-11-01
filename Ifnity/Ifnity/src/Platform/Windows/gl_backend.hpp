@@ -46,6 +46,8 @@ namespace OpenGL
 
 	void WriteBuffer(BufferHandle& buffer, const void* data, size_t size) override;
 
+    void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)override;
+
     private:
 
 		Program CreateProgram(const char* vertexShader, const char* fragmentShader);
@@ -55,6 +57,11 @@ namespace OpenGL
 
         GLuint   m_VAO; ///< The vertex array object used by the device.
     };
+
+
+
+
+
 
     class Buffer final: public IBuffer
     {
@@ -69,6 +76,8 @@ namespace OpenGL
 
 		BufferDescription& GetBufferDescription()  override { return m_Description; }
 		const uint32_t GetBufferID() const override { return m_BufferID; }
+
+
 
     private:
 		uint32_t m_BufferID; ///< The buffer ID.

@@ -59,6 +59,7 @@ public:
     virtual void Draw(DrawDescription& desc) = 0;
     virtual GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) = 0;
 	virtual void WriteBuffer(BufferHandle& buffer, const void* data, size_t size) = 0;
+    virtual void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size) = 0;
     
 
 	virtual BufferHandle CreateBuffer(BufferDescription& desc) = 0;

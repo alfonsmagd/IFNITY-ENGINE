@@ -26,11 +26,12 @@ void DeviceOpengl::OnUpdate()
 	//glViewport(0, 0, GetWidth(), GetHeight());
 	//
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
+	glEnable(GL_DEPTH_TEST);
 	glClearColor(m_Color[0],m_Color[1], m_Color[2], m_Color[3]);
 	//Imgui update Render 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	glfwSwapBuffers(m_Window);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 /// <summary>
@@ -221,28 +222,7 @@ void DeviceOpengl::UseShader()
 {}
 
 // sp is Shader Fragment. 
-void DeviceOpengl::DemoTriangle(const char* sv, const char* sp)
-{
-	const GLuint shaderVertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(shaderVertex, 1, &sv, nullptr);
-	glCompileShader(shaderVertex);
 
-	const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(shaderFragment, 1, &sp, nullptr);
-	glCompileShader(shaderFragment);
-
-	const GLuint program = glCreateProgram();
-	glAttachShader(program, shaderVertex);
-	glAttachShader(program, shaderFragment);
-
-	glLinkProgram(program);
-	glUseProgram(program);
-
-	GLuint vao;
-	glCreateVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-}
 
 void DeviceOpengl::RenderDemo(int w,int h) const
 {

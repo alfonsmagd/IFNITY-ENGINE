@@ -17,7 +17,7 @@ namespace OpenGL
 	{
 		//The next remove this and set in desc. u other size. 
 		glViewport(0, 0, 1200, 720);
-
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glDrawArrays(GL_TRIANGLES, 0, desc.size);
 	
 	}
@@ -103,6 +103,40 @@ namespace OpenGL
 		glBindBuffer(GL_UNIFORM_BUFFER, buffer->GetBufferID());
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
 
+	}
+
+	void Device::BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)
+	{
+		glBindVertexArray(m_VAO);
+
+		GLuint vertexbuffer;
+		glCreateBuffers(1, &vertexbuffer);
+		glNamedBufferStorage(vertexbuffer, size, data, 0);
+		glVertexArrayVertexBuffer(m_VAO, 0, vertexbuffer, desc[ 0 ].offset, desc[ 0 ].elementStride);
+		for(size_t i = 0 ; i < sizedesc ; i++ )
+		{
+
+			GLuint index = static_cast<GLuint>(desc[i].bufferLocation);
+			
+			glEnableVertexArrayAttrib(m_VAO, index);
+
+			glVertexArrayAttribFormat(
+				m_VAO,
+				index,
+				desc[ i ].arraySize,
+				GL_FLOAT, // Asumiendo que rhi::Format se puede convertir a GLenum
+				GL_FALSE, // Asumiendo que no hay normalización
+				desc[ i ].offset
+			);
+			glVertexArrayAttribBinding(m_VAO, index, 0);
+
+			if(desc[ i ].isInstanced)
+			{
+				glVertexArrayBindingDivisor(m_VAO, index, 1);
+			}
+		}//end for 
+
+		//glBindVertexArray(0);
 	}
 
 
