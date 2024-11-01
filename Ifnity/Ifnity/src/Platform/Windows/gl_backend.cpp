@@ -78,10 +78,20 @@ namespace OpenGL
 	{}
 	void Device::Draw(DrawDescription& desc)
 	{
-		//The next remove this and set in desc. u other size. 
+
 		glViewport(0, 0, 1200, 720);
 		SetOpenGLRasterizationState(desc.rasterizationState);
-		glDrawArrays(GL_TRIANGLES, 0, desc.size);
+		if(desc.isIndexed)
+		{
+			glDrawElements(GL_TRIANGLES, desc.size, GL_UNSIGNED_INT, desc.indices);
+		}
+		else
+		{
+			glDrawArrays(GL_TRIANGLES, 0, desc.size);
+		}
+		//The next remove this and set in desc. u other size. 
+		
+		
 	
 	}
 
@@ -142,34 +152,57 @@ namespace OpenGL
 	}
 
 
-	BufferHandle Device::CreateBuffer(BufferDescription& desc)
+	BufferHandle Device::CreateBuffer(const BufferDescription& desc)
 	{
-		const GLsizeiptr kBufferSize = desc.byteSize;
 
-		GLuint perFrameDataBuffer;
-		glCreateBuffers(1, &perFrameDataBuffer);
-		glNamedBufferStorage(perFrameDataBuffer, kBufferSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
-		//Now I only use a constan buffer in the future proably I will use other types of buffer.
-		glBindBufferRange( GL_UNIFORM_BUFFER ,
-			0, perFrameDataBuffer, 0, kBufferSize);
-			
 
-		Buffer* buffer = new Buffer(perFrameDataBuffer,desc);
+		if(desc.type == BufferType::CONSTANT_BUFFER)
+		{
 
-		return BufferHandle(buffer);
+			const GLsizeiptr kBufferSize = desc.byteSize;
+
+
+			GLuint perFrameDataBuffer;
+			glCreateBuffers(1, &perFrameDataBuffer);
+			glNamedBufferStorage(perFrameDataBuffer, kBufferSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
+			//Now I only use a constan buffer in the future proably I will use other types of buffer.
+			glBindBufferRange(GL_UNIFORM_BUFFER,
+				0, perFrameDataBuffer, 0, kBufferSize);
+
+
+			Buffer* buffer = new Buffer(perFrameDataBuffer, desc);
+
+			return BufferHandle(buffer);
+		}
+		if(desc.type == BufferType::VERTEX_INDEX_BUFFER)
+		{
+			return CreateVertexAttAndIndexBuffer(desc);
+		}
+		else
+		{
+			IFNITY_LOG(LogApp, WARNING, "Buffer type not implemented");
+			return nullptr;
+		}
 	}
 
-	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size)
+	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)
 	{
 
-
-		glBindBuffer(GL_UNIFORM_BUFFER, buffer->GetBufferID());
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
+		if(buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER)
+		{
+			glBindBuffer(GL_UNIFORM_BUFFER, buffer->GetBufferID());
+			glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
+		}
+		else
+		{
+			glNamedBufferSubData(buffer->GetBufferID(), offset, size, data);
+		}
 
 	}
 
 	void Device::BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)
 	{
+
 		glBindVertexArray(m_VAO);
 
 		GLuint vertexbuffer;
@@ -200,6 +233,35 @@ namespace OpenGL
 		}//end for 
 
 		//glBindVertexArray(0);
+	}
+
+	void Device::BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf)
+	{
+	
+		GLuint indexbuffer = bf->GetBufferID();
+
+		//Check if some vertexattribut have index buffer
+		for(size_t i = 0; i < sizedesc; i++)
+		{
+			if(desc[ i ].haveIndexBuffer)
+			{
+				glVertexArrayVertexBuffer(m_VAO, 0, indexbuffer, desc[i].offset,desc[i].elementStride);
+			}
+			else
+			{
+				glEnableVertexArrayAttrib(m_VAO, desc[ i ].bufferLocation);
+				glVertexArrayAttribFormat
+				(
+					m_VAO,
+					desc[ i ].bufferLocation,
+					desc[ i ].arraySize,
+					GL_FLOAT, 
+					GL_FALSE, 
+					desc[ i ].offset
+				);
+				glVertexArrayAttribBinding(m_VAO, desc[ i ].bufferLocation, 0);
+			}
+		}//endfor
 	}
 
 
@@ -257,6 +319,24 @@ namespace OpenGL
 		return m_Program;
 		
     }
+
+	BufferHandle Device::CreateVertexAttAndIndexBuffer(const BufferDescription& desc)
+	{
+		const GLsizeiptr kBufferSize = desc.byteSize;
+
+		//Create the buffer id 
+		GLuint meshData;
+		glCreateBuffers(1, &meshData);
+
+		//Create the buffer storage
+		glNamedBufferStorage(meshData, kBufferSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
+		glVertexArrayElementBuffer(m_VAO, meshData); // index buffer
+
+		Buffer* buffer = new Buffer(meshData, desc);
+		
+		return BufferHandle(buffer);
+	
+	}
 
 
 

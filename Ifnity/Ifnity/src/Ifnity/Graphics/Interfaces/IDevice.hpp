@@ -49,12 +49,21 @@ struct IFNITY_API GraphicsPipelineDescription
 		return *this;
     }
 
+	 constexpr GraphicsPipelineDescription& SetRasterizationState(const RasterizationState& state)
+	 {
+		 rasterizationState = state;
+		 return *this;
+	 }
+
 };
 
 
 struct IFNITY_API DrawDescription
 {
 	RasterizationState rasterizationState;
+
+	bool isIndexed = false;
+	const void* indices = nullptr;
     unsigned int size;
 };
 
@@ -69,11 +78,10 @@ public:
      */
     virtual void Draw(DrawDescription& desc) = 0;
     virtual GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) = 0;
-	virtual void WriteBuffer(BufferHandle& buffer, const void* data, size_t size) = 0;
+	virtual void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) = 0;
     virtual void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size) = 0;
-    
-
-	virtual BufferHandle CreateBuffer(BufferDescription& desc) = 0;
+	virtual void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) {}; //todo abstract
+	virtual BufferHandle CreateBuffer(const BufferDescription& desc) = 0;
 
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;

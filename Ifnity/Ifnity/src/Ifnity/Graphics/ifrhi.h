@@ -60,6 +60,17 @@ struct Color
 namespace rhi {
 
     //TYPES 
+
+    enum class VerxtexAttributeType: uint8_t
+    {
+        POSITION,
+        COLOR,
+		NORMAL,
+		TANGENT,
+        INDEX,
+
+        NONE
+    };
     enum class PrimitiveType: uint8_t
     {
         PointList,

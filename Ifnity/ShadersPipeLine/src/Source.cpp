@@ -384,12 +384,12 @@ private:
 //This is global 
 
 
-class Source: public IFNITY::App
+class Source_Tetahedre: public IFNITY::App
 {
 
 public:
 
-	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	Source_Tetahedre(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
 
 		PushLayer(new   IFNITY::NVML_Monitor());
@@ -587,6 +587,234 @@ void main_ps(
 
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
+		
+
+		size_t sizeIndices = m_Tetrahedron.GetSizeIndices();
+		size_t sizeVertices = m_Tetrahedron.GetSizeVertices();
+
+		m_VertexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
+			BufferDescription()
+			.SetBufferType(BufferType::VERTEX_INDEX_BUFFER)
+			.SetByteSize(sizeVertices + sizeIndices)
+			.SetDebugName("Tetrahedron")
+			);
+			
+
+
+		VertexAttributeDescription indexDescription;
+		indexDescription.setName("Index")
+			.setOffset(sizeIndices)
+			.setElementStride(sizeof(GeometricModels::Vertex))
+			.setHaveIndexBuffer(true);
+		//.setData(m_Tetrahedron.GetIndices().data())
+
+
+		VertexAttributeDescription vertexDescription;
+		vertexDescription.setName("Vertex Position")
+			.setOffset(offsetof(GeometricModels::Vertex, position))
+			.setArraySize(3)
+			.setIsInstanced(false)
+			.setBufferIndexLocation(0)
+			.setSize(sizeof(vec3));
+
+		VertexAttributeDescription normalDescription;
+		normalDescription.setName("Vertex Normal")
+			.setOffset(offsetof(GeometricModels::Vertex, normal))
+			.setArraySize(3)
+			.setIsInstanced(false)
+			.setBufferIndexLocation(1)
+			.setSize(sizeof(vec3));
+
+		VertexAttributeDescription tangentDescription;
+		tangentDescription.setName("Vertex Tangent")
+			.setOffset(offsetof(GeometricModels::Vertex, tangent))
+			.setArraySize(3)
+			.setIsInstanced(false)
+			.setBufferIndexLocation(2)
+			.setSize(sizeof(vec3));
+		
+
+		VertexAttributeDescription vertxAtt[ 4 ] = { 
+			indexDescription,
+			vertexDescription, 
+			normalDescription, 
+			tangentDescription
+			 };
+
+		m_ManagerDevice->GetRenderDevice()->BindingVertexIndexAttributes(vertxAtt, 4, m_VertexBuffer);
+
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer,m_Tetrahedron.index.data(),sizeIndices,0	);
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, m_Tetrahedron.vertices.data(), sizeVertices, sizeIndices);
+
+
+
+
+	}
+
+	void Render() override
+	{
+		using namespace math;
+		//SetPipelineState
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+
+		const mat4 mg = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+		const mat4 fg = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+		const mat4 mvpg = fg * mg;
+
+
+		const float4x4 m = rotate(float4x4::identity(), (float)glfwGetTime(), float3(0.f, 0.f, 1.0f));
+		const float4x4 p = orthoProjOGLStyle(-aspectRatio, aspectRatio, -1.0f, 1.0f, 1.0f, -1.0f);
+		//
+		const float4x4 mvpd = m * p;
+
+
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
+		//m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, mvpd.m_data, sizeof(mvpd));
+
+		//Draw Description 
+		DrawDescription desc;
+		//desc.rasterizationState.fillMode = FillModeType::Wireframe;
+		desc.size = m_Tetrahedron.index.size();
+		desc.indices = (const void*)(0);
+		desc.isIndexed = true;
+
+		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
+		IFNITY_LOG(LogApp, INFO, "Render App");
+	}
+	void Animate() override
+	{
+		IFNITY_LOG(LogApp, INFO, "Animate App");
+	}
+	~Source_Tetahedre() override {}
+
+private:
+	BufferHandle m_UBO;
+	BufferHandle m_VertexBuffer;
+	GraphicsDeviceManager* m_ManagerDevice;
+	GraphicsPipeline m_GraphicsPipeline;
+	std::shared_ptr<IShader> m_vs;
+	std::shared_ptr<IShader> m_ps;
+	
+	GeometricModels::Tetrahedron m_Tetrahedron;
+};
+
+
+
+class Source: public IFNITY::App
+{
+
+public:
+
+	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	{
+
+		PushLayer(new   IFNITY::NVML_Monitor());
+		PushLayer(new ImGuiTestLayer());
+		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
+
+
+	}
+
+	void Initialize() override
+	{
+		m_ManagerDevice = &App::GetApp().GetManagerDevice();
+
+
+		IFNITY::ShaderCompiler::Initialize();
+
+
+		std::wstring shaderSource3 = LR"(
+
+		cbuffer PerFrameData : register(b0)
+		{
+			matrix MVP;
+		};
+		
+		struct VertexInput
+		{
+		    float3 position : POSITION0;
+		    float3 color : COLOR1; // Color de entrada desde el vértice
+		};
+		
+		// Función del Vertex Shader
+		void main_vs(
+		    VertexInput input,                 // Entrada del vértice
+		    uint i_vertexId : SV_VertexID,     // ID del vértice
+		    out float4 o_pos : SV_Position,     // Salida de posición
+		    out float3 o_color : COLOR          // Salida de color
+		)
+		{
+		    // Multiplicar la posición por la matriz MVP
+		    o_pos = mul(float4(input.position, 1.0), MVP);
+		    // Asignar el color desde la entrada del vértice
+		    o_color = input.color; // Usa el color directamente de la entrada
+		}
+		
+		// Función del Pixel Shader
+		void main_ps(
+		    float4 i_pos : SV_Position,          // Entrada de posición (no se usa en este caso)
+		    float3 i_color : COLOR,              // Entrada de color
+		    out float4 o_color : SV_Target0       // Salida de color
+		)
+		{
+		    // Asignar el color a la salida del pixel
+		    o_color = float4(i_color, 1.0); 
+		}
+)";
+
+
+
+		auto& vfs = IFNITY::VFS::GetInstance();
+
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
+		////Use filesystems to init 
+		//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
+		//for (const auto& file : files)
+		//{
+		//	std::cout << file << std::endl;
+		//}
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
+
+		ShaderCreateDescription DescriptionShader;
+		{
+			DescriptionShader.EntryPoint = L"main_vs";
+			DescriptionShader.Profile = L"vs_6_0";
+			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "vsTriangle";
+			m_vs->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.EntryPoint = L"main_ps";
+			DescriptionShader.Profile = L"ps_6_0";
+			DescriptionShader.Type = ShaderType::PIXEL_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "psTriangle";
+			m_ps->SetShaderDescription(DescriptionShader);
+		}
+
+		ShaderCompiler::CompileShader(m_vs.get());
+		ShaderCompiler::CompileShader(m_ps.get());
+
+
+		GraphicsPipelineDescription gdesc;
+		gdesc.SetVertexShader(m_vs.get()).
+			SetPixelShader(m_ps.get());
+
+		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+
+		BufferDescription DescriptionBuffer;
+		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
+			.SetByteSize(sizeof(mat4))
+			.SetDebugName("UBO MVP")
+			.SetStrideSize(0);
+
+		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
+
 
 
 		// Definir las posiciones de los vértices
@@ -686,7 +914,6 @@ private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 };
-
 void error_callback(void*, const char* error_message)
 {
 	// Handle the error message here  
@@ -700,6 +927,6 @@ IFNITY::App* IFNITY::CreateApp()
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
 
-	return new Source_Cube(api);
+	return new Source_Tetahedre(api);
 }
 

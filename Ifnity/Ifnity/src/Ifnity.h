@@ -14,6 +14,9 @@
 
 #include "Ifnity/Maths/math.h"
 
+//Models
+#include "Ifnity/Models/GeometicModels.hpp"
+
 //wOMDPW
 //Entry Point this include have put at the end of the file.
 #include "Ifnity/EntryPoint.h"

@@ -17,45 +17,47 @@ namespace OpenGL
     class Device final: public IDevice
     {
     public:
-    /**
-    * @brief Constructor for the Device class.
-    */
-    Device();
+        /**
+        * @brief Constructor for the Device class.
+        */
+        Device();
 
-    /**
-    * @brief Destructor for the Device class.
-    */
-    virtual ~Device();
+        /**
+        * @brief Destructor for the Device class.
+        */
+        virtual ~Device();
 
-    /**
-    * @brief Draws using the provided description.
-    * 
-    * @param desc The description of the draw call.
-    */
-    void Draw(DrawDescription& desc) override;
+        /**
+        * @brief Draws using the provided description.
+        * 
+        * @param desc The description of the draw call.
+        */
+        void Draw(DrawDescription& desc) override;
 
-    /**
-    * @brief Creates a graphics pipeline.
-    * 
-    * @return A GraphicsPipeline object.
-    */
-    GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
+        /**
+        * @brief Creates a graphics pipeline.
+        * 
+        * @return A GraphicsPipeline object.
+        */
+        GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
 
 
-	BufferHandle CreateBuffer(BufferDescription& desc) override;
+	    BufferHandle CreateBuffer( const BufferDescription& desc) override;
 
-	void WriteBuffer(BufferHandle& buffer, const void* data, size_t size) override;
+	    void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) override;
 
-    void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)override;
+        void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)   override;
+        void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
+
 
     private:
 
-		Program CreateProgram(const char* vertexShader, const char* fragmentShader);
+	    	Program CreateProgram(const char* vertexShader, const char* fragmentShader);
+			BufferHandle CreateVertexAttAndIndexBuffer(const BufferDescription& desc);
 
+            Program m_Program; ///< The program used by the device.
 
-        Program m_Program; ///< The program used by the device.
-
-        GLuint   m_VAO; ///< The vertex array object used by the device.
+            GLuint   m_VAO; ///< The vertex array object used by the device.
     };
 
 
@@ -67,7 +69,7 @@ namespace OpenGL
     {
     public:
         //Constructor 
-		Buffer(GLuint bufferID, BufferDescription& desc): 
+		Buffer(GLuint bufferID, const BufferDescription& desc): 
             m_BufferID(bufferID),
             m_Description(desc) {}
 		//Destructor

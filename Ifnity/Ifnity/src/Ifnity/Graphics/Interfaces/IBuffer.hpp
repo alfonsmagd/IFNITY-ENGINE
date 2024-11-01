@@ -8,6 +8,7 @@ struct IFNITY_API VertexAttributeDescription
 {
     std::string name;
     rhi::Format format = rhi::Format::UNKNOWN;
+	rhi::VerxtexAttributeType type = rhi::VerxtexAttributeType::NONE;
     uint32_t arraySize = 1;
     uint32_t bufferLocation = 0;
     uint32_t offset = 0;
@@ -15,6 +16,7 @@ struct IFNITY_API VertexAttributeDescription
     uint32_t elementStride = 0;
     size_t   size = 0;
     bool isInstanced = false;
+	bool haveIndexBuffer = false;
 
 	const void* data = nullptr;
 
@@ -27,6 +29,8 @@ struct IFNITY_API VertexAttributeDescription
     constexpr VertexAttributeDescription& setIsInstanced(bool value) { isInstanced = value; return *this; }
     constexpr VertexAttributeDescription& setSize(size_t value) { size = value; return *this; }
 	constexpr VertexAttributeDescription& setData(const void* value) { data = value; return *this; }
+	constexpr VertexAttributeDescription& setHaveIndexBuffer(bool value) { haveIndexBuffer = value; return *this; }
+	constexpr VertexAttributeDescription& setAttributeType(rhi::VerxtexAttributeType value) { type = value; return *this; }
 };
 
 
@@ -37,12 +41,15 @@ struct IFNITY_API VertexAttributeDescription
  */
 enum class IFNITY_API BufferType: unsigned char
 {
-    VERTEX_BUFFER,      ///< Buffer for vertex data
-    INDEX_BUFFER,       ///< Buffer for index data
-    CONSTANT_BUFFER,    ///< Buffer for constant data
+    VERTEX_BUFFER  = 0x01 ,    ///< Buffer for vertex data
+    INDEX_BUFFER   = 0x02,     ///< Buffer for index data
+	VERTEX_INDEX_BUFFER = VERTEX_BUFFER | INDEX_BUFFER, ///< Buffer for vertex and index data
+    CONSTANT_BUFFER = 0xF0,    ///< Buffer for constant data
 
     NO_DEFINE_BUFFER = 0xFF ///< Undefined buffer type
 };
+
+
 
 
 
