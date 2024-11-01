@@ -21,12 +21,22 @@ struct IFNITY_API GraphicsPipeline
 	 GraphicsPipeline() = default;
 };
 
+struct IFNITY_API RasterizationState
+{
+	rhi::PrimitiveType primitiveType = rhi::PrimitiveType::TriangleList;
+	rhi::CullModeType cullMode =       rhi::CullModeType::FrontAndBack;
+	rhi::FrontFaceType frontFace =     rhi::FrontFaceType::CounterClockwise;
+	rhi::FillModeType fillMode   =     rhi::FillModeType::None;
+};
 
 struct IFNITY_API GraphicsPipelineDescription
 {
- 
+	RasterizationState rasterizationState;
+
 	IShader* vs  = nullptr;
 	IShader* ps = nullptr;
+
+
 
 	 GraphicsPipelineDescription& SetVertexShader(IShader* shader)
 	{
@@ -44,6 +54,7 @@ struct IFNITY_API GraphicsPipelineDescription
 
 struct IFNITY_API DrawDescription
 {
+	RasterizationState rasterizationState;
     unsigned int size;
 };
 

@@ -77,6 +77,7 @@ public:
 
 		//ChooseApi();
 		ShowColorPiceckerWindow();
+		ShowFillModeSelector();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
 	// Heredado vía Layer
@@ -161,6 +162,38 @@ private:
 		ImGui::End();
 	}
 
+	void ShowFillModeSelector()
+	{
+		if(ImGui::Begin("Fill Mode Selector"))
+		{
+			const char* fillModeItems[] = { "Point", "Wireframe", "Solid" };
+			static int currentItem = 1; // Inicialmente Wireframe
+
+			if(ImGui::Combo("Fill Mode", &currentItem, fillModeItems, IM_ARRAYSIZE(fillModeItems)))
+			{
+				switch(currentItem)
+				{
+				case 0:
+					currentFillMode = FillModeType::Point;
+					break;
+				case 1:
+					currentFillMode = FillModeType::Wireframe;
+					break;
+				case 2:
+					currentFillMode = FillModeType::Solid;
+					break;
+				}
+
+				// Actualizar el estado de rasterización
+				DrawDescription desc;
+				desc.rasterizationState.fillMode = currentFillMode;
+				desc.size = 3;
+				m_Device->GetRenderDevice()->Draw(desc);
+			}
+		}
+		ImGui::End();
+	}
+	FillModeType currentFillMode = FillModeType::Wireframe; // Valor inicial
 	IFNITY::GraphicsDeviceManager* m_Device;
 };
 
@@ -329,7 +362,7 @@ static const uint indices[36] = {
 
 		//Draw Description 
 		DrawDescription desc;
-		desc.size = 42;
+		desc.size = 36;
 		m_ManagerDevice->GetRenderDevice()->Draw(desc);
 
 		IFNITY_LOG(LogApp, INFO, "Render App");
@@ -591,7 +624,8 @@ void main_ps(
 			.setIsInstanced(false)
 			.setBufferIndexLocation(0)
 			.setElementStride(sizeof(Vertex))
-			.setSize(sizeof(vec3));
+			.setSize(sizeof(vec3))
+			.setData(vertices.data());
 
 		VertexAttributeDescription colorDescription;
 		colorDescription.setName("Vertex Color")
@@ -604,7 +638,7 @@ void main_ps(
 
 		VertexAttributeDescription vertxAtt[ 2 ] = { vertexDescription,colorDescription };
 
-		m_ManagerDevice->GetRenderDevice()->BindingVertexAttributes(vertxAtt, 2, vertices.data(), vertices.size() * sizeof(Vertex));
+		m_ManagerDevice->GetRenderDevice()->BindingVertexAttributes(vertxAtt, 2, vertexDescription.data, vertices.size() * sizeof(Vertex));
 
 
 
@@ -633,6 +667,7 @@ void main_ps(
 
 		//Draw Description 
 		DrawDescription desc;
+		//desc.rasterizationState.fillMode = FillModeType::Wireframe;
 		desc.size = 3;
 		m_ManagerDevice->GetRenderDevice()->Draw(desc);
 
@@ -665,6 +700,6 @@ IFNITY::App* IFNITY::CreateApp()
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
 
-	return new Source(api);
+	return new Source_Cube(api);
 }
 

@@ -16,6 +16,8 @@ struct IFNITY_API VertexAttributeDescription
     size_t   size = 0;
     bool isInstanced = false;
 
+	const void* data = nullptr;
+
     VertexAttributeDescription& setName(const std::string& value) { name = value; return *this; }
     constexpr VertexAttributeDescription& setFormat(rhi::Format value) { format = value; return *this; }
     constexpr VertexAttributeDescription& setArraySize(uint32_t value) { arraySize = value; return *this; }
@@ -24,6 +26,7 @@ struct IFNITY_API VertexAttributeDescription
     constexpr VertexAttributeDescription& setElementStride(uint32_t value) { elementStride = value; return *this; }
     constexpr VertexAttributeDescription& setIsInstanced(bool value) { isInstanced = value; return *this; }
     constexpr VertexAttributeDescription& setSize(size_t value) { size = value; return *this; }
+	constexpr VertexAttributeDescription& setData(const void* value) { data = value; return *this; }
 };
 
 

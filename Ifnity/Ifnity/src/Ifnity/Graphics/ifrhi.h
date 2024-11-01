@@ -60,7 +60,36 @@ struct Color
 namespace rhi {
 
     //TYPES 
- 
+    enum class PrimitiveType: uint8_t
+    {
+        PointList,
+        LineList,
+        TriangleList,
+        TriangleStrip,
+        TriangleFan,
+        TriangleListWithAdjacency,
+        TriangleStripWithAdjacency,
+        PatchList
+    };
+	enum class CullModeType: uint8_t
+    {
+        None,
+        Front,
+        Back,
+        FrontAndBack
+    };
+	enum class FillModeType: uint8_t
+	{
+		None,
+		Solid,
+        Point,
+		Wireframe
+	};
+	enum class FrontFaceType: uint8_t
+    {
+        Clockwise,
+        CounterClockwise
+    };
     // types to simplify use
     enum class Format: uint8_t
     {

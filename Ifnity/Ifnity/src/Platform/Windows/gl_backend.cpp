@@ -8,6 +8,69 @@ IFNITY_NAMESPACE
 
 namespace OpenGL
 {
+    void SetOpenGLRasterizationState(const RasterizationState& state)
+    {
+        static rhi::CullModeType currentCullMode = rhi::CullModeType::FrontAndBack;
+        static rhi::FrontFaceType currentFrontFace = rhi::FrontFaceType::CounterClockwise;
+        static rhi::FillModeType currentFillMode = rhi::FillModeType::Solid;
+
+        // Configurar el modo de culling solo si es diferente al actual
+        if(state.cullMode != currentCullMode)
+        {
+            switch(state.cullMode)
+            {
+            case rhi::CullModeType::None:
+                glDisable(GL_CULL_FACE);
+                break;
+            case rhi::CullModeType::Front:
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_FRONT);
+                break;
+            case rhi::CullModeType::Back:
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_BACK);
+                break;
+            case rhi::CullModeType::FrontAndBack:
+                glEnable(GL_CULL_FACE);
+                glCullFace(GL_FRONT_AND_BACK);
+                break;
+            }
+            currentCullMode = state.cullMode;
+        }
+
+        // Configurar la orientación de la cara frontal solo si es diferente a la actual
+        if(state.frontFace != currentFrontFace)
+        {
+            switch(state.frontFace)
+            {
+            case rhi::FrontFaceType::Clockwise:
+                glFrontFace(GL_CW);
+                break;
+            case rhi::FrontFaceType::CounterClockwise:
+                glFrontFace(GL_CCW);
+                break;
+            }
+            currentFrontFace = state.frontFace;
+        }
+
+        // Configurar el modo de polígono solo si es diferente al actual
+        if(state.fillMode != currentFillMode)
+        {
+            switch(state.fillMode)
+            {
+            case rhi::FillModeType::Point:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+                break;
+            case rhi::FillModeType::Wireframe:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                break;
+            case rhi::FillModeType::Solid:
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                break;
+            }
+            currentFillMode = state.fillMode;
+        }
+    }
 
 	Device::Device()
 	{}
@@ -17,7 +80,7 @@ namespace OpenGL
 	{
 		//The next remove this and set in desc. u other size. 
 		glViewport(0, 0, 1200, 720);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		SetOpenGLRasterizationState(desc.rasterizationState);
 		glDrawArrays(GL_TRIANGLES, 0, desc.size);
 	
 	}
