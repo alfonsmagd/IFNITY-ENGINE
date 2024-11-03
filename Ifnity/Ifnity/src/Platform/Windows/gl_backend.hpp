@@ -58,6 +58,7 @@ namespace OpenGL
             Program m_Program; ///< The program used by the device.
 
             GLuint   m_VAO; ///< The vertex array object used by the device.
+			BufferHandle m_VertexBuffer; ///< The vertex buffer used by the device.
     };
 
 
@@ -75,10 +76,13 @@ namespace OpenGL
 		//Destructor
 		virtual ~Buffer() = default;
 
+        
+        const void* data;
 
 		BufferDescription& GetBufferDescription()  override { return m_Description; }
 		const uint32_t GetBufferID() const override { return m_BufferID; }
-
+		void SetData(const void* data) override { this->data = data; }
+		const void* GetData() const override { return data; }
 
 
     private:

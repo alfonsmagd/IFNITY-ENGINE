@@ -124,8 +124,10 @@ public:
      */
     virtual BufferDescription& GetBufferDescription() = 0;
 	virtual const uint32_t GetBufferID() const = 0;
+	virtual void SetData(const void* data) = 0;
+	virtual const void* GetData() const = 0;
 };
 
-using BufferHandle = std::shared_ptr<IBuffer>;
+using  BufferHandle = std::shared_ptr<IBuffer>;
 
 IFNITY_END_NAMESPACE

@@ -350,13 +350,12 @@ static const uint indices[36] = {
 		//SetPipelineState
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		const mat4 mg = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+		const mat4 mg = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), App::GetTime(), vec3(1.0f, 1.0f, 1.0f));
 		const mat4 fg = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
-		const mat4 mvpg = fg * mg;
+		alignas(16) const mat4 mvpg = fg * mg;
 
 
-
-
+	
 		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
 		//m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, mvpd.m_data, sizeof(mvpd));
 
@@ -589,7 +588,7 @@ void main_ps(
 
 		
 
-		size_t sizeIndices = m_Tetrahedron.GetSizeIndices();
+		size_t sizeIndices  = m_Tetrahedron.GetSizeIndices();
 		size_t sizeVertices = m_Tetrahedron.GetSizeVertices();
 
 		m_VertexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
@@ -643,7 +642,7 @@ void main_ps(
 
 		m_ManagerDevice->GetRenderDevice()->BindingVertexIndexAttributes(vertxAtt, 4, m_VertexBuffer);
 
-		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer,m_Tetrahedron.index.data(),sizeIndices,0	);
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, m_Tetrahedron.index.data(),sizeIndices,0	);
 		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, m_Tetrahedron.vertices.data(), sizeVertices, sizeIndices);
 
 
@@ -662,10 +661,7 @@ void main_ps(
 		const mat4 mvpg = fg * mg;
 
 
-		const float4x4 m = rotate(float4x4::identity(), (float)glfwGetTime(), float3(0.f, 0.f, 1.0f));
-		const float4x4 p = orthoProjOGLStyle(-aspectRatio, aspectRatio, -1.0f, 1.0f, 1.0f, -1.0f);
-		//
-		const float4x4 mvpd = m * p;
+		
 
 
 		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
@@ -837,7 +833,7 @@ public:
 
 		std::vector<Vertex> vertices = {
 		   {{0.0f,  0.5f, 0.0f},  {1.0f, 0.0f, 0.0f}},  // Vértice superior (rojo)
-		   {{-0.5f, -0.5f, 0.0f}, {1.0f, 1.0f, 0.0f}}, // Vértice inferior izquierdo (verde)
+		   {{-0.5f, -0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}}, // Vértice inferior izquierdo (verde)
 		   {{0.5f, -0.5f, 0.0f},  {.0f, .0f, 1.0f}}   // Vértice inferior derecho (azul)
 		};
 
@@ -884,11 +880,6 @@ public:
 		const mat4 mvpg = fg * mg;
 
 
-		const float4x4 m = rotate(float4x4::identity(), (float)glfwGetTime(), float3(0.f, 0.f, 1.0f));
-		const float4x4 p = orthoProjOGLStyle(-aspectRatio, aspectRatio, -1.0f, 1.0f, 1.0f, -1.0f);
-		//
-		const float4x4 mvpd = m * p;
-
 
 		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
 		//m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, mvpd.m_data, sizeof(mvpd));
@@ -927,6 +918,6 @@ IFNITY::App* IFNITY::CreateApp()
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
 
-	return new Source_Tetahedre(api);
+	return new Source_Cube(api);
 }
 

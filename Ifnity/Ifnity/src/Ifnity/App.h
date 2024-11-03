@@ -52,6 +52,7 @@ public:
 		m_graphicsAPI = api;
 		m_FlagChangeAPI = flagChange;
 	}
+	inline float GetTime() const { return (float)glfwGetTime(); }
 
 
 protected:

@@ -1,4 +1,5 @@
 #include "gl_backend.hpp"
+#include <GLFW\glfw3.h>
 
 
 
@@ -8,6 +9,20 @@ IFNITY_NAMESPACE
 
 namespace OpenGL
 {
+	void CheckOpenGLError(const char* stmt, const char* fname, int line)
+	{
+		GLenum err = glGetError();
+		if(err != GL_NO_ERROR)
+		{
+			std::cerr << "OpenGL error " << err << " at " << fname << ":" << line << " - for " << stmt << std::endl;
+			exit(1);
+		}
+	}
+
+	#define GL_CHECK(stmt) do { \
+        stmt; \
+        CheckOpenGLError(#stmt, __FILE__, __LINE__); \
+    } while (0)
     void SetOpenGLRasterizationState(const RasterizationState& state)
     {
         static rhi::CullModeType currentCullMode = rhi::CullModeType::FrontAndBack;
@@ -171,7 +186,7 @@ namespace OpenGL
 
 
 			Buffer* buffer = new Buffer(perFrameDataBuffer, desc);
-
+			m_VertexBuffer = BufferHandle(buffer);
 			return BufferHandle(buffer);
 		}
 		if(desc.type == BufferType::VERTEX_INDEX_BUFFER)
@@ -190,12 +205,15 @@ namespace OpenGL
 
 		if(buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER)
 		{
-			glBindBuffer(GL_UNIFORM_BUFFER, buffer->GetBufferID());
-			glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data);
+			
+			//iMPLMENTA AQUI QUE LE MANDO UN
+			GL_CHECK(glBindBuffer(GL_UNIFORM_BUFFER, buffer->GetBufferID()));
+			GL_CHECK(glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data));
+		
 		}
 		else
 		{
-			glNamedBufferSubData(buffer->GetBufferID(), offset, size, data);
+			glNamedBufferSubData(m_VertexBuffer->GetBufferID(), offset, size, data);
 		}
 
 	}
