@@ -282,6 +282,26 @@ namespace OpenGL
 		}//endfor
 	}
 
+	TextureHandle Device::CreateTexture( TextureDescription& desc)
+	{
+		//Load texture from image file
+
+		const void* img = LoadTextureFromFileDescription(desc);
+
+		GLuint textureID;
+		glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
+		glTextureParameteri(textureID, GL_TEXTURE_MAX_LEVEL, 0);
+		glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureStorage2D(textureID, 1, GL_RGB8, desc.width, desc.height);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glTextureSubImage2D(textureID, 0, 0, 0, desc.width, desc.height, GL_RGB, GL_UNSIGNED_BYTE, img);
+		glBindTextures(0, 1, &textureID);
+
+		ITexture* texture = new Texture(desc, textureID);
+		return TextureHandle(texture);
+	}
+
 
 
     Program Device::CreateProgram(const char* vertexShader, const char* fragmentShader)

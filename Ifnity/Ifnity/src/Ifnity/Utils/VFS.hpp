@@ -16,7 +16,8 @@ IFNITY_NAMESPACE
     SHADERS,
     MESH,
     SCENES,
-    CAMERAS
+    CAMERAS,
+    TEXTURES
 };
 
 /**

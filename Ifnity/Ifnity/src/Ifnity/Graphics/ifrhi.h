@@ -179,7 +179,24 @@ namespace rhi {
         COUNT
     };
 
+    enum class TextureDimension: uint8_t
+    {
+        UNKNOWN,
+        TEXTURE1D,
+        TEXTURE1DARRAY,
+        TEXTURE2D,
+        TEXTURE2DARRAY,
+        TEXTURECUBE,
+        TEXTURECUBEARRAY,
+        TEXTURE2DMS,
+        TEXTURE2DMSARRAY,
+        TEXTURE3D,
 
+        COUNT
+    };
+
+
+   
 
 
 

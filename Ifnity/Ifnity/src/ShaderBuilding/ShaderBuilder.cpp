@@ -346,9 +346,10 @@ bool ShaderCompiler::CompileSpirV2Glsl(const std::string& inputFilePath, const s
 
 	// Modificar opciones
 	spvc_compiler_create_compiler_options(compiler_glsl, &options);
-	spvc_compiler_options_set_uint(options, SPVC_COMPILER_OPTION_GLSL_VERSION, 450);
+	spvc_compiler_options_set_uint(options, SPVC_COMPILER_OPTION_GLSL_SEPARATE_SHADER_OBJECTS, 450);
 	spvc_compiler_install_compiler_options(compiler_glsl, options);
-
+	// Construir combinaciones de imagen y samplers
+	spvc_compiler_build_combined_image_samplers(compiler_glsl); // not delete its is importan to build 
 	// Compilar a GLSL
 	spvc_compiler_compile(compiler_glsl, &result);
 	IFNITY_LOG(LogApp,INFO,("Cross-compiled source: %s\n", result));

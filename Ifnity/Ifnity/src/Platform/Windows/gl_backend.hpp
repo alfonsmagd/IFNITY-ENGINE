@@ -13,6 +13,9 @@ IFNITY_NAMESPACE
 
 namespace OpenGL
 {
+    //-------------------------------------------------//
+    //  DEVICE OPENGL                                  //
+    //-------------------------------------------------//
 
     class Device final: public IDevice
     {
@@ -26,7 +29,7 @@ namespace OpenGL
         * @brief Destructor for the Device class.
         */
         virtual ~Device();
-
+         
         /**
         * @brief Draws using the provided description.
         * 
@@ -49,6 +52,7 @@ namespace OpenGL
         void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)   override;
         void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
 
+        virtual TextureHandle CreateTexture(TextureDescription& desc) override;
 
     private:
 
@@ -65,7 +69,9 @@ namespace OpenGL
 
 
 
-
+    //-------------------------------------------------//
+   //  BUFFER OPENGL                                  //
+   //-------------------------------------------------//
     class Buffer final: public IBuffer
     {
     public:
@@ -95,6 +101,24 @@ namespace OpenGL
     {
         return std::make_shared<Device>();
     }
+
+    //-------------------------------------------------//
+   //  TEXTURE OPENGL                                  //
+   //-------------------------------------------------//
+
+    class Texture final: public ITexture
+    {
+    public:
+        virtual TextureDescription GetTextureDescription() override { return m_TextureDescription; }
+        virtual uint32_t           GetTextureID() override { return m_TextureID; }
+
+        //Constructor 
+        Texture(TextureDescription desc, uint32_t uid) : m_TextureDescription(desc), m_TextureID(uid){ }
+
+    private:
+        uint32_t m_TextureID;
+        TextureDescription m_TextureDescription;
+    };
 };
 
 

@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "IShader.hpp"
 #include "IBuffer.hpp"
+#include "ITexture.hpp"
 
 IFNITY_NAMESPACE
 
@@ -82,6 +83,8 @@ public:
     virtual void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size) = 0;
 	virtual void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) {}; //todo abstract
 	virtual BufferHandle CreateBuffer(const BufferDescription& desc) = 0;
+
+	virtual TextureHandle CreateTexture(TextureDescription& desc) = 0;
 
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
