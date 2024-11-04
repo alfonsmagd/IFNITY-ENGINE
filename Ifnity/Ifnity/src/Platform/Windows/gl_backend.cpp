@@ -186,8 +186,8 @@ namespace OpenGL
 
 
 			Buffer* buffer = new Buffer(perFrameDataBuffer, desc);
-			m_VertexBuffer = BufferHandle(buffer);
-			return BufferHandle(buffer);
+			 return  BufferHandle(buffer);
+			
 		}
 		if(desc.type == BufferType::VERTEX_INDEX_BUFFER)
 		{
@@ -213,7 +213,7 @@ namespace OpenGL
 		}
 		else
 		{
-			glNamedBufferSubData(m_VertexBuffer->GetBufferID(), offset, size, data);
+			glNamedBufferSubData(buffer->GetBufferID(), offset, size, data);
 		}
 
 	}

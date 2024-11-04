@@ -918,6 +918,6 @@ IFNITY::App* IFNITY::CreateApp()
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
 
-	return new Source_Cube(api);
+	return new Source_Tetahedre(api);
 }
 
