@@ -26,8 +26,9 @@ struct IFNITY_API TextureDescription
     uint32_t mipLevels = 1;
     uint32_t sampleCount = 1;
     uint32_t sampleQuality = 0;
-    rhi::Format format = rhi::Format::UNKNOWN;
+    rhi::Format format = rhi::Format::R8G8B8;
     rhi::TextureDimension dimension = rhi::TextureDimension::TEXTURE2D;
+	rhi::TextureWrapping  wrapping = rhi::TextureWrapping::REPEAT;
     std::string debugName;
     std::string filepath;
 
@@ -69,6 +70,7 @@ struct IFNITY_API TextureDescription
     constexpr TextureDescription& setUseClearValue(bool value) { useClearValue = value; return *this; }
     constexpr TextureDescription& setKeepInitialState(bool value) { keepInitialState = value; return *this; }
     TextureDescription& setFilePath(std::string filepath) { this->filepath = filepath;  return *this; }
+	constexpr TextureDescription& setWrapping(rhi::TextureWrapping value) { wrapping = value; return *this; }
   
 };
 

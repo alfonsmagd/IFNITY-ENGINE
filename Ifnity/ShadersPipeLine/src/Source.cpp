@@ -996,12 +996,7 @@ float4 main_ps(VSOutput input) : SV_Target
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
 		vfs.Mount("Data", "Data",       IFNITY::FolderType::TEXTURES);
-		////Use filesystems to init 
-		//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
-		//for (const auto& file : files)
-		//{
-		//	std::cout << file << std::endl;
-		//}
+	
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
 
@@ -1044,7 +1039,7 @@ float4 main_ps(VSOutput input) : SV_Target
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
 
-		TextureDescription().filepath = "Data/diffuse_madera.jpg";
+		
 
 		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture
 					( TextureDescription().setFilePath("Data/diffuse_madera.jpg") );
@@ -1063,6 +1058,8 @@ float4 main_ps(VSOutput input) : SV_Target
 		using namespace math;
 		//SetPipelineState
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+
+		
 
 		const mat4 mg = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 0.0f, -1.0f));
 		const mat4 fg = glm::ortho(-aspectRatio, aspectRatio, -1.f, 1.f, 1.f, -1.f);

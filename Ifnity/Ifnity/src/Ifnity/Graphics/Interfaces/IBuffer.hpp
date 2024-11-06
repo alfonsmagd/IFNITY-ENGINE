@@ -9,6 +9,7 @@ struct IFNITY_API VertexAttributeDescription
     std::string name;
     rhi::Format format = rhi::Format::UNKNOWN;
 	rhi::VerxtexAttributeType type = rhi::VerxtexAttributeType::NONE;
+    
     uint32_t arraySize = 1;
     uint32_t bufferLocation = 0;
     uint32_t offset = 0;

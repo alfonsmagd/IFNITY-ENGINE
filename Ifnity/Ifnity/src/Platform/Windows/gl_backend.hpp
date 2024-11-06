@@ -5,6 +5,7 @@
 
 
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
+#include "gl_constans.hpp"
 #include <glad\glad.h>
 
 IFNITY_NAMESPACE

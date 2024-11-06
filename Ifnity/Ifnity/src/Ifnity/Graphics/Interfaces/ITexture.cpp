@@ -39,7 +39,10 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
 }
 
 void FreeTexture(const void* img)
-{}
+{
+	stbi_image_free(const_cast<void*>(img));
+
+}
 
 IFNITY_END_NAMESPACE
 
