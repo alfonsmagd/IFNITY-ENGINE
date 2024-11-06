@@ -27,11 +27,21 @@ set(DXC_DLL_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/bin/x64")
 file(GLOB DXC_DLLS "${DXC_DLL_DIR}/*.dll")
 
 set(SPIRV_SKIP_TESTS ON CACHE BOOL "Skip SPIRV tests")
-        set(SPIRV_BUILD_COMPRESSION OFF CACHE BOOL "Do not build SPIRV compressing codec")
-        set(SPIRV_SKIP_EXECUTABLES ON CACHE BOOL "Skip building SPIRV executable and tests along with the library")
-        set(SKIP_SPIRV_TOOLS_INSTALL ON CACHE BOOL "Skip SPIRV tools installation")
-        set(SPIRV_WERROR OFF CACHE BOOL "Do not enable error on warning")
-		set(SPIRV_CROSS_CLI  OFF CACHE BOOL "Build the CLI binary. Requires SPIRV_CROSS_STATIC.")
+set(SPIRV_BUILD_COMPRESSION OFF CACHE BOOL "Do not build SPIRV compressing codec")
+set(SPIRV_SKIP_EXECUTABLES ON CACHE BOOL "Skip building SPIRV executable and tests along with the library")
+set(SKIP_SPIRV_TOOLS_INSTALL ON CACHE BOOL "Skip SPIRV tools installation")
+set(SPIRV_WERROR OFF CACHE BOOL "Do not enable error on warning")
+set(SPIRV_CROSS_CLI  OFF CACHE BOOL "Build the CLI binary. Requires SPIRV_CROSS_STATIC.")
+
+#Sets ASSIMPS 
+set(ASSIMP_NO_EXPORT ON CACHE BOOL "")
+set(ASSIMP_BUILD_DRACO OFF CACHE BOOL "")
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "")
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "")
+set(ASSIMP_INSTALL_PDB OFF CACHE BOOL "")
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "")
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "")
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "")
 
 
 # Buscar nvml.dll en el sistema
@@ -64,6 +74,8 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 #add glslang 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/SPIRV-Cross)
+#add assimp
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 
 
 
@@ -93,7 +105,8 @@ include_directories(${Vulkan_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 #Include DXC
 include_directories(${DXC_INCLUDE_DIR})
-
+#include assimp
+include_directories(${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 
 
 
@@ -149,11 +162,15 @@ target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
 #Link dxc
 target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
+#Target link assimp
+target_link_libraries(${PROJECT_NAME} PUBLIC assimp)
 
 # Include Target Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
 # Include Target DXC Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${DXC_INCLUDE_DIR})
+# Include Target assimp Directories
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 
 
 if(NVML_LIBRARY)

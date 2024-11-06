@@ -3,7 +3,9 @@
 // IFNITY.cp
 
 #include <Ifnity.h>
-
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/cimport.h>
 
 
 using namespace IFNITY;
