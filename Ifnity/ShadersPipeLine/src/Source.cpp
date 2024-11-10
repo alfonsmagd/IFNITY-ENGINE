@@ -1111,7 +1111,8 @@ IFNITY::App* IFNITY::CreateApp()
 
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
-
-	return new Source_Texture(api);
+	//return new Source_Texture(api)
+	//return new Source_Tetahedre(api);
+	return new Source_Cube(api);
 }
 

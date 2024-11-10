@@ -9,6 +9,9 @@ IFNITY_NAMESPACE
 
 //Forward declaration 
 
+using TextureHandle = std::shared_ptr<struct ITexture>;
+
+
 struct TextureDescription;
 
  const void* LoadTextureFromFile(const std::string& filePath);
@@ -84,5 +87,5 @@ public:
 
 };
 
-using TextureHandle = std::shared_ptr<ITexture>;
+
 IFNITY_END_NAMESPACE
