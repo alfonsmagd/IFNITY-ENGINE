@@ -58,6 +58,7 @@ namespace OpenGL
     private:
 
 	    	Program CreateProgram(const char* vertexShader, const char* fragmentShader);
+			Program CreateProgram(const char* vertexShader, const char* fragmentShader, const char* geometryShader);
 			BufferHandle CreateVertexAttAndIndexBuffer(const BufferDescription& desc);
 
             Program m_Program; ///< The program used by the device.

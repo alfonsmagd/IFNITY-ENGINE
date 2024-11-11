@@ -11,6 +11,7 @@
 using namespace IFNITY;
 using namespace IFNITY::rhi;
 using glm::vec3;
+using glm::vec2;
 using glm::mat4;
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
@@ -942,7 +943,7 @@ public:
 
 		IFNITY::ShaderCompiler::Initialize();
 
-
+//
 		std::wstring shaderSource3 = LR"(
 
 			// Buffer constante para la matriz MVP
@@ -996,7 +997,9 @@ float4 main_ps(VSOutput input) : SV_Target
 
 	)";
 
+		
 
+		
 
 		auto& vfs = IFNITY::VFS::GetInstance();
 
@@ -1127,60 +1130,6 @@ public:
 		IFNITY::ShaderCompiler::Initialize();
 
 
-		std::wstring shaderSource3 = LR"(
-
-			// Buffer constante para la matriz MVP
-cbuffer PerFrameData : register(b0)
-{
-    matrix MVP;
-};
-
-// Coordenadas de vértices
-static const float2 g_positions[3] =
-{
-    float2(-0.5, -0.5),
-    float2(0.0, 0.5),
-    float2(0.5, -0.5)
-};
-
-// Coordenadas de textura (UV)
-static const float2 tc[3] = 
-{
-    float2(0.0f, 0.0f),
-    float2(1.0f, 0.0f),
-    float2(0.5f, 1.0f)
-};
-
-// Estructura de salida del Vertex Shader
-struct VSOutput
-{
-    float4 pos : SV_Position;
-    float2 uv : TEXCOORD0;
-};
-
-// Vertex Shader
-VSOutput main_vs(uint i_vertexId : SV_VertexID)
-{
-    VSOutput output;
-    output.pos = mul(float4(g_positions[i_vertexId], 0.0f, 1.0f), MVP);
-    output.uv = tc[i_vertexId];
-    return output;
-}
-
-// Definición de la textura y el sampler en HLSL
-Texture2D texture0 : register(t0);
-SamplerState sampler0 : register(s0);
-
-// Pixel Shader
-float4 main_ps(VSOutput input) : SV_Target
-{
-    // Muestra el color de la textura usando las coordenadas UV
-    return texture0.Sample(sampler0, input.uv);
-}
-
-	)";
-
-
 
 		auto& vfs = IFNITY::VFS::GetInstance();
 
@@ -1189,36 +1138,36 @@ float4 main_ps(VSOutput input) : SV_Target
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
+		m_gs = std::make_shared<IShader>();
 
 		ShaderCreateDescription DescriptionShader;
 		{
-			DescriptionShader.EntryPoint = L"main_vs";
-			DescriptionShader.Profile = L"vs_6_0";
-			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
-			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
-			DescriptionShader.ShaderSource = shaderSource3;
 			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "vsTriangle";
+			DescriptionShader.FileName = "GL02.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
-			DescriptionShader.EntryPoint = L"main_ps";
-			DescriptionShader.Profile = L"ps_6_0";
-			DescriptionShader.Type = ShaderType::PIXEL_SHADER;
-			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
-			DescriptionShader.ShaderSource = shaderSource3;
-			DescriptionShader.FileName = "psTriangle";
+		
+			DescriptionShader.FileName = "GL02.frag";
 			DescriptionShader.NoCompile = true;
 			m_ps->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.FileName = "GL02.geom";
+			DescriptionShader.NoCompile = true;
+			m_gs->SetShaderDescription(DescriptionShader);
+
 		}
 
 		ShaderCompiler::CompileShader(m_vs.get());
 		ShaderCompiler::CompileShader(m_ps.get());
+		ShaderCompiler::CompileShader(m_gs.get());
 
 
 		GraphicsPipelineDescription gdesc;
-		gdesc.SetVertexShader(m_vs.get()).
-			SetPixelShader(m_ps.get());
+		gdesc.SetVertexShader(m_vs.get())
+			.SetPixelShader(m_ps.get())
+			.SetGeometryShader(m_gs.get());
 
 		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 
@@ -1227,18 +1176,67 @@ float4 main_ps(VSOutput input) : SV_Target
 			.SetByteSize(sizeof(mat4))
 			.SetDebugName("UBO MVP")
 			.SetStrideSize(0);
-
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
+		//Assimp process
+		struct VertexData
+		{
+			vec3 pos;
+			vec2 tc;
+		};
+		const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+
+
+		if(!scene || !scene->HasMeshes())
+		{
+			printf("Unable to load data/rubber_duck/scene.gltf\n");
+			exit(255);
+		}
 
 
 
-		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture
-		(TextureDescription().setFilePath("Data/diffuse_madera.jpg"));
+		const aiMesh* mesh = scene->mMeshes[ 0 ];
+		std::vector<VertexData> vertices;
+		for(unsigned i = 0; i != mesh->mNumVertices; i++)
+		{
+			const aiVector3D v = mesh->mVertices[ i ];
+			const aiVector3D t = mesh->mTextureCoords[ 0 ][ i ];
+			
+            vertices.push_back(VertexData{ vec3(v.x, v.z, v.y), vec2(t.x, t.y) });
+		}
+		std::vector<unsigned int> indices;
+		for(unsigned i = 0; i != mesh->mNumFaces; i++)
+		{
+			for(unsigned j = 0; j != 3; j++)
+				indices.push_back(mesh->mFaces[ i ].mIndices[ j ]);
+		}
+		aiReleaseImport(scene);
+
+		const size_t kSizeIndices = sizeof(unsigned int) * indices.size();
+		const size_t kSizeVertices = sizeof(VertexData) * vertices.size();
+		m_IndexCount = indices.size();
+
+		m_IndexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
+			BufferDescription()
+			.SetBufferType(BufferType::VERTEX_PULLING_BUFFER_INDEX)
+			.SetByteSize(kSizeIndices)
+			.SetDebugName("Assimp_Index")
+		);
+
+		m_VertexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
+			BufferDescription()
+			.SetBindingPoint(1)
+			.SetByteSize(kSizeVertices)
+			.SetDebugName("Assimp_Vertex")
+		.SetBufferType(BufferType::VERTEX_PULLING_BUFFER));
 
 
+	     m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_IndexBuffer, indices.data(), kSizeIndices, 0);
+		 m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, vertices.data(), kSizeVertices, 0);
 
-
+		 m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture
+		 (TextureDescription().setFilePath("data/rubber_duck/textures/Duck_baseColor.png"));
+		
 	}
 
 
@@ -1247,16 +1245,16 @@ float4 main_ps(VSOutput input) : SV_Target
 
 	void Render() override
 	{
-		using namespace math;
-		//SetPipelineState
+		//using namespace math;
+		////SetPipelineState
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
 
 
-		const mat4 mg = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 0.0f, -1.0f));
-		const mat4 fg = glm::ortho(-aspectRatio, aspectRatio, -1.f, 1.f, 1.f, -1.f);
-		const mat4 mvpg = fg * mg;
-
+		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+		
+		const mat4 mvpg = p  * m;
 
 
 		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
@@ -1264,8 +1262,17 @@ float4 main_ps(VSOutput input) : SV_Target
 		//Draw Description 
 		DrawDescription desc;
 		//desc.rasterizationState.fillMode = FillModeType::Wireframe;
-		desc.size = 3;
+		desc.size = m_IndexCount;
+		desc.indices = (const void*)(0);
+		desc.isIndexed = true;
+
 		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
+		////Draw Description 
+		//DrawDescription desc;
+		////desc.rasterizationState.fillMode = FillModeType::Wireframe;
+		//desc.size = 3;
+		//m_ManagerDevice->GetRenderDevice()->Draw(desc);
 
 		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
@@ -1273,15 +1280,24 @@ float4 main_ps(VSOutput input) : SV_Target
 	{
 		IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
+
+	void LoadAssimp()
+	{
+		
+	}
 	~Source_VTXP() override {}
 
 private:
 	TextureHandle m_Texture;
 	BufferHandle m_UBO;
+	BufferHandle m_VertexBuffer;
+	BufferHandle m_IndexBuffer;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipeline m_GraphicsPipeline;
+	unsigned int m_IndexCount;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
+	std::shared_ptr<IShader> m_gs;
 };
 
 
@@ -1300,6 +1316,8 @@ IFNITY::App* IFNITY::CreateApp()
 
 	//return new Source_Texture(api)
 	//return new Source_Tetahedre(api);
+	//
+	// return new Source_Tetahedre(api);
 	return new Source_VTXP(api);
 }
 

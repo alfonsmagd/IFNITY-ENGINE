@@ -36,6 +36,7 @@ struct IFNITY_API GraphicsPipelineDescription
 
 	IShader* vs  = nullptr;
 	IShader* ps = nullptr;
+	IShader* gs = nullptr;
 
 
 
@@ -49,6 +50,11 @@ struct IFNITY_API GraphicsPipelineDescription
 		ps = shader;
 		return *this;
     }
+	 GraphicsPipelineDescription& SetGeometryShader(IShader* shader)
+	 {
+		 gs = shader;
+		 return *this;
+	 }
 
 	 constexpr GraphicsPipelineDescription& SetRasterizationState(const RasterizationState& state)
 	 {

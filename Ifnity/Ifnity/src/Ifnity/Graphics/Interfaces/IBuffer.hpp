@@ -46,6 +46,10 @@ enum class IFNITY_API BufferType: unsigned char
     INDEX_BUFFER   = 0x02,     ///< Buffer for index data
 	VERTEX_INDEX_BUFFER = VERTEX_BUFFER | INDEX_BUFFER, ///< Buffer for vertex and index data
     CONSTANT_BUFFER = 0xF0,    ///< Buffer for constant data
+	VERTEX_PULLING_BUFFER_INDEX = 0x10,///< Buffer for vertex pulling data this implies that the buffer is used for vertex pulling and configure the index buffer 
+	VERTEX_PULLING_BUFFER = 0x20,///< Buffer for vertex pulling data , Vertex data, no index buffer.
+
+
 
     NO_DEFINE_BUFFER = 0xFF ///< Undefined buffer type
 };
@@ -65,6 +69,8 @@ struct IFNITY_API BufferDescription
     uint32_t strideSize = 0;        ///< Stride size of the buffer
     std::string debugName;          ///< Debug name for the buffer
     BufferType type = BufferType::NO_DEFINE_BUFFER; ///< Type of the buffer
+	uint8_t binding = 0;            ///< Binding point of the buffer
+
 
     /**
      * @brief Sets the byte size of the buffer.
@@ -108,6 +114,18 @@ struct IFNITY_API BufferDescription
     {
         type = bufferType;
         return *this;
+    }
+
+	/**
+	 * @brief Sets the binding point of the buffer.
+	 * @param bind Binding point
+	 * @return Reference to the current BufferDescription object
+	 */
+    constexpr BufferDescription& SetBindingPoint(uint8_t bind) noexcept
+    {
+		binding = bind;
+		return *this;
+
     }
 };
 
