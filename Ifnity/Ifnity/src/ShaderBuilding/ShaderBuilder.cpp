@@ -214,15 +214,53 @@ std::string ShaderCompiler::GetShaderFilePath(const VFS& vfs, const std::string&
 }
 
 
+HRESULT ShaderCompiler::ChekingLocalShaders(IShader& shader)
+{
+	//Get the shader description
+	ShaderCreateDescription description = shader.GetShaderDescription();
+	//Get the VFS
+	VFS& vfs = GetVFS();
+	//Get the path to the shader
+	std::string path = vfs.ResolvePath("Shaders","d3d12");
+	//First d3d12 shader
+	description.Filepath = path + "//" + description.FileName + ".hlsl";
+
+	shader.AddShaderDescription(rhi::GraphicsAPI::D3D12, description);
+
+	//Reslolve spirv path
+	path = vfs.ResolvePath("Shaders", "vk");
+	description.Filepath = path + "//" + description.FileName + ".spv";
+	shader.AddShaderDescription(rhi::GraphicsAPI::VULKAN, description);
+
+	//Resolve glsl path
+	path = vfs.ResolvePath("Shaders", "opengl");
+	description.Filepath = path + "//" + description.FileName + ".glsl";
+	shader.AddShaderDescription(rhi::GraphicsAPI::OPENGL, description);
+
+	return S_OK;
+	
+}
+
+
 HRESULT ShaderCompiler::CompileShader(IShader* shader)
 {
+	// Obtener la descripción del shader
+	ShaderCreateDescription description = shader->GetShaderDescription();
+
+	//Check if not force to compile process 
+
+	if(description.NoCompile)
+	{
+		return ChekingLocalShaders(*shader);
+	}
+
+
 	if(!CheckInitialization() || shader == nullptr)
 	{
 		return E_FAIL;
 	}
 
-	// Obtener la descripción del shader
-	ShaderCreateDescription description = shader->GetShaderDescription();
+	
 	shader->AddShaderDescription(rhi::GraphicsAPI::D3D12, description);
 
 	// Crear el blob del shader

@@ -45,6 +45,14 @@ public:
      */
     static HRESULT CompileShader(IShader* shader);
 
+
+    /**
+     * @brief No compile option, its only check if shaders files are correct in folders. 
+     * @param shader Pointer to the IShader object.
+     * @return HRESULT indicating the result of the checking proccess.
+     */
+    static HRESULT ChekingLocalShaders(IShader& shader);
+
     /**
      * @brief Converts a SPIR-V file to GLSL.
      * @param inputFilePath Path to the input SPIR-V file.

@@ -43,6 +43,7 @@ struct IFNITY_API ShaderCreateDescription
 	bool SaveFile{ true };
 	std::string FileName;
 	std::string Filepath{};
+	bool NoCompile = false;
 
 	// Operator to compare two ShaderCreateDescription and uses in std::set
 	bool operator<(const ShaderCreateDescription& other) const
