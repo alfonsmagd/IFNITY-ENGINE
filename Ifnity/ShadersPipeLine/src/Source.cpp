@@ -393,7 +393,7 @@ static const uint indices[36] = {
 private:
 	BufferHandle m_UBO;
 	GraphicsDeviceManager* m_ManagerDevice;
-	GraphicsPipeline m_GraphicsPipeline;
+	GraphicsPipelineHandle m_GraphicsPipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 };
@@ -706,7 +706,7 @@ private:
 	BufferHandle m_UBO;
 	BufferHandle m_VertexBuffer;
 	GraphicsDeviceManager* m_ManagerDevice;
-	GraphicsPipeline m_GraphicsPipeline;
+	GraphicsPipelineHandle m_GraphicsPipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 
@@ -922,7 +922,7 @@ public:
 private:
 	BufferHandle m_UBO;
 	GraphicsDeviceManager* m_ManagerDevice;
-	GraphicsPipeline m_GraphicsPipeline;
+	GraphicsPipelineHandle m_GraphicsPipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 };
@@ -1111,7 +1111,7 @@ private:
 	TextureHandle m_Texture;
 	BufferHandle m_UBO;
 	GraphicsDeviceManager* m_ManagerDevice;
-	GraphicsPipeline m_GraphicsPipeline;
+	GraphicsPipelineHandle m_GraphicsPipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 };
@@ -1308,7 +1308,7 @@ private:
 	BufferHandle m_VertexBuffer;
 	BufferHandle m_IndexBuffer;
 	GraphicsDeviceManager* m_ManagerDevice;
-	GraphicsPipeline m_GraphicsPipeline;
+	GraphicsPipelineHandle m_GraphicsPipeline;
 	unsigned int m_IndexCount;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
@@ -1759,7 +1759,7 @@ private:
 	BufferHandle m_VertexBuffer;
 	BufferHandle m_IndexBuffer;
 	GraphicsDeviceManager* m_ManagerDevice;
-	GraphicsPipeline m_GraphicsPipeline;
+	GraphicsPipelineHandle m_GraphicsPipeline;
 	unsigned int m_IndexCount;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;

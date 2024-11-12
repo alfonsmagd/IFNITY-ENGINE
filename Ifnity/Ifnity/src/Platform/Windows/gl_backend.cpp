@@ -49,7 +49,7 @@ namespace OpenGL
 
 	}
 
-	GraphicsPipeline Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc)
+	GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc)
 	{
 		auto* vs = desc.vs;
 		auto* fs = desc.ps;
@@ -58,7 +58,7 @@ namespace OpenGL
 		if(!vs || !fs)
 		{
 			IFNITY_LOG(LogApp, WARNING, "Load GetPixelShader or VertexShader");
-			return GraphicsPipeline{};
+			return GraphicsPipelineHandle{};
 		}
 
 		// 1. retrieve the vertex/fragment/geometry source code from filePath
@@ -109,17 +109,19 @@ namespace OpenGL
 		const char* gShaderCode = gs ? geometryCode.c_str() : nullptr;
 
 		// compile shaders 
-		GraphicsPipeline pipeline{};
+		GraphicsPipeline* pipeline = new GraphicsPipeline();
 		if(gShaderCode)
 		{
-			pipeline.program = CreateProgram(vShaderCode, fShaderCode, gShaderCode);
+			pipeline->SetProgram(CreateProgram(vShaderCode, fShaderCode, gShaderCode));
 		}
 		else
 		{
-			pipeline.program = CreateProgram(vShaderCode, fShaderCode);
+			pipeline->SetProgram(CreateProgram(vShaderCode, fShaderCode));
 		}
 
-		return pipeline;
+
+
+		return GraphicsPipelineHandle(pipeline);
 	}
 
 
@@ -479,6 +481,19 @@ namespace OpenGL
 
 
 
+	/**
+	* @brief Destructor for the GraphicsPipeline class.
+	*
+	* This destructor deletes the OpenGL program associated with the graphics pipeline
+	* if the program ID is not zero.
+	*/
+	GraphicsPipeline::~GraphicsPipeline()
+	{
+		if(m_Program.id != 0)
+		{
+			glDeleteProgram(m_Program.id);
+		}
+	}
 
 };
 

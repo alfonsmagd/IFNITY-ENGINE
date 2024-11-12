@@ -43,7 +43,7 @@ namespace OpenGL
         * 
         * @return A GraphicsPipeline object.
         */
-        GraphicsPipeline CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
+        GraphicsPipelineHandle CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
 
 
 	    BufferHandle CreateBuffer( const BufferDescription& desc) override;
@@ -68,7 +68,10 @@ namespace OpenGL
     };
 
 
-
+    inline DeviceHandle CreateDevice()
+    {
+        return std::make_shared<Device>();
+    }
 
 
     //-------------------------------------------------//
@@ -99,10 +102,7 @@ namespace OpenGL
     };
 
 
-    inline DeviceHandle CreateDevice()
-    {
-        return std::make_shared<Device>();
-    }
+    
 
     //-------------------------------------------------//
    //  TEXTURE OPENGL                                  //
@@ -120,6 +120,25 @@ namespace OpenGL
     private:
         uint32_t m_TextureID;
         TextureDescription m_TextureDescription;
+    };
+
+    //-------------------------------------------------  //
+    //  GRAPHICS PIPELINE OPENGL                               //
+    //-------------------------------------------------//
+
+    class GraphicsPipeline final: public IGraphicsPipeline
+    {
+		Program m_Program;
+		GraphicsPipelineDescription m_Description;
+
+    public:
+        //Destructor 
+        ~GraphicsPipeline();
+      
+		 const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
+		 void  SetProgram(Program program) { m_Program = program; }
+		
+
     };
 };
 
