@@ -61,85 +61,133 @@ namespace rhi {
 
     //TYPES 
 
-    enum class VerxtexAttributeType: uint8_t
+    /**
+     * @enum eBitmapType
+     * @brief Enum representing the type of bitmap.
+     */
+    enum eBitmapType : uint8_t
     {
-        POSITION,
-        COLOR,
-		NORMAL,
-		TANGENT,
-        INDEX,
-
-        NONE
-    };
-    enum class PrimitiveType: uint8_t
-    {
-        PointList,
-        LineList,
-        TriangleList,
-        TriangleStrip,
-        TriangleFan,
-        TriangleListWithAdjacency,
-        TriangleStripWithAdjacency,
-        PatchList
-    };
-	enum class CullModeType: uint8_t
-    {
-        None,
-        Front,
-        Back,
-        FrontAndBack
-    };
-	enum class FillModeType: uint8_t
-	{
-		None,
-		Solid,
-        Point,
-		Wireframe
-	};
-	enum class FrontFaceType: uint8_t
-    {
-        Clockwise,
-        CounterClockwise
-    };
-    // types to simplify use
-    enum class Format: uint8_t
-    {
-
-        R8G8B8_UINT,
-        R8G8B8, 
-
-        
-        UNKNOWN,
-        COUNT
-    }; 
-
-    enum class TextureWrapping: uint8_t
-    {
-        REPEAT,
-		MIRRORED_REPEAT,
-		CLAMP_TO_EDGE,
-		CLAMP_TO_BORDER,
-
-        COUNT
-        
+        eBitmapType_2D,   /**< 2D bitmap type */
+        eBitmapType_Cube  /**< Cube bitmap type */
     };
 
-    enum class TextureDimension: uint8_t
+    /**
+     * @enum eBitmapFormat
+     * @brief Enum representing the format of bitmap.
+     */
+    enum eBitmapFormat : uint8_t
     {
-        UNKNOWN,
-        TEXTURE1D,
-        TEXTURE1DARRAY,
-        TEXTURE2D,
-        TEXTURE2DARRAY,
-        TEXTURECUBE,
-        TEXTURECUBEARRAY,
-        TEXTURE2DMS,
-        TEXTURE2DMSARRAY,
-        TEXTURE3D,
-
-        COUNT
+        eBitmapFormat_UnsignedByte, /**< Unsigned byte format */
+        eBitmapFormat_Float         /**< Float format */
     };
 
+    /**
+     * @enum VerxtexAttributeType
+     * @brief Enum representing the type of vertex attribute.
+     */
+    enum class VerxtexAttributeType : uint8_t
+    {
+        POSITION, /**< Position attribute */
+        COLOR,    /**< Color attribute */
+        NORMAL,   /**< Normal attribute */
+        TANGENT,  /**< Tangent attribute */
+        INDEX,    /**< Index attribute */
+        NONE      /**< No attribute */
+    };
+
+    /**
+     * @enum PrimitiveType
+     * @brief Enum representing the type of primitive.
+     */
+    enum class PrimitiveType : uint8_t
+    {
+        PointList,                    /**< Point list */
+        LineList,                     /**< Line list */
+        TriangleList,                 /**< Triangle list */
+        TriangleStrip,                /**< Triangle strip */
+        TriangleFan,                  /**< Triangle fan */
+        TriangleListWithAdjacency,    /**< Triangle list with adjacency */
+        TriangleStripWithAdjacency,   /**< Triangle strip with adjacency */
+        PatchList                     /**< Patch list */
+    };
+
+    /**
+     * @enum CullModeType
+     * @brief Enum representing the type of cull mode.
+     */
+    enum class CullModeType : uint8_t
+    {
+        None,          /**< No culling */
+        Front,         /**< Front face culling */
+        Back,          /**< Back face culling */
+        FrontAndBack   /**< Front and back face culling */
+    };
+
+    /**
+     * @enum FillModeType
+     * @brief Enum representing the type of fill mode.
+     */
+    enum class FillModeType : uint8_t
+    {
+        None,       /**< No fill */
+        Solid,      /**< Solid fill */
+        Point,      /**< Point fill */
+        Wireframe   /**< Wireframe fill */
+    };
+
+    /**
+     * @enum FrontFaceType
+     * @brief Enum representing the type of front face.
+     */
+    enum class FrontFaceType : uint8_t
+    {
+        Clockwise,         /**< Clockwise front face */
+        CounterClockwise   /**< Counter-clockwise front face */
+    };
+
+    /**
+     * @enum Format
+     * @brief Enum representing the format type.
+     */
+    enum class Format : uint8_t
+    {
+        R8G8B8_UINT, /**< R8G8B8 unsigned integer format */
+        R8G8B8,      /**< R8G8B8 format */
+        UNKNOWN,     /**< Unknown format */
+        COUNT        /**< Format count */
+    };
+
+    /**
+     * @enum TextureWrapping
+     * @brief Enum representing the type of texture wrapping.
+     */
+    enum class TextureWrapping : uint8_t
+    {
+        REPEAT,            /**< Repeat wrapping */
+        MIRRORED_REPEAT,   /**< Mirrored repeat wrapping */
+        CLAMP_TO_EDGE,     /**< Clamp to edge wrapping */
+        CLAMP_TO_BORDER,   /**< Clamp to border wrapping */
+        COUNT              /**< Wrapping count */
+    };
+
+    /**
+     * @enum TextureDimension
+     * @brief Enum representing the dimension of texture.
+     */
+    enum class TextureDimension : uint8_t
+    {
+        UNKNOWN,            /**< Unknown dimension */
+        TEXTURE1D,          /**< 1D texture */
+        TEXTURE1DARRAY,     /**< 1D texture array */
+        TEXTURE2D,          /**< 2D texture */
+        TEXTURE2DARRAY,     /**< 2D texture array */
+        TEXTURECUBE,        /**< Cube texture */
+        TEXTURECUBEARRAY,   /**< Cube texture array */
+        TEXTURE2DMS,        /**< 2D multisample texture */
+        TEXTURE2DMSARRAY,   /**< 2D multisample texture array */
+        TEXTURE3D,          /**< 3D texture */
+        COUNT               /**< Dimension count */
+    };
 
    
 

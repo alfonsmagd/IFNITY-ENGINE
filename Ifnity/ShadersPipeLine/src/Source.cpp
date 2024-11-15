@@ -1351,114 +1351,6 @@ public:
 		IFNITY::ShaderCompiler::Initialize();
 
 
-//		std::wstring shaderSource3 = LR"(
-//
-//cbuffer PerFrameData : register(b0)
-//{
-//    float4x4 MVP;
-//};
-//
-//struct Vertex
-//{
-//     float p[3];  // Position as a float3
-//     float tc[2]; // Texture coordinates as a float2
-//};
-//
-//// Structured buffer for vertices, bound to register t1
-//StructuredBuffer<Vertex> in_Vertices : register(t1);
-//
-//float3 getPosition(uint i)
-//{
-//    // Return position as a float3 using the array values
-//    return float3(in_Vertices[i].p[0], in_Vertices[i].p[1], in_Vertices[i].p[2]);
-//}
-//
-//float2 getTexCoord(uint i)
-//{
-//    // Return texture coordinates as a float2 using the array values
-//    return float2(in_Vertices[i].tc[0], in_Vertices[i].tc[1]);
-//}
-//
-//struct VS_OUTPUT
-//{
-//    float4 pos : SV_POSITION;
-//    float2 uv : TEXCOORD0;
-//};
-//
-//VS_OUTPUT main_vs(uint VertexID : SV_VertexID)
-//{
-//    VS_OUTPUT output;
-//
-//    // Fetch the position and texture coordinates
-//    float3 pos = getPosition(VertexID);
-//    output.pos = mul( float4(pos, 1.0),MVP);
-//    
-//    output.uv = getTexCoord(VertexID);
-//
-//    return output;
-//}
-///////////////////////////////////////////
-////SHADER GEOM ///////////////////////////
-///////////////////////////////////////////
-//
-//struct GSInput
-//{
-//    float4 position : SV_POSITION;
-//    float2 uv : TEXCOORD0;
-//};
-//
-//struct GSOutput
-//{
-//    float4 position : SV_POSITION;
-//    float2 uv : TEXCOORD0;
-//    float3 barycoords : TEXCOORD1;
-//};
-//
-//[maxvertexcount(3)]
-//void main_gs(triangle GSInput input[3], inout TriangleStream<GSOutput> triStream)
-//{
-//    const float3 bc[3] = {
-//        float3(1.0, 0.0, 0.0),
-//        float3(0.0, 1.0, 0.0),
-//        float3(0.0, 0.0, 1.0)
-//    };
-//
-//    for (int i = 0; i < 3; i++)
-//    {
-//        GSOutput output;
-//        output.position = input[i].position;
-//        output.uv = input[i].uv;
-//        output.barycoords = bc[i];
-//        triStream.Append(output);
-//    }
-//    triStream.RestartStrip();
-//}
-//
-///////////////////////////////////////////
-////PIXEL SHADER ///////////////////////////
-///////////////////////////////////////////
-//
-//Texture2D texture0 : register(t0);
-//SamplerState sampler0 : register(s0);
-//
-//struct PSInput
-//{
-//    float2 uvs : TEXCOORD0;
-//    float3 barycoords : TEXCOORD1;
-//};
-//
-//float edgeFactor(float thickness, float3 barycoords)
-//{
-//    float3 a3 = smoothstep(float3(0.0, 0.0, 0.0), fwidth(barycoords) * thickness, barycoords);
-//    return min(min(a3.x, a3.y), a3.z);
-//}
-//
-//float4 main_ps(PSInput input) : SV_TARGET
-//{
-//    float4 color = texture0.Sample(sampler0, input.uvs);
-//    return lerp(color * float4(0.8, 0.8, 0.8, 1.0), color, edgeFactor(1.0, input.barycoords));
-//}
-//	)";
 
 	 std::wstring shaderSource3 = LR"(
 
@@ -1734,11 +1626,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 
 		m_ManagerDevice->GetRenderDevice()->Draw(desc);
 
-		////Draw Description 
-		//DrawDescription desc;
-		////desc.rasterizationState.fillMode = FillModeType::Wireframe;
-		//desc.size = 3;
-		//m_ManagerDevice->GetRenderDevice()->Draw(desc);
+	
 
 		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
@@ -1766,7 +1654,202 @@ private:
 	std::shared_ptr<IShader> m_gs;
 };
 
+//------------------------------------------------- //
+//  SOURCE_CUBEMAP                                  //
+//------------------------------------------------- //
 
+class Source_CUBEMAP: public IFNITY::App
+{
+
+public:
+
+	Source_CUBEMAP(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	{
+
+		PushLayer(new   IFNITY::NVML_Monitor());
+		PushLayer(new ImGuiTestLayer());
+		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
+
+
+	}
+
+	void Initialize() override
+	{
+		m_ManagerDevice = &App::GetApp().GetManagerDevice();
+
+
+		IFNITY::ShaderCompiler::Initialize();
+
+
+
+		auto& vfs = IFNITY::VFS::GetInstance();
+
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
+		vfs.Mount("Data", "Data", IFNITY::FolderType::TEXTURES);
+
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
+		m_gs = std::make_shared<IShader>();
+
+		ShaderCreateDescription DescriptionShader;
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "vtxpulling";
+			m_vs->SetShaderDescription(DescriptionShader);
+		}
+		{
+
+			DescriptionShader.FileName = "ptxpulling";
+			DescriptionShader.NoCompile = true;
+			m_ps->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.FileName = "gtxpulling";
+			DescriptionShader.NoCompile = true;
+			m_gs->SetShaderDescription(DescriptionShader);
+
+		}
+
+		ShaderCompiler::CompileShader(m_vs.get());
+		ShaderCompiler::CompileShader(m_ps.get());
+		ShaderCompiler::CompileShader(m_gs.get());
+
+
+		GraphicsPipelineDescription gdesc;
+		gdesc.SetVertexShader(m_vs.get())
+			 .SetPixelShader(m_ps.get())
+			 .SetGeometryShader(m_gs.get());
+
+		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+
+		BufferDescription DescriptionBuffer;
+		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
+			.SetByteSize(sizeof(mat4))
+			.SetDebugName("UBO MVP")
+			.SetStrideSize(0);
+		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
+
+		//Assimp process
+		struct VertexData
+		{
+			vec3 pos;
+			vec2 tc;
+		};
+		const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+
+
+		if(!scene || !scene->HasMeshes())
+		{
+			printf("Unable to load data/rubber_duck/scene.gltf\n");
+			exit(255);
+		}
+
+
+
+		const aiMesh* mesh = scene->mMeshes[ 0 ];
+		std::vector<VertexData> vertices;
+		for(unsigned i = 0; i != mesh->mNumVertices; i++)
+		{
+			const aiVector3D v = mesh->mVertices[ i ];
+			const aiVector3D t = mesh->mTextureCoords[ 0 ][ i ];
+
+			vertices.push_back(VertexData{ vec3(v.x, v.z, v.y), vec2(t.x, t.y) });
+		}
+		std::vector<unsigned int> indices;
+		for(unsigned i = 0; i != mesh->mNumFaces; i++)
+		{
+			for(unsigned j = 0; j != 3; j++)
+				indices.push_back(mesh->mFaces[ i ].mIndices[ j ]);
+		}
+		aiReleaseImport(scene);
+
+		const size_t kSizeIndices = sizeof(unsigned int) * indices.size();
+		const size_t kSizeVertices = sizeof(VertexData) * vertices.size();
+		m_IndexCount = indices.size();
+
+		m_IndexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
+			BufferDescription()
+			.SetBufferType(BufferType::VERTEX_PULLING_BUFFER_INDEX)
+			.SetByteSize(kSizeIndices)
+			.SetDebugName("Assimp_Index")
+		);
+
+		m_VertexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
+			BufferDescription()
+			.SetBindingPoint(1)
+			.SetByteSize(kSizeVertices)
+			.SetDebugName("Assimp_Vertex")
+			.SetBufferType(BufferType::VERTEX_PULLING_BUFFER));
+
+
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_IndexBuffer, indices.data(), kSizeIndices, 0);
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, vertices.data(), kSizeVertices, 0);
+
+		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture
+		(TextureDescription().setFilePath("data/rubber_duck/textures/Duck_baseColor.png"));
+
+	}
+
+
+
+
+
+	void Render() override
+	{
+		//using namespace math;
+		////SetPipelineState
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+
+
+
+		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+
+		const mat4 mvpg = p * m;
+
+
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
+
+		//Draw Description 
+		DrawDescription desc;
+		//desc.rasterizationState.fillMode = FillModeType::Wireframe;
+		desc.size = m_IndexCount;
+		desc.indices = (const void*)(0);
+		desc.isIndexed = true;
+
+		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
+		////Draw Description 
+		//DrawDescription desc;
+		////desc.rasterizationState.fillMode = FillModeType::Wireframe;
+		//desc.size = 3;
+		//m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
+		IFNITY_LOG(LogApp, INFO, "Render App");
+	}
+	void Animate() override
+	{
+		IFNITY_LOG(LogApp, INFO, "Animate App");
+	}
+
+	void LoadAssimp()
+	{
+
+	}
+	~Source_CUBEMAP() override {}
+
+private:
+	TextureHandle m_Texture;
+	BufferHandle m_UBO;
+	BufferHandle m_VertexBuffer;
+	BufferHandle m_IndexBuffer;
+	GraphicsDeviceManager* m_ManagerDevice;
+	GraphicsPipelineHandle m_GraphicsPipeline;
+	unsigned int m_IndexCount;
+	std::shared_ptr<IShader> m_vs;
+	std::shared_ptr<IShader> m_ps;
+	std::shared_ptr<IShader> m_gs;
+};
 
 void error_callback(void*, const char* error_message)
 {

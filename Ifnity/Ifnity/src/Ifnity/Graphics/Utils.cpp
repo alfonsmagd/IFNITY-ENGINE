@@ -18,16 +18,11 @@ namespace Utils
 			                      .SetBufferType(BufferType::CONSTANT_BUFFER);
 	}
 
+	IFNITY_API void saveHDR(const Bitmap& bitmap, const char* filename)
+	{
+		stbi_write_hdr(filename, bitmap.w_, bitmap.h_, bitmap.comp_, reinterpret_cast<const float*>(bitmap.data_.data()));
 
-
-
-
-
-
-
-
-
-
+	}
 
 
 }
