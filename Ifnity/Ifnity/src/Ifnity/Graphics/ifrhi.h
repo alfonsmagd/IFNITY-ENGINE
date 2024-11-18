@@ -153,6 +153,7 @@ namespace rhi {
     {
         R8G8B8_UINT, /**< R8G8B8 unsigned integer format */
         R8G8B8,      /**< R8G8B8 format */
+		R32G32B32_FLOAT, /**< R32G32B32 float format */
         UNKNOWN,     /**< Unknown format */
         COUNT        /**< Format count */
     };

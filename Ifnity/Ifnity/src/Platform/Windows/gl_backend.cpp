@@ -1,5 +1,7 @@
 #include "gl_backend.hpp"
 #include <GLFW\glfw3.h>
+#include "..\..\..\vendor\glfw\deps\stb_image_write.h"
+
 
 
 
@@ -24,7 +26,78 @@ namespace OpenGL
         CheckOpenGLError(#stmt, __FILE__, __LINE__); \
     } while (0)
 
+	std::string readShaderFile(const char* fileName)
+	{
+		FILE* file = fopen(fileName, "r");
 
+		if(!file)
+		{
+			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file '%s'\n", fileName);
+			return std::string();
+		}
+
+		fseek(file, 0L, SEEK_END);
+		const auto bytesinfile = ftell(file);
+		fseek(file, 0L, SEEK_SET);
+
+		char* buffer = (char*)alloca(static_cast<size_t>(bytesinfile) + 1);
+		const size_t bytesread = fread(buffer, 1, bytesinfile, file);
+		fclose(file);
+
+		buffer[ bytesread ] = 0;
+
+		static constexpr unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
+
+		if(bytesread > 3)
+		{
+			if(!memcmp(buffer, BOM, 3))
+				memset(buffer, ' ', 3);
+		}
+
+		std::string code(buffer);
+
+		while(code.find("#include ") != code.npos)
+		{
+			const auto pos = code.find("#include ");
+			const auto p1 = code.find('<', pos);
+			const auto p2 = code.find('>', pos);
+			if(p1 == code.npos || p2 == code.npos || p2 <= p1)
+			{
+				IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot include  shader file '%s'\n", fileName);
+				return std::string();
+			}
+			const std::string name = code.substr(p1 + 1, p2 - p1 - 1);
+			const std::string include = readShaderFile(name.c_str());
+			code.replace(pos, p2 - pos + 1, include.c_str());
+		}
+
+		return code;
+	}
+
+	void printShaderSource(const char* text)
+	{
+		int line = 1;
+		IFNITY_LOG(LogCore, INFO, "Shader source code Start : -------------------------------------------------------------\n");
+		printf("\n(%3i) ", line);
+
+		while(text && *text++)
+		{
+			if(*text == '\n')
+			{
+				printf("\n(%3i) ", ++line);
+			}
+			else if(*text == '\r')
+			{
+			}
+			else
+			{
+				printf("%c", *text);
+			}
+		}
+
+		printf("\n");
+		IFNITY_LOG(LogCore, INFO, "Shader source code END : -------------------------------------------------------------\n");
+	}
 
 	Device::Device()
 	{}
@@ -33,7 +106,11 @@ namespace OpenGL
 	void Device::Draw(DrawDescription& desc)
 	{
 
-		glViewport(0, 0, 1200, 720);
+		glViewport(desc.viewPortState.x, 
+				   desc.viewPortState.y,
+				   desc.viewPortState.width,
+				   desc.viewPortState.height);
+
 		SetOpenGLRasterizationState(desc.rasterizationState);
 		if(desc.isIndexed)
 		{
@@ -77,26 +154,15 @@ namespace OpenGL
 		{
 			const auto& vsfile = vs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
 			const auto& psfile = fs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
-			vShaderFile.open(vsfile);
-			fShaderFile.open(psfile);
-			std::stringstream vShaderStream, fShaderStream, gShaderStream;
-			// read file's buffer contents into streams
-			vShaderStream << vShaderFile.rdbuf();
-			fShaderStream << fShaderFile.rdbuf();
-			// close file handlers
-			vShaderFile.close();
-			fShaderFile.close();
-			// convert stream into string
-			vertexCode = vShaderStream.str();
-			fragmentCode = fShaderStream.str();
+
+			vertexCode = readShaderFile(vsfile.c_str());
+			fragmentCode = readShaderFile(psfile.c_str());
 
 			if(gs)
 			{
 				const auto& gsfile = gs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
-				gShaderFile.open(gsfile);
-				gShaderStream << gShaderFile.rdbuf();
-				gShaderFile.close();
-				geometryCode = gShaderStream.str();
+
+				geometryCode = readShaderFile(gsfile.c_str());
 			}
 		}
 		catch(std::ifstream::failure& e)
@@ -278,6 +344,28 @@ namespace OpenGL
 	 */
 	TextureHandle Device::CreateTexture(TextureDescription& desc)
 	{
+		//Create Switch for the type of texture
+		switch(desc.dimension)
+		{
+		case rhi::TextureDimension::TEXTURE2D:
+			return CreateTexture2DImpl(desc);
+			break;
+
+		case rhi::TextureDimension::TEXTURECUBE:
+			return CreateTextureCubeMapImpl(desc);
+			break;
+		default:
+			IFNITY_LOG(LogApp, ERROR, "Texture dimension not implemented");
+			return nullptr;
+		}
+
+	}
+
+
+
+
+	TextureHandle Device::CreateTexture2DImpl(TextureDescription& desc)
+	{
 		// Load texture from image file
 		const void* img = LoadTextureFromFileDescription(desc);
 		if(!img)
@@ -314,8 +402,58 @@ namespace OpenGL
 		return TextureHandle(texture);
 	}
 
+	TextureHandle Device::CreateTextureCubeMapImpl(TextureDescription& desc)
+	{
+		// Load texture from image file
+		const void* img = LoadTextureFromFileDescription(desc);
+		if(!img)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Failed to load texture from file.");
+			return nullptr;
+		}
+
+		//Generate Bitmap to elaborate CubeMap implementation
+		Bitmap in(desc.width, desc.height, desc.comp, rhi::eBitmapFormat_Float, img);
+		FreeTexture(img); // Free the image
 
 
+		Bitmap out = convertEquirectangularMapToVerticalCross(in);
+
+
+		Bitmap cubemap = convertVerticalCrossToCubeMapFaces(out);
+
+		GLenum format = OpenGL::c_FormatMap[ (uint8_t)desc.format ].glFormat;
+		GLenum textureWrap = ConvertToOpenGLTextureWrapping(desc.wrapping);
+
+		stbi_write_hdr("screenshot.hdr", out.w_, out.h_, out.comp_, (const float*)out.data_.data());
+
+		GLuint cubemapTex;
+		{
+			glCreateTextures(ConvertToOpenGLTextureTarget(desc.dimension), 1, &cubemapTex);
+			glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_S, textureWrap);
+			glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_T, textureWrap);
+			glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_R, textureWrap);
+			glTextureParameteri(cubemapTex, GL_TEXTURE_BASE_LEVEL, 0);
+			glTextureParameteri(cubemapTex, GL_TEXTURE_MAX_LEVEL, 0);
+			glTextureParameteri(cubemapTex, GL_TEXTURE_MAX_LEVEL, 0);
+			glTextureParameteri(cubemapTex, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTextureParameteri(cubemapTex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTextureStorage2D(cubemapTex, 1, format, cubemap.w_, cubemap.h_);
+			const uint8_t* data = cubemap.data_.data();
+
+			for(unsigned i = 0; i != 6; ++i)
+			{
+				glTextureSubImage3D(cubemapTex, 0, 0, 0, i, cubemap.w_, cubemap.h_, 1, GL_RGB, GL_FLOAT, data);
+				data += cubemap.w_ * cubemap.h_ * cubemap.comp_ * Bitmap::getBytesPerComponent(cubemap.fmt_);
+			}
+			glBindTextures(1, 1, &cubemapTex);
+		}
+
+		ITexture* texture = new Texture(desc, cubemapTex);
+		return TextureHandle(texture);
+
+
+	}
 
 	/**
 	 * @brief Creates an OpenGL program from vertex and fragment shader source code.
@@ -341,6 +479,9 @@ namespace OpenGL
 			glGetShaderInfoLog(shaderVertex, 512, NULL, infoLog);
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n", infoLog);
 		};
+		#if _DEBUG
+		printShaderSource(vertexShader);
+		#endif
 
 		const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(shaderFragment, 1, &fragmentShader, nullptr);
@@ -353,6 +494,9 @@ namespace OpenGL
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n", infoLog);
 		};
 
+		#if _DEBUG
+		printShaderSource(fragmentShader);
+		#endif
 		const GLuint program = glCreateProgram();
 		glAttachShader(program, shaderVertex);
 		glAttachShader(program, shaderFragment);
@@ -398,6 +542,9 @@ namespace OpenGL
 			glGetShaderInfoLog(shaderVertex, 512, NULL, infoLog);
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n", infoLog);
 		}
+		#if _DEBUG
+		printShaderSource(vertexShader);
+		#endif
 
 		// Compile fragment shader
 		const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -409,6 +556,9 @@ namespace OpenGL
 			glGetShaderInfoLog(shaderFragment, 512, NULL, infoLog);
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n", infoLog);
 		}
+		#if _DEBUG
+		printShaderSource(fragmentShader);
+		#endif
 
 		// Compile geometry shader if provided
 		GLuint shaderGeometry = 0;
@@ -423,6 +573,9 @@ namespace OpenGL
 				glGetShaderInfoLog(shaderGeometry, 512, NULL, infoLog);
 				IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n", infoLog);
 			}
+			#if _DEBUG
+			printShaderSource(geometryShader);
+			#endif
 		}
 
 		// Create program and attach shaders
@@ -438,7 +591,7 @@ namespace OpenGL
 		if(!success)
 		{
 			glGetProgramInfoLog(program, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+			IFNITY_LOG(LogCore, ERROR, "ERROR::SHADER::PROGRAM::LINKING_FAILED\n", infoLog);
 		}
 		glUseProgram(program);
 

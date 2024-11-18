@@ -25,16 +25,29 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
 {
 
     int w, h, comp;
-    const uint8_t* img = stbi_load(desc.filepath.c_str(), &w, &h, &comp, 3);
+
+    // Check correct transform 
+    const void* img = nullptr;
+    switch(desc.dimension)
+    {
+    case rhi::TextureDimension::TEXTURECUBE:
+        img = stbi_loadf(desc.filepath.c_str(), &w, &h, &comp, 3);
+        break;
+    default:
+        img = stbi_load(desc.filepath.c_str(), &w, &h, &comp, 3);
+        break;
+    }
 
     if(img == nullptr)
     {
         return nullptr;
     }
+
     desc.width = w;
     desc.height = h;
+	desc.comp = comp;
 
-    return static_cast<const void*>(img);
+    return img; 
 	
 }
 

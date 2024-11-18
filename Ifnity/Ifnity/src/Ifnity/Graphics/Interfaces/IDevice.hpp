@@ -17,10 +17,50 @@ IFNITY_NAMESPACE
 struct IFNITY_API DrawDescription
 {
 	RasterizationState rasterizationState;
+	ViewPortState      viewPortState;
 
 	bool isIndexed = false;
 	const void* indices = nullptr;
     unsigned int size;
+
+	constexpr DrawDescription& SetRasterizationState(const RasterizationState& state)
+	{
+		rasterizationState = state;
+		return *this;
+	}
+	constexpr DrawDescription& SetViewPortState(const ViewPortState& state)
+	{
+		viewPortState = state;
+		return *this;
+	}
+
+	//Constructors 
+	DrawDescription() = default;
+	DrawDescription(const RasterizationState& rasterizationState, const ViewPortState& viewPortState): 
+		rasterizationState(rasterizationState), viewPortState(viewPortState) {}
+	DrawDescription& operator=(const DrawDescription& desc)
+	{
+		rasterizationState = desc.rasterizationState;
+		viewPortState = desc.viewPortState;
+		isIndexed = desc.isIndexed;
+		indices = desc.indices;
+		size = desc.size;
+		return *this;
+	}
+	const DrawDescription& operator=(DrawDescription&& desc) noexcept
+	{
+		rasterizationState = std::move(desc.rasterizationState);
+		viewPortState = std::move(desc.viewPortState);
+		isIndexed = std::move(desc.isIndexed);
+		indices = std::move(desc.indices);
+		size = std::move(desc.size);
+		return *this;
+	}
+	~DrawDescription()
+	{
+		delete indices;
+	}
+
 };
 
 // Definition of the IDevice interface

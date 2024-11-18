@@ -11,6 +11,7 @@
 using namespace IFNITY;
 using namespace IFNITY::rhi;
 using glm::vec3;
+using glm::vec4;
 using glm::vec2;
 using glm::mat4;
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
@@ -714,7 +715,6 @@ private:
 };
 
 
-
 //-------------------------------------------------//
 //  SOURCE  attib normal                             //
 //-------------------------------------------------//
@@ -928,10 +928,6 @@ private:
 };
 
 
-
-
-
-
 //-------------------------------------------------//
 //  SOURCE_TEXTURE                                  //
 //-------------------------------------------------//
@@ -958,7 +954,7 @@ public:
 
 		IFNITY::ShaderCompiler::Initialize();
 
-//
+		//
 		std::wstring shaderSource3 = LR"(
 
 			// Buffer constante para la matriz MVP
@@ -1012,15 +1008,15 @@ float4 main_ps(VSOutput input) : SV_Target
 
 	)";
 
-		
 
-		
+
+
 
 		auto& vfs = IFNITY::VFS::GetInstance();
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
-		vfs.Mount("Data", "Data",       IFNITY::FolderType::TEXTURES);
-	
+		vfs.Mount("Data", "Data", IFNITY::FolderType::TEXTURES);
+
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
 
@@ -1063,10 +1059,10 @@ float4 main_ps(VSOutput input) : SV_Target
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
 
-		
+
 
 		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture
-					( TextureDescription().setFilePath("Data/diffuse_madera.jpg") );
+		(TextureDescription().setFilePath("Data/diffuse_madera.jpg"));
 
 
 
@@ -1083,7 +1079,7 @@ float4 main_ps(VSOutput input) : SV_Target
 		//SetPipelineState
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		
+
 
 		const mat4 mg = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 0.0f, -1.0f));
 		const mat4 fg = glm::ortho(-aspectRatio, aspectRatio, -1.f, 1.f, 1.f, -1.f);
@@ -1115,7 +1111,6 @@ private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 };
-
 
 
 //-------------------------------------------------//
@@ -1162,7 +1157,7 @@ public:
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
-		
+
 			DescriptionShader.FileName = "ptxpulling";
 			DescriptionShader.NoCompile = true;
 			m_ps->SetShaderDescription(DescriptionShader);
@@ -1216,8 +1211,8 @@ public:
 		{
 			const aiVector3D v = mesh->mVertices[ i ];
 			const aiVector3D t = mesh->mTextureCoords[ 0 ][ i ];
-			
-            vertices.push_back(VertexData{ vec3(v.x, v.z, v.y), vec2(t.x, t.y) });
+
+			vertices.push_back(VertexData{ vec3(v.x, v.z, v.y), vec2(t.x, t.y) });
 		}
 		std::vector<unsigned int> indices;
 		for(unsigned i = 0; i != mesh->mNumFaces; i++)
@@ -1243,15 +1238,15 @@ public:
 			.SetBindingPoint(1)
 			.SetByteSize(kSizeVertices)
 			.SetDebugName("Assimp_Vertex")
-		.SetBufferType(BufferType::VERTEX_PULLING_BUFFER));
+			.SetBufferType(BufferType::VERTEX_PULLING_BUFFER));
 
 
-	     m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_IndexBuffer, indices.data(), kSizeIndices, 0);
-		 m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, vertices.data(), kSizeVertices, 0);
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_IndexBuffer, indices.data(), kSizeIndices, 0);
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, vertices.data(), kSizeVertices, 0);
 
-		 m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture
-		 (TextureDescription().setFilePath("data/rubber_duck/textures/Duck_baseColor.png"));
-		
+		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture
+		(TextureDescription().setFilePath("data/rubber_duck/textures/Duck_baseColor.png"));
+
 	}
 
 
@@ -1268,8 +1263,8 @@ public:
 
 		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
 		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
-		
-		const mat4 mvpg = p  * m;
+
+		const mat4 mvpg = p * m;
 
 
 		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
@@ -1298,7 +1293,7 @@ public:
 
 	void LoadAssimp()
 	{
-		
+
 	}
 	~Source_VTXP() override {}
 
@@ -1352,7 +1347,7 @@ public:
 
 
 
-	 std::wstring shaderSource3 = LR"(
+		std::wstring shaderSource3 = LR"(
 
 cbuffer PerFrameData : register(b0)
 {
@@ -1599,7 +1594,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 		////SetPipelineState
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		
+
 
 		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
 		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
@@ -1612,7 +1607,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 
 		const void* dataPtr = static_cast<const void*>(&data);
 
-	
+
 
 
 		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, dataPtr, sizeof(PerFrameData));
@@ -1626,7 +1621,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 
 		m_ManagerDevice->GetRenderDevice()->Draw(desc);
 
-	
+
 
 		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
@@ -1663,6 +1658,13 @@ class Source_CUBEMAP: public IFNITY::App
 
 public:
 
+	struct PerFrameData
+	{
+		mat4 model;
+		mat4 mvp;
+		vec4 cameraPos;
+	};
+
 	Source_CUBEMAP(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
 
@@ -1685,108 +1687,48 @@ public:
 		auto& vfs = IFNITY::VFS::GetInstance();
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
-		vfs.Mount("Data", "Data", IFNITY::FolderType::TEXTURES);
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
-		m_gs = std::make_shared<IShader>();
 
 		ShaderCreateDescription DescriptionShader;
 		{
 			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "vtxpulling";
+			DescriptionShader.FileName = "GL03_cube.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
-
-			DescriptionShader.FileName = "ptxpulling";
 			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "GL03_cube.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
-		}
-		{
-			DescriptionShader.FileName = "gtxpulling";
-			DescriptionShader.NoCompile = true;
-			m_gs->SetShaderDescription(DescriptionShader);
-
 		}
 
 		ShaderCompiler::CompileShader(m_vs.get());
 		ShaderCompiler::CompileShader(m_ps.get());
-		ShaderCompiler::CompileShader(m_gs.get());
 
 
 		GraphicsPipelineDescription gdesc;
-		gdesc.SetVertexShader(m_vs.get())
-			 .SetPixelShader(m_ps.get())
-			 .SetGeometryShader(m_gs.get());
+		gdesc.SetVertexShader(m_vs.get()).
+			SetPixelShader(m_ps.get());
 
 		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 
 		BufferDescription DescriptionBuffer;
 		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
-			.SetByteSize(sizeof(mat4))
+			.SetByteSize(sizeof(PerFrameData))
 			.SetDebugName("UBO MVP")
 			.SetStrideSize(0);
+
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
-		//Assimp process
-		struct VertexData
-		{
-			vec3 pos;
-			vec2 tc;
-		};
-		const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+		TextureDescription descCubeTexture;
+		descCubeTexture.setDimension(TextureDimension::TEXTURECUBE)
+			.setFilePath("data/cube_boloni.hdr")
+			.setWrapping(TextureWrapping::CLAMP_TO_EDGE);
+
+		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture(descCubeTexture);
 
 
-		if(!scene || !scene->HasMeshes())
-		{
-			printf("Unable to load data/rubber_duck/scene.gltf\n");
-			exit(255);
-		}
-
-
-
-		const aiMesh* mesh = scene->mMeshes[ 0 ];
-		std::vector<VertexData> vertices;
-		for(unsigned i = 0; i != mesh->mNumVertices; i++)
-		{
-			const aiVector3D v = mesh->mVertices[ i ];
-			const aiVector3D t = mesh->mTextureCoords[ 0 ][ i ];
-
-			vertices.push_back(VertexData{ vec3(v.x, v.z, v.y), vec2(t.x, t.y) });
-		}
-		std::vector<unsigned int> indices;
-		for(unsigned i = 0; i != mesh->mNumFaces; i++)
-		{
-			for(unsigned j = 0; j != 3; j++)
-				indices.push_back(mesh->mFaces[ i ].mIndices[ j ]);
-		}
-		aiReleaseImport(scene);
-
-		const size_t kSizeIndices = sizeof(unsigned int) * indices.size();
-		const size_t kSizeVertices = sizeof(VertexData) * vertices.size();
-		m_IndexCount = indices.size();
-
-		m_IndexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
-			BufferDescription()
-			.SetBufferType(BufferType::VERTEX_PULLING_BUFFER_INDEX)
-			.SetByteSize(kSizeIndices)
-			.SetDebugName("Assimp_Index")
-		);
-
-		m_VertexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
-			BufferDescription()
-			.SetBindingPoint(1)
-			.SetByteSize(kSizeVertices)
-			.SetDebugName("Assimp_Vertex")
-			.SetBufferType(BufferType::VERTEX_PULLING_BUFFER));
-
-
-		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_IndexBuffer, indices.data(), kSizeIndices, 0);
-		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, vertices.data(), kSizeVertices, 0);
-
-		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture
-		(TextureDescription().setFilePath("data/rubber_duck/textures/Duck_baseColor.png"));
 
 	}
 
@@ -1801,21 +1743,30 @@ public:
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
 
-
-		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 m = glm::scale(mat4(1.0f), vec3(2.0f));
 		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
 
-		const mat4 mvpg = p * m;
+		const PerFrameData perFrameData
+		{
+
+			m, //model
+			p * m, //mvp
+			vec4(0.0f, 0.0f, 0.0f, 0.0f) //cameraPos
+		};
 
 
-		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
+		
+
+
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, &perFrameData, sizeof(PerFrameData));
 
 		//Draw Description 
 		DrawDescription desc;
 		//desc.rasterizationState.fillMode = FillModeType::Wireframe;
-		desc.size = m_IndexCount;
+		desc.size = 36; // Cube vertex 
 		desc.indices = (const void*)(0);
-		desc.isIndexed = true;
+		desc.isIndexed = false;
+		desc.viewPortState = ViewPortState(0, 0, m_ManagerDevice->GetWidth(), m_ManagerDevice->GetHeight());
 
 		m_ManagerDevice->GetRenderDevice()->Draw(desc);
 
@@ -1868,6 +1819,7 @@ IFNITY::App* IFNITY::CreateApp()
 	//
 	// return new Source_Tetahedre(api);
 
-	return new Source_VTXP_HLSL(api);
+	//return new Source_VTXP_HLSL(api);
+	return new Source_CUBEMAP(api);
 }
 

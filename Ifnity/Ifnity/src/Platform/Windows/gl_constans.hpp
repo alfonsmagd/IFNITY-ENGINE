@@ -16,7 +16,8 @@ namespace OpenGL
 
     static const std::array<FormatMapping, size_t(rhi::Format::COUNT)> c_FormatMap = { {
         { rhi::Format::R8G8B8_UINT,                                         GL_RGB8UI },
-        { rhi::Format::R8G8B8,                                              GL_RGB8   }
+        { rhi::Format::R8G8B8,                                              GL_RGB8   },
+        { rhi::Format::R32G32B32_FLOAT,                                     GL_RGB32F }                                          
     } };
 
 

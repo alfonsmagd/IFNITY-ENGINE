@@ -12,6 +12,19 @@ struct IFNITY_API Program
 	unsigned int id;
 };
 
+struct IFNITY_API ViewPortState
+{
+	uint32_t x = 0.0f;
+	uint32_t y = 0.0f;
+	uint32_t width = 1200;
+	uint32_t height = 720;
+	uint32_t minDepth = 0;
+	uint32_t maxDepth = 1;
+
+	//Constructors
+	ViewPortState() = default;
+	ViewPortState(uint32_t x, uint32_t y, uint32_t width, uint32_t height): x(x), y(y), width(width), height(height) {};
+};
 
 struct IFNITY_API RasterizationState
 {

@@ -5,6 +5,7 @@
 
 
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
+#include "Ifnity/Graphics/Features/CubeMapTextures.hpp"
 #include "gl_constans.hpp"
 #include <glad\glad.h>
 
@@ -57,13 +58,15 @@ namespace OpenGL
 
     private:
 
+		    TextureHandle CreateTexture2DImpl(TextureDescription& desc);
+			TextureHandle CreateTextureCubeMapImpl(TextureDescription& desc);
 	    	Program CreateProgram(const char* vertexShader, const char* fragmentShader);
 			Program CreateProgram(const char* vertexShader, const char* fragmentShader, const char* geometryShader);
 			BufferHandle CreateVertexAttAndIndexBuffer(const BufferDescription& desc);
 
             Program m_Program; ///< The program used by the device.
 
-            GLuint   m_VAO; ///< The vertex array object used by the device.
+            GLuint       m_VAO; ///< The vertex array object used by the device.
 			BufferHandle m_VertexBuffer; ///< The vertex buffer used by the device.
     };
 

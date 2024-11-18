@@ -29,11 +29,13 @@ struct IFNITY_API TextureDescription
     uint32_t mipLevels = 1;
     uint32_t sampleCount = 1;
     uint32_t sampleQuality = 0;
+    uint8_t  comp = 0;
     rhi::Format format = rhi::Format::R8G8B8;
     rhi::TextureDimension dimension = rhi::TextureDimension::TEXTURE2D;
 	rhi::TextureWrapping  wrapping = rhi::TextureWrapping::REPEAT;
     std::string debugName;
     std::string filepath;
+	
 
     bool isShaderResource = true; // Note: isShaderResource is initialized to 'true' for backward compatibility
     bool isRenderTarget = false;
