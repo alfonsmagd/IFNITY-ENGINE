@@ -16,7 +16,7 @@ namespace OpenGL
 		GLenum err = glGetError();
 		if(err != GL_NO_ERROR)
 		{
-			std::cerr << "OpenGL error " << err << " at " << fname << ":" << line << " - for " << stmt << std::endl;
+			IFNITY_LOG(LogApp,ERROR, "OpenGL error " , err ," at " ,fname  ,":" ,line ," - for " , stmt);
 			exit(1);
 		}
 	}
@@ -264,7 +264,7 @@ namespace OpenGL
 		}
 		else
 		{
-			glNamedBufferSubData(buffer->GetBufferID(), offset, size, data);
+			GL_CHECK(glNamedBufferSubData(buffer->GetBufferID(), offset, size, data));
 		}
 
 	}
@@ -363,6 +363,16 @@ namespace OpenGL
 
 
 
+
+	GLuint Device::CreateVAO()
+	{
+		// Create and bind VAO object
+		GLuint vao;
+		glCreateVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+
+		return vao;
+	}
 
 	TextureHandle Device::CreateTexture2DImpl(TextureDescription& desc)
 	{
@@ -511,8 +521,7 @@ namespace OpenGL
 		}
 		glUseProgram(program);
 
-		glCreateVertexArrays(1, &m_VAO);
-		glBindVertexArray(m_VAO);
+		GetMeshVAO("default");
 
 		m_Program.id = program;
 
@@ -596,8 +605,8 @@ namespace OpenGL
 		glUseProgram(program);
 
 		// Create and bind vertex array
-		glCreateVertexArrays(1, &m_VAO);
-		glBindVertexArray(m_VAO);
+
+		GetMeshVAO("default");
 
 		m_Program.id = program;
 
@@ -630,6 +639,23 @@ namespace OpenGL
 
 		return BufferHandle(buffer);
 
+	}
+
+	void Device::GetMeshVAO(const std::string mesh)
+	{	
+		if(m_MeshVAOs.find(mesh) == m_MeshVAOs.end())
+		{
+			GLuint vao;
+			glCreateVertexArrays(1, &vao);
+			m_MeshVAOs[ mesh ] = vao;
+
+			if(mesh == "default")
+			{
+				m_VAO = vao;
+			}
+			
+		}
+		glBindVertexArray(m_MeshVAOs[ mesh ]);
 	}
 
 

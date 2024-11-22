@@ -1800,6 +1800,149 @@ private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 	std::shared_ptr<IShader> m_gs;
+
+	//Object shader 
+
+};
+
+//------------------------------------------------- //
+//  SOURCE_CUBEMAP_FIGURE                           //
+//------------------------------------------------- //
+
+class Source_CUBEMAP_FIGURE: public IFNITY::App
+{
+
+public:
+
+	struct PerFrameData
+	{
+		mat4 model;
+		mat4 mvp;
+		vec4 cameraPos;
+	};
+
+	Source_CUBEMAP_FIGURE(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	{
+
+		PushLayer(new   IFNITY::NVML_Monitor());
+		PushLayer(new ImGuiTestLayer());
+		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
+
+
+	}
+
+	void Initialize() override
+	{
+		m_ManagerDevice = &App::GetApp().GetManagerDevice();
+
+
+		IFNITY::ShaderCompiler::Initialize();
+		auto& vfs = IFNITY::VFS::GetInstance();
+
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
+
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
+
+		ShaderCreateDescription DescriptionShader;
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "GL03_cube.vert";
+			m_vs->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "GL03_cube.frag";
+			m_ps->SetShaderDescription(DescriptionShader);
+		}
+
+		ShaderCompiler::CompileShader(m_vs.get());
+		ShaderCompiler::CompileShader(m_ps.get());
+
+
+		GraphicsPipelineDescription gdesc;
+		gdesc.SetVertexShader(m_vs.get()).
+			  SetPixelShader(m_ps.get());
+
+		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+
+		BufferDescription DescriptionBuffer;
+		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
+			.SetByteSize(sizeof(PerFrameData))
+			.SetDebugName("UBO MVP")
+			.SetStrideSize(0);
+
+		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
+
+		TextureDescription descCubeTexture;
+		descCubeTexture.setDimension(TextureDimension::TEXTURECUBE)
+			.setFilePath("data/cube_boloni.hdr")
+			.setWrapping(TextureWrapping::CLAMP_TO_EDGE);
+
+		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture(descCubeTexture);
+
+
+
+	}
+
+
+
+	void Render() override
+	{
+		
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+
+
+		const mat4 m = glm::scale(mat4(1.0f), vec3(2.0f));
+		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+
+		const PerFrameData perFrameData
+		{
+
+			m, //model
+			p * m, //mvp
+			vec4(0.0f, 0.0f, 0.0f, 0.0f) //cameraPos
+		};
+
+
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, &perFrameData, sizeof(PerFrameData));
+
+		//Draw Description 
+		DrawDescription desc;
+		
+		desc.size = 36; // Cube vertex 
+		desc.indices = (const void*)(0);
+		desc.isIndexed = false;
+		desc.viewPortState = ViewPortState(0, 0, m_ManagerDevice->GetWidth(), m_ManagerDevice->GetHeight());
+
+		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
+		
+
+		IFNITY_LOG(LogApp, INFO, "Render App");
+	}
+	void Animate() override
+	{
+		IFNITY_LOG(LogApp, INFO, "Animate App");
+	}
+
+	void LoadAssimp()
+	{
+
+	}
+	~Source_CUBEMAP_FIGURE() override {}
+
+private:
+	TextureHandle m_Texture;
+	BufferHandle m_UBO;
+	BufferHandle m_VertexBuffer;
+	BufferHandle m_IndexBuffer;
+	GraphicsDeviceManager* m_ManagerDevice;
+	GraphicsPipelineHandle m_GraphicsPipeline;
+	unsigned int m_IndexCount;
+	std::shared_ptr<IShader> m_vs;
+	std::shared_ptr<IShader> m_ps;
+	std::shared_ptr<IShader> m_gs;
 };
 
 void error_callback(void*, const char* error_message)
@@ -1817,9 +1960,9 @@ IFNITY::App* IFNITY::CreateApp()
 	//return new Source_Texture(api)
 	//return new Source_Tetahedre(api);
 	//
-	// return new Source_Tetahedre(api);
+	 return new Source_Tetahedre(api);
 
 	//return new Source_VTXP_HLSL(api);
-	return new Source_CUBEMAP(api);
+	return new Source_CUBEMAP_FIGURE(api);
 }
 

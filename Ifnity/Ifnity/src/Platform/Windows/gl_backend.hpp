@@ -58,16 +58,21 @@ namespace OpenGL
 
     private:
 
+		    GLuint GetVAO() const { return m_VAO; }
+			GLuint CreateVAO();
 		    TextureHandle CreateTexture2DImpl(TextureDescription& desc);
 			TextureHandle CreateTextureCubeMapImpl(TextureDescription& desc);
 	    	Program CreateProgram(const char* vertexShader, const char* fragmentShader);
 			Program CreateProgram(const char* vertexShader, const char* fragmentShader, const char* geometryShader);
 			BufferHandle CreateVertexAttAndIndexBuffer(const BufferDescription& desc);
+            void GetMeshVAO(const std::string mesh);
 
             Program m_Program; ///< The program used by the device.
 
-            GLuint       m_VAO; ///< The vertex array object used by the device.
+			GLuint       m_VAO; ///< The vertex array object used by the device DEFAULT VAO. 
 			BufferHandle m_VertexBuffer; ///< The vertex buffer used by the device.
+
+			std::unordered_map<std::string_view, GLuint> m_MeshVAOs; ///< The buffers used by save VAO by ID Mesh.
     };
 
 
