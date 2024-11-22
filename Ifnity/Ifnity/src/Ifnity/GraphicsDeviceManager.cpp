@@ -210,7 +210,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 			{
 			case GLFW_PRESS:
 				//data.GLFWEventSourceBus.triggerKeyPressed(key, 0);
-				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, 0);
+				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, action,mods);
 				break;
 			case GLFW_RELEASE:
 				//data.GLFWEventSourceBus.triggerKeyReleased(key);
@@ -218,7 +218,7 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 				break;
 			case GLFW_REPEAT:
 				//data.GLFWEventSourceBus.triggerKeyPressed(key, 1);
-				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, 1);
+				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, action, mods);
 				break;
 			}
 		});

@@ -8,6 +8,7 @@
 #include "Ifnity/Layers/ImguiLayer.h"
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Ifnity/Layers/ExampleLayer.h"
+#include "Ifnity/Camera/CameraLayer.h"
 #include "../ShaderBuilding/ShaderBuilder.hpp"
 
 //Maths

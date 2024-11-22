@@ -25,15 +25,15 @@ namespace IFNITY {
 		}
 	};
 
-	class EventCameraListener: public events::EventListener<MouseMove>
-	{
-	public:
-		void onEventReceived(const MouseMove& event) override
-		{
-			IFNITY_LOG(LogCore, TRACE, event.ToString() + "camera");
-		}
-	
-	};
+	//class EventCameraListener: public events::EventListener<MouseMove>
+	//{
+	//public:
+	//	void onEventReceived(const MouseMove& event) override
+	//	{
+	//		IFNITY_LOG(LogCore, TRACE, event.ToString() + "camera");
+	//	}
+	//
+	//};
 
 
 	/// <summary>

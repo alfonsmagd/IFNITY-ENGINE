@@ -1821,11 +1821,14 @@ public:
 		vec4 cameraPos;
 	};
 
-	Source_CUBEMAP_FIGURE(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	Source_CUBEMAP_FIGURE(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()), 
+		positioner(vec3(0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_CameraListener(&positioner)
 	{
-
+		
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
+		PushLayer(new IFNITY::CameraLayer(&m_CameraListener));
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
 
 
@@ -1898,7 +1901,6 @@ public:
 
 		const PerFrameData perFrameData
 		{
-
 			m, //model
 			p * m, //mvp
 			vec4(0.0f, 0.0f, 0.0f, 0.0f) //cameraPos
@@ -1933,6 +1935,7 @@ public:
 	~Source_CUBEMAP_FIGURE() override {}
 
 private:
+	CameraPositioner_FirstPerson positioner;
 	TextureHandle m_Texture;
 	BufferHandle m_UBO;
 	BufferHandle m_VertexBuffer;
@@ -1943,6 +1946,7 @@ private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 	std::shared_ptr<IShader> m_gs;
+	IFNITY::EventCameraListener m_CameraListener;
 };
 
 void error_callback(void*, const char* error_message)
@@ -1960,7 +1964,7 @@ IFNITY::App* IFNITY::CreateApp()
 	//return new Source_Texture(api)
 	//return new Source_Tetahedre(api);
 	//
-	 return new Source_Tetahedre(api);
+	 //return new Source_Tetahedre(api);
 
 	//return new Source_VTXP_HLSL(api);
 	return new Source_CUBEMAP_FIGURE(api);

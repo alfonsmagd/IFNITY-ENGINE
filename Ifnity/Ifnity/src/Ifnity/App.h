@@ -67,7 +67,7 @@ private:
 
 	std::unique_ptr<GraphicsDeviceManager> m_ManagerDevice;
 	std::unique_ptr<GLFWEventListener> m_GLFWEventListener;
-	std::unique_ptr<EventCameraListener> m_CameraEventListener;
+	//std::unique_ptr<EventCameraListener> m_CameraEventListener;
 	LayerStack m_LayerStack;
 	GLFWEventSource* m_EventBus = nullptr;
 	rhi::GraphicsAPI m_API;
