@@ -33,15 +33,17 @@ jobs:
     - name: Add Ninja to PATH
       run: echo "C:\ProgramData\chocolatey\bin" >> $GITHUB_PATH
 
-    - name: Configure CMake
+    - name: Set up MSVC environment
       shell: cmd
       run: |
-        cmake -S %GITHUB_WORKSPACE%/Ifnity -B %GITHUB_WORKSPACE%/Ifnity/build ^
-          -G "Ninja" ^
-          -DCMAKE_C_COMPILER=cl ^
-          -DCMAKE_CXX_COMPILER=cl ^
-          -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+        "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
-    - name: Build
-      shell: cmd
-      run: cmake --build %GITHUB_WORKSPACE%/Ifnity/build --config %BUILD_TYPE%
+    - name: Configure CMake
+      run: |
+        cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/out/build/x64-Debug \
+          -G "Ninja" \
+          -DCMAKE_BUILD_TYPE=Debug \
+          -DBUILD_SHARED_IFNITY=False
+
+    - name: Build Project
+      run: cmake --build ${{github.workspace}}/out/build/x64-Debug --config Debug
