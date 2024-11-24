@@ -27,9 +27,11 @@ jobs:
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
 
-    - name: Install Ninja (if missing)
-      if: failure()
+    - name: Install Ninja
       run: choco install ninja -y
+
+    - name: Add Ninja to PATH
+      run: echo "::add-path::C:\\ProgramData\\chocolatey\\bin"
 
     - name: Configure CMake
       shell: cmd
