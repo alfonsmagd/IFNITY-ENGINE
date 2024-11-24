@@ -27,9 +27,6 @@ jobs:
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
 
-    - name: Verify Ninja installation
-      run: ninja --version
-
     - name: Install Ninja (if missing)
       if: failure()
       run: choco install ninja -y
