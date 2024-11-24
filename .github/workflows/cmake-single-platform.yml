@@ -29,12 +29,14 @@ jobs:
         vulkan-use-cache: true
 
     - name: Configure CMake
+      shell: cmd
       run: |
-        cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/Ifnity/build \
-          -G "Ninja" \
-          -DCMAKE_C_COMPILER=cl \
-          -DCMAKE_CXX_COMPILER=cl \
-          -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+        cmake -S %GITHUB_WORKSPACE%/Ifnity -B %GITHUB_WORKSPACE%/Ifnity/build ^
+          -G "Ninja" ^
+          -DCMAKE_C_COMPILER=cl ^
+          -DCMAKE_CXX_COMPILER=cl ^
+          -DCMAKE_BUILD_TYPE=%BUILD_TYPE%
+
 
     - name: Build
       run: cmake --build ${{github.workspace}}/Ifnity/build --config ${{env.BUILD_TYPE}}
