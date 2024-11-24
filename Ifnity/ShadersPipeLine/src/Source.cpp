@@ -1971,7 +1971,7 @@ IFNITY::App* IFNITY::CreateApp()
 	//
 	 //return new Source_Tetahedre(api);
 
-	//return new Source_VTXP_HLSL(api);
-	return new Source_CUBEMAP_FIGURE(api);
+	return new Source_VTXP_HLSL(api);
+	//return new Source_CUBEMAP_FIGURE(api);
 }
 
