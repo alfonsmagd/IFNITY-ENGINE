@@ -33,10 +33,6 @@ jobs:
     - name: Add Ninja to PATH
       run: echo "C:\ProgramData\chocolatey\bin" >> $GITHUB_PATH
 
-    - name: Set up MSVC environment
-      shell: cmd
-      run: |
-        "C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 
     - name: Configure CMake
       run: |
