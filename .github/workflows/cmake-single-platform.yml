@@ -31,7 +31,7 @@ jobs:
       run: choco install ninja -y
 
     - name: Add Ninja to PATH
-      run: echo "::add-path::C:\\ProgramData\\chocolatey\\bin"
+      run: echo "C:\ProgramData\chocolatey\bin" >> $GITHUB_PATH
 
     - name: Configure CMake
       shell: cmd
