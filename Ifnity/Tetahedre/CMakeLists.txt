@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # Nombre del proyecto
-project(ShadersPipelines)
+project(Tetahedre)
 
 # C++ 17 standar 
 set(CMAKE_CXX_STANDARD 17)
@@ -55,4 +55,3 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     ${CMAKE_SOURCE_DIR}/../data
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
 )
-

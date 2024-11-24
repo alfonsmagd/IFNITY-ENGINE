@@ -13,6 +13,11 @@ add_subdirectory(Ifnity)
 add_subdirectory(Sandbox)
 add_subdirectory(GPU_MONITOR)
 add_subdirectory(ShadersPipeLine)
+add_subdirectory(Simple_Texture)
+add_subdirectory(Tetahedre)
+add_subdirectory(Skybox_Camera)
+#add_subdirectory(Source_VTXP_HLSL)
+#add_subdirectory(CubeMap_Texture)
 
 # El dll que genera Ifnity se copiará automáticamente a la carpeta de salida de Sandbox
 

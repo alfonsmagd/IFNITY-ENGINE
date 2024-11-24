@@ -1,10 +1,7 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.8)
 
 # Nombre del proyecto
-project(ShadersPipelines)
-
-# C++ 17 standar 
-set(CMAKE_CXX_STANDARD 17)
+project(SkyBox_Camera)
 
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 
@@ -49,10 +46,8 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     ${CMAKE_SOURCE_DIR}/../Shaders
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
 )
-
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/../data
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
 )
-

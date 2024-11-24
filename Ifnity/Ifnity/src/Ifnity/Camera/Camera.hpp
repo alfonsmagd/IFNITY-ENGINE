@@ -139,10 +139,10 @@ public:
 
 public:
 	float mouseSpeed_ = 4.0f;
-	float acceleration_ = 150.0f;
+	float acceleration_ = 60.0f;
 	float damping_ = 0.2f;
-	float maxSpeed_ = 10.0f;
-	float fastCoef_ = 10.0f;
+	float maxSpeed_ = 7.0f;
+	float fastCoef_ = 7.0f;
 
 private:
 	glm::vec2 mousePos_ = glm::vec2(0);

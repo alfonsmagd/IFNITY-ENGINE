@@ -979,11 +979,20 @@ static const float2 tc[3] =
     float2(0.5f, 1.0f)
 };
 
+static const float3 colorFactors[3] =
+{
+    float3(1.0f, 0.0f, 0.0f), // Rojo
+    float3(0.0f, 1.0f, 0.0f), // Verde
+    float3(0.0f, 0.0f, 1.0f)  // Azul
+};
+
 // Estructura de salida del Vertex Shader
 struct VSOutput
 {
     float4 pos : SV_Position;
     float2 uv : TEXCOORD0;
+	float3 colorFactor : COLOR0; // Factor de color
+
 };
 
 // Vertex Shader
@@ -992,6 +1001,8 @@ VSOutput main_vs(uint i_vertexId : SV_VertexID)
     VSOutput output;
     output.pos = mul(float4(g_positions[i_vertexId], 0.0f, 1.0f), MVP);
     output.uv = tc[i_vertexId];
+    output.colorFactor = colorFactors[i_vertexId]; // Enviar el factor de color
+    
     return output;
 }
 
@@ -1002,9 +1013,14 @@ SamplerState sampler0 : register(s0);
 // Pixel Shader
 float4 main_ps(VSOutput input) : SV_Target
 {
-    // Muestra el color de la textura usando las coordenadas UV
-    return texture0.Sample(sampler0, input.uv);
+        // Muestra el color de la textura usando las coordenadas UV
+    float4 texColor = texture0.Sample(sampler0, input.uv);
+	// Multiplica el color de la textura por el factor de color
+    return float4(texColor.rgb * input.colorFactor, texColor.a) * 1.5f;
+    
+return texColor;
 }
+
 
 	)";
 
@@ -1880,7 +1896,7 @@ public:
 		TextureDescription descCubeTexture;
 		descCubeTexture.setDimension(TextureDimension::TEXTURECUBE)
 			.setFilePath("data/cube_boloni.hdr")
-			.setWrapping(TextureWrapping::CLAMP_TO_EDGE); 
+			.setWrapping(TextureWrapping::CLAMP_TO_EDGE);
 
 		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture(descCubeTexture);
 
@@ -1966,12 +1982,8 @@ IFNITY::App* IFNITY::CreateApp()
 
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
-	//return new Source_Texture(api)
-	//return new Source_Tetahedre(api);
-	//
-	 //return new Source_Tetahedre(api);
+	return new Source_Texture(api);
 
-	//return new Source_VTXP_HLSL(api);
-	return new Source_CUBEMAP_FIGURE(api);
+	//return new Source_CUBEMAP_FIGURE(api);
 }
 

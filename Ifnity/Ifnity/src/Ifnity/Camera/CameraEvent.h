@@ -3,6 +3,7 @@
 #include "Ifnity/Event/Event.h"
 #include "Ifnity/Event/EventBus.h"
 #include "Camera.hpp"
+#include "Ifnity\App.h"
 #include <GLFW\glfw3.h>
 
 
@@ -40,13 +41,19 @@ namespace IFNITY
 
 		void onEventReceived(const MouseMove& event) override
 		{
-			mouseState.pos.x = static_cast<float>(event.getX());
-			mouseState.pos.y = static_cast<float>(event.getY());
+			mouseState.pos.x = static_cast<float>(event.getX()) / App::GetApp().GetManagerDevice().GetWidth();
+			mouseState.pos.y = static_cast<float>(event.getY()) / App::GetApp().GetManagerDevice().GetHeight();
 			IFNITY_LOG(LogCore, TRACE, event.ToString() + "camera");
+			IFNITY_LOG(LogCore, TRACE, "Mouse Pos: " + std::to_string(mouseState.pos.x) + " " + std::to_string(mouseState.pos.y));
 		}
 
 		void onEventReceived(const MouseClick& event) override
 		{
+			//To avoid the camera movement when the mouse is over the imgui window.
+			if(ImGui::GetIO().WantCaptureMouse)
+			{
+				return;
+			}
 			mouseState.pressedLeft = event.getButton() == GLFW_MOUSE_BUTTON_LEFT &&
 				event.getState() == GLFW_PRESS;
 			IFNITY_LOG(LogCore, TRACE, event.ToString() + "camera");
@@ -57,7 +64,6 @@ namespace IFNITY
 			const bool pressed = event.getAction() != GLFW_RELEASE;
 			const int key = event.getKey();
 
-			
 			if(key == GLFW_KEY_W)
 				m_cameraPositioner->movement_.forward_ = pressed;
 			if(key == GLFW_KEY_S)
@@ -66,10 +72,11 @@ namespace IFNITY
 				m_cameraPositioner->movement_.left_ = pressed;
 			if(key == GLFW_KEY_D)
 				m_cameraPositioner->movement_.right_ = pressed;
-			if(key == GLFW_KEY_1)
+			if(key == GLFW_KEY_Q)
 				m_cameraPositioner->movement_.up_ = pressed;
-			if(key == GLFW_KEY_2)
+			if(key == GLFW_KEY_E)
 				m_cameraPositioner->movement_.down_ = pressed;
+
 			IFNITY_LOG(LogCore, TRACE, event.ToString() + "camera");
 		}
 

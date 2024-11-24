@@ -1880,7 +1880,7 @@ public:
 		TextureDescription descCubeTexture;
 		descCubeTexture.setDimension(TextureDimension::TEXTURECUBE)
 			.setFilePath("data/cube_boloni.hdr")
-			.setWrapping(TextureWrapping::CLAMP_TO_EDGE); 
+			.setWrapping(TextureWrapping::CLAMP_TO_BORDER);
 
 		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture(descCubeTexture);
 
@@ -1969,9 +1969,8 @@ IFNITY::App* IFNITY::CreateApp()
 	//return new Source_Texture(api)
 	//return new Source_Tetahedre(api);
 	//
-	 //return new Source_Tetahedre(api);
+	 return new Source_Tetahedre(api);
 
-	//return new Source_VTXP_HLSL(api);
-	return new Source_CUBEMAP_FIGURE(api);
+	
 }
 
