@@ -2,7 +2,8 @@
 
 #include "pch.h"
 #include "Ifnity/Event/WindowEvent.h"
-
+#include "Ifnity\Graphics\Interfaces\IShader.hpp"
+#include "Ifnity\Graphics\Interfaces\IDevice.hpp"
 
 // GRAPHIC API
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -82,6 +83,9 @@ public:
 
 	virtual unsigned int GetWidth() const = 0;
 	virtual unsigned int GetHeight() const = 0;
+	//To implment next.
+	[[nodiscard]] virtual IDevice* GetRenderDevice() const { return nullptr; }
+
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowData&& props);
 	bool CreateInstance();
@@ -98,10 +102,21 @@ public:
 	static GraphicsDeviceManager* Create(rhi::GraphicsAPI api = rhi::GraphicsAPI::D3D11);
 	// Método estático para obtener la API gráfica
 	static rhi::GraphicsAPI GetStaticGraphicsAPI() { return g_API; }
+	
 
 	virtual void* Wrapper_ptr_data() { return 0; };
-
 	virtual void ClearBackBuffer(float* color) {};
+	virtual void LoadAppPipelineDescription() {}; //TODO: ABSOLUTE. 
+
+	
+
+
+	//APP user 
+	void LoadAppShaders(IShader* vs, IShader* ps) {
+		m_VS = vs; 
+		m_PS = ps; }
+	const IShader* GetVertexShader() { return m_VS; }
+	const IShader* GetPixelShader() {  return m_PS; }
 
 protected:
 	// Api Device specific methods interface to be implemented by the derived class.
@@ -114,13 +129,17 @@ protected:
 	virtual void ResizeSwapChain() = 0;
 	virtual void InitializeGui() = 0;
 	virtual void InternalPreDestroy() = 0; 
-
+	
+	
 	
 
 	WindowData m_Props;
 	bool m_IsNvidia = false;
 	GLFWwindow* m_Window = nullptr;
 	bool m_InstanceCreated = false;
+	
+	//Graphics Shaders
+	
 
 private:
 	void SetGLFWCallbacks();
@@ -136,6 +155,9 @@ private:
 	
 	static rhi::GraphicsAPI g_API; // By default opengl is the api 
 	StateGraphicsDevice m_StateGraphicsDevice{ StateGraphicsDevice::NOT_INITIALIZED };
+
+	IShader* m_VS = nullptr;
+	IShader* m_PS = nullptr;
 };
 
 

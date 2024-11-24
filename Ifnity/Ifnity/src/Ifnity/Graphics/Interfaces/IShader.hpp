@@ -43,6 +43,7 @@ struct IFNITY_API ShaderCreateDescription
 	bool SaveFile{ true };
 	std::string FileName;
 	std::string Filepath{};
+	bool NoCompile = false;
 
 	// Operator to compare two ShaderCreateDescription and uses in std::set
 	bool operator<(const ShaderCreateDescription& other) const
@@ -66,10 +67,9 @@ public:
 	void SetShaderDescription(const ShaderCreateDescription& description) { m_Description = description; }
 	
 	ShaderCreateDescription GetShaderDescription() const { return m_Description; }
-	void AddShaderDescription(rhi::GraphicsAPI api, const ShaderCreateDescription& description);
+	const ShaderCreateDescription& GetShaderDescpritionbyAPI(rhi::GraphicsAPI api) const ;
 	
-
-
+	void AddShaderDescription(rhi::GraphicsAPI api, const ShaderCreateDescription& description);
 	std::vector<const wchar_t*> GetCompileArgs(const ShaderCreateDescription& shaderDescription) const;
 	
 

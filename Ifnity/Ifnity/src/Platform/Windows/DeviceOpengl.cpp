@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "DeviceOpengl.h"
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
+#include "Ifnity/Graphics/Interfaces/IShader.hpp"
 #include <glm\glm.hpp>
 
 
@@ -17,13 +18,20 @@ DeviceOpengl::~DeviceOpengl()
 	// Shutdown the window and close GLFW
 	//Other function to close the window
 	IFNITY_LOG(LogApp, WARNING, "DeviceOpenGL destroyed");
+	m_RenderDevice.reset();
 }
 
 void DeviceOpengl::OnUpdate()
 {
-	//Clear the color buffer
+	//glViewport(0, 0, GetWidth(), GetHeight());
+	//
+	//glDrawArrays(GL_TRIANGLES, 0, 3);
+	glEnable(GL_DEPTH_TEST);
 	glClearColor(m_Color[0],m_Color[1], m_Color[2], m_Color[3]);
+	//Imgui update Render 
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	glfwSwapBuffers(m_Window);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 /// <summary>
@@ -67,6 +75,11 @@ bool DeviceOpengl::InitializeDeviceAndContext()
 	//Print OpenGL information
 	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
 
+
+	// Create m_RenderDevice based in OPENGL . 
+	
+	m_RenderDevice = OpenGL::CreateDevice();
+
 	return true;
 
 	
@@ -105,39 +118,123 @@ void DeviceOpengl::InitializeGLAD()
 	}
 }
 
-// sp is Shader Fragment. 
-void DeviceOpengl::DemoTriangle(const char* sv, const char* sp)
+void DeviceOpengl::BuildGraphicsShaders()
 {
+	if( !GetVertexShader() || !GetPixelShader())
+	{
+		IFNITY_LOG(LogApp, WARNING, "Load GetPixelShader or VertexShader");
+		return;
+	}
+
+	// 1. retrieve the vertex/fragment source code from filePath
+    std::string vertexCode;
+    std::string fragmentCode;
+    std::ifstream vShaderFile;
+    std::ifstream fShaderFile;
+    // ensure ifstream objects can throw exceptions:
+    vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
+    try 
+    {
+		const auto& vsfile = GetVertexShader()->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
+		const auto& psfile = GetPixelShader()->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
+        vShaderFile.open(vsfile);
+        fShaderFile.open(psfile);
+        std::stringstream vShaderStream, fShaderStream;
+        // read file's buffer contents into streams
+        vShaderStream << vShaderFile.rdbuf();
+        fShaderStream << fShaderFile.rdbuf();		
+        // close file handlers
+        vShaderFile.close();
+        fShaderFile.close();
+        // convert stream into string
+        vertexCode   = vShaderStream.str();
+        fragmentCode = fShaderStream.str();		
+    }
+    catch(std::ifstream::failure e)
+    {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+    }
+    const char* vShaderCode = vertexCode.c_str();
+    const char* fShaderCode = fragmentCode.c_str();
+    
+	// 2. compile shaders 
+
+	CompileGraphicsShader(vShaderCode, fShaderCode);
+
+
+
+}
+
+void DeviceOpengl::CompileGraphicsShader(const char* vertexShader, const char* fragmentShader)
+{
+
+	
+	int success;
+	char infoLog[ 512 ];
+
+	// Complete the shader program
 	const GLuint shaderVertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(shaderVertex, 1, &sv, nullptr);
+	glShaderSource(shaderVertex, 1, &vertexShader, nullptr);
 	glCompileShader(shaderVertex);
 
+	// print compile errors if any
+	glGetShaderiv(shaderVertex, GL_COMPILE_STATUS, &success);
+	if(!success)
+	{
+		glGetShaderInfoLog(shaderVertex, 512, NULL, infoLog);
+		IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" , infoLog);
+	};
+
 	const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(shaderFragment, 1, &sp, nullptr);
+	glShaderSource(shaderFragment, 1, &fragmentShader, nullptr);
 	glCompileShader(shaderFragment);
+
+	glGetShaderiv(shaderFragment, GL_COMPILE_STATUS, &success);
+	if(!success)
+	{
+		glGetShaderInfoLog(shaderFragment, 512, NULL, infoLog);
+		IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n", infoLog);
+	};
+
 
 	const GLuint program = glCreateProgram();
 	glAttachShader(program, shaderVertex);
 	glAttachShader(program, shaderFragment);
 
 	glLinkProgram(program);
+
+	glGetProgramiv(program, GL_LINK_STATUS, &success);
+	if(!success)
+	{
+		glGetProgramInfoLog(program, 512, NULL, infoLog);
+		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+	}
 	glUseProgram(program);
 
-	GLuint vao;
-	glCreateVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	
+	glCreateVertexArrays(1, &m_VAO);
+	glBindVertexArray(m_VAO);
+
 }
+
+void DeviceOpengl::UseShader()
+{}
+
+// sp is Shader Fragment. 
+
 
 void DeviceOpengl::RenderDemo(int w,int h) const
 {
 
 	glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Frame Start");
 	glViewport(0, 0,w , h);
-	glClear(GL_COLOR_BUFFER_BIT);
+
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 	glPopDebugGroup();
 }
+
+
 
 
 std::string DeviceOpengl::GetOpenGLInfo() const
@@ -169,6 +266,8 @@ std::string DeviceOpengl::GetOpenGLInfo() const
 	
 }
 
+
+
 void DeviceOpengl::Shutdown()
 {
 	IFNITY_LOG(LogApp, WARNING, "Shutdown Init OPENGL");
@@ -180,10 +279,19 @@ void DeviceOpengl::InternalPreDestroy()
 {
 }
 
+void DeviceOpengl::LoadAppPipelineDescription()
+{
+
+	BuildGraphicsShaders();
+
+}
+
 void DeviceOpengl::ClearBackBuffer(float* color) 
 {
 	std::copy(color, color + 4, m_Color);
 }
+
+
 
 
 

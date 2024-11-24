@@ -205,22 +205,9 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 	glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-
-			switch (action)
-			{
-			case GLFW_PRESS:
 				//data.GLFWEventSourceBus.triggerKeyPressed(key, 0);
-				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, 0);
-				break;
-			case GLFW_RELEASE:
-				//data.GLFWEventSourceBus.triggerKeyReleased(key);
-				data.GLFWEventSourceBus.triggerEvent<KeyRelease>(key);
-				break;
-			case GLFW_REPEAT:
-				//data.GLFWEventSourceBus.triggerKeyPressed(key, 1);
-				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, 1);
-				break;
-			}
+				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, action,mods);
+		
 		});
 
 	glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos)

@@ -11,6 +11,11 @@
 IFNITY_NAMESPACE 
 
 
+
+
+
+
+
 //BASIC TYPES COLOR// 
 struct Color
 {
@@ -49,7 +54,146 @@ struct Color
 
 
 
+
+
+
 namespace rhi {
+
+    //TYPES 
+
+    /**
+     * @enum eBitmapType
+     * @brief Enum representing the type of bitmap.
+     */
+    enum eBitmapType : uint8_t
+    {
+        eBitmapType_2D,   /**< 2D bitmap type */
+        eBitmapType_Cube  /**< Cube bitmap type */
+    };
+
+    /**
+     * @enum eBitmapFormat
+     * @brief Enum representing the format of bitmap.
+     */
+    enum eBitmapFormat : uint8_t
+    {
+        eBitmapFormat_UnsignedByte, /**< Unsigned byte format */
+        eBitmapFormat_Float         /**< Float format */
+    };
+
+    /**
+     * @enum VerxtexAttributeType
+     * @brief Enum representing the type of vertex attribute.
+     */
+    enum class VerxtexAttributeType : uint8_t
+    {
+        POSITION, /**< Position attribute */
+        COLOR,    /**< Color attribute */
+        NORMAL,   /**< Normal attribute */
+        TANGENT,  /**< Tangent attribute */
+        INDEX,    /**< Index attribute */
+        NONE      /**< No attribute */
+    };
+
+    /**
+     * @enum PrimitiveType
+     * @brief Enum representing the type of primitive.
+     */
+    enum class PrimitiveType : uint8_t
+    {
+        PointList,                    /**< Point list */
+        LineList,                     /**< Line list */
+        TriangleList,                 /**< Triangle list */
+        TriangleStrip,                /**< Triangle strip */
+        TriangleFan,                  /**< Triangle fan */
+        TriangleListWithAdjacency,    /**< Triangle list with adjacency */
+        TriangleStripWithAdjacency,   /**< Triangle strip with adjacency */
+        PatchList                     /**< Patch list */
+    };
+
+    /**
+     * @enum CullModeType
+     * @brief Enum representing the type of cull mode.
+     */
+    enum class CullModeType : uint8_t
+    {
+        None,          /**< No culling */
+        Front,         /**< Front face culling */
+        Back,          /**< Back face culling */
+        FrontAndBack   /**< Front and back face culling */
+    };
+
+    /**
+     * @enum FillModeType
+     * @brief Enum representing the type of fill mode.
+     */
+    enum class FillModeType : uint8_t
+    {
+        None,       /**< No fill */
+        Solid,      /**< Solid fill */
+        Point,      /**< Point fill */
+        Wireframe   /**< Wireframe fill */
+    };
+
+    /**
+     * @enum FrontFaceType
+     * @brief Enum representing the type of front face.
+     */
+    enum class FrontFaceType : uint8_t
+    {
+        Clockwise,         /**< Clockwise front face */
+        CounterClockwise   /**< Counter-clockwise front face */
+    };
+
+    /**
+     * @enum Format
+     * @brief Enum representing the format type.
+     */
+    enum class Format : uint8_t
+    {
+        R8G8B8_UINT, /**< R8G8B8 unsigned integer format */
+        R8G8B8,      /**< R8G8B8 format */
+		R32G32B32_FLOAT, /**< R32G32B32 float format */
+        UNKNOWN,     /**< Unknown format */
+        COUNT        /**< Format count */
+    };
+
+    /**
+     * @enum TextureWrapping
+     * @brief Enum representing the type of texture wrapping.
+     */
+    enum class TextureWrapping : uint8_t
+    {
+        REPEAT,            /**< Repeat wrapping */
+        MIRRORED_REPEAT,   /**< Mirrored repeat wrapping */
+        CLAMP_TO_EDGE,     /**< Clamp to edge wrapping */
+        CLAMP_TO_BORDER,   /**< Clamp to border wrapping */
+        COUNT              /**< Wrapping count */
+    };
+
+    /**
+     * @enum TextureDimension
+     * @brief Enum representing the dimension of texture.
+     */
+    enum class TextureDimension : uint8_t
+    {
+        UNKNOWN,            /**< Unknown dimension */
+        TEXTURE1D,          /**< 1D texture */
+        TEXTURE1DARRAY,     /**< 1D texture array */
+        TEXTURE2D,          /**< 2D texture */
+        TEXTURE2DARRAY,     /**< 2D texture array */
+        TEXTURECUBE,        /**< Cube texture */
+        TEXTURECUBEARRAY,   /**< Cube texture array */
+        TEXTURE2DMS,        /**< 2D multisample texture */
+        TEXTURE2DMSARRAY,   /**< 2D multisample texture array */
+        TEXTURE3D,          /**< 3D texture */
+        COUNT               /**< Dimension count */
+    };
+
+   
+
+
+
 
        // Definición de los errores de D3D12
    #define D3D12_ERROR_INVALID_DEVICE 0x887A0001
@@ -156,7 +300,20 @@ namespace rhi {
 
 
 
+  /*  struct DrawDescription
+    {
+        uint32_t vertexCount = 0;
+        uint32_t instanceCount = 1;
+        uint32_t startIndexLocation = 0;
+        uint32_t startVertexLocation = 0;
+        uint32_t startInstanceLocation = 0;
 
+        constexpr DrawDescription& setVertexCount(uint32_t value) { vertexCount = value; return *this; }
+        constexpr DrawDescription& setInstanceCount(uint32_t value) { instanceCount = value; return *this; }
+        constexpr DrawDescription& setStartIndexLocation(uint32_t value) { startIndexLocation = value; return *this; }
+        constexpr DrawDescription& setStartVertexLocation(uint32_t value) { startVertexLocation = value; return *this; }
+        constexpr DrawDescription& setStartInstanceLocation(uint32_t value) { startInstanceLocation = value; return *this; }
+    };*/
 
 
 	// MacroDefinition to  IntelliSense Style based in the Forge Engine;

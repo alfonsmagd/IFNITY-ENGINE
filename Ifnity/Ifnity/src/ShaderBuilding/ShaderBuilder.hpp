@@ -2,7 +2,7 @@
 
 #include "pch.h"
 #include "Ifnity/Utils/VFS.hpp"
-#include "Ifnity/Graphics/IShader.hpp"
+#include "Ifnity/Graphics/Interfaces/IShader.hpp"
 #include <dxcapi.h>
 #include <wrl\client.h>
 
@@ -44,6 +44,14 @@ public:
      * @return HRESULT indicating the result of the compilation.
      */
     static HRESULT CompileShader(IShader* shader);
+
+
+    /**
+     * @brief No compile option, its only check if shaders files are correct in folders. 
+     * @param shader Pointer to the IShader object.
+     * @return HRESULT indicating the result of the checking proccess.
+     */
+    static HRESULT ChekingLocalShaders(IShader& shader);
 
     /**
      * @brief Converts a SPIR-V file to GLSL.

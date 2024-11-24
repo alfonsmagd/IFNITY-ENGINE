@@ -135,5 +135,8 @@ EVENT_END()
 #define CONNECT_SINGLE_EVENT(eventType, eventBus) \
     IFNITY::events::connect<IFNITY::eventType>(*eventBus, *this)
 
+//This implementation assumes that eventCamera its a pointer to a class that inherits from EventListener
+#define CONNECT_EVENT_CAMERA(eventType, eventBus,eventCamera) \
+	IFNITY::events::connect<IFNITY::eventType>(*eventBus, *eventCamera)
 
 #define CONNECT_EVENT(x) ConnectEvent<x>()

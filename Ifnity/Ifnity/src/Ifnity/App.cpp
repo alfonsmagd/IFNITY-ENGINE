@@ -66,10 +66,12 @@ void main()
 		// Create windows props
 		WindowData props;
 
-		m_Window = std::unique_ptr<GraphicsDeviceManager>(
+		m_ManagerDevice = std::unique_ptr<GraphicsDeviceManager>(
 			GraphicsDeviceManager::Create(api));
 
-		m_Window->CreateWindowSurface(std::move(props));
+		//This method is more sintatic sugar, but its preferible to move in constructor problaby LoadApp will grew up 
+
+		m_ManagerDevice->CreateWindowSurface(std::move(props));
 
 
 		InitEventBusAndListeners();
@@ -86,7 +88,7 @@ void main()
 
 		m_GLFWEventListener = std::make_unique<GLFWEventListener>();
 
-		SetEventBus(m_Window->GetGLFWEventSource());
+		SetEventBus(m_ManagerDevice->GetGLFWEventSource());
 
 		// Connect Differents events. 
 		CONNECT_EVENT(WindowResize);
@@ -100,7 +102,7 @@ void main()
 	}
 	//Example the simple event connect. 
 
-	//events::connect<MouseMove>(*m_Window->GetGLFWEventSource(), *m_CameraEventListener);
+	//events::connect<MouseMove>(*m_ManagerDevice->GetGLFWEventSource(), *m_CameraEventListener);
 
 
 // Static member  declaration
@@ -109,6 +111,8 @@ void main()
 	App::App(rhi::GraphicsAPI api) : m_graphicsAPI(api)
 	{
 		s_Instance = this;
+
+		//Remakr that it this the basse. 
 
 		InitApp(m_graphicsAPI);
 
@@ -176,6 +180,11 @@ void main()
 
 	void App::run()
 	{
+		//Initialize user pipelineload. 
+
+		//m_ManagerDevice->LoadAppPipelineDescription();
+		
+		
 		//This part its because the initializacion process is in the constructor of the app, then source will be build LAYERS  after App constructor. We cant initiate EventBusLayers in App constructor. 
 		InitiateEventBusLayers();
 
@@ -185,9 +194,6 @@ void main()
 		while (isRunning())
 		{
 			glfwPollEvents();
-			m_Window->RenderDemo(m_Window->GetWidth(), m_Window->GetHeight());
-
-			// Render ImGui Frame
 #ifndef _MODO_TEST
 			RenderImGuiFrame();
 #endif
@@ -198,20 +204,28 @@ void main()
 				layer->OnUpdate();
 			}
 
+			// Update animation 
+			Animate();
 
-			m_Window->OnUpdate();
+			//
+			Render();
+
+
+			m_ManagerDevice->OnUpdate();
+
+
 #ifndef _MODO_TEST
 
 			// Change API 
 			if (m_FlagChangeAPI)
 			{
 				//Delete and destroy windows. 
-				m_Window->Shutdown();
+				m_ManagerDevice->Shutdown();
 
 
 				//OnDetach all layers
 				ForceOnDetachLayers();
-				m_Window.reset();
+				m_ManagerDevice.reset();
 
 				ResetAppEvents();
 
@@ -224,7 +238,7 @@ void main()
 #endif
 }
 
-		m_Window->Shutdown();
+		m_ManagerDevice->Shutdown();
 	}
 
 	void App::PushLayer(Layer* layer)
@@ -270,7 +284,7 @@ void main()
 	void App::SetImguiAPI() const
 	{
 		// If you use other different lib, api or framework to generate a window , you should change this.
-		m_Window->InitImGui();
+		m_ManagerDevice->InitImGui();
 
 	}
 
@@ -279,10 +293,10 @@ void main()
 		ImGuiIO& io = ImGui::GetIO();
 		App& app = App::GetApp();
 
-		io.DisplaySize = ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
+		io.DisplaySize = ImVec2(app.GetManagerDevice().GetWidth(), app.GetManagerDevice().GetHeight());
 		/*IFNITY_LOG(LogApp, INFO,
-			"Width imgui : " + std::to_string(app.GetWindow().GetWidth()) +
-			" Height imgui : " + std::to_string(app.GetWindow().GetHeight()));*/
+			"Width imgui : " + std::to_string(app.GetManagerDevice().GetWidth()) +
+			" Height imgui : " + std::to_string(app.GetManagerDevice().GetHeight()));*/
 
 		float time = (float)glfwGetTime();
 

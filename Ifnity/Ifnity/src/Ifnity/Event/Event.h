@@ -10,7 +10,7 @@ namespace IFNITY {
 	EVENT3(MouseClick, int, Button, int, State, int, Mods)
 	EVENT2(MouseMove, int, X, int, Y);
     EVENT2(WindowResize, int, Width, int, Height);
-    EVENT2(KeyPressed, int, Key, int, Repeat);
+    EVENT3(KeyPressed, int, Key, int, Action,int, Mode);
     EVENT2(ScrollMouseMove, int, X, int, Y);
 	EVENT1(KeyRelease, int, Key)
     EVENT(WindowClose,"Window Close Event");
@@ -23,6 +23,11 @@ namespace IFNITY {
 									 MouseMove, \
 									 ScrollMouseMove, \
 									 MouseClick
+
+	#define CAMERA_EVENT_GROUP       MouseMove,\
+									 MouseClick,\
+									 KeyPressed
+									 
 
 
 }

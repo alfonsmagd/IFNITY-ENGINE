@@ -21,12 +21,6 @@ jobs:
         submodules: true  # Incluye los submódulos
         fetch-depth: 0    # Clona el historial completo para los submódulos
 
-    
-    - name: Install Windows SDK
-      uses: GuillaumeFalourd/setup-windows10-sdk-action@main
-      with:
-          sdk-version: 22621
-
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.0
       with:
@@ -40,4 +34,3 @@ jobs:
 
     - name: Build
       run: cmake --build ${{github.workspace}}/Ifnity/build --config ${{env.BUILD_TYPE}}
-

@@ -27,6 +27,7 @@ DeviceD3D11::~DeviceD3D11()
 
 void DeviceD3D11::OnUpdate()
 {
+
 	
 	m_SwapChain->Present(IsVSync() ? 1 : 0, 0);
 	//Swap the buffers
@@ -35,7 +36,7 @@ void DeviceD3D11::OnUpdate()
 
 	// TODO: NOT DO THIS HERE, NOW ITS A TEST CODE SOLUTION, BUT ALL ITS NEED WHEN RESIZE EVENTS ITS TRIGGERED;
 	ResizeSwapChain();
-
+	RenderDemo(m_Props.Width, m_Props.Height);
 
 }
 
