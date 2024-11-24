@@ -36,10 +36,7 @@ jobs:
 
     - name: Configure CMake
       run: |
-        cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/out/build/x64-Debug ^
-          -G "Ninja" ^
-          -DCMAKE_BUILD_TYPE=Debug ^
-          -DBUILD_SHARED_IFNITY=False
+        cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/out/build/x64-Debug -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_IFNITY=False
 
     - name: Build Project
       run: cmake --build ${{github.workspace}}/out/build/x64-Debug --config Debug
