@@ -77,7 +77,7 @@ namespace OpenGL
 	void printShaderSource(const char* text)
 	{
 		int line = 1;
-		IFNITY_LOG(LogCore, INFO, "Shader source code Start : -------------------------------------------------------------\n");
+		IFNITY_LOG(LogCore, TRACE, "Shader source code Start : -------------------------------------------------------------\n");
 		printf("\n(%3i) ", line);
 
 		while(text && *text++)
@@ -96,7 +96,7 @@ namespace OpenGL
 		}
 
 		printf("\n");
-		IFNITY_LOG(LogCore, INFO, "Shader source code END : -------------------------------------------------------------\n");
+		IFNITY_LOG(LogCore, TRACE, "Shader source code END : -------------------------------------------------------------\n");
 	}
 
 	Device::Device()

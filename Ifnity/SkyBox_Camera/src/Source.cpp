@@ -305,6 +305,12 @@ public:
 
 	void Render() override
 	{
+		
+		const double newTimeStamp = glfwGetTime();
+		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
+		timeStamp = newTimeStamp;
+		m_FpsCounter.tick(deltaSeconds);
+
 
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
@@ -365,6 +371,11 @@ private:
 	// Camera objects 
 	IFNITY::EventCameraListener m_CameraListener;
 	CameraPositioner_FirstPerson positioner;
+
+	//FPS Counter
+	IFNITY::FpsCounter m_FpsCounter;
+	float deltaSeconds = 0.0f;
+	double timeStamp = 0.0;
 };
 
 void error_callback(void*, const char* error_message)
