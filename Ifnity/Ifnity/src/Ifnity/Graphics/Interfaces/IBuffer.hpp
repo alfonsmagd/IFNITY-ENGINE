@@ -6,20 +6,17 @@ IFNITY_NAMESPACE
 
 struct IFNITY_API VertexAttributeDescription
 {
-    std::string name;
-    rhi::Format format = rhi::Format::UNKNOWN;
-	rhi::VerxtexAttributeType type = rhi::VerxtexAttributeType::NONE;
-    
-    uint32_t arraySize = 1;
     uint32_t bufferLocation = 0;
+    uint32_t arraySize = 1;
+    rhi::Format format = rhi::Format::UNKNOWN;
+    rhi::VerxtexAttributeType type = rhi::VerxtexAttributeType::NONE;
     uint32_t offset = 0;
-    // note: for most APIs, all strides for a given bufferIndex must be identical
     uint32_t elementStride = 0;
-    size_t   size = 0;
+    size_t size = 0;
     bool isInstanced = false;
-	bool haveIndexBuffer = false;
-
-	const void* data = nullptr;
+    bool haveIndexBuffer = false;
+    const void* data = nullptr;
+    std::string name;
 
     VertexAttributeDescription& setName(const std::string& value) { name = value; return *this; }
     constexpr VertexAttributeDescription& setFormat(rhi::Format value) { format = value; return *this; }

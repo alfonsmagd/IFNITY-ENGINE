@@ -153,7 +153,7 @@ void DeviceD3D12::OnUpdate()
 	
 
 	//PopulateCommandList();
-	/*DrawElements(m_PipelineState,m_RootSignature);*/
+	//DrawElements(m_PipelineState,m_RootSignature);
 	//ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
 
@@ -1055,6 +1055,7 @@ void DeviceD3D12::DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
 {
 	m_CommandList->SetPipelineState(pipelineState.Get());
 	m_CommandList->SetGraphicsRootSignature(rootSignature.Get());
+	
 
 	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
