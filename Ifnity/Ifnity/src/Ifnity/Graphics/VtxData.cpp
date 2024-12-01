@@ -3,7 +3,7 @@
 IFNITY_NAMESPACE
 
 
-MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
+IFNITY_API MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
 {
 	MeshFileHeader header;
 
@@ -50,7 +50,7 @@ MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
 
 
 //TODO TEMPLATE..
-void combineBuffers(const std::vector<uint32_t>& indexData,
+IFNITY_API void combineBuffers(const std::vector<uint32_t>& indexData,
 	const std::vector<float>& vertexData, std::vector<uint8_t>& combinedBuffer)
 {
 	// Calcular el tamaño combinado
@@ -65,7 +65,7 @@ void combineBuffers(const std::vector<uint32_t>& indexData,
 		vertexData.data(),
 		vertexData.size() * sizeof(float));
 }
-void loadCombinedBuffer(FILE* file, MeshFileHeader& header, std::vector<uint8_t>& combinedBuffer)
+IFNITY_API void loadCombinedBuffer(FILE* file, MeshFileHeader& header, std::vector<uint8_t>& combinedBuffer)
 {
 	// Calcular tamaño combinado
 	size_t totalSize = header.indexDataSize * sizeof(uint32_t) + header.vertexDataSize * sizeof(float);

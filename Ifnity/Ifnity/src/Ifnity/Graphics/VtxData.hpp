@@ -111,10 +111,10 @@ struct IFNITY_API MeshData
 
 static_assert(sizeof(DrawData) == sizeof(uint32_t) * 6);
 
-MeshFileHeader loadMeshData(const char* filename, MeshData& out);
+IFNITY_API MeshFileHeader loadMeshData(const char* filename, MeshData& out);
 
-void combineBuffers(const std::vector<uint32_t>& indexData, const std::vector<float>& vertexData, std::vector<uint8_t>& combinedBuffer);
+IFNITY_API void combineBuffers(const std::vector<uint32_t>& indexData, const std::vector<float>& vertexData, std::vector<uint8_t>& combinedBuffer);
 
-void loadCombinedBuffer(FILE* file, MeshFileHeader& header, std::vector<uint8_t>& combinedBuffer);
+IFNITY_API void loadCombinedBuffer(FILE* file, MeshFileHeader& header, std::vector<uint8_t>& combinedBuffer);
 
 IFNITY_END_NAMESPACE

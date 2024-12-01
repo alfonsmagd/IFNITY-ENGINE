@@ -7,7 +7,7 @@
 
 IFNITY_NAMESPACE
 
-
+using vec2 = glm::vec2;
 
 namespace OpenGL
 {
@@ -672,6 +672,25 @@ namespace OpenGL
 		{
 			glDeleteProgram(m_Program.id);
 		}
+	}
+
+	/**
+	* @brief Destructor for the GraphicsPipeline class.
+	*
+	* This destructor deletes the OpenGL program associated with the graphics pipeline
+	* if the program ID is not zero.
+	*/
+	MeshObject::MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize) :
+		m_Device(nullptr)
+	{
+		
+
+	}
+
+	void MeshObject::Draw()
+	{
+		glBindVertexArray(m_VAO);
+		
 	}
 
 };

@@ -149,7 +149,30 @@ namespace OpenGL
 
     };
 
-   
+    //-------------------------------------------------  //
+   //  MESHObject OPENGL                              //
+   //----------------------------------------------------//
+
+	class MeshObject final: public IMeshObject
+	{
+        public:
+            //Constructor 
+			MeshObject() = default;
+            MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize);
+            void Draw();
+				
+    private:
+
+		GLuint m_VAO; ///< The vertex array object used by the device.
+        BufferHandle m_BufferVertex;
+		BufferHandle m_BufferIndex;
+        BufferHandle m_BufferIndirect;
+
+		IDevice* m_Device; // avoid circular reference
+	
+	};
+
+	//-------------------------------------------------  //
 
 };
 

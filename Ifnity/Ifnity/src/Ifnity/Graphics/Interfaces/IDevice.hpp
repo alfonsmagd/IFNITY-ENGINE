@@ -7,6 +7,7 @@
 #include "IBuffer.hpp"
 #include "ITexture.hpp"
 #include "IGraphicsPipeline.hpp"
+#include "IMeshObject.hpp"
 
 
 IFNITY_NAMESPACE

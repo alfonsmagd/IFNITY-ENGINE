@@ -2,35 +2,57 @@
 
 
 #include "pch.h"
-#include "Ifnity\Models\GeometicModels.hpp"
+#include "../../Graphics/VtxData.hpp"
 
 IFNITY_NAMESPACE
 
 
 
-struct MeshDescription
+struct IFNITY_API MeshObjectDescription
 {
 	/*is based in filename */
 	std::string  filePath;
 	bool isLargeMesh = false;
 	bool isGeometryModel = false;
+
+	//MeshData 
+	MeshData meshData;
+	MeshFileHeader meshFileHeader;
 	
 
-	 MeshDescription& setFilePath(const std::string& value) { filePath = value; return *this; };
-	constexpr MeshDescription& setIsLargeMesh(bool value) { isLargeMesh = value; return *this; };
-	constexpr MeshDescription& setIsGeometryModel(bool value) { isGeometryModel = value; return *this; };
+	MeshObjectDescription&           setFilePath(const std::string& value) { filePath = value; return *this; };
+	constexpr MeshObjectDescription& setIsLargeMesh(bool value) { isLargeMesh = value; return *this; };
+	constexpr MeshObjectDescription& setIsGeometryModel(bool value) { isGeometryModel = value; return *this; };
+	 MeshObjectDescription& setMeshData(const MeshData& value) { meshData = value; return *this; };
+	MeshObjectDescription& buildMeshDatabyAssimp()
+	{
+		//Todo this process 
+		return *this;
+
+	}
+
+	MeshObjectDescription& buildMeshDataByCacheFile()
+	{
+		//Todo this process 
+		return *this;
+	}
+
+	MeshObjectDescription& buildMeshDataByGeometryModel()
+	{
+		IFNITY_LOG(LogApp, ERROR, "Not posible to build , you not uses a GeometricalBaseModel to build");
+		assert(!isGeometryModel, "Not posible to build , you not uses a GeometricalBaseModel to build");
+		//Todo this process 
+		return *this;
+	}
 
 
 };
 
 
-class IMeshObject
+class IFNITY_API IMeshObject
 {
 
 
-	virtual void Initialize() = 0;
-	virtual void Draw() = 0;
-	virtual void Destroy() = 0;
 
 };
 
