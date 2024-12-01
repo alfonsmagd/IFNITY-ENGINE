@@ -386,7 +386,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 
 	for (const auto& ext : extensions)
 	{
-		IFNITY_LOG(LogCore, INFO, "Supported extension: {}", ext.extensionName);
+		IFNITY_LOG(LogCore, INFO, "Supported extension: %s", ext.extensionName);
 	}
 
 	// Verificar si VK_EXT_debug_marker está en la lista de extensiones soportadas

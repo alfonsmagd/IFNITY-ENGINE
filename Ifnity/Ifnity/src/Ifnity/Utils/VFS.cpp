@@ -77,7 +77,7 @@ std::string VFS::SaveFile(const std::string& virtualPath, const std::string& fil
     std::string physicalPath = ResolvePath(virtualPath);
     if (physicalPath.empty())
     {
-        return false;
+        return "";
     }
 
     // Determinar el subdirectorio basado en la extensión del archivo
@@ -105,7 +105,7 @@ std::string VFS::SaveFile(const std::string& virtualPath, const std::string& fil
     std::ofstream outFile(fullPath, std::ios::binary);
     if (!outFile)
     {
-        return false;
+        return "";
     }
 
     outFile.write(data.data(), data.size());

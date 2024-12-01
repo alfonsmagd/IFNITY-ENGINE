@@ -273,7 +273,8 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 
 	// Compilar el shader
 	ComPtr<IDxcResult> result;
-	hr = CompileShaderBlob(sourceBlob, shader->GetCompileArgs(description), result);
+	std::vector<const wchar_t*> compileArgs = shader->GetCompileArgs(description);
+	hr = CompileShaderBlob(sourceBlob, compileArgs, result);
 	if(FAILED(hr))
 	{
 		return hr;

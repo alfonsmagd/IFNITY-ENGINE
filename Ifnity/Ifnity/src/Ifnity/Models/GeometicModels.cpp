@@ -38,8 +38,8 @@ namespace GeometricModels
 		memcpy(meshData.vertexData_.data(), vertices.data(), meshData.vertexData_.size());
 		memcpy(meshData.indexData_.data(), index.data(), meshData.indexData_.size());
 
-		meshData.meshes_.push_back(Mesh{ 0, 0, 0, 0 });
-
+        //Empty the meshes. 
+        meshData.meshes_.push_back(Mesh{});
 
 	}
 
