@@ -20,8 +20,8 @@ namespace GeometricModels
 		virtual ~GeometricModel() = default;
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> index;
-		inline size_t GetSizeIndices() const { return index.size() * sizeof(unsigned int); }
-		inline size_t GetSizeVertices() const { return vertices.size() * sizeof(Vertex); }
+		inline const size_t GetSizeIndices() const { return index.size() * sizeof(unsigned int); }
+		inline const size_t GetSizeVertices() const { return vertices.size() * sizeof(Vertex); }
 
 		virtual void toMeshData( MeshData& meshData) const = 0;
 		
@@ -31,7 +31,8 @@ namespace GeometricModels
 	struct IFNITY_API Tetrahedron: public GeometricModel
 	{
 		Tetrahedron();
-
+		//Destructor 
+		~Tetrahedron() override;
 		void toMeshData(MeshData& meshData) const override;
 		
 	};

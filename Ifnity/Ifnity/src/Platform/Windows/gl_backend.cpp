@@ -16,7 +16,7 @@ namespace OpenGL
 		GLenum err = glGetError();
 		if(err != GL_NO_ERROR)
 		{
-			IFNITY_LOG(LogApp,ERROR, "OpenGL error " , err ," at " ,fname  ,":" ,line ," - for " , stmt);
+			IFNITY_LOG(LogApp, ERROR, "OpenGL error ", err, " at ", fname, ":", line, " - for ", stmt);
 			exit(1);
 		}
 	}
@@ -106,10 +106,10 @@ namespace OpenGL
 	void Device::Draw(DrawDescription& desc)
 	{
 
-		glViewport(desc.viewPortState.x, 
-				   desc.viewPortState.y,
-				   desc.viewPortState.width,
-				   desc.viewPortState.height);
+		glViewport(desc.viewPortState.x,
+			desc.viewPortState.y,
+			desc.viewPortState.width,
+			desc.viewPortState.height);
 
 		SetOpenGLRasterizationState(desc.rasterizationState);
 		if(desc.isIndexed)
@@ -208,8 +208,6 @@ namespace OpenGL
 			//Now I only use a constan buffer in the future proably I will use other types of buffer.
 			glBindBufferRange(GL_UNIFORM_BUFFER,
 				0, perFrameDataBuffer, 0, kBufferSize);
-
-
 			Buffer* buffer = new Buffer(perFrameDataBuffer, desc);
 			return  BufferHandle(buffer);
 
@@ -281,7 +279,7 @@ namespace OpenGL
 		for(size_t i = 0; i < sizedesc; i++)
 		{
 
-			GLuint index = static_cast<GLuint>(desc[ i ].bufferLocation);
+			GLuint index = static_cast<GLuint>(desc[ i ].index);
 
 			glEnableVertexArrayAttrib(m_VAO, index);
 
@@ -318,17 +316,17 @@ namespace OpenGL
 			}
 			else
 			{
-				glEnableVertexArrayAttrib(m_VAO, desc[ i ].bufferLocation);
+				glEnableVertexArrayAttrib(m_VAO, desc[ i ].index);
 				glVertexArrayAttribFormat
 				(
 					m_VAO,
-					desc[ i ].bufferLocation,
+					desc[ i ].index,
 					desc[ i ].arraySize,
 					GL_FLOAT,
 					GL_FALSE,
 					desc[ i ].offset
 				);
-				glVertexArrayAttribBinding(m_VAO, desc[ i ].bufferLocation, 0);
+				glVertexArrayAttribBinding(m_VAO, desc[ i ].index, 0);
 			}
 		}//endfor
 	}
@@ -358,6 +356,28 @@ namespace OpenGL
 			IFNITY_LOG(LogApp, ERROR, "Texture dimension not implemented");
 			return nullptr;
 		}
+
+	}
+
+	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
+	{
+		//Check if MeshData its valid ? 
+		if(!desc.meshData.indexData_.size() || !desc.meshData.vertexData_.size())
+		{
+			IFNITY_LOG(LogApp, ERROR, "MeshData its invalid");
+			return nullptr;
+		}
+		// Check if ist not a large mesh 
+
+		if(!desc.isLargeMesh)
+		{
+			//Create a MeshObject
+			MeshObject* mesh = new MeshObject(desc.meshData.indexData_.data(), desc.meshData.indexData_.size(), desc.meshData.vertexData_.data(), desc.meshData.vertexData_.size(), this);
+			return MeshObjectHandle(mesh);
+		}
+
+
+		return nullptr;
 
 	}
 
@@ -641,8 +661,18 @@ namespace OpenGL
 
 	}
 
+	BufferHandle Device::CreateDefaultBuffer(int64 size, const void* data, uint32_t flags)
+	{
+		GLuint handle;
+		glCreateBuffers(1, &handle);
+		glNamedBufferStorage(handle, size, data, flags);
+		Buffer* buffer = new Buffer(handle, BufferDescription().SetBufferType(BufferType::DEFAULT_BUFFER));
+
+		return BufferHandle(buffer);
+	}
+
 	void Device::GetMeshVAO(const std::string mesh)
-	{	
+	{
 		if(m_MeshVAOs.find(mesh) == m_MeshVAOs.end())
 		{
 			GLuint vao;
@@ -653,9 +683,22 @@ namespace OpenGL
 			{
 				m_VAO = vao;
 			}
-			
+
 		}
 		glBindVertexArray(m_MeshVAOs[ mesh ]);
+	}
+
+	void Device::SetupVertexAttributes(GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes)
+	{
+		glVertexArrayElementBuffer(vao, indexBuffer);
+		glVertexArrayVertexBuffer(vao, 0, vertexBuffer, 0, attributes[ 0 ].stride);
+
+		for(const auto& attr : attributes)
+		{
+			glEnableVertexArrayAttrib(vao, attr.index);
+			glVertexArrayAttribFormat(vao, attr.index, attr.size, attr.type, attr.normalized, attr.offset);
+			glVertexArrayAttribBinding(vao, attr.index, attr.bindingindex);
+		}
 	}
 
 
@@ -680,18 +723,46 @@ namespace OpenGL
 	* This destructor deletes the OpenGL program associated with the graphics pipeline
 	* if the program ID is not zero.
 	*/
-	MeshObject::MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize) :
-		m_Device(nullptr)
+	MeshObject::MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize, IDevice* device): m_Device(device)
 	{
-		
+		//Try to cast the device to OpenGL Device
+		Device* dev = dynamic_cast<Device*>(device);
+		if(!dev)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Device its not a OpenGL Device");
+			return;
+		}
 
+		//Create a VAO
+		m_VAO = dev->CreateVAO();
+		//Create a BufferHandle for the indices with no flags 
+		m_BufferIndex = dev->CreateDefaultBuffer(indicesSize, indices, 0);
+		//Create a BufferHandle for the vertexattrib with no flags
+		m_BufferVertex = dev->CreateDefaultBuffer(vertexattribSize, vertexattrib, 0);
+
+		//Setup the vertex attributes
+		std::vector<OpenGL::VertexAttribute> attributes = {
+	{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), 0, 0},
+	{1, 2, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3), 0},
+	{2, 3, GL_FLOAT, GL_TRUE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3) + sizeof(vec2), 0}
+		};
+
+		dev->SetupVertexAttributes(m_VAO, m_BufferVertex->GetBufferID(), m_BufferIndex->GetBufferID(), attributes);
+
+
+
+
+		//BindVertexArrayObject
+		glBindVertexArray(m_VAO);
 	}
 
 	void MeshObject::Draw()
 	{
 		glBindVertexArray(m_VAO);
-		
+
 	}
+
+
 
 };
 

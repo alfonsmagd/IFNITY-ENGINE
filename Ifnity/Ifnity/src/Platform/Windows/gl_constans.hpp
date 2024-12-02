@@ -8,6 +8,20 @@ IFNITY_NAMESPACE
 
 namespace OpenGL
 {
+    struct VertexAttribute
+    {
+        GLuint index;
+        GLint size;
+        GLenum type;
+        GLboolean normalized;
+        GLsizei stride;
+        size_t offset;
+        GLuint bindingindex;
+        
+    };
+
+
+
     struct FormatMapping
     {
         rhi::Format rhiFormat;

@@ -10,7 +10,7 @@
 
 IFNITY_NAMESPACE 
 
-
+typedef signed long long int int64;
 
 
 

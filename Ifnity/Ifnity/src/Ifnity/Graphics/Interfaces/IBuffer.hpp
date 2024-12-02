@@ -6,22 +6,22 @@ IFNITY_NAMESPACE
 
 struct IFNITY_API VertexAttributeDescription
 {
-    uint32_t bufferLocation = 0;
+    uint32_t index = 0;
     uint32_t arraySize = 1;
-    rhi::Format format = rhi::Format::UNKNOWN;
-    rhi::VerxtexAttributeType type = rhi::VerxtexAttributeType::NONE;
     uint32_t offset = 0;
     uint32_t elementStride = 0;
     size_t size = 0;
+    rhi::Format format = rhi::Format::UNKNOWN;
+    rhi::VerxtexAttributeType type = rhi::VerxtexAttributeType::NONE;
+    const void* data = nullptr;
     bool isInstanced = false;
     bool haveIndexBuffer = false;
-    const void* data = nullptr;
     std::string name;
 
     VertexAttributeDescription& setName(const std::string& value) { name = value; return *this; }
     constexpr VertexAttributeDescription& setFormat(rhi::Format value) { format = value; return *this; }
     constexpr VertexAttributeDescription& setArraySize(uint32_t value) { arraySize = value; return *this; }
-    constexpr VertexAttributeDescription& setBufferIndexLocation(uint32_t value) { bufferLocation = value; return *this; }
+    constexpr VertexAttributeDescription& setBufferIndexLocation(uint32_t value) { index = value; return *this; }
     constexpr VertexAttributeDescription& setOffset(uint32_t value) { offset = value; return *this; }
     constexpr VertexAttributeDescription& setElementStride(uint32_t value) { elementStride = value; return *this; }
     constexpr VertexAttributeDescription& setIsInstanced(bool value) { isInstanced = value; return *this; }
@@ -39,6 +39,7 @@ struct IFNITY_API VertexAttributeDescription
  */
 enum class IFNITY_API BufferType: unsigned char
 {
+    DEFAULT_BUFFER = 0x00,    ///< Default buffer type
     VERTEX_BUFFER  = 0x01 ,    ///< Buffer for vertex data
     INDEX_BUFFER   = 0x02,     ///< Buffer for index data
 	VERTEX_INDEX_BUFFER = VERTEX_BUFFER | INDEX_BUFFER, ///< Buffer for vertex and index data
@@ -46,6 +47,8 @@ enum class IFNITY_API BufferType: unsigned char
 	VERTEX_PULLING_BUFFER_INDEX = 0x10,///< Buffer for vertex pulling data this implies that the buffer is used for vertex pulling and configure the index buffer 
 	VERTEX_PULLING_BUFFER = 0x20,///< Buffer for vertex pulling data , Vertex data, no index buffer.
 
+
+	
 
 
     NO_DEFINE_BUFFER = 0xFF ///< Undefined buffer type

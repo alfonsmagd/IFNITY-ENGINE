@@ -55,9 +55,10 @@ namespace OpenGL
         void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
 
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
+		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
 
     private:
-
+		
 		    GLuint GetVAO() const { return m_VAO; }
 			GLuint CreateVAO();
 		    TextureHandle CreateTexture2DImpl(TextureDescription& desc);
@@ -65,7 +66,11 @@ namespace OpenGL
 	    	Program CreateProgram(const char* vertexShader, const char* fragmentShader);
 			Program CreateProgram(const char* vertexShader, const char* fragmentShader, const char* geometryShader);
 			BufferHandle CreateVertexAttAndIndexBuffer(const BufferDescription& desc);
+            BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint32_t flags);
             void GetMeshVAO(const std::string mesh);
+            void SetupVertexAttributes(GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes);
+            
+
 
             Program m_Program; ///< The program used by the device.
 
@@ -73,6 +78,9 @@ namespace OpenGL
 			BufferHandle m_VertexBuffer; ///< The vertex buffer used by the device.
 
 			std::unordered_map<std::string_view, GLuint> m_MeshVAOs; ///< The buffers used by save VAO by ID Mesh.
+            
+            //Friend class 
+            friend class MeshObject;
     };
 
 
@@ -92,6 +100,8 @@ namespace OpenGL
 		Buffer(GLuint bufferID, const BufferDescription& desc): 
             m_BufferID(bufferID),
             m_Description(desc) {}
+
+    
 		//Destructor
 		virtual ~Buffer() = default;
 
@@ -158,7 +168,7 @@ namespace OpenGL
         public:
             //Constructor 
 			MeshObject() = default;
-            MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize);
+            MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize, IDevice* device);
             void Draw();
 				
     private:

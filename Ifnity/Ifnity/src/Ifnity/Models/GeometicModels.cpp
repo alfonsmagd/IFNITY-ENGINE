@@ -28,6 +28,13 @@ namespace GeometricModels
 
     }
 
+    Tetrahedron::~Tetrahedron()
+    {
+        vertices.clear();
+        index.clear();
+    }
+
+
 	void Tetrahedron::toMeshData(MeshData& meshData) const
 	{
 		// Reserve space in memory for the vertex and index data
