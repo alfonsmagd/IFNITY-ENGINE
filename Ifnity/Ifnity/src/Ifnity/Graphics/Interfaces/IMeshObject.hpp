@@ -2,14 +2,17 @@
 
 
 #include "pch.h"
-#include "../../Graphics/VtxData.hpp"
+#include "Ifnity/Graphics/VtxData.hpp"
+#include "Ifnity/Models/GeometicModels.hpp"
 
 IFNITY_NAMESPACE
 
-
+using namespace GeometricModels;
 
 struct IFNITY_API MeshObjectDescription
 {
+
+
 	/*is based in filename */
 	std::string  filePath;
 	bool isLargeMesh = false;
@@ -37,11 +40,29 @@ struct IFNITY_API MeshObjectDescription
 		return *this;
 	}
 
-	MeshObjectDescription& buildMeshDataByGeometryModel()
+	MeshObjectDescription& buildMeshDataByGeometryModel(GeometricalModelType type)
 	{
-		IFNITY_LOG(LogApp, ERROR, "Not posible to build , you not uses a GeometricalBaseModel to build");
-		assert(!isGeometryModel, "Not posible to build , you not uses a GeometricalBaseModel to build");
-		//Todo this process 
+	
+		assert(!isLargeMesh, "Not posible to build , you set isLargeMesh true , but you choose buildMeshData");
+		
+		//Build switch case to build the mesh data by geometry model
+		//Create switch 
+		switch(type)
+		{
+		case GeometricalModelType::TETHAHEDRON:
+		{
+			Tetrahedron().toMeshData(meshData);
+			break;
+		}
+		case GeometricalModelType::CUBE:
+		{
+			Cube().toMeshData(meshData);
+			break;
+		}
+		default:
+			break;
+		}
+
 		return *this;
 	}
 
@@ -51,8 +72,8 @@ struct IFNITY_API MeshObjectDescription
 
 class IFNITY_API IMeshObject
 {
-
-
+public:
+	virtual void Draw() = 0;
 
 };
 

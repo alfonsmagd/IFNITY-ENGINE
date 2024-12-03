@@ -371,8 +371,9 @@ namespace OpenGL
 
 		if(!desc.isLargeMesh)
 		{
-			//Create a MeshObject
+			//Create a MeshObject with the data. 
 			MeshObject* mesh = new MeshObject(desc.meshData.indexData_.data(), desc.meshData.indexData_.size(), desc.meshData.vertexData_.data(), desc.meshData.vertexData_.size(), this);
+
 			return MeshObjectHandle(mesh);
 		}
 
@@ -661,12 +662,18 @@ namespace OpenGL
 
 	}
 
-	BufferHandle Device::CreateDefaultBuffer(int64 size, const void* data, uint32_t flags)
+	BufferHandle Device::CreateDefaultBuffer(int64 size, const void* data, uint32_t flags = 0)
 	{
 		GLuint handle;
 		glCreateBuffers(1, &handle);
 		glNamedBufferStorage(handle, size, data, flags);
-		Buffer* buffer = new Buffer(handle, BufferDescription().SetBufferType(BufferType::DEFAULT_BUFFER));
+
+		BufferDescription desc; 
+		desc.byteSize = size;
+		desc.type = BufferType::DEFAULT_BUFFER;
+
+
+		Buffer* buffer = new Buffer(handle, desc);
 
 		return BufferHandle(buffer);
 	}
@@ -722,6 +729,8 @@ namespace OpenGL
 	*
 	* This destructor deletes the OpenGL program associated with the graphics pipeline
 	* if the program ID is not zero.
+	* 
+	* TODO : Adding and pass flags 
 	*/
 	MeshObject::MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize, IDevice* device): m_Device(device)
 	{
@@ -736,22 +745,18 @@ namespace OpenGL
 		//Create a VAO
 		m_VAO = dev->CreateVAO();
 		//Create a BufferHandle for the indices with no flags 
-		m_BufferIndex = dev->CreateDefaultBuffer(indicesSize, indices, 0);
+		m_BufferIndex = dev->CreateDefaultBuffer(indicesSize, indices);
 		//Create a BufferHandle for the vertexattrib with no flags
-		m_BufferVertex = dev->CreateDefaultBuffer(vertexattribSize, vertexattrib, 0);
+		m_BufferVertex = dev->CreateDefaultBuffer(vertexattribSize, vertexattrib);
 
 		//Setup the vertex attributes
 		std::vector<OpenGL::VertexAttribute> attributes = {
-	{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), 0, 0},
-	{1, 2, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3), 0},
-	{2, 3, GL_FLOAT, GL_TRUE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3) + sizeof(vec2), 0}
+	{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec3), 0, 0},
+	{1, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec3), sizeof(vec3), 0},
+	{2, 3, GL_FLOAT, GL_TRUE,  sizeof(vec3) + sizeof(vec3) + sizeof(vec3), sizeof(vec3) + sizeof(vec3), 0}
 		};
 
 		dev->SetupVertexAttributes(m_VAO, m_BufferVertex->GetBufferID(), m_BufferIndex->GetBufferID(), attributes);
-
-
-
-
 		//BindVertexArrayObject
 		glBindVertexArray(m_VAO);
 	}
@@ -759,7 +764,20 @@ namespace OpenGL
 	void MeshObject::Draw()
 	{
 		glBindVertexArray(m_VAO);
+		// Vincula el buffer de índices
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
 
+		// Dibuja los elementos
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_BufferIndex->GetBufferDescription().byteSize / sizeof(GLuint)), GL_UNSIGNED_INT, nullptr);
+
+
+	}
+
+	MeshObject::~MeshObject()
+	{
+		
+		glDeleteVertexArrays(1, &m_VAO);
+		
 	}
 
 

@@ -169,7 +169,11 @@ namespace OpenGL
             //Constructor 
 			MeshObject() = default;
             MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize, IDevice* device);
-            void Draw();
+            void Draw() override;
+
+            //Destructor 
+            ~MeshObject();
+
 				
     private:
 

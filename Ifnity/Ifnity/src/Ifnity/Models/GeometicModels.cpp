@@ -35,20 +35,43 @@ namespace GeometricModels
     }
 
 
-	void Tetrahedron::toMeshData(MeshData& meshData) const
-	{
-		// Reserve space in memory for the vertex and index data
-		meshData.vertexData_.resize(vertices.size() * sizeof(Vertex));
-		meshData.indexData_.resize(index.size() * sizeof(uint32_t));
 
-		// memcpy is used to copy the data from the vertices and index vectors to the meshData vertexData and indexData vectors
-		memcpy(meshData.vertexData_.data(), vertices.data(), meshData.vertexData_.size());
-		memcpy(meshData.indexData_.data(), index.data(), meshData.indexData_.size());
+    //Cube implementation 
 
-        //Empty the meshes. 
-        meshData.meshes_.push_back(Mesh{});
+    Cube::Cube()
+    {
+        vertices =
+        {
+            // Vértices del cubo con sus posiciones, normales y tangentes
+            {{-1.0f, -1.0f, -1.0f}, {-1.0f, -1.0f, -1.0f}, {0.0f, 0.0f, 0.0f}},
+            {{1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, -1.0f}, {1.0f, 0.0f, 0.0f}},
+            {{1.0f, 1.0f, -1.0f}, {1.0f, 1.0f, -1.0f}, {1.0f, 1.0f, 0.0f}},
+            {{-1.0f, 1.0f, -1.0f}, {-1.0f, 1.0f, -1.0f}, {0.0f, 1.0f, 0.0f}},
+            {{-1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+            {{1.0f, -1.0f, 1.0f}, {1.0f, -1.0f, 1.0f}, {1.0f, 0.0f, 1.0f}},
+            {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}},
+            {{-1.0f, 1.0f, 1.0f}, {-1.0f, 1.0f, 1.0f}, {0.0f, 1.0f, 1.0f}},
+        };
 
-	}
+        index =
+        {
+            0, 1, 2, 2, 3, 0, // Cara 1
+            4, 5, 6, 6, 7, 4, // Cara 2
+            0, 1, 5, 5, 4, 0, // Cara 3
+            2, 3, 7, 7, 6, 2, // Cara 4
+            0, 3, 7, 7, 4, 0, // Cara 5
+            1, 2, 6, 6, 5, 1  // Cara 6
+        };
+    }
+
+    Cube::~Cube()
+    {
+        vertices.clear();
+        index.clear();
+    }
+
+    
+
 
 }
 

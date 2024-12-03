@@ -3,9 +3,7 @@
 // IFNITY.cp
 
 #include <Ifnity.h>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-#include <assimp/cimport.h>
+
 
 
 using namespace IFNITY;
@@ -14,6 +12,7 @@ using glm::vec3;
 using glm::vec4;
 using glm::vec2;
 using glm::mat4;
+
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
 public:
@@ -53,24 +52,49 @@ public:
 
 };
 
+class NVMLLayer: public IFNITY::Layer
+{
+public:
+	NVMLLayer(): Layer("NVML") {}
+	~NVMLLayer() {}
+
+	void OnUpdate() override
+	{
+
+		monitor.refresh();
+		monitor.display();
+	}
+
+	void ConnectToEventBusImpl(void* bus) override
+	{}
+	void OnAttach() override
+	{
+		loggerDisplayMonitor = LoggerDisplayMonitor();
+		monitor.setDisplay(&loggerDisplayMonitor);
+
+		IFNITY_LOG(LogApp, INFO, "NVML Layer is attached");
+	}
+
+private:
+	NvmlMonitor monitor;
+	LoggerDisplayMonitor loggerDisplayMonitor;
+};
+
 
 
 class ImGuiTestLayer: public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer(): Layer("ImGuiTest"), m_Device(&IFNITY::App::GetApp().GetManagerDevice()) {}
+	ImGuiTestLayer(): Layer("ImGuiTest") {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
 	{
-
-		m_Device = &IFNITY::App::GetApp().GetManagerDevice();
 		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
 	}
 
 	void OnUpdate() override
 	{
-
 		ImGuiContext* context = GetImGuiContext();
 		if(context == nullptr)
 		{
@@ -80,17 +104,14 @@ public:
 		ImGui::SetCurrentContext(context);
 
 		//ChooseApi();
-		ShowColorPiceckerWindow();
-		ShowFillModeSelector();
-		SetThickenessImgui();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
 	// Heredado vía Layer
 	void ConnectToEventBusImpl(void* bus) override
-	{}
+	{
 
-	// Método para obtener el valor de thickness
-	float GetThickness() const { return m_Thickness; }
+
+	}
 private:
 	// Una función que se llama al hacer clic en el botón
 	void AccionPorOpcion(int opcionSeleccionada)
@@ -155,80 +176,33 @@ private:
 		ImGui::End();  // Termina la creación de la ventana
 	}
 
-	void ShowColorPiceckerWindow()
-	{
-		ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
-		ImGui::Begin("Color Picker");
-		static float clearColor[ 4 ] = { 0.45f, 0.55f, 0.60f, 1.00f };
-		// Selector de color
-		if(ImGui::ColorEdit4("Clear Color", clearColor))
-		{
-			// Si el color cambia, actualiza el color del buffer de fondo
-			m_Device->ClearBackBuffer(clearColor);
-		}
-		ImGui::End();
-	}
 
-	void SetThickenessImgui()
-	{
-		ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowPos(ImVec2(50, 50), ImGuiCond_FirstUseEver);
-		ImGui::Begin("Thickness");
-		ImGui::SliderFloat("Thickness", &m_Thickness, 0.0f, 10.0f);
-		ImGui::End();
 
-	}
 
-	void ShowFillModeSelector()
-	{
-		if(ImGui::Begin("Fill Mode Selector"))
-		{
-			const char* fillModeItems[] = { "Point", "Wireframe", "Solid" };
-			static int currentItem = 1; // Inicialmente Wireframe
 
-			if(ImGui::Combo("Fill Mode", &currentItem, fillModeItems, IM_ARRAYSIZE(fillModeItems)))
-			{
-				switch(currentItem)
-				{
-				case 0:
-					currentFillMode = FillModeType::Point;
-					break;
-				case 1:
-					currentFillMode = FillModeType::Wireframe;
-					break;
-				case 2:
-					currentFillMode = FillModeType::Solid;
-					break;
-				}
 
-				// Actualizar el estado de rasterización
-				DrawDescription desc;
-				desc.rasterizationState.fillMode = currentFillMode;
-				desc.size = 3;
-				m_Device->GetRenderDevice()->Draw(desc);
-			}
-		}
-		ImGui::End();
-	}
-	FillModeType currentFillMode = FillModeType::Wireframe; // Valor inicial
-	IFNITY::GraphicsDeviceManager* m_Device;
-	float m_Thickness = 1.0f;
+
 };
 
-
-
-class Source_Tetahedre: public IFNITY::App
+class Source: public IFNITY::App
 {
-
 public:
-
-	Source_Tetahedre(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api)
 	{
+		// Obtener el contexto de ImGui desde IFNITY  DLL
+		/*ImGuiContext* context = GetImGuiContext();
+		if (context == nullptr)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
+			return;
+		}*/
 
+		// Establecer el contexto de ImGui en la aplicación principal
+		//ImGui::SetCurrentContext(context);
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
+
 
 
 	}
@@ -240,95 +214,6 @@ public:
 
 		IFNITY::ShaderCompiler::Initialize();
 
-
-
-		/*	std::wstring shaderSource3 = LR"(
-
-		cbuffer PerFrameData : register(b0)
-	{
-		matrix MVP;
-	};
-
-	static const float2 g_positions[] =
-	{
-		float2(-0.5, -0.5),
-		float2(0, 0.5),
-		float2(0.5, -0.5),
-
-	};
-
-	static const float3 g_colors[] =
-	{
-		float3(1, 1, 1),
-		float3(0, 1, 0),
-		float3(0, 0, 1)
-
-	};
-
-	void main_vs(
-		uint i_vertexId : SV_VertexID,
-		out float4 o_pos : SV_Position,
-		out float3 o_color : COLOR
-	)
-	{
-		  o_pos = mul(float4(g_positions[i_vertexId], 0, 1),MVP);
-		o_color = g_colors[i_vertexId];
-	}
-
-	void main_ps(
-		in float4 i_pos : SV_Position,
-		in float3 i_color : COLOR,
-		out float4 o_color : SV_Target0
-	)
-	{
-
-			o_color = float4(i_color, 1);
-
-	}
-	)";*/
-	/*std::wstring shaderSource3 = LR"(
-
-cbuffer PerFrameData : register(b0)
-{
-	matrix MVP;
-};
-
-struct VertexInput
-{
-	float3 position : POSITION0;
-	float3 color : COLOR1;
-};
-
-static const float3 g_colors[] =
-{
-	float3(1, 1, 1),
-	float3(0, 1, 0),
-	float3(0, 0, 1)
-
-};
-
-void main_vs(
-	in VertexInput input,
-	uint i_vertexId : SV_VertexID,
-	out float4 o_pos : SV_Position,
-	out float3 o_color : COLOR
-)
-{
-	  o_pos = mul(float4(input.position, 1.0),MVP);
-	o_color = g_colors[i_vertexId];
-}
-
-void main_ps(
-	in float4 i_pos : SV_Position,
-	in float3 i_color : COLOR,
-	out float4 o_color : SV_Target0
-)
-{
-
-		o_color = float4(i_color, 1);
-
-}
-)";*/
 
 		std::wstring shaderSource3 = LR"(
 
@@ -374,12 +259,7 @@ void main_ps(
 		auto& vfs = IFNITY::VFS::GetInstance();
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
-		////Use filesystems to init 
-		//std::vector<std::string> files = vfs.ListFiles("Shaders","vk");
-		//for (const auto& file : files)
-		//{
-		//	std::cout << file << std::endl;
-		//}
+
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
 
@@ -421,68 +301,14 @@ void main_ps(
 
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
+		MeshObjectDescription tetrahedronDesc;
+		tetrahedronDesc.setIsGeometryModel(true).
+			setIsLargeMesh(false).
+			buildMeshDataByGeometryModel(GeometricalModelType::CUBE);
 
 
-		size_t sizeIndices = m_Tetrahedron.GetSizeIndices();
-		size_t sizeVertices = m_Tetrahedron.GetSizeVertices();
+		m_MeshTetrahedron = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(tetrahedronDesc);
 
-		m_VertexBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(
-			BufferDescription()
-			.SetBufferType(BufferType::VERTEX_INDEX_BUFFER)
-			.SetByteSize(sizeVertices + sizeIndices)
-			.SetDebugName("Tetrahedron")
-		);
-
-
-
-		VertexAttributeDescription indexDescription;
-		indexDescription.setName("Index")
-			.setOffset(sizeIndices)
-			.setElementStride(sizeof(GeometricModels::VertexGeometry))
-			.setHaveIndexBuffer(true);
-		//.setData(m_Tetrahedron.GetIndices().data())
-
-
-		VertexAttributeDescription vertexDescription;
-		vertexDescription.setName("Vertex Position")
-			.setOffset(0)
-			.setArraySize(3)
-			.setIsInstanced(false)
-			.setBufferIndexLocation(0)
-			.setSize(sizeof(vec3));
-
-		VertexAttributeDescription normalDescription;
-		normalDescription.setName("Vertex Normal")
-			.setOffset(12)
-			.setArraySize(3)
-			.setIsInstanced(false)
-			.setBufferIndexLocation(1)
-			.setSize(sizeof(vec3));
-
-		VertexAttributeDescription tangentDescription;
-		tangentDescription.setName("Vertex Tangent")
-			.setOffset(24)
-			.setArraySize(3)
-			.setIsInstanced(false)
-			.setBufferIndexLocation(2)
-			.setSize(sizeof(vec3));
-
-
-		VertexAttributeDescription vertxAtt[ 4 ] = {
-			indexDescription,
-			vertexDescription,
-			normalDescription,
-			tangentDescription
-		};
-
-		m_ManagerDevice->GetRenderDevice()->BindingVertexIndexAttributes(vertxAtt, 4, m_VertexBuffer);
-		
-
-
-		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, m_Tetrahedron.index.data(), sizeIndices, 0);
-		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_VertexBuffer, m_Tetrahedron.vertices.data(), sizeVertices, sizeIndices);
-
-	
 
 
 	}
@@ -493,7 +319,7 @@ void main_ps(
 		//SetPipelineState
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		const mat4 mg = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+		const mat4 mg = glm::rotate(glm::translate(mat4(0.5f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
 		const mat4 fg = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
 		const mat4 mvpg = fg * mg;
 
@@ -511,7 +337,7 @@ void main_ps(
 		desc.indices = (const void*)(0);
 		desc.isIndexed = true;
 
-		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+		m_MeshTetrahedron.get()->Draw();
 
 		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
@@ -519,25 +345,32 @@ void main_ps(
 	{
 		IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
-	~Source_Tetahedre() override {}
+	~Source() override {}
+
 
 private:
 	BufferHandle m_UBO;
 	BufferHandle m_VertexBuffer;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_GraphicsPipeline;
+	MeshObjectHandle m_MeshTetrahedron;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 
-	GeometricModels::Tetrahedron m_Tetrahedron;
+	
 };
 
-
-void error_callback(void*, const char* error_message)
+class Source_TestD3D12: public IFNITY::App
 {
-	// Handle the error message here  
-	std::cerr << "Error: " << error_message << std::endl;
-}
+public:
+	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api)
+	{
+		PushLayer(new ExampleLayer());
+	}
+	~Source_TestD3D12() override
+	{}
+};
+
 
 IFNITY::App* IFNITY::CreateApp()
 {
@@ -545,11 +378,8 @@ IFNITY::App* IFNITY::CreateApp()
 
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
-	//return new Source_Texture(api)
-	//return new Source_Tetahedre(api);
-	//
-	 return new Source_Tetahedre(api);
 
-	
+	//return new Source_TestD3D12(api);
+	return new Source(api);
 }
 
