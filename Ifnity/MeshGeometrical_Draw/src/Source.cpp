@@ -301,13 +301,21 @@ public:
 
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
-		MeshObjectDescription tetrahedronDesc;
-		tetrahedronDesc.setIsGeometryModel(true).
+		MeshObjectDescription cubeDesc;
+		cubeDesc.setIsGeometryModel(true).
 			setIsLargeMesh(false).
 			buildMeshDataByGeometryModel(GeometricalModelType::CUBE);
 
+		MeshObjectDescription tetrahedronDesc;
+		tetrahedronDesc.setIsGeometryModel(true).
+			setIsLargeMesh(false).
+			buildMeshDataByGeometryModel(GeometricalModelType::TETHAHEDRON);
+
+
+
 
 		m_MeshTetrahedron = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(tetrahedronDesc);
+		m_MeshCube = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(cubeDesc);
 
 
 
@@ -316,28 +324,35 @@ public:
 	void Render() override
 	{
 		using namespace math;
-		//SetPipelineState
+		// SetPipelineState
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
-
-		const mat4 mg = glm::rotate(glm::translate(mat4(0.5f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
 		const mat4 fg = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
-		const mat4 mvpg = fg * mg;
 
+		for(int i = 0; i < 6; ++i)
+		{
+	
 
+			// Para el cubo
+			float angleCube = glm::radians(60.0f * i);
+			vec3 positionCube = vec3(cos(angleCube) * 2.0f, sin(angleCube) * 2.0f, -3.5f);
+			mat4 modelCube = glm::scale(glm::translate(mat4(1.0f), positionCube), vec3(0.2f));
+			modelCube = glm::rotate(modelCube, (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+			mat4 mvpCube = fg * modelCube;
 
+			m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpCube), sizeof(mvpCube));
+			m_MeshCube.get()->Draw();
 
+			// Para el tetraedro
+			float angleTetrahedron = glm::radians(45.0f * i);
+			vec3 positionTetrahedron = vec3(cos(angleTetrahedron) * 2.0f, sin(angleTetrahedron) * 2.0f, -3.5f);
+			mat4 modelTetrahedron = glm::scale(glm::translate(mat4(1.0f), positionTetrahedron), vec3(0.2f));
+			modelTetrahedron = glm::rotate(modelTetrahedron, (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+			mat4 mvpTetrahedron = fg * modelTetrahedron;
 
-		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpg), sizeof(mvpg));
-		//m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, mvpd.m_data, sizeof(mvpd));
-
-		//Draw Description 
-		DrawDescription desc;
-		//desc.rasterizationState.fillMode = FillModeType::Wireframe;
-		desc.size = m_Tetrahedron.index.size();
-		desc.indices = (const void*)(0);
-		desc.isIndexed = true;
-
-		m_MeshTetrahedron.get()->Draw();
+			m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, glm::value_ptr(mvpTetrahedron), sizeof(mvpTetrahedron));
+			m_MeshTetrahedron.get()->Draw();
+			
+		}
 
 		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
@@ -354,6 +369,7 @@ private:
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_GraphicsPipeline;
 	MeshObjectHandle m_MeshTetrahedron;
+	MeshObjectHandle m_MeshCube;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 
