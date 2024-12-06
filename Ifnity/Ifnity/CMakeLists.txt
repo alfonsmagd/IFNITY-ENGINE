@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.8)
 project(Ifnity)
 
 
-#Options
-
+#Options and Functions 
+function(assign_vendor_folder target)
+    set_target_properties(${target} PROPERTIES FOLDER "Vendor")
+endfunction()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -66,16 +68,22 @@ set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 
 # Add GLFW like a subdirectory to be built with the project
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
+ASSIGN_VENDOR_FOLDER(glfw)
+
 #add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
 # add D3D12MemoryAllocator 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator)
+ASSIGN_VENDOR_FOLDER(D3D12MemoryAllocator)
 # add vulkan bootstrap
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
+ASSIGN_VENDOR_FOLDER(vk-bootstrap)
 #add glslang 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/SPIRV-Cross)
+
 #add assimp
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
+ASSIGN_VENDOR_FOLDER(assimp)
 
 
 
@@ -160,6 +168,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
+ASSIGN_VENDOR_FOLDER(spirv-cross-core)
+ASSIGN_VENDOR_FOLDER(spirv-cross-c)
 #Link dxc
 target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
 #Target link assimp
