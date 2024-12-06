@@ -304,12 +304,12 @@ public:
 		MeshObjectDescription cubeDesc;
 		cubeDesc.setIsGeometryModel(true).
 			setIsLargeMesh(false).
-			buildMeshDataByGeometryModel(GeometricalModelType::CUBE);
+			setMeshDataBuilder(new MeshDataBuilderGeometryModel(GeometricalModelType::CUBE));
 
 		MeshObjectDescription tetrahedronDesc;
 		tetrahedronDesc.setIsGeometryModel(true).
 			setIsLargeMesh(false).
-			buildMeshDataByGeometryModel(GeometricalModelType::TETHAHEDRON);
+			setMeshDataBuilder(new MeshDataBuilderGeometryModel(GeometricalModelType::TETHAHEDRON));
 
 
 
