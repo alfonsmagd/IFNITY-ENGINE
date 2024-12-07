@@ -77,10 +77,10 @@ private:
 
 
 
-class ImGuiTestLayer : public IFNITY::Layer
+class ImGuiTestLayer: public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest") {}
+	ImGuiTestLayer(): Layer("ImGuiTest") {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
@@ -91,7 +91,7 @@ public:
 	void OnUpdate() override
 	{
 		ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
+		if(context == nullptr)
 		{
 			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
 			return;
@@ -104,22 +104,24 @@ public:
 	// Heredado vía Layer
 	void ConnectToEventBusImpl(void* bus) override
 	{
-		
+
 
 	}
 private:
 	// Una función que se llama al hacer clic en el botón
-	void AccionPorOpcion(int opcionSeleccionada) {
+	void AccionPorOpcion(int opcionSeleccionada)
+	{
 
 		GraphicsAPI api = IFNITY::App::GetApp().GetGraphicsAPI();
-		switch (opcionSeleccionada) {
+		switch(opcionSeleccionada)
+		{
 		case 0:
 			// Acción para la opción 1
 			IFNITY_LOG(LogApp, INFO, "OPENGL");
-			
+
 
 			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::OPENGL,api != GraphicsAPI::OPENGL);
+				.SetGraphicsAPI(GraphicsAPI::OPENGL, api != GraphicsAPI::OPENGL);
 			break;
 		case 1:
 			// Acción para la opción 2
@@ -142,24 +144,27 @@ private:
 				.SetGraphicsAPI(GraphicsAPI::VULKAN, api != GraphicsAPI::VULKAN);
 			break;
 		default:
-		
+
 			break;
 		}
 	}
 
-	void ChooseApi() {
+	void ChooseApi()
+	{
 		static int selectOption = 0;
-		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN"};
+		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN" };
 
 		ImGui::Begin("API WINDOW");  // Comienza la creación de la ventana
 
 		// Combo box con las opciones
-		if (ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options))) {
+		if(ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options)))
+		{
 			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
 		}
 
 		// Botón que ejecuta la función cuando se hace clic
-		if (ImGui::Button("OK")) {
+		if(ImGui::Button("OK"))
+		{
 			AccionPorOpcion(selectOption);
 		}
 
@@ -171,13 +176,13 @@ private:
 
 
 
-	
+
 };
 
 class Source: public IFNITY::App
 {
 public:
-	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api)
 	{
 		// Obtener el contexto de ImGui desde IFNITY  DLL
 		/*ImGuiContext* context = GetImGuiContext();
@@ -192,16 +197,15 @@ public:
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
-		
-		
 
+		
 	}
 
 	void Initialize() override
 	{
 
 	}
-	
+
 	void Render() override
 	{
 		IFNITY_LOG(LogApp, INFO, "Render App");
@@ -213,16 +217,15 @@ public:
 	~Source() override {}
 };
 
-class Source_TestD3D12 : public IFNITY::App
+class Source_TestD3D12: public IFNITY::App
 {
 public:
-	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api)
 	{
 		PushLayer(new ExampleLayer());
 	}
 	~Source_TestD3D12() override
-	{
-	}
+	{}
 };
 
 
