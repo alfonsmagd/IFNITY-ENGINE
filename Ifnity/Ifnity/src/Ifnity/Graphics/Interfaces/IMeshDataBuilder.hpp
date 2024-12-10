@@ -21,7 +21,7 @@ public:
 class MeshDataBuilderAssimp: public IMeshDataBuilder
 {
 private:
-	 void loadFileAssimp(const char* fileName, MeshData& meshData);
+	 bool loadFileAssimp(const char* fileName, MeshData& meshData);
 	 Mesh convertAIMesh(const aiMesh* m,       MeshData& meshData);
 	
 public:
@@ -30,7 +30,7 @@ public:
 	void buildMeshData(MeshObjectDescription& description) override;
 
 private:
-	const uint16_t m_numElementsPerVertex;
+	const uint16_t m_numElementsPerVertex;  // Number of elements per vertex pos,normal,tg, example
 	const float    m_meshScale;
 	uint32_t       m_indexOffset = 0;
 	uint32_t       m_vertexOffset = 0;

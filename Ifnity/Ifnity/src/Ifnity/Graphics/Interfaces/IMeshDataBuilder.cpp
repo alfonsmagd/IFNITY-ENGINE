@@ -14,7 +14,7 @@ void MeshDataBuilderCacheFile::buildMeshData(MeshObjectDescription& description)
 
 }
 
-void MeshDataBuilderAssimp::loadFileAssimp(const char* fileName, MeshData& meshData)
+bool MeshDataBuilderAssimp::loadFileAssimp(const char* fileName, MeshData& meshData)
 {
 
 	printf("Loading '%s'...\n", fileName);
@@ -36,7 +36,7 @@ void MeshDataBuilderAssimp::loadFileAssimp(const char* fileName, MeshData& meshD
 	if(!scene || !scene->HasMeshes())
 	{
 		printf("Unable to load '%s'\n", fileName);
-		exit(255);
+		return false;
 	}
 
 	meshData.meshes_.reserve(scene->mNumMeshes);
@@ -44,23 +44,12 @@ void MeshDataBuilderAssimp::loadFileAssimp(const char* fileName, MeshData& meshD
 
 	for(unsigned int i = 0; i != scene->mNumMeshes; i++)
 	{
-		printf("\nConverting meshes %u/%u...", i + 1, scene->mNumMeshes);
+		IFNITY_LOG(LogCore, INFO, "Converting meshes %u/%u...", i + 1, scene->mNumMeshes);
 		fflush(stdout);
 		meshData.meshes_.push_back(convertAIMesh(scene->mMeshes[ i ],meshData));
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-
+	return true;
 }
 
 Mesh MeshDataBuilderAssimp::convertAIMesh(const aiMesh* m, MeshData& meshData)
@@ -76,6 +65,8 @@ Mesh MeshDataBuilderAssimp::convertAIMesh(const aiMesh* m, MeshData& meshData)
 	std::vector<std::vector<uint32_t>> outLods;
 
 	auto& vertices = meshData.vertexData_;
+	// Reservar memoria para los vértices
+	vertices.reserve(vertices.size() + m->mNumVertices * 8);  //3 position, 2 texcoord, 3 normal 
 
 	for(size_t i = 0; i != m->mNumVertices; i++)
 	{
@@ -149,8 +140,19 @@ Mesh MeshDataBuilderAssimp::convertAIMesh(const aiMesh* m, MeshData& meshData)
 
 void MeshDataBuilderAssimp::buildMeshData(MeshObjectDescription& description)
 {
-	IFNITY_LOG(LogCore, WARNING, "Not implemented yet");
+	//Check if the file exists
+	if(description.filePath.empty())
+	{
+		IFNITY_LOG(LogCore, ERROR, "error filePath is empty, you need set a file assimp file");
+		return;
+	}
 
+	//load the file an fill the meshData Assimp and chek if the file is loaded
+	if(!loadFileAssimp(description.filePath.c_str(), description.meshData))
+	{
+		IFNITY_LOG(LogCore, ERROR, "error loading file %s", description.filePath.c_str());
+	}
+	
 }
 
 void MeshDataBuilderGeometryModel::buildMeshData(MeshObjectDescription& description)

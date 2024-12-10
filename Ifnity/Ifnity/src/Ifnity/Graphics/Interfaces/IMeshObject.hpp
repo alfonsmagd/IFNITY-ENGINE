@@ -6,12 +6,13 @@
 #include "Ifnity/Models/GeometicModels.hpp"
 #include "Ifnity\Graphics\Interfaces\IMeshDataBuilder.hpp"
 
+
 IFNITY_NAMESPACE
 
 using namespace GeometricModels;
 
 //Forward declaration
-
+struct DrawDescription;
 
 struct IFNITY_API MeshObjectDescription
 {
@@ -52,8 +53,11 @@ struct IFNITY_API MeshObjectDescription
 		return *this;
 	};
 
-
-
+	//Destructor.
+	~MeshObjectDescription()
+	{
+		delete meshDataBuilder;
+	}
 
 
 };
@@ -65,6 +69,8 @@ class IFNITY_API IMeshObject
 {
 public:
 	virtual void Draw() = 0;
+	virtual void Draw(const DrawDescription& desc) = 0;
+	virtual void DrawIndexed() = 0;
 
 };
 

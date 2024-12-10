@@ -668,7 +668,7 @@ namespace OpenGL
 		glCreateBuffers(1, &handle);
 		glNamedBufferStorage(handle, size, data, flags);
 
-		BufferDescription desc; 
+		BufferDescription desc;
 		desc.byteSize = size;
 		desc.type = BufferType::DEFAULT_BUFFER;
 
@@ -729,8 +729,8 @@ namespace OpenGL
 	*
 	* This destructor deletes the OpenGL program associated with the graphics pipeline
 	* if the program ID is not zero.
-	* 
-	* TODO : Adding and pass flags 
+	*
+	* TODO : Adding and pass flags
 	*/
 	MeshObject::MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize, IDevice* device): m_Device(device)
 	{
@@ -750,10 +750,11 @@ namespace OpenGL
 		m_BufferVertex = dev->CreateDefaultBuffer(vertexattribSize, vertexattrib);
 
 		//Setup the vertex attributes
-		std::vector<OpenGL::VertexAttribute> attributes = {
-	{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec3), 0, 0},
-	{1, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec3), sizeof(vec3), 0},
-	{2, 3, GL_FLOAT, GL_TRUE,  sizeof(vec3) + sizeof(vec3) + sizeof(vec3), sizeof(vec3) + sizeof(vec3), 0}
+		std::vector<OpenGL::VertexAttribute> attributes = 
+		{
+			{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec3), 0, 0},
+			{1, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec3), sizeof(vec3), 0},
+			{2, 3, GL_FLOAT, GL_TRUE,  sizeof(vec3) + sizeof(vec3) + sizeof(vec3), sizeof(vec3) + sizeof(vec3), 0}
 		};
 
 		dev->SetupVertexAttributes(m_VAO, m_BufferVertex->GetBufferID(), m_BufferIndex->GetBufferID(), attributes);
@@ -764,20 +765,29 @@ namespace OpenGL
 	void MeshObject::Draw()
 	{
 		glBindVertexArray(m_VAO);
-		// Vincula el buffer de índices
+		
+		//Bind the index buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
 
-		// Dibuja los elementos
+		//Draw the mesh 
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_BufferIndex->GetBufferDescription().byteSize / sizeof(GLuint)), GL_UNSIGNED_INT, nullptr);
+
+		
 
 
 	}
 
+	void MeshObject::Draw(const DrawDescription& desc)
+	{}
+
+	void MeshObject::DrawIndexed()
+	{}
+
 	MeshObject::~MeshObject()
 	{
-		
+
 		glDeleteVertexArrays(1, &m_VAO);
-		
+
 	}
 
 
