@@ -4,7 +4,7 @@
 
 #include <Ifnity.h>
 
-
+#define SELECT_API_SELECTOR 0
 
 using namespace IFNITY::rhi;
 
@@ -98,7 +98,9 @@ public:
 		}
 		ImGui::SetCurrentContext(context);
 
-		ChooseApi();
+		#if SELECT_API_SELECTOR
+			ChooseApi();
+		#endif
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
 	// Heredado vía Layer
@@ -198,7 +200,7 @@ public:
 		PushLayer(new ImGuiTestLayer());
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
 
-		
+
 	}
 
 	void Initialize() override
@@ -233,7 +235,7 @@ IFNITY::App* IFNITY::CreateApp()
 {
 
 
-	auto api = IFNITY::rhi::GraphicsAPI::VULKAN;
+	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
 
 	//return new Source_TestD3D12(api);

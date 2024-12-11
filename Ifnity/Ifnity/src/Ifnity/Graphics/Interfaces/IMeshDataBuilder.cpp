@@ -152,6 +152,12 @@ void MeshDataBuilderAssimp::buildMeshData(MeshObjectDescription& description)
 	{
 		IFNITY_LOG(LogCore, ERROR, "error loading file %s", description.filePath.c_str());
 	}
+
+	//save the meshData
+	saveMeshData(description.filePath.c_str(), description.meshData);
+
+
+
 	
 }
 

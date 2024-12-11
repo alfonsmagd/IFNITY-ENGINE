@@ -1,4 +1,5 @@
 #include "VtxData.hpp"
+#include "Ifnity\Utils\VFS.hpp"
 
 IFNITY_NAMESPACE
 
@@ -79,10 +80,40 @@ IFNITY_API void loadCombinedBuffer(FILE* file, MeshFileHeader& header, std::vect
 
 
 
-// 
 
+IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data)
+{
+	FILE* f = fopen(meshFile, "wb");
 
+	assert(f);
 
+	if(!f)
+	{
+		IFNITY_LOG(LogApp, ERROR, "Cannot open %s", meshFile);
+		exit(EXIT_FAILURE);
+	}
+
+	MeshFileHeader header;
+	header.magicValue = 0x12345678;
+	header.meshCount = static_cast<uint32_t>(data.meshes_.size());
+	header.dataBlockStartOffset = sizeof(MeshFileHeader);
+	header.indexDataSize = static_cast<uint32_t>(data.indexData_.size() * sizeof(uint32_t));
+	header.vertexDataSize = static_cast<uint32_t>(data.vertexData_.size() * sizeof(float));
+
+	// Write the header
+	fwrite(&header, 1, sizeof(header), f);
+
+	// Write the mesh descriptors
+	fwrite(data.meshes_.data(), sizeof(Mesh), data.meshes_.size(), f);
+
+	// Write the index and vertex data
+	fwrite(data.indexData_.data(), 1, header.indexDataSize, f);
+	fwrite(data.vertexData_.data(), 1, header.vertexDataSize, f);
+
+	fclose(f);
+
+	
+}
 
 
 

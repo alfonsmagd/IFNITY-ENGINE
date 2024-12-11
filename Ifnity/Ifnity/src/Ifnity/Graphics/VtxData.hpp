@@ -117,4 +117,6 @@ IFNITY_API void combineBuffers(const std::vector<uint32_t>& indexData, const std
 
 IFNITY_API void loadCombinedBuffer(FILE* file, MeshFileHeader& header, std::vector<uint8_t>& combinedBuffer);
 
+IFNITY_API void saveMeshData(const char* filename, const MeshData& data);
+
 IFNITY_END_NAMESPACE
