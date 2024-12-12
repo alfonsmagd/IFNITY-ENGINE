@@ -49,23 +49,9 @@ struct  IFNITY_API Mesh final
 	/** Information about stream element (size pretty much defines everything else, the "semantics" is defined by the shader) */
 	uint32_t streamElementSize[ kMaxStreams ] = { 0 };
 
-	/** We could have included the streamStride[] array here to allow interleaved storage of attributes.
-    For this book we assume tightly-packed (non-interleaved) vertex attribute streams */
-	uint32_t  streamStride[ kMaxStreams ] = { 0 };
 
-	/**
-  * @brief Get the offset of a vertex attribute in a specific stream.
-  * @param vertexIndex The index of the vertex.
-  * @param stream The stream index.
-  * @return The offset of the vertex attribute in the specified stream.
-  */
-	inline uint32_t getVertexAttributeOffset(uint32_t vertexIndex, uint32_t stream) const
-	{
-		assert(stream < kMaxStreams);
-		return streamOffset[ stream ] + vertexIndex * streamStride[ stream ];
-	}
 
-	/**Additional information, like mesh name, can be added here */
+	
 };
 
 /**

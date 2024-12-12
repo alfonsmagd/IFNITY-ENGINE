@@ -39,7 +39,7 @@ struct IFNITY_API MeshObjectDescription
 
 		meshDataBuilder = std::move(builder);
 
-		//Try to build mesh data 
+		//Try to build mesh data this break chain of responsability
 		if(meshDataBuilder)
 		{
 			meshDataBuilder->buildMeshData(*this);

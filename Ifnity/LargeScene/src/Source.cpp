@@ -2,7 +2,17 @@
 
 // IFNITY.cp
 
+
 #include <Ifnity.h>
+
+
+
+using namespace IFNITY;
+using namespace IFNITY::rhi;
+using glm::vec3;
+using glm::vec4;
+using glm::vec2;
+using glm::mat4;
 
 #define SELECT_API_SELECTOR 0
 
@@ -99,7 +109,7 @@ public:
 		ImGui::SetCurrentContext(context);
 
 		#if SELECT_API_SELECTOR
-			ChooseApi();
+		ChooseApi();
 		#endif
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
@@ -186,25 +196,130 @@ class Source: public IFNITY::App
 public:
 	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api)
 	{
-		// Obtener el contexto de ImGui desde IFNITY  DLL
-		/*ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
-		{
-			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
-			return;
-		}*/
 
-		// Establecer el contexto de ImGui en la aplicación principal
-		//ImGui::SetCurrentContext(context);
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
-		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
+		PushOverlay(new IFNITY::ImguiLayer());
 
 
 	}
 
 	void Initialize() override
 	{
+		std::string  filenameAssimp = "data/rubber_duck/scene.gltf";
+		std::string  meshDataTest = "data/rubber_duck/scene.gltf.meshdata";
+		std::string  test = "data/rubber_duck/test.meshes";
+
+		m_ManagerDevice = &App::GetApp().GetManagerDevice();
+
+
+		IFNITY::ShaderCompiler::Initialize();
+
+
+		std::wstring shaderSource3 = LR"(
+
+		cbuffer PerFrameData : register(b0)
+		{
+			matrix MVP;
+		};
+		
+		struct VertexInput
+		{
+		    float3 position : POSITION0;
+		    float3 color : COLOR1; // Color de entrada desde el vértice
+		};
+		
+		// Función del Vertex Shader
+		void main_vs(
+		    VertexInput input,                 // Entrada del vértice
+		    uint i_vertexId : SV_VertexID,     // ID del vértice
+		    out float4 o_pos : SV_Position,     // Salida de posición
+		    out float3 o_color : COLOR          // Salida de color
+		)
+		{
+		    // Multiplicar la posición por la matriz MVP
+		    o_pos = mul(float4(input.position, 1.0), MVP);
+		    // Asignar el color desde la entrada del vértice
+		    o_color = input.color; // Usa el color directamente de la entrada
+		}
+		
+		// Función del Pixel Shader
+		void main_ps(
+		    float4 i_pos : SV_Position,          // Entrada de posición (no se usa en este caso)
+		    float3 i_color : COLOR,              // Entrada de color
+		    out float4 o_color : SV_Target0       // Salida de color
+		)
+		{
+		    // Asignar el color a la salida del pixel
+		    o_color = float4(i_color, 1.0); 
+		}
+)";
+
+
+
+		auto& vfs = IFNITY::VFS::GetInstance();
+
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
+
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
+
+		ShaderCreateDescription DescriptionShader;
+		{
+			DescriptionShader.EntryPoint = L"main_vs";
+			DescriptionShader.Profile = L"vs_6_0";
+			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "vsTriangle";
+			m_vs->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.EntryPoint = L"main_ps";
+			DescriptionShader.Profile = L"ps_6_0";
+			DescriptionShader.Type = ShaderType::PIXEL_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "psTriangle";
+			m_ps->SetShaderDescription(DescriptionShader);
+		}
+
+		ShaderCompiler::CompileShader(m_vs.get());
+		ShaderCompiler::CompileShader(m_ps.get());
+
+
+		GraphicsPipelineDescription gdesc;
+		gdesc.SetVertexShader(m_vs.get()).
+			SetPixelShader(m_ps.get());
+
+		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+
+		BufferDescription DescriptionBuffer;
+		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
+			.SetByteSize(sizeof(mat4))
+			.SetDebugName("UBO MVP")
+			.SetStrideSize(0);
+
+		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
+
+		MeshObjectDescription meshAssimp = 
+		{
+			.filePath = filenameAssimp,
+			.isLargeMesh = true,
+			.isGeometryModel = false,
+			.meshData = MeshData{},
+			.meshFileHeader = MeshFileHeader{},
+			.meshDataBuilder = nullptr
+		};
+
+		meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(9, 1.0f));
+
+
+		loadMeshData(test.c_str(), meshAssimp.meshData);
+
+		
+
+
 
 	}
 
@@ -216,7 +331,17 @@ public:
 	{
 		IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
-	~Source() override {}
+private:
+	BufferHandle m_UBO;
+	BufferHandle m_VertexBuffer;
+	GraphicsDeviceManager* m_ManagerDevice;
+	GraphicsPipelineHandle m_GraphicsPipeline;
+	MeshObjectHandle m_MeshTetrahedron;
+	MeshObjectHandle m_MeshCube;
+	std::shared_ptr<IShader> m_vs;
+	std::shared_ptr<IShader> m_ps;
+
+
 };
 
 class Source_TestD3D12: public IFNITY::App
