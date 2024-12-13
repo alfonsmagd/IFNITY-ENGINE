@@ -376,6 +376,12 @@ namespace OpenGL
 
 			return MeshObjectHandle(mesh);
 		}
+		if(desc.isLargeMesh)
+		{
+			//Create a MeshObject with the data. 
+
+			MeshObject* mesh = new MeshObject(&desc.meshFileHeader, desc.meshData.meshes_.data(), desc.meshData.indexData_.data(), desc.meshData.vertexData_.data(), this);
+		}
 
 
 		return nullptr;
@@ -750,7 +756,7 @@ namespace OpenGL
 		m_BufferVertex = dev->CreateDefaultBuffer(vertexattribSize, vertexattrib);
 
 		//Setup the vertex attributes
-		std::vector<OpenGL::VertexAttribute> attributes = 
+		std::vector<OpenGL::VertexAttribute> attributes =
 		{
 			{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec3), 0, 0},
 			{1, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec3), sizeof(vec3), 0},
@@ -762,17 +768,51 @@ namespace OpenGL
 		glBindVertexArray(m_VAO);
 	}
 
+	MeshObject::MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device): m_Device(device), m_header(header), m_meshes(meshes)
+	{
+
+		Device* dev = dynamic_cast<Device*>(device);
+		if(!dev)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Device its not a OpenGL Device");
+			return;
+		}
+
+		//Create a VAO
+		m_VAO = dev->CreateVAO();
+		//Create a BufferHandle for the indices with no flags 
+		m_BufferIndex = dev->CreateDefaultBuffer(header->indexDataSize, indices);
+		//Create a BufferHandle for the vertexattrib with no flags
+		m_BufferVertex = dev->CreateDefaultBuffer(header->vertexDataSize, vertexattrib);
+
+		//Setup the vertex attributes position, uv, normal todo Change to Template Method. 
+
+		std::vector<OpenGL::VertexAttribute> attributes =
+		{
+			{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), 0, 0}, //Position
+			{1, 2, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3), 0}, //UV
+			{2, 3, GL_FLOAT, GL_TRUE,  sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3) + sizeof(vec2), 0}	//Normal
+		};
+
+		dev->SetupVertexAttributes(m_VAO, m_BufferVertex->GetBufferID(), m_BufferIndex->GetBufferID(), attributes);
+		//BindVertexArrayObject
+		glBindVertexArray(m_VAO);
+
+
+	}
+
+
 	void MeshObject::Draw()
 	{
 		glBindVertexArray(m_VAO);
-		
+
 		//Bind the index buffer
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
 
 		//Draw the mesh 
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_BufferIndex->GetBufferDescription().byteSize / sizeof(GLuint)), GL_UNSIGNED_INT, nullptr);
 
-		
+
 
 
 	}
@@ -781,7 +821,24 @@ namespace OpenGL
 	{}
 
 	void MeshObject::DrawIndexed()
-	{}
+	{
+		glBindVertexArray(m_VAO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
+
+		//glDrawElements(GL_TRIANGLES,      static_cast<GLsizei>(numIndices_),      GL_UNSIGNED_INT, nullptr);
+
+		for(uint32_t i = 0; i < m_header->meshCount; ++i)
+		{
+			const Mesh& mesh = m_meshes[ i ];
+			glDrawElementsBaseVertex(
+				GL_TRIANGLES,
+				mesh.getLODIndicesCount(0),
+				GL_UNSIGNED_INT,
+				(void*)(mesh.indexOffset * sizeof(uint32_t)),
+				mesh.vertexOffset
+			);
+		}
+	}
 
 	MeshObject::~MeshObject()
 	{

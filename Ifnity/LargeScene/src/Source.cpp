@@ -4,6 +4,7 @@
 
 
 #include <Ifnity.h>
+#include <future>
 
 
 
@@ -209,6 +210,7 @@ public:
 		std::string  filenameAssimp = "data/rubber_duck/scene.gltf";
 		std::string  meshDataTest = "data/rubber_duck/scene.gltf.meshdata";
 		std::string  test = "data/rubber_duck/test.meshes";
+		std::string test3 = "data/bistro/Exterior/exterior.obj";
 
 		m_ManagerDevice = &App::GetApp().GetManagerDevice();
 
@@ -302,9 +304,9 @@ public:
 
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
-		MeshObjectDescription meshAssimp = 
+		/*MeshObjectDescription meshAssimp = 
 		{
-			.filePath = filenameAssimp,
+			.filePath = test3,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
@@ -312,28 +314,72 @@ public:
 			.meshDataBuilder = nullptr
 		};
 
-		meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(9, 1.0f));
+		meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 0.01f));*/
 
 
-		loadMeshData(test.c_str(), meshAssimp.meshData);
+		/*loadMeshData(test.c_str(), meshAssimp.meshData);*/
 
 		
+		// Iniciar la carga de la malla en un hilo separado
+		meshLoadingFuture = std::async(std::launch::async, &Source::loadMeshAsync, this, test3);
 
 
 
 	}
 
+
+
 	void Render() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Render App");
+		// Verificar si la carga de la malla ha finalizado
+		if(meshLoadingFuture.valid() && meshLoadingFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+		{
+			// La malla ha sido cargada, puedes renderizarla
+			// Aquí iría el código para renderizar la malla
+			IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
+		}
+		else
+		{
+			// La malla aún se está cargando
+			IFNITY_LOG(LogApp, INFO, "Mesh is still loading...");
+		}
 	}
 	void Animate() override
 	{
 		IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
 private:
+
+	void loadMeshAsync(const std::string& filePath)
+	{
+		MeshObjectDescription meshAssimp =
+		{
+			.filePath = filePath,
+			.isLargeMesh = true,
+			.isGeometryModel = false,
+			.meshData = MeshData{},
+			.meshFileHeader = MeshFileHeader{},
+			.meshDataBuilder = nullptr
+		};
+
+		meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 0.01f));
+		loadMeshData(filePath.c_str(), meshAssimp.meshData);
+		m_meshData = meshAssimp.meshData;
+
+
+
+
+
+
+
+
+
+
+	}
+	MeshData m_meshData;
 	BufferHandle m_UBO;
 	BufferHandle m_VertexBuffer;
+	std::future<void> meshLoadingFuture;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_GraphicsPipeline;
 	MeshObjectHandle m_MeshTetrahedron;

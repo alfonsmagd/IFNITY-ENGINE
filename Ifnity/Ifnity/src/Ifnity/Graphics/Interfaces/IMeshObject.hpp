@@ -72,6 +72,8 @@ public:
 	virtual void Draw(const DrawDescription& desc) = 0;
 	virtual void DrawIndexed() = 0;
 
+	
+
 };
 
 

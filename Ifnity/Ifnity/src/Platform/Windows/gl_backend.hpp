@@ -169,9 +169,15 @@ namespace OpenGL
             //Constructor 
 			MeshObject() = default;
             MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize, IDevice* device);
+
+            MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device);
+
+
             void Draw() override;
 			void Draw(const DrawDescription& desc) override;
 			void DrawIndexed() override;
+
+
 
             //Destructor 
             ~MeshObject();
@@ -186,6 +192,8 @@ namespace OpenGL
         BufferHandle m_BufferIndirect;
 
 		IDevice* m_Device; // avoid circular reference
+        const MeshFileHeader* m_header;
+		const Mesh* m_meshes;
 	
 	};
 

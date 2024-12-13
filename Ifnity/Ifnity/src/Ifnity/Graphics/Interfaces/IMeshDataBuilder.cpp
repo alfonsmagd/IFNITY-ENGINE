@@ -44,10 +44,10 @@ bool MeshDataBuilderAssimp::loadFileAssimp(const char* fileName, MeshData& meshD
 
 	for(unsigned int i = 0; i != scene->mNumMeshes; i++)
 	{
-		std::stringstream logMessage;
+		/*std::stringstream logMessage;
 		logMessage << "Converting meshes " << (i + 1) << "/" << scene->mNumMeshes << "...";
 		IFNITY_LOG(LogCore, INFO, logMessage.str().c_str());
-		fflush(stdout);
+		fflush(stdout);*/
 		meshData.meshes_.push_back(convertAIMesh(scene->mMeshes[ i ],meshData));
 	}
 
@@ -68,7 +68,7 @@ Mesh MeshDataBuilderAssimp::convertAIMesh(const aiMesh* m, MeshData& meshData)
 
 	auto& vertices = meshData.vertexData_;
 	// Reservar memoria para los vértices
-	vertices.reserve(vertices.size() + m->mNumVertices * m_numElementsPerVertex);  //3 position, 2 texcoord, 3 normal 
+	//vertices.reserve(vertices.size() + m->mNumVertices * m_numElementsPerVertex);  //3 position, 2 texcoord, 3 normal 
 
 	for(size_t i = 0; i != m->mNumVertices; i++)
 	{
@@ -115,7 +115,7 @@ Mesh MeshDataBuilderAssimp::convertAIMesh(const aiMesh* m, MeshData& meshData)
 
 	
 	outLods.push_back(srcIndices);
-	printf("\nCalculated LOD count: %u\n", (unsigned)outLods.size());
+	//printf("\nCalculated LOD count: %u\n", (unsigned)outLods.size());
 
 	uint32_t numIndices = 0;
 	for(size_t l = 0; l < outLods.size(); l++)
@@ -151,6 +151,8 @@ void MeshDataBuilderAssimp::buildMeshData(MeshObjectDescription& description)
 	{
 		IFNITY_LOG(LogCore, ERROR, "error loading file %s", description.filePath.c_str());
 	}
+
+	IFNITY_LOG(LogCore, INFO, "Loaded file sucesffuly", description.filePath.c_str());
 
 	//save the meshData
 	saveMeshData(description.filePath.c_str(), description.meshData);
