@@ -66,7 +66,8 @@ namespace OpenGL
 	    	Program CreateProgram(const char* vertexShader, const char* fragmentShader);
 			Program CreateProgram(const char* vertexShader, const char* fragmentShader, const char* geometryShader);
 			BufferHandle CreateVertexAttAndIndexBuffer(const BufferDescription& desc);
-            BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint32_t flags);
+            BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint32_t flags = 0);
+			BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags = 0);
             void GetMeshVAO(const std::string mesh);
             void SetupVertexAttributes(GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes);
             
@@ -172,13 +173,17 @@ namespace OpenGL
 
             MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device);
 
+            // Constructor que toma un MeshObjectDescription
+            MeshObject( const MeshObjectDescription&& desc, IDevice* device);
+               
+
 
             void Draw() override;
 			void Draw(const DrawDescription& desc) override;
 			void DrawIndexed() override;
 
 
-
+			MeshObjectDescription& GetMeshObjectDescription() { return m_MeshObjectDescription; }
             //Destructor 
             ~MeshObject();
             
@@ -190,6 +195,9 @@ namespace OpenGL
         BufferHandle m_BufferVertex;
 		BufferHandle m_BufferIndex;
         BufferHandle m_BufferIndirect;
+
+		MeshObjectDescription m_MeshObjectDescription;
+
 
 		IDevice* m_Device; // avoid circular reference
         const MeshFileHeader* m_header;

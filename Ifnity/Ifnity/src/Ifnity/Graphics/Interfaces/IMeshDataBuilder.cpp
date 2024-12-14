@@ -155,7 +155,7 @@ void MeshDataBuilderAssimp::buildMeshData(MeshObjectDescription& description)
 	IFNITY_LOG(LogCore, INFO, "Loaded file sucesffuly", description.filePath.c_str());
 
 	//save the meshData
-	saveMeshData(description.filePath.c_str(), description.meshData);
+	saveMeshData(description.filePath.c_str(), description.meshData, description.meshFileHeader);
 
 
 

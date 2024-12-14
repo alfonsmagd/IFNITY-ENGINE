@@ -167,7 +167,8 @@ namespace OpenGL
 		}
 		catch(std::ifstream::failure& e)
 		{
-			std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
+			
+			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ",e.code());
 		}
 
 		const char* vShaderCode = vertexCode.c_str();
@@ -241,6 +242,11 @@ namespace OpenGL
 
 			Buffer* buffer = new Buffer(dataVertices, desc);
 			return BufferHandle(buffer);
+		}
+		else if(desc.type == BufferType::STORAGE_BUFFER)
+		{
+			return CreateDefaultBuffer(desc.byteSize, desc.data , desc.binding, GL_DYNAMIC_STORAGE_BIT);
+
 		}
 		else
 		{
@@ -362,7 +368,7 @@ namespace OpenGL
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
 	{
 		//Check if MeshData its valid ? 
-		if(!desc.meshData.indexData_.size() || !desc.meshData.vertexData_.size())
+		if(desc.meshData.indexData_.empty() || desc.meshData.vertexData_.empty())
 		{
 			IFNITY_LOG(LogApp, ERROR, "MeshData its invalid");
 			return nullptr;
@@ -376,11 +382,14 @@ namespace OpenGL
 
 			return MeshObjectHandle(mesh);
 		}
-		if(desc.isLargeMesh)
+		else if(desc.isLargeMesh)
 		{
 			//Create a MeshObject with the data. 
 
-			MeshObject* mesh = new MeshObject(&desc.meshFileHeader, desc.meshData.meshes_.data(), desc.meshData.indexData_.data(), desc.meshData.vertexData_.data(), this);
+			/*MeshObject* mesh = new MeshObject(&desc.meshFileHeader, desc.meshData.meshes_.data(), desc.meshData.indexData_.data(), desc.meshData.vertexData_.data(), this);*/
+			MeshObject* mesh = new MeshObject(std::move(desc), this);
+
+			return MeshObjectHandle(mesh);
 		}
 
 
@@ -393,10 +402,25 @@ namespace OpenGL
 
 	GLuint Device::CreateVAO()
 	{
-		// Create and bind VAO object
+		// Verificar si el contexto de OpenGL está inicializado
+		if(!glfwGetCurrentContext())
+		{
+			IFNITY_LOG(LogApp, ERROR, "El contexto de OpenGL no está inicializado.");
+			return 0;
+		}
+
+		// Crear y enlazar el objeto VAO
 		GLuint vao;
-		glCreateVertexArrays(1, &vao);
+		glGenVertexArrays(1, &vao); // Usar glGenVertexArrays en lugar de glCreateVertexArrays
 		glBindVertexArray(vao);
+
+		// Verificar si hubo errores de OpenGL
+		GLenum error = glGetError();
+		if(error != GL_NO_ERROR)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Error de OpenGL al crear el VAO: ", error);
+			return 0;
+		}
 
 		return vao;
 	}
@@ -668,7 +692,7 @@ namespace OpenGL
 
 	}
 
-	BufferHandle Device::CreateDefaultBuffer(int64 size, const void* data, uint32_t flags = 0)
+	BufferHandle Device::CreateDefaultBuffer(int64 size, const void* data, uint32_t flags)
 	{
 		GLuint handle;
 		glCreateBuffers(1, &handle);
@@ -677,9 +701,28 @@ namespace OpenGL
 		BufferDescription desc;
 		desc.byteSize = size;
 		desc.type = BufferType::DEFAULT_BUFFER;
+		desc.binding = 0;
 
 
 		Buffer* buffer = new Buffer(handle, desc);
+
+		return BufferHandle(buffer);
+	}
+
+	BufferHandle Device::CreateDefaultBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags)
+	{
+		GLuint handle;
+		glCreateBuffers(1, &handle);
+		glNamedBufferStorage(handle, size, data, flags);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, handle);
+
+		BufferDescription desc;
+		desc.byteSize = size;
+		desc.type = BufferType::DEFAULT_BUFFER;
+		desc.binding = binding;
+
+		Buffer* buffer = new Buffer(handle, desc);
+
 
 		return BufferHandle(buffer);
 	}
@@ -801,6 +844,44 @@ namespace OpenGL
 
 	}
 
+	MeshObject::MeshObject(const MeshObjectDescription&& desc, IDevice* device): m_Device(device), m_MeshObjectDescription(std::move(desc)), m_header(nullptr), m_meshes(nullptr)
+	{
+
+
+		Device* dev = dynamic_cast<Device*>(m_Device);
+		if(!dev)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Device its not a OpenGL Device");
+			return;
+		}
+		//Setting the FileHeader
+		
+		m_header = &m_MeshObjectDescription.meshFileHeader;
+		m_meshes = m_MeshObjectDescription.meshData.meshes_.data();
+
+		// Crear un VAO
+		m_VAO = dev->CreateVAO();
+		// Crear un BufferHandle para los índices sin flags
+		m_BufferIndex = dev->CreateDefaultBuffer(m_MeshObjectDescription.meshFileHeader.indexDataSize, m_MeshObjectDescription.meshData.indexData_.data());
+		// Crear un BufferHandle para los atributos de vértices sin flags
+		m_BufferVertex = dev->CreateDefaultBuffer(m_MeshObjectDescription.meshFileHeader.vertexDataSize, m_MeshObjectDescription.meshData.vertexData_.data());
+
+		// Configurar los atributos de vértices
+		std::vector<OpenGL::VertexAttribute> attributes =
+		{
+			{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), 0, 0}, // Position
+			{1, 2, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3), 0}, // UV
+			{2, 3, GL_FLOAT, GL_TRUE,  sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3) + sizeof(vec2), 0} // Normal
+		};
+
+		dev->SetupVertexAttributes(m_VAO, m_BufferVertex->GetBufferID(), m_BufferIndex->GetBufferID(), attributes);
+		// Vincular el VAO
+		glBindVertexArray(m_VAO);
+	
+	}
+
+	
+
 
 	void MeshObject::Draw()
 	{
@@ -844,6 +925,7 @@ namespace OpenGL
 	{
 
 		glDeleteVertexArrays(1, &m_VAO);
+		
 
 	}
 

@@ -5,6 +5,7 @@
 
 #include <Ifnity.h>
 #include <future>
+#include "..\..\Ifnity\vendor\glad\include\glad\glad.h"
 
 
 
@@ -18,6 +19,8 @@ using glm::mat4;
 #define SELECT_API_SELECTOR 0
 
 using namespace IFNITY::rhi;
+
+
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
@@ -184,33 +187,47 @@ private:
 		ImGui::End();  // Termina la creación de la ventana
 	}
 
-
-
-
-
-
-
 };
 
 class Source: public IFNITY::App
 {
 public:
-	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api)
+
+	struct PerFrameData
+	{
+		mat4 view;
+		mat4 proj;
+		vec4 cameraPos;
+	};
+
+
+
+
+	Source(IFNITY::rhi::GraphicsAPI api): 
+		IFNITY::App(api),
+		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
+		m_camera(vec3(-31.5f, 7.5f, -9.5f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_CameraListener(&m_camera)
 	{
 
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
+		PushLayer(new IFNITY::CameraLayer(&m_CameraListener));
 		PushOverlay(new IFNITY::ImguiLayer());
 
+		const GLsizeiptr kUniformBufferSize = sizeof(PerFrameData);
 
 	}
 
 	void Initialize() override
 	{
 		std::string  filenameAssimp = "data/rubber_duck/scene.gltf";
-		std::string  meshDataTest = "data/rubber_duck/scene.gltf.meshdata";
+		std::string  meshDataTest = "data/rubber_duck/test.meshes";
 		std::string  test = "data/rubber_duck/test.meshes";
 		std::string test3 = "data/bistro/Exterior/exterior.obj";
+		std::string test3Result = "data/bistro/Exterior/exterior.obj.meshdata";
+
+		std::string duck5file = "data/rubber_duck/scene.gltf.meshdata";
 
 		m_ManagerDevice = &App::GetApp().GetManagerDevice();
 
@@ -218,95 +235,77 @@ public:
 		IFNITY::ShaderCompiler::Initialize();
 
 
-		std::wstring shaderSource3 = LR"(
-
-		cbuffer PerFrameData : register(b0)
-		{
-			matrix MVP;
-		};
-		
-		struct VertexInput
-		{
-		    float3 position : POSITION0;
-		    float3 color : COLOR1; // Color de entrada desde el vértice
-		};
-		
-		// Función del Vertex Shader
-		void main_vs(
-		    VertexInput input,                 // Entrada del vértice
-		    uint i_vertexId : SV_VertexID,     // ID del vértice
-		    out float4 o_pos : SV_Position,     // Salida de posición
-		    out float3 o_color : COLOR          // Salida de color
-		)
-		{
-		    // Multiplicar la posición por la matriz MVP
-		    o_pos = mul(float4(input.position, 1.0), MVP);
-		    // Asignar el color desde la entrada del vértice
-		    o_color = input.color; // Usa el color directamente de la entrada
-		}
-		
-		// Función del Pixel Shader
-		void main_ps(
-		    float4 i_pos : SV_Position,          // Entrada de posición (no se usa en este caso)
-		    float3 i_color : COLOR,              // Entrada de color
-		    out float4 o_color : SV_Target0       // Salida de color
-		)
-		{
-		    // Asignar el color a la salida del pixel
-		    o_color = float4(i_color, 1.0); 
-		}
-)";
-
-
 
 		auto& vfs = IFNITY::VFS::GetInstance();
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
+		vfs.Mount("Data", "Data", IFNITY::FolderType::TEXTURES);
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
+		m_gs = std::make_shared<IShader>();
 
 		ShaderCreateDescription DescriptionShader;
 		{
-			DescriptionShader.EntryPoint = L"main_vs";
-			DescriptionShader.Profile = L"vs_6_0";
-			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
-			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
-			DescriptionShader.ShaderSource = shaderSource3;
-			DescriptionShader.FileName = "vsTriangle";
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "scene_wireframe.vs";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
-			DescriptionShader.EntryPoint = L"main_ps";
-			DescriptionShader.Profile = L"ps_6_0";
-			DescriptionShader.Type = ShaderType::PIXEL_SHADER;
-			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
-			DescriptionShader.ShaderSource = shaderSource3;
-			DescriptionShader.FileName = "psTriangle";
+
+			DescriptionShader.FileName = "scene_wireframe.fs";
+			DescriptionShader.NoCompile = true;
 			m_ps->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.FileName = "scene_wireframe.gs";
+			DescriptionShader.NoCompile = true;
+			m_gs->SetShaderDescription(DescriptionShader);
+
 		}
 
 		ShaderCompiler::CompileShader(m_vs.get());
 		ShaderCompiler::CompileShader(m_ps.get());
-
+		ShaderCompiler::CompileShader(m_gs.get());
 
 		GraphicsPipelineDescription gdesc;
-		gdesc.SetVertexShader(m_vs.get()).
-			SetPixelShader(m_ps.get());
+		gdesc.SetVertexShader(m_vs.get())
+			.SetPixelShader(m_ps.get())
+			.SetGeometryShader(m_gs.get());
 
 		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 
+
 		BufferDescription DescriptionBuffer;
 		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
-			.SetByteSize(sizeof(mat4))
-			.SetDebugName("UBO MVP")
+			.SetByteSize(sizeof(PerFrameData))
+			.SetDebugName("UBO MVP PERFRAME DATA ")
 			.SetStrideSize(0);
 
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
-		/*MeshObjectDescription meshAssimp = 
+
+		
+		const mat4 m(glm::scale(mat4(1.0f), vec3(2.0f)));
+		//Create PerFrameData Buffer 
+		BufferDescription descriptionStorageBuffer;
+		descriptionStorageBuffer.SetBufferType(BufferType::STORAGE_BUFFER)
+			.SetByteSize(sizeof(mat4))
+			.SetData(glm::value_ptr(m))
+			.SetDebugName("STORAGE MODEL")
+			.SetStrideSize(0)
+			.SetBindingPoint(2);
+
+		m_StorageBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(descriptionStorageBuffer);
+
+		//
+
+		
+		//meshLoadingFuture = std::async(std::launch::async, &Source::loadMeshAsync, this, filenameAssimp);
+		
+		MeshObjectDescription meshAssimp =
 		{
-			.filePath = test3,
+			.filePath = "",
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
@@ -314,16 +313,12 @@ public:
 			.meshDataBuilder = nullptr
 		};
 
-		meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 0.01f));*/
+		//meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 3.f));
+		meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
+		m_meshData = meshAssimp.meshData;
+		header = meshAssimp.meshFileHeader;
 
-
-		/*loadMeshData(test.c_str(), meshAssimp.meshData);*/
-
-		
-		// Iniciar la carga de la malla en un hilo separado
-		meshLoadingFuture = std::async(std::launch::async, &Source::loadMeshAsync, this, test3);
-
-
+		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
 
 	}
 
@@ -334,15 +329,38 @@ public:
 		// Verificar si la carga de la malla ha finalizado
 		if(meshLoadingFuture.valid() && meshLoadingFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
 		{
-			// La malla ha sido cargada, puedes renderizarla
-			// Aquí iría el código para renderizar la malla
+			/* La malla ha sido cargada, puedes renderizarla
+			 Aquí iría el código para renderizar la malla*/
+			 // Asegurarse de que el contexto principal esté activo
+			
+			float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 			IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
+			glViewport(0, 0, m_ManagerDevice->GetWidth(), m_ManagerDevice->GetHeight());
+		
+
+			const mat4 p = glm::perspective(45.0f, aspectRatio, 0.5f, 5000.0f);
+			const mat4 view = m_camera.getViewMatrix();
+
+			const PerFrameData perFrameData = { .view = view, .proj = p, .cameraPos = glm::vec4(m_camera.getPosition(), 1.0f) };
+
+			m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, &perFrameData, sizeof(PerFrameData));
+
+			glEnable(GL_DEPTH_TEST);
+			glDisable(GL_BLEND);
+
+			glfwMakeContextCurrent(glfwGetCurrentContext());
+			m_MeshScene->DrawIndexed();
+
+			
+
+
 		}
 		else
 		{
 			// La malla aún se está cargando
 			IFNITY_LOG(LogApp, INFO, "Mesh is still loading...");
 		}
+	
 	}
 	void Animate() override
 	{
@@ -352,9 +370,21 @@ private:
 
 	void loadMeshAsync(const std::string& filePath)
 	{
+		// Crear un contexto compartido en el hilo secundario
+		GLFWwindow* sharedContextWindow = glfwCreateWindow(1, 1, "", nullptr, glfwGetCurrentContext());
+		if(!sharedContextWindow)
+		{
+			IFNITY_LOG(LogApp, ERROR, "No se pudo crear el contexto compartido de OpenGL.");
+			return;
+		}
+
+		// Hacer que el contexto compartido sea actual en el hilo secundario
+		glfwMakeContextCurrent(sharedContextWindow);
+
+		
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = filePath,
+			.filePath = "",
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
@@ -362,30 +392,39 @@ private:
 			.meshDataBuilder = nullptr
 		};
 
-		meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 0.01f));
-		loadMeshData(filePath.c_str(), meshAssimp.meshData);
+		//meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 3.f));
+		meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
 		m_meshData = meshAssimp.meshData;
+		header = meshAssimp.meshFileHeader;
+		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
 
+	
 
-
-
-
-
-
-
-
+		// Destruir el contexto compartido cuando ya no sea necesario
+		glfwDestroyWindow(sharedContextWindow);
 
 	}
+
+	
+	MeshFileHeader header;
+
 	MeshData m_meshData;
 	BufferHandle m_UBO;
+	BufferHandle m_StorageBuffer;
 	BufferHandle m_VertexBuffer;
 	std::future<void> meshLoadingFuture;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_GraphicsPipeline;
-	MeshObjectHandle m_MeshTetrahedron;
-	MeshObjectHandle m_MeshCube;
+	
+	MeshObjectHandle m_MeshScene;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
+	std::shared_ptr<IShader> m_gs;
+
+
+	// Camera objects 
+	IFNITY::EventCameraListener m_CameraListener;
+	CameraPositioner_FirstPerson m_camera;
 
 
 };

@@ -6,8 +6,8 @@ IFNITY_NAMESPACE
 
 IFNITY_API MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
 {
-	
-	
+
+
 
 	FILE* f = fopen(meshFile, "rb");
 
@@ -15,7 +15,7 @@ IFNITY_API MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
 
 	if(!f)
 	{
-		IFNITY_LOG(LogApp,ERROR,"Cannot open %s. Did you forget to run \"Convert mesh \"?\n", meshFile);
+		IFNITY_LOG(LogApp, ERROR, "Cannot open %s. Did you forget to run \"Convert mesh \"?\n", meshFile);
 		exit(EXIT_FAILURE);
 	}
 
@@ -24,22 +24,22 @@ IFNITY_API MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
 	// Read the header and check if sizeof its correct 
 	if(fread(&fileHeader, 1, sizeof(fileHeader), f) != sizeof(fileHeader))
 	{
-		IFNITY_LOG(LogApp,ERROR,"Unable to read mesh file fileHeader\n");
+		IFNITY_LOG(LogApp, ERROR, "Unable to read mesh file fileHeader\n");
 		exit(EXIT_FAILURE);
 	}
 
 	// Copy meshfileheader 
 	auto header = fileHeader;
-	
+
 
 	// Get mesh count  and fill the mesh data
 	out.meshes_.resize(fileHeader.meshCount);
 	if(fread(out.meshes_.data(), sizeof(Mesh), fileHeader.meshCount, f) != fileHeader.meshCount)
 	{
-		IFNITY_LOG(LogApp,ERROR,"Could not read mesh descriptors\n");
+		IFNITY_LOG(LogApp, ERROR, "Could not read mesh descriptors\n");
 		exit(EXIT_FAILURE);
 	}
-	
+
 
 	out.indexData_.resize(fileHeader.indexDataSize / sizeof(uint32_t));
 	out.vertexData_.resize(fileHeader.vertexDataSize / sizeof(float));
@@ -88,7 +88,7 @@ IFNITY_API void loadCombinedBuffer(FILE* file, MeshFileHeader& header, std::vect
 
 
 
-IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data)
+IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data,  MeshFileHeader& fheader)
 {
 	//Generate  the file with .meshdata extension 
 	std::string meshFileStr = meshFile + std::string(".meshdata");
@@ -110,7 +110,15 @@ IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data)
 		.indexDataSize = static_cast<uint32_t>(data.indexData_.size() * sizeof(uint32_t)),
 		.vertexDataSize = static_cast<uint32_t>(data.vertexData_.size() * sizeof(float))
 	};
-	
+
+
+	fheader.magicValue = header.magicValue;
+	fheader.meshCount = header.meshCount;
+	fheader.dataBlockStartOffset = header.dataBlockStartOffset;
+	fheader.indexDataSize = header.indexDataSize;
+	fheader.vertexDataSize = header.vertexDataSize;
+
+
 	// Write the header
 	fwrite(&header, 1, sizeof(header), f);
 
@@ -123,7 +131,7 @@ IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data)
 
 	fclose(f);
 
-	
+
 }
 
 

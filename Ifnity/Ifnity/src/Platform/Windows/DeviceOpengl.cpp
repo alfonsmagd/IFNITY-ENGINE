@@ -23,15 +23,16 @@ DeviceOpengl::~DeviceOpengl()
 
 void DeviceOpengl::OnUpdate()
 {
-	//glViewport(0, 0, GetWidth(), GetHeight());
+	
 	//
 	//glDrawArrays(GL_TRIANGLES, 0, 3);
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 	glClearColor(m_Color[0],m_Color[1], m_Color[2], m_Color[3]);
 	//Imgui update Render 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 	glfwSwapBuffers(m_Window);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(0, 0, GetWidth(), GetHeight());
 }
 
 /// <summary>

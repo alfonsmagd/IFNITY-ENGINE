@@ -46,7 +46,7 @@ enum class IFNITY_API BufferType: unsigned char
     CONSTANT_BUFFER = 0xF0,    ///< Buffer for constant data
 	VERTEX_PULLING_BUFFER_INDEX = 0x10,///< Buffer for vertex pulling data this implies that the buffer is used for vertex pulling and configure the index buffer 
 	VERTEX_PULLING_BUFFER = 0x20,///< Buffer for vertex pulling data , Vertex data, no index buffer.
-
+	STORAGE_BUFFER = 0x30,     ///< Buffer for storage data
 
 	
 
@@ -70,6 +70,7 @@ struct IFNITY_API BufferDescription
     std::string debugName;          ///< Debug name for the buffer
     BufferType type = BufferType::NO_DEFINE_BUFFER; ///< Type of the buffer
 	uint8_t binding = 0;            ///< Binding point of the buffer
+	const void* data ;     ///< Data to be written to the buffer
 
 
     /**
@@ -127,6 +128,12 @@ struct IFNITY_API BufferDescription
 		return *this;
 
     }
+
+	constexpr BufferDescription& SetData(const void* value) noexcept
+	{
+		data = value;
+		return *this;
+	}
 
 private:
 	friend class IDevice;

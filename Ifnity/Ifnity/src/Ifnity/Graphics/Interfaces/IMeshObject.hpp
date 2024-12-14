@@ -16,8 +16,9 @@ struct DrawDescription;
 
 struct IFNITY_API MeshObjectDescription
 {
+	
 
-
+	// Constructor de movimient
 	/*is based in filename */
 	std::string  filePath;
 	bool isLargeMesh = false;
@@ -27,6 +28,10 @@ struct IFNITY_API MeshObjectDescription
 	MeshData meshData;
 	MeshFileHeader meshFileHeader;
 	IMeshDataBuilder* meshDataBuilder = nullptr;
+
+	
+
+	
 
 
 	MeshObjectDescription& setFilePath(const std::string& value) { filePath = value; return *this; };
@@ -43,6 +48,7 @@ struct IFNITY_API MeshObjectDescription
 		if(meshDataBuilder)
 		{
 			meshDataBuilder->buildMeshData(*this);
+			delete meshDataBuilder; //You dont need this anymore
 		}
 		else
 		{
@@ -56,7 +62,6 @@ struct IFNITY_API MeshObjectDescription
 	//Destructor.
 	~MeshObjectDescription()
 	{
-		delete meshDataBuilder;
 	}
 
 
@@ -72,7 +77,7 @@ public:
 	virtual void Draw(const DrawDescription& desc) = 0;
 	virtual void DrawIndexed() = 0;
 
-	
+	virtual MeshObjectDescription& GetMeshObjectDescription() = 0;
 
 };
 
