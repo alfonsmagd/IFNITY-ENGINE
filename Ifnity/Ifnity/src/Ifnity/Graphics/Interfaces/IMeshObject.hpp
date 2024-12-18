@@ -29,9 +29,6 @@ struct IFNITY_API MeshObjectDescription
 	MeshFileHeader meshFileHeader;
 	IMeshDataBuilder* meshDataBuilder = nullptr;
 
-	
-
-	
 
 
 	MeshObjectDescription& setFilePath(const std::string& value) { filePath = value; return *this; };
@@ -39,25 +36,7 @@ struct IFNITY_API MeshObjectDescription
 	constexpr MeshObjectDescription& setIsGeometryModel(bool value) { isGeometryModel = value; return *this; };
 	MeshObjectDescription& setMeshData(const MeshData& value) { meshData = value; return *this; };
 
-	MeshObjectDescription& setMeshDataBuilder(IMeshDataBuilder* builder)
-	{
-
-		meshDataBuilder = std::move(builder);
-
-		//Try to build mesh data this break chain of responsability
-		if(meshDataBuilder)
-		{
-			meshDataBuilder->buildMeshData(*this);
-			delete meshDataBuilder; //You dont need this anymore
-		}
-		else
-		{
-			IFNITY_LOG(LogCore, ERROR, "error meshDataBuilder is null, you need set a meshDataBuilder");
-		}
-
-
-		return *this;
-	};
+	
 
 	//Destructor.
 	~MeshObjectDescription()

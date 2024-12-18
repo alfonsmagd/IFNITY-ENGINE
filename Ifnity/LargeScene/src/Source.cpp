@@ -206,7 +206,7 @@ public:
 	Source(IFNITY::rhi::GraphicsAPI api): 
 		IFNITY::App(api),
 		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
-		m_camera(vec3(-31.5f, 7.5f, -9.5f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_camera(vec3(-10.5f, 7.5f, -0.f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener(&m_camera)
 	{
 
@@ -227,7 +227,15 @@ public:
 		std::string test3 = "data/bistro/Exterior/exterior.obj";
 		std::string test3Result = "data/bistro/Exterior/exterior.obj.meshdata";
 
+		std::string cornelbox = "data/Cornel-box/CornellBox-Sphere.obj";
+
 		std::string duck5file = "data/rubber_duck/scene.gltf.meshdata";
+
+
+		std::string sanmiguel = "data/sanmiguel/san-miguel-low-poly.obj";
+		std::string sanmiguelResult = "data/sanmiguel/san-miguel-low-poly.obj.meshdata";
+
+
 
 		m_ManagerDevice = &App::GetApp().GetManagerDevice();
 
@@ -305,7 +313,7 @@ public:
 		
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = "",
+			.filePath = sanmiguel,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
@@ -313,11 +321,12 @@ public:
 			.meshDataBuilder = nullptr
 		};
 
-		//meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 3.f));
-		meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
+	    //meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 1.f));
+		meshAssimp.meshFileHeader = loadMeshData(sanmiguelResult.c_str(), meshAssimp.meshData);
 		m_meshData = meshAssimp.meshData;
 		header = meshAssimp.meshFileHeader;
 
+		//m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp(8,1.2f));
 		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
 
 	}
@@ -326,13 +335,7 @@ public:
 
 	void Render() override
 	{
-		// Verificar si la carga de la malla ha finalizado
-		if(meshLoadingFuture.valid() && meshLoadingFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
-		{
-			/* La malla ha sido cargada, puedes renderizarla
-			 Aquí iría el código para renderizar la malla*/
-			 // Asegurarse de que el contexto principal esté activo
-			
+		
 			float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 			IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
 			glViewport(0, 0, m_ManagerDevice->GetWidth(), m_ManagerDevice->GetHeight());
@@ -354,12 +357,7 @@ public:
 			
 
 
-		}
-		else
-		{
-			// La malla aún se está cargando
-			IFNITY_LOG(LogApp, INFO, "Mesh is still loading...");
-		}
+	
 	
 	}
 	void Animate() override
@@ -381,22 +379,22 @@ private:
 		// Hacer que el contexto compartido sea actual en el hilo secundario
 		glfwMakeContextCurrent(sharedContextWindow);
 
-		
-		MeshObjectDescription meshAssimp =
-		{
-			.filePath = "",
-			.isLargeMesh = true,
-			.isGeometryModel = false,
-			.meshData = MeshData{},
-			.meshFileHeader = MeshFileHeader{},
-			.meshDataBuilder = nullptr
-		};
+		//
+		//MeshObjectDescription meshAssimp =
+		//{
+		//	.filePath = "",
+		//	.isLargeMesh = true,
+		//	.isGeometryModel = false,
+		//	.meshData = MeshData{},
+		//	.meshFileHeader = MeshFileHeader{},
+		//	.meshDataBuilder = nullptr
+		//};
 
-		//meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 3.f));
-		meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
-		m_meshData = meshAssimp.meshData;
-		header = meshAssimp.meshFileHeader;
-		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
+		////meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 3.f));
+		//meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
+		//m_meshData = meshAssimp.meshData;
+		//header = meshAssimp.meshFileHeader;
+		//m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
 
 	
 

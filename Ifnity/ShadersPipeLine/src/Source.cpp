@@ -950,11 +950,8 @@ public:
 	void Initialize() override
 	{
 		m_ManagerDevice = &App::GetApp().GetManagerDevice();
-
-
 		IFNITY::ShaderCompiler::Initialize();
 
-		//
 		std::wstring shaderSource3 = LR"(
 
 			// Buffer constante para la matriz MVP
@@ -1057,8 +1054,6 @@ float4 main_ps(VSOutput input) : SV_Target
 			.SetStrideSize(0);
 
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
-
-
 
 
 		m_Texture = m_ManagerDevice->GetRenderDevice()->CreateTexture

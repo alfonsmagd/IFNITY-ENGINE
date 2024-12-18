@@ -303,19 +303,19 @@ public:
 
 		MeshObjectDescription cubeDesc;
 		cubeDesc.setIsGeometryModel(true).
-			setIsLargeMesh(false).
-			setMeshDataBuilder(new MeshDataBuilderGeometryModel(GeometricalModelType::CUBE));
+			setIsLargeMesh(false);
+			
 
 		MeshObjectDescription tetrahedronDesc;
 		tetrahedronDesc.setIsGeometryModel(true).
-			setIsLargeMesh(false).
-			setMeshDataBuilder(new MeshDataBuilderGeometryModel(GeometricalModelType::TETHAHEDRON));
+			setIsLargeMesh(false);
+		
 
 
 
 
-		m_MeshTetrahedron = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(tetrahedronDesc);
-		m_MeshCube = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(cubeDesc);
+		m_MeshTetrahedron = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(tetrahedronDesc, new MeshDataBuilderGeometryModel(GeometricalModelType::CUBE));
+		m_MeshCube = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(cubeDesc,               new MeshDataBuilderGeometryModel(GeometricalModelType::TETHAHEDRON)	);
 
 
 
@@ -328,7 +328,7 @@ public:
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 		const mat4 fg = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
 
-		for(int i = 0; i < 6; ++i)
+		for(int i = 0; i < 16; ++i)
 		{
 	
 
@@ -343,7 +343,7 @@ public:
 			m_MeshCube.get()->Draw();
 
 			// Para el tetraedro
-			float angleTetrahedron = glm::radians(45.0f * i);
+			float angleTetrahedron = glm::radians(25.0f * i);
 			vec3 positionTetrahedron = vec3(cos(angleTetrahedron) * 2.0f, sin(angleTetrahedron) * 2.0f, -3.5f);
 			mat4 modelTetrahedron = glm::scale(glm::translate(mat4(1.0f), positionTetrahedron), vec3(0.2f));
 			modelTetrahedron = glm::rotate(modelTetrahedron, (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));

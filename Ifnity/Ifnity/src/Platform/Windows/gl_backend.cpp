@@ -370,7 +370,7 @@ namespace OpenGL
 		//Check if MeshData its valid ? 
 		if(desc.meshData.indexData_.empty() || desc.meshData.vertexData_.empty())
 		{
-			IFNITY_LOG(LogApp, ERROR, "MeshData its invalid");
+			IFNITY_LOG(LogApp, ERROR, "MeshData its invalid, are you sure that mesh Object Desc has data? , you have to build, or use a IMeshObjectBuilder");
 			return nullptr;
 		}
 		// Check if ist not a large mesh 
@@ -395,6 +395,20 @@ namespace OpenGL
 
 		return nullptr;
 
+	}
+
+	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
+	{
+		if(meshbuilder)
+		{
+			meshbuilder->buildMeshData(const_cast<MeshObjectDescription&>(desc));
+			return CreateMeshObject(desc);
+		}
+		else
+		{
+			IFNITY_LOG(LogApp, ERROR, "MeshDataBuilder its invalid");
+			return nullptr;
+		}
 	}
 
 

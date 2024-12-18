@@ -56,6 +56,7 @@ namespace OpenGL
 
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
+		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)override;
 
     private:
 		

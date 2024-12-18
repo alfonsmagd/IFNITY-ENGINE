@@ -48,9 +48,6 @@ enum class IFNITY_API BufferType: unsigned char
 	VERTEX_PULLING_BUFFER = 0x20,///< Buffer for vertex pulling data , Vertex data, no index buffer.
 	STORAGE_BUFFER = 0x30,     ///< Buffer for storage data
 
-	
-
-
     NO_DEFINE_BUFFER = 0xFF ///< Undefined buffer type
 };
 
