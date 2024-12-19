@@ -221,6 +221,174 @@ public:
 
 	void Initialize() override
 	{
+		IFNITY::ShaderCompiler::Initialize();
+		auto& vfs = IFNITY::VFS::GetInstance();
+
+
+
+
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
+		vfs.Mount("Data", "Data", IFNITY::FolderType::TEXTURES);
+
+
+
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
+		m_gs = std::make_shared<IShader>();
+		std::wstring shaderSource3 = LR"(
+
+				// HLSL Shader
+		cbuffer PerFrameData : register(b0)
+		{
+		    float4x4 view;
+		    float4x4 proj;
+		    float4 cameraPos; // No se usa en este shader, pero se declara como en GLSL
+		};
+		
+		StructuredBuffer<float4x4> in_Model : register(t2);
+		
+		struct VSInput
+		{
+		    float3 pos : POSITION;
+		};
+		
+		struct VSOutput
+		{
+		    float4 position : SV_POSITION;
+		    float2 uv : TEXCOORD0;
+		    float3 wpos : TEXCOORD1;
+		};
+		
+		VSOutput main_vs(VSInput input, uint instanceID : SV_InstanceID)
+		{
+		    VSOutput output;
+		
+		    // Calculamos el modelo, vista y proyección
+		    float4x4 MVP = mul(in_Model[instanceID], mul(view, proj));
+		
+		    // Transformamos la posición
+		    output.position = mul( float4(input.pos, 1.0),MVP);
+		
+		    // Coordenadas de textura y posición en el mundo
+		    output.uv = float2(0.1, 0.1);
+		    output.wpos = input.pos;
+		
+		    return output;
+		}
+		
+
+	//GS Shader//////////////////////////////////////////////////////////////////////////////////////
+			struct GSInput
+			{
+			    float4 position : SV_POSITION;
+			    float2 uv : TEXCOORD0;
+			    float3 wpos : TEXCOORD1;
+			};
+			
+			struct GSOutput
+			{
+			    float4 position : SV_POSITION;
+			    float2 uv : TEXCOORD0;
+			    float3 barycoords : TEXCOORD1;
+			    float3 wpos_out : TEXCOORD2;
+			};
+			
+			[maxvertexcount(3)]
+			void main_gs(triangle GSInput input[3], inout TriangleStream<GSOutput> triStream)
+			{
+			    const float3 bc[3] = {
+			        float3(1.0, 0.0, 0.0),
+			        float3(0.0, 1.0, 0.0),
+			        float3(0.0, 0.0, 1.0)
+			    };
+			
+			    for (int i = 0; i < 3; i++)
+			    {
+			        GSOutput output;
+			        output.position = input[i].position;
+			        output.uv = input[i].uv;
+			        output.barycoords = bc[i];
+			        output.wpos_out = input[i].wpos;
+			        triStream.Append(output);
+			    }
+			    triStream.RestartStrip();
+			}
+
+	//PS Shader//////////////////////////////////////////////////////////////////////////////////////
+Texture2D texture0 : register(t0);
+SamplerState sampler0 : register(s0);
+
+struct PSInput
+{
+    float2 uvs : TEXCOORD0;
+    float3 barycoords : TEXCOORD1;
+    float3 wpos_out : TEXCOORD2;
+};
+
+float edgeFactor(float thickness, float3 barycoords)
+{
+    float3 a3 = smoothstep(float3(0.0, 0.0, 0.0), fwidth(barycoords) * thickness, barycoords);
+    return min(min(a3.x, a3.y), a3.z);
+}
+
+float4 main_ps(PSInput input) : SV_TARGET
+{
+    float4 color = float4(1.0, 1.0, 1.0, 1.0);
+    return lerp(color * float4(0.1, 0.1, 0.1, 1.0), color, edgeFactor(1.0, input.barycoords));
+}
+
+
+
+
+
+)";
+			ShaderCreateDescription DescriptionShader;
+			{
+				DescriptionShader.EntryPoint = L"main_vs";
+				DescriptionShader.Profile = L"vs_6_0";
+				DescriptionShader.Type = ShaderType::VERTEX_SHADER;
+				DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+				DescriptionShader.ShaderSource = shaderSource3;
+				DescriptionShader.FileName = "largescene_wireframeVS";
+				DescriptionShader.NoCompile = false;
+				m_vs->SetShaderDescription(DescriptionShader);
+			}
+			{
+
+				DescriptionShader.EntryPoint = L"main_ps";
+				DescriptionShader.Profile = L"ps_6_0";
+				DescriptionShader.Type = ShaderType::PIXEL_SHADER;
+				DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+				DescriptionShader.ShaderSource = shaderSource3;
+				DescriptionShader.FileName = "largescene_wireframeFS";
+				DescriptionShader.NoCompile = false;
+				m_ps->SetShaderDescription(DescriptionShader);
+			}
+			{
+				DescriptionShader.EntryPoint = L"main_gs";
+				DescriptionShader.Profile = L"gs_6_0";
+				DescriptionShader.Type = ShaderType::GEOMETRY_SHADER;
+				DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+				DescriptionShader.ShaderSource = shaderSource3;
+				DescriptionShader.FileName = "largescene_wireframeGS";
+				DescriptionShader.NoCompile = false;
+				m_gs->SetShaderDescription(DescriptionShader);
+
+			}
+
+			ShaderCompiler::CompileShader(m_vs.get());
+			ShaderCompiler::CompileShader(m_ps.get());
+			ShaderCompiler::CompileShader(m_gs.get());
+
+
+			GraphicsPipelineDescription gdesc;
+			gdesc.SetVertexShader(m_vs.get())
+				.SetPixelShader(m_ps.get())
+				.SetGeometryShader(m_gs.get());
+
+			m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+
+
 		std::string  filenameAssimp = "data/rubber_duck/scene.gltf";
 		std::string  meshDataTest = "data/rubber_duck/test.meshes";
 		std::string  test = "data/rubber_duck/test.meshes";
@@ -243,45 +411,41 @@ public:
 		IFNITY::ShaderCompiler::Initialize();
 
 
+		
 
-		auto& vfs = IFNITY::VFS::GetInstance();
+		//ShaderCreateDescription DescriptionShader;
+		//{
+		//	DescriptionShader.NoCompile = true;
+		//	DescriptionShader.FileName = "scene_wireframe.vs";
+		//	m_vs->SetShaderDescription(DescriptionShader);
+		//}
 
-		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
-		vfs.Mount("Data", "Data", IFNITY::FolderType::TEXTURES);
 
-		m_vs = std::make_shared<IShader>();
-		m_ps = std::make_shared<IShader>();
-		m_gs = std::make_shared<IShader>();
+	
 
-		ShaderCreateDescription DescriptionShader;
-		{
-			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "scene_wireframe.vs";
-			m_vs->SetShaderDescription(DescriptionShader);
-		}
-		{
+		//{
 
-			DescriptionShader.FileName = "scene_wireframe.fs";
-			DescriptionShader.NoCompile = true;
-			m_ps->SetShaderDescription(DescriptionShader);
-		}
-		{
-			DescriptionShader.FileName = "scene_wireframe.gs";
-			DescriptionShader.NoCompile = true;
-			m_gs->SetShaderDescription(DescriptionShader);
+		//	DescriptionShader.FileName = "scene_wireframe.fs";
+		//	DescriptionShader.NoCompile = true;
+		//	m_ps->SetShaderDescription(DescriptionShader);
+		//}
+		//{
+		//	DescriptionShader.FileName = "scene_wireframe.gs";
+		//	DescriptionShader.NoCompile = true;
+		//	m_gs->SetShaderDescription(DescriptionShader);
 
-		}
+		//}
 
-		ShaderCompiler::CompileShader(m_vs.get());
-		ShaderCompiler::CompileShader(m_ps.get());
-		ShaderCompiler::CompileShader(m_gs.get());
+		//ShaderCompiler::CompileShader(m_vs.get());
+		//ShaderCompiler::CompileShader(m_ps.get());
+		//ShaderCompiler::CompileShader(m_gs.get());
 
-		GraphicsPipelineDescription gdesc;
-		gdesc.SetVertexShader(m_vs.get())
-			.SetPixelShader(m_ps.get())
-			.SetGeometryShader(m_gs.get());
+		//GraphicsPipelineDescription gdesc;
+		//gdesc.SetVertexShader(m_vs.get())
+		//	.SetPixelShader(m_ps.get())
+		//	.SetGeometryShader(m_gs.get());
 
-		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+		//m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 
 
 		BufferDescription DescriptionBuffer;

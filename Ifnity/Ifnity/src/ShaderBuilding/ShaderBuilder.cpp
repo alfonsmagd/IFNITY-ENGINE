@@ -200,7 +200,19 @@ HRESULT ShaderCompiler::CompileShaderBlob(ComPtr<IDxcBlobEncoding>& sourceBlob, 
 
 	if(FAILED(status))
 	{
-		std::cerr << "La compilación del shader falló." << std::endl;
+		// Obtener los mensajes de diagnóstico
+		ComPtr<IDxcBlobEncoding> errors;
+		hr = result->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr);
+		if(SUCCEEDED(hr) && errors && errors->GetBufferSize() > 0)
+		{
+			std::string errorMessage = std::string(reinterpret_cast<const char*>(errors->GetBufferPointer()), errors->GetBufferSize());
+			IFNITY_LOG(LogApp, ERROR, "La compilación del shader falló: {}" + errorMessage);
+		}
+		else
+		{
+			IFNITY_LOG(LogApp, ERROR, "La compilación del shader falló sin mensajes de diagnóstico.");
+		}
+
 		return status;
 	}
 
