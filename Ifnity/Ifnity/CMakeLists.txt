@@ -10,6 +10,9 @@ endfunction()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_SUPPRESS_REGENERATION true)
+set(CMAKE_SKIP_INSTALL_RULES true)
+
 if(MSVC)
     add_definitions(-DUNICODE -D_UNICODE)
 endif()
@@ -170,10 +173,12 @@ target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
 ASSIGN_VENDOR_FOLDER(spirv-cross-core)
 ASSIGN_VENDOR_FOLDER(spirv-cross-c)
+ASSIGN_VENDOR_FOLDER(vk-bootstrap)
 #Link dxc
 target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
 #Target link assimp
 target_link_libraries(${PROJECT_NAME} PUBLIC assimp)
+ASSIGN_VENDOR_FOLDER(assimp)
 
 # Include Target Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
@@ -212,6 +217,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     COMPILE_FLAGS_DIST "-D IFNITY_DIST -O2"
     LINK_FLAGS_DIST "${CMAKE_SHARED_LINKER_FLAGS_DIST}"
 )
+
+# Filtrar y mostrar solo los destinos que generan archivos .exe
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Executables")
 
 # Copiar nvml.lib al directorio de enlace
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD

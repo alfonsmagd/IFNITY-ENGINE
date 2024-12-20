@@ -18,6 +18,7 @@ add_subdirectory(Tetahedre)
 add_subdirectory(Skybox_Camera)
 add_subdirectory(MeshGeometrical_Draw)
 add_subdirectory(LargeScene)
+add_subdirectory(infinite_plane)
 
 #add_subdirectory(Source_VTXP_HLSL)
 #add_subdirectory(CubeMap_Texture)

@@ -411,42 +411,6 @@ float4 main_ps(PSInput input) : SV_TARGET
 		IFNITY::ShaderCompiler::Initialize();
 
 
-		
-
-		//ShaderCreateDescription DescriptionShader;
-		//{
-		//	DescriptionShader.NoCompile = true;
-		//	DescriptionShader.FileName = "scene_wireframe.vs";
-		//	m_vs->SetShaderDescription(DescriptionShader);
-		//}
-
-
-	
-
-		//{
-
-		//	DescriptionShader.FileName = "scene_wireframe.fs";
-		//	DescriptionShader.NoCompile = true;
-		//	m_ps->SetShaderDescription(DescriptionShader);
-		//}
-		//{
-		//	DescriptionShader.FileName = "scene_wireframe.gs";
-		//	DescriptionShader.NoCompile = true;
-		//	m_gs->SetShaderDescription(DescriptionShader);
-
-		//}
-
-		//ShaderCompiler::CompileShader(m_vs.get());
-		//ShaderCompiler::CompileShader(m_ps.get());
-		//ShaderCompiler::CompileShader(m_gs.get());
-
-		//GraphicsPipelineDescription gdesc;
-		//gdesc.SetVertexShader(m_vs.get())
-		//	.SetPixelShader(m_ps.get())
-		//	.SetGeometryShader(m_gs.get());
-
-		//m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
-
 
 		BufferDescription DescriptionBuffer;
 		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
@@ -513,7 +477,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 			m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, &perFrameData, sizeof(PerFrameData));
 
 			glEnable(GL_DEPTH_TEST);
-			glDisable(GL_BLEND);
+			//glDisable(GL_BLEND);
 
 			glfwMakeContextCurrent(glfwGetCurrentContext());
 			m_MeshScene->DrawIndexed();

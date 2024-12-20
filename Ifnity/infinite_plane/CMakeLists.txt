@@ -1,10 +1,11 @@
+cmake_minimum_required(VERSION 3.8)
 
-
-
+# Nombre del proyecto
+project(infinite_plane)
 
 # C++ 17 standar 
 set(CMAKE_CXX_STANDARD 20)
-
+set(CMAKE_SUPPRESS_REGENERATION true)
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 
 
