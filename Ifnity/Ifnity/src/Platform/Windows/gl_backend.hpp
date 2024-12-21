@@ -57,7 +57,7 @@ namespace OpenGL
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)override;
-
+        void SetRenderState(const RenderState& state);
     private:
 		
 		    GLuint GetVAO() const { return m_VAO; }
@@ -71,6 +71,8 @@ namespace OpenGL
 			BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags = 0);
             void GetMeshVAO(const std::string mesh);
             void SetupVertexAttributes(GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes);
+
+			
             
 
 
@@ -156,8 +158,9 @@ namespace OpenGL
         ~GraphicsPipeline();
       
 		 const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
+		 void BindPipeline(IDevice* device) override;
 		 void  SetProgram(Program program) { m_Program = program; }
-		
+		 void SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = desc; }
 
     };
 

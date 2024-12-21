@@ -142,6 +142,30 @@ namespace OpenGL
 		   return GL_REPEAT; // Valor por defecto
 	   }
    }
+
+
+
+   inline GLenum ConvertToOpenGLBlendFactor(BlendFactor factor)
+   {
+       switch(factor)
+       {
+       case BlendFactor::ZERO:
+           return GL_ZERO;
+       case BlendFactor::ONE:
+           return GL_ONE;
+       case BlendFactor::SRC_COLOR:
+           return GL_SRC_COLOR;
+	   case BlendFactor::ONE_MINUS_SRC_COLOR:
+           return GL_ONE_MINUS_DST_COLOR;
+       case BlendFactor::SRC_ALPHA:
+           return GL_SRC_ALPHA;
+       case BlendFactor::ONE_MINUS_SRC_ALPHA:
+           return GL_ONE_MINUS_SRC_ALPHA;
+       default:
+           return GL_ONE; // Valor por defecto
+       }
+   }
+
 }
     
 

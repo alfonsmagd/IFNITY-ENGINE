@@ -193,7 +193,7 @@ public:
 	Source(IFNITY::rhi::GraphicsAPI api):
 		IFNITY::App(api),
 		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
-		m_camera(vec3(-0.5f, 0.5f, -0.f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_camera(vec3(35.f, 0.5f, -10.f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener(&m_camera)
 	{
 
@@ -221,166 +221,166 @@ public:
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
 
-		std::wstring infinite_grid_shader = LR"(
-///////////////////////////////////////////
-////////////////MAIN VS////////////////////
-///////////////////////////////////////////
-    cbuffer PerFrameData : register(b0) {
-    float4x4 view;
-    float4x4 proj;
-    float4 cameraPos;
-};
-
-struct VertexInput {
-    uint vertexID : SV_VertexID;
-};
-
-struct VertexOutput {
-    float4 position : SV_Position;
-    float2 uv : TEXCOORD0;
-    float2 camPos : TEXCOORD1;
-};
-
-// Extents of grid in world coordinates
-static const float gridSize = 100.0;
-
-// Size of one cell
-static const float gridCellSize = 0.025;
-
-// Color of thin lines
-static const float4 gridColorThin = float4(0.5, 0.5, 1.0, 1.0);
-
-// Color of thick lines (every tenth line)
-static const float4 gridColorThick = float4(0.0, 0.0, 0.0, 1.0);
-
-// Minimum number of pixels between cell lines before LOD switch
-static const float gridMinPixelsBetweenCells = 1.0;
-
-// Grid positions
-static const float3 pos[4] = {
-    float3(-1.0, 0.0, -1.0),
-    float3( 1.0, 0.0, -1.0),
-    float3( 1.0, 0.0,  1.0),
-    float3(-1.0, 0.0,  1.0)
-};
-
-// Grid indices
-static const int indices[6] = { 
-    0, 1, 2, 
-    2, 3, 0 
-};
-
-
-// Logarithm base 10
-float log10(float x) {
-    return log(x) / log(10.0);
-}
-
-// Saturate scalar value (clamp to [0, 1])
-float satf(float x) {
-    return saturate(x);
-}
-
-// Saturate vector value (clamp each component to [0, 1])
-float2 satv(float2 x) {
-    return clamp(x, float2(0.0, 0.0), float2(1.0, 1.0));
-}
-
-// Maximum of two components in a vector
-float max2(float2 v) {
-    return max(v.x, v.y);
-}
-
-// Grid color calculation based on UV and camera position
-float4 gridColor(float2 uv, float2 camPos) {
-    // Screen-space derivatives of UV
-    float2 dudv = float2(
-        length(float2(ddx(uv.x), ddy(uv.x))),
-        length(float2(ddx(uv.y), ddy(uv.y)))
-    );
-
-    // Calculate the LOD level
-    float lodLevel = max(0.0, log10((length(dudv) * gridMinPixelsBetweenCells) / gridCellSize) + 1.0);
-    float lodFade = frac(lodLevel);
-
-    // Cell sizes for LODs
-    float lod0 = gridCellSize * pow(10.0, floor(lodLevel));
-    float lod1 = lod0 * 10.0;
-    float lod2 = lod1 * 10.0;
-
-    // Increase line width for anti-aliasing
-    dudv *= 4.0;
-
-    // Offset UV to center anti-aliased lines
-    uv += dudv / 2.0f;
-
-    // Calculate alpha coverage for each LOD
-    float lod0a = max2(float2(1.0, 1.0) - abs(satv(fmod(uv, lod0) / dudv) * 2.0 - float2(1.0, 1.0)));
-	float lod1a = max2(float2(1.0, 1.0) - abs(satv(fmod(uv, lod1) / dudv) * 2.0 - float2(1.0, 1.0)));
-    float lod2a = max2(float2(1.0, 1.0) - abs(satv(fmod(uv, lod2) / dudv) * 2.0 - float2(1.0, 1.0)));
-
-    // Offset UV by camera position
-    uv -= camPos;
-
-    // Blend between colors for LOD transition
-    float4 c = (lod2a > 0.0) 
-        ? gridColorThick 
-        : (lod1a > 0.0) 
-            ? lerp(gridColorThick, gridColorThin, lodFade) 
-            : gridColorThin;
-
-    // Calculate opacity falloff based on distance to grid extents
-    float opacityFalloff = (1.0 - satf(length(uv) / gridSize));
-
-    // Final alpha blending
-    c.a *= (lod2a > 0.0 ? lod2a : lod1a > 0.0 ? lod1a : (lod0a * (1.0 - lodFade))) * opacityFalloff;
-
-    return c;
-}
-
-///////////////////////MAIN VS////////////////////////
-VertexOutput main_vs(VertexInput input) {
-    VertexOutput output;
-
-    // Compute Model-View-Projection matrix
-    float4x4 MVP = mul(view, proj);
-
-    // Get vertex index
-    int idx = indices[input.vertexID];
-    float3 position = pos[idx] * gridSize;
-
-    // Offset by camera position
-    position.x += cameraPos.x;
-    position.z += cameraPos.z;
-
-    // Set outputs
-    output.position = mul( float4(position, 1.0),MVP);
-    output.uv = position.xz;
-    output.camPos = cameraPos.xz;
-
-    return output;
-}
-
-///////////////////////////////////////////
-////////////////MAIN PS////////////////////
-///////////////////////////////////////////
-struct PSInput {
-    float2 uv : TEXCOORD0;    // Entrada de las coordenadas UV
-    float2 camPos : TEXCOORD1; // Entrada de la posición de la cámara
-};
-
-float4 main_ps(PSInput input) : SV_Target {
-    return gridColos(input.uv, input.camPos); //  `gridColor`
-}
-
-
-
-)";
-
-
+//	/*	std::wstring infinite_grid_shader = LR"(
+/////////////////////////////////////////////
+//////////////////MAIN VS////////////////////
+/////////////////////////////////////////////
+//    cbuffer PerFrameData : register(b0) {
+//    float4x4 view;
+//    float4x4 proj;
+//    float4 cameraPos;
+//};
+//
+//struct VertexInput {
+//    uint vertexID : SV_VertexID;
+//};
+//
+//struct VertexOutput {
+//    float4 position : SV_Position;
+//    float2 uv : TEXCOORD0;
+//    float2 camPos : TEXCOORD1;
+//};
+//
+//// Extents of grid in world coordinates
+//static const float gridSize = 100.0;
+//
+//// Size of one cell
+//static const float gridCellSize = 0.025;
+//
+//// Color of thin lines
+//static const float4 gridColorThin = float4(0.5, 0.5, 1.0, 1.0);
+//
+//// Color of thick lines (every tenth line)
+//static const float4 gridColorThick = float4(0.0, 0.0, 0.0, 1.0);
+//
+//// Minimum number of pixels between cell lines before LOD switch
+//static const float gridMinPixelsBetweenCells = 4.0;
+//
+//// Grid positions
+//static const float3 pos[4] = {
+//    float3(-1.0, 0.0, -1.0),
+//    float3( 1.0, 0.0, -1.0),
+//    float3( 1.0, 0.0,  1.0),
+//    float3(-1.0, 0.0,  1.0)
+//};
+//
+//// Grid indices
+//static const int indices[6] = { 
+//    0, 1, 2, 
+//    2, 3, 0 
+//};
+//
+//
+//// Logarithm base 10
+//float log10(float x) {
+//    return log(x) / log(10.0);
+//}
+//
+//// Saturate scalar value (clamp to [0, 1])
+//float satf(float x) {
+//    return saturate(x);
+//}
+//
+//// Saturate vector value (clamp each component to [0, 1])
+//float2 satv(float2 x) {
+//    return clamp(x, float2(0.0, 0.0), float2(1.0, 1.0));
+//}
+//
+//// Maximum of two components in a vector
+//float max2(float2 v) {
+//    return max(v.x, v.y);
+//}
+//
+//// Grid color calculation based on UV and camera position
+//float4 gridColor(float2 uv, float2 camPos) {
+//    // Screen-space derivatives of UV
+//    float2 dudv = float2(
+//        length(float2(ddx(uv.x), ddy(uv.x))),
+//        length(float2(ddx(uv.y), ddy(uv.y)))
+//    );
+//
+//    // Calculate the LOD level
+//    float lodLevel = max(0.0, log10((length(dudv) * gridMinPixelsBetweenCells) / gridCellSize) + 1.0);
+//    float lodFade = frac(lodLevel);
+//
+//    // Cell sizes for LODs
+//    float lod0 = gridCellSize * pow(10.0, floor(lodLevel));
+//    float lod1 = lod0 * 10.0;
+//    float lod2 = lod1 * 10.0;
+//
+//    // Increase line width for anti-aliasing
+//    dudv *= 4.0;
+//
+//    // Offset UV to center anti-aliased lines
+//    uv += dudv / 2.0f;
+//
+//    // Calculate alpha coverage for each LOD
+//    float lod0a = max2(float2(1.0, 1.0) - abs(satv(fmod(uv, lod0) / dudv) * 2.0 - float2(1.0, 1.0)));
+//	float lod1a = max2(float2(1.0, 1.0) - abs(satv(fmod(uv, lod1) / dudv) * 2.0 - float2(1.0, 1.0)));
+//    float lod2a = max2(float2(1.0, 1.0) - abs(satv(fmod(uv, lod2) / dudv) * 2.0 - float2(1.0, 1.0)));
+//
+//    // Offset UV by camera position
+//    uv -= camPos;
+//
+//    // Blend between colors for LOD transition
+//    float4 c = (lod2a > 0.0) 
+//        ? gridColorThick 
+//        : (lod1a > 0.0) 
+//            ? lerp(gridColorThick, gridColorThin, lodFade) 
+//            : gridColorThin;
+//
+//    // Calculate opacity falloff based on distance to grid extents
+//    float opacityFalloff = (1.0 - satf(length(uv) / gridSize));
+//
+//    // Final alpha blending
+//    c.a *= (lod2a > 0.0 ? lod2a : lod1a > 0.0 ? lod1a : (lod0a * (1.0 - lodFade))) * opacityFalloff;
+//
+//    return c;
+//}
+//
+/////////////////////////MAIN VS////////////////////////
+//VertexOutput main_vs(VertexInput input) {
+//    VertexOutput output;
+//
+//    // Compute Model-View-Projection matrix
+//    float4x4 MVP = mul(view, proj);
+//
+//    // Get vertex index
+//    int idx = indices[input.vertexID];
+//    float3 position = pos[idx] * gridSize;
+//
+//    // Offset by camera position
+//    position.x += cameraPos.x;
+//    position.z += cameraPos.z;
+//
+//    // Set outputs
+//    output.position = mul( float4(position, 1.0),MVP);
+//    output.uv = position.xz;
+//    output.camPos = cameraPos.xz;
+//
+//    return output;
+//}
+//
+/////////////////////////////////////////////
+//////////////////MAIN PS////////////////////
+/////////////////////////////////////////////
+//struct PSInput {
+//    float2 uv : TEXCOORD0;    // Entrada de las coordenadas UV
+//    float2 camPos : TEXCOORD1; // Entrada de la posición de la cámara
+//};
+//
+//float4 main_ps(PSInput input) : SV_Target {
+//    return gridColor(input.uv, input.camPos); //  `gridColor`
+//}
+//*/
+//
+//
+//)";
 
 
-		ShaderCreateDescription DescriptionShader;
+
+
+		/*ShaderCreateDescription DescriptionShader;
 		{
 			DescriptionShader.EntryPoint = L"main_vs";
 			DescriptionShader.Profile = L"vs_6_0";
@@ -398,9 +398,9 @@ float4 main_ps(PSInput input) : SV_Target {
 			DescriptionShader.ShaderSource = infinite_grid_shader;
 			DescriptionShader.FileName = "infinite_grid_ps";
 			m_ps->SetShaderDescription(DescriptionShader);
-		}
+		}*/
 
-	/*ShaderCreateDescription DescriptionShader;
+	ShaderCreateDescription DescriptionShader;
 	{
 		DescriptionShader.NoCompile = true;
 		DescriptionShader.FileName = "GL01_grid.vert";
@@ -412,7 +412,7 @@ float4 main_ps(PSInput input) : SV_Target {
 		DescriptionShader.NoCompile = true;
 		DescriptionShader.FileName = "GL01_grid.frag";
 		m_ps->SetShaderDescription(DescriptionShader);
-	}*/
+	}
 
 
 
@@ -421,9 +421,17 @@ float4 main_ps(PSInput input) : SV_Target {
 		ShaderCompiler::CompileShader(m_ps.get());
 
 
+
+		//Create RenderState 
+	
+
 		GraphicsPipelineDescription gdesc;
+		BlendState blendstate;
+		blendstate.setBlendEnable(true).setSrcBlend(BlendFactor::SRC_ALPHA).setDestBlend(BlendFactor::ONE_MINUS_SRC_ALPHA);
+
 		gdesc.SetVertexShader(m_vs.get()).
-			SetPixelShader(m_ps.get());
+			SetPixelShader(m_ps.get()).
+			SetRenderState(RenderState{ .depthTest = true, .depthWrite = true , .blendState =blendstate });
 
 		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 
@@ -439,12 +447,15 @@ float4 main_ps(PSInput input) : SV_Target {
 	
 	void Render() override
 	{
+
+		m_GraphicsPipeline->BindPipeline(m_ManagerDevice->GetRenderDevice());
+
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 		IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
 		
 
 
-		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.5f, 1000.0f);
+		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
 		const mat4 view = m_camera.getViewMatrix();
 
 		const PerFrameData perFrameData = { .view = view, .proj = p, .cameraPos = glm::vec4(m_camera.getPosition(), 1.0f) };

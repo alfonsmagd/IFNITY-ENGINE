@@ -186,7 +186,9 @@ namespace OpenGL
 			pipeline->SetProgram(CreateProgram(vShaderCode, fShaderCode));
 		}
 
-
+		SetRenderState(desc.renderState);
+		pipeline->SetGraphicsPipelineDesc(desc);
+		
 
 		return GraphicsPipelineHandle(pipeline);
 	}
@@ -773,6 +775,18 @@ namespace OpenGL
 
 
 
+	void Device::SetRenderState(const RenderState& state)
+	{
+		//BlendState 
+		state.blendState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+		glBlendFunc(ConvertToOpenGLBlendFactor(state.blendState.srcBlend), ConvertToOpenGLBlendFactor(state.blendState.dstBlend));
+	
+	
+	
+	}
+
+
+
 	/**
 	* @brief Destructor for the GraphicsPipeline class.
 	*
@@ -786,6 +800,18 @@ namespace OpenGL
 			glDeleteProgram(m_Program.id);
 		}
 	}
+
+	void GraphicsPipeline::BindPipeline(IDevice* device)
+	{
+		Device* gldev = dynamic_cast<Device*>(device);
+		if(gldev)
+		{
+			gldev->SetRenderState(m_Description.renderState);
+			glUseProgram(m_Program.id);
+		}
+		
+	}
+
 
 	/**
 	* @brief Destructor for the GraphicsPipeline class.
