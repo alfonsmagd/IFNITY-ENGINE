@@ -209,8 +209,7 @@ namespace OpenGL
 			glCreateBuffers(1, &perFrameDataBuffer);
 			glNamedBufferStorage(perFrameDataBuffer, kBufferSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
 			//Now I only use a constan buffer in the future proably I will use other types of buffer.
-			glBindBufferRange(GL_UNIFORM_BUFFER,
-				0, perFrameDataBuffer, 0, kBufferSize);
+			glBindBufferRange(GL_UNIFORM_BUFFER,desc.binding, perFrameDataBuffer, desc.offset, kBufferSize);
 			Buffer* buffer = new Buffer(perFrameDataBuffer, desc);
 			return  BufferHandle(buffer);
 
@@ -780,6 +779,9 @@ namespace OpenGL
 		//BlendState 
 		state.blendState.blendEnable ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
 		glBlendFunc(ConvertToOpenGLBlendFactor(state.blendState.srcBlend), ConvertToOpenGLBlendFactor(state.blendState.dstBlend));
+
+		//DepthState 
+		state.depthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
 	
 	
 	

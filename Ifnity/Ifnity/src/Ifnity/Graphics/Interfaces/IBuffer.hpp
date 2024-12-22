@@ -64,6 +64,7 @@ struct IFNITY_API BufferDescription
 {
     uint64_t byteSize = 0;          ///< Size of the buffer in bytes
     uint32_t strideSize = 0;        ///< Stride size of the buffer
+	uint32_t offset = 0;            ///< Offset of the buffer
     std::string debugName;          ///< Debug name for the buffer
     BufferType type = BufferType::NO_DEFINE_BUFFER; ///< Type of the buffer
 	uint8_t binding = 0;            ///< Binding point of the buffer
@@ -125,6 +126,13 @@ struct IFNITY_API BufferDescription
 		return *this;
 
     }
+
+
+	constexpr BufferDescription& SetOffset(uint32_t value) noexcept
+	{
+		offset = value;
+		return *this;
+	}
 
 	constexpr BufferDescription& SetData(const void* value) noexcept
 	{

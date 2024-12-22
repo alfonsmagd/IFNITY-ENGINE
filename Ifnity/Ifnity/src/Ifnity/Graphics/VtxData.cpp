@@ -11,7 +11,7 @@ IFNITY_API MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
 
 	FILE* f = fopen(meshFile, "rb");
 
-	assert(f); // Did you forget to run "Ch5_Tool05_MeshConvert"?
+	assert(f); 
 
 	if(!f)
 	{

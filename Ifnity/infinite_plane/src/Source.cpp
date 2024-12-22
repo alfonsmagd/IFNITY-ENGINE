@@ -181,6 +181,8 @@ private:
 
 class Source: public IFNITY::App
 {
+	#define GRID  0 
+	#define SCENE 1
 
 	struct PerFrameData
 	{
@@ -193,7 +195,7 @@ public:
 	Source(IFNITY::rhi::GraphicsAPI api):
 		IFNITY::App(api),
 		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
-		m_camera(vec3(35.f, 0.5f, -10.f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_camera(vec3(35.f, 0.5f, -10.f), vec3(-1.0f, -90, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener(&m_camera)
 	{
 
@@ -218,8 +220,11 @@ public:
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
 
-		m_vs = std::make_shared<IShader>();
-		m_ps = std::make_shared<IShader>();
+		m_vs[GRID]    = std::make_shared<IShader>();
+		m_ps[GRID]    = std::make_shared<IShader>();
+		m_vs[ SCENE ] = std::make_shared<IShader>();
+		m_ps[ SCENE ] = std::make_shared<IShader>();
+		m_gs = std::make_shared<IShader>();
 
 //	/*	std::wstring infinite_grid_shader = LR"(
 /////////////////////////////////////////////
@@ -377,9 +382,6 @@ public:
 //
 //)";
 
-
-
-
 		/*ShaderCreateDescription DescriptionShader;
 		{
 			DescriptionShader.EntryPoint = L"main_vs";
@@ -405,50 +407,139 @@ public:
 		DescriptionShader.NoCompile = true;
 		DescriptionShader.FileName = "GL01_grid.vert";
 
-		m_vs->SetShaderDescription(DescriptionShader);
+		m_vs[GRID]->SetShaderDescription(DescriptionShader);
 	}
 
 	{
 		DescriptionShader.NoCompile = true;
 		DescriptionShader.FileName = "GL01_grid.frag";
-		m_ps->SetShaderDescription(DescriptionShader);
+		m_ps[GRID]->SetShaderDescription(DescriptionShader);
+	}
+	{
+		DescriptionShader.NoCompile = true;
+		DescriptionShader.FileName = "scene_wireframe.vs";
+		m_vs[ SCENE ]->SetShaderDescription(DescriptionShader);
+	}
+	{
+		DescriptionShader.NoCompile = true;
+		DescriptionShader.FileName = "scene_wireframe.gs";
+		m_gs->SetShaderDescription(DescriptionShader);
+	}
+	{
+		DescriptionShader.NoCompile = true;
+		DescriptionShader.FileName = "scene_wireframe.fs";
+		m_ps[ SCENE ]->SetShaderDescription(DescriptionShader);
+
 	}
 
+	//Compile Shader
+
+		ShaderCompiler::CompileShader(m_vs[GRID].get());
+		ShaderCompiler::CompileShader(m_ps[GRID].get());
+		ShaderCompiler::CompileShader(m_vs[ SCENE ].get());
+		ShaderCompiler::CompileShader(m_ps[ SCENE ].get());
+		ShaderCompiler::CompileShader(m_gs.get());
+		
 
 
 
-		ShaderCompiler::CompileShader(m_vs.get());
-		ShaderCompiler::CompileShader(m_ps.get());
-
-
-
-		//Create RenderState 
+		//Create RenderState to render Grid 
 	
 
 		GraphicsPipelineDescription gdesc;
 		BlendState blendstate;
 		blendstate.setBlendEnable(true).setSrcBlend(BlendFactor::SRC_ALPHA).setDestBlend(BlendFactor::ONE_MINUS_SRC_ALPHA);
 
-		gdesc.SetVertexShader(m_vs.get()).
-			SetPixelShader(m_ps.get()).
+		gdesc.SetVertexShader(m_vs[GRID].get()).
+			SetPixelShader(   m_ps[GRID].get()).
 			SetRenderState(RenderState{ .depthTest = true, .depthWrite = true , .blendState =blendstate });
 
-		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+
+		m_GraphicsPipeline[GRID] = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+
+
+		//Create RenderState to render Scene
+		BlendState blendstateScene;
+		blendstate.disableBlend();
+
+		GraphicsPipelineDescription gdescScene;
+		gdescScene.SetVertexShader(m_vs[ SCENE ].get())
+			.SetPixelShader(m_ps[ SCENE ].get())
+			.SetGeometryShader(m_gs.get())
+			.SetRenderState(RenderState{ .depthTest = true , .blendState = blendstateScene});
+
+		m_GraphicsPipeline[ SCENE ] = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdescScene);
+
+
+
+		//Creation Buffers 
 
 		BufferDescription DescriptionBuffer;
 		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
 			.SetByteSize(sizeof(PerFrameData))
 			.SetDebugName("UBO MVP PERFRAME DATA ")
-			.SetStrideSize(0);
+			.SetStrideSize(0)
+			.SetOffset(0)
+			.SetBindingPoint(0);
 
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
+
+
+		const mat4 m(glm::scale(mat4(1.0f), vec3(2.0f)));
+		//Create PerFrameData Buffer 
+		BufferDescription descriptionStorageBuffer;
+		descriptionStorageBuffer.SetBufferType(BufferType::STORAGE_BUFFER)
+			.SetByteSize(sizeof(mat4))
+			.SetData(glm::value_ptr(m))
+			.SetDebugName("STORAGE MODEL")
+			.SetStrideSize(0)
+			.SetBindingPoint(2);
+
+		m_StorageBuffer = m_ManagerDevice->GetRenderDevice()->CreateBuffer(descriptionStorageBuffer);
+
+
+		//Generate Mesh Objects FILE NAMES 
+	
+
+		std::string  filenameAssimp = "data/rubber_duck/scene.gltf";
+		std::string  meshDataTest = "data/rubber_duck/test.meshes";
+		std::string  test = "data/rubber_duck/test.meshes";
+		std::string test3 = "data/bistro/Exterior/exterior.obj";
+		std::string test3Result = "data/bistro/Exterior/exterior.obj.meshdata";
+
+		std::string cornelbox = "data/Cornel-box/CornellBox-Sphere.obj";
+
+		std::string duck5file = "data/rubber_duck/scene.gltf.meshdata";
+
+
+		std::string sanmiguel = "data/sanmiguel/san-miguel-low-poly.obj";
+		std::string sanmiguelResult = "data/sanmiguel/san-miguel-low-poly.obj.meshdata";
+		
+		MeshObjectDescription meshAssimp =
+		{
+			.filePath = test3,
+			.isLargeMesh = true,
+			.isGeometryModel = false,
+			.meshData = MeshData{},
+			.meshFileHeader = MeshFileHeader{},
+			.meshDataBuilder = nullptr
+		};
+
+		//meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 1.f));
+		meshAssimp.meshFileHeader = loadMeshData(test3Result.c_str(), meshAssimp.meshData);
+		m_meshData = meshAssimp.meshData;
+		header = meshAssimp.meshFileHeader;
+
+		//m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp(8,1.2f));
+		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
+
 
 	}
 	
 	void Render() override
 	{
-
-		m_GraphicsPipeline->BindPipeline(m_ManagerDevice->GetRenderDevice());
+		//Change pipeline to render the Grid
+		m_GraphicsPipeline[GRID]->BindPipeline(m_ManagerDevice->GetRenderDevice());
 
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 		IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
@@ -477,6 +568,11 @@ public:
 		desc.isIndexed = false;
 
 		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
+		//Change the Pipeline to render the Scene
+		m_GraphicsPipeline[ SCENE ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
+		m_MeshScene->DrawIndexed();
+
 		
 		
 	}
@@ -489,14 +585,18 @@ public:
 
 private:
 	BufferHandle m_UBO;
-	BufferHandle m_VertexBuffer;
+	BufferHandle m_StorageBuffer;
 	GraphicsDeviceManager* m_ManagerDevice;
-	GraphicsPipelineHandle m_GraphicsPipeline;
-	MeshObjectHandle m_MeshTetrahedron;
-	MeshObjectHandle m_MeshCube;
-	std::shared_ptr<IShader> m_vs;
-	std::shared_ptr<IShader> m_ps;
+	GraphicsPipelineHandle m_GraphicsPipeline[2];
+	
+	std::shared_ptr<IShader> m_vs[2];
+	std::shared_ptr<IShader> m_ps[2];
+	std::shared_ptr<IShader> m_gs;
+	//Scene Mesh Objects
 
+	MeshFileHeader header;
+	MeshData m_meshData;
+	MeshObjectHandle m_MeshScene;
 	// Camera objects 
 	IFNITY::EventCameraListener m_CameraListener;
 	CameraPositioner_FirstPerson m_camera;

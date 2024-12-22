@@ -389,19 +389,19 @@ float4 main_ps(PSInput input) : SV_TARGET
 			m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 
 
-		std::string  filenameAssimp = "data/rubber_duck/scene.gltf";
-		std::string  meshDataTest = "data/rubber_duck/test.meshes";
-		std::string  test = "data/rubber_duck/test.meshes";
-		std::string test3 = "data/bistro/Exterior/exterior.obj";
-		std::string test3Result = "data/bistro/Exterior/exterior.obj.meshdata";
+			std::string  filenameAssimp = "data/rubber_duck/scene.gltf";
+			std::string  meshDataTest = "data/rubber_duck/test.meshes";
+			std::string  test = "data/rubber_duck/test.meshes";
+			std::string test3 = "data/bistro/Exterior/exterior.obj";
+			std::string test3Result = "data/bistro/Exterior/exterior.obj.meshdata";
 
-		std::string cornelbox = "data/Cornel-box/CornellBox-Sphere.obj";
+			std::string cornelbox = "data/Cornel-box/CornellBox-Sphere.obj";
 
-		std::string duck5file = "data/rubber_duck/scene.gltf.meshdata";
+			std::string duck5file = "data/rubber_duck/scene.gltf.meshdata";
 
 
-		std::string sanmiguel = "data/sanmiguel/san-miguel-low-poly.obj";
-		std::string sanmiguelResult = "data/sanmiguel/san-miguel-low-poly.obj.meshdata";
+			std::string sanmiguel = "data/sanmiguel/san-miguel-low-poly.obj";
+			std::string sanmiguelResult = "data/sanmiguel/san-miguel-low-poly.obj.meshdata";
 
 
 
@@ -479,7 +479,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 			glEnable(GL_DEPTH_TEST);
 			//glDisable(GL_BLEND);
 
-			glfwMakeContextCurrent(glfwGetCurrentContext());
+		
 			m_MeshScene->DrawIndexed();
 
 			
