@@ -18,7 +18,7 @@ public:
 	virtual void buildMeshData(MeshObjectDescription& description) = 0;
 };
 
-class MeshDataBuilderAssimp: public IMeshDataBuilder
+class  IFNITY_API MeshDataBuilderAssimp: public IMeshDataBuilder
 {
 private:
 	 bool loadFileAssimp(const char* fileName, MeshData& meshData);
@@ -37,14 +37,14 @@ private:
 
 };
 
-class MeshDataBuilderCacheFile: public IMeshDataBuilder
+class IFNITY_API MeshDataBuilderCacheFile: public IMeshDataBuilder
 {
 public:
 	void buildMeshData(MeshObjectDescription& description) override;
 
 };
 
-class MeshDataBuilderGeometryModel: public IMeshDataBuilder
+class IFNITY_API MeshDataBuilderGeometryModel: public IMeshDataBuilder
 {
 public:
 	MeshDataBuilderGeometryModel(GeometricModels::GeometricalModelType type): m_Type(type) {};

@@ -17,6 +17,7 @@
 #include "Ifnity/Maths/math.h"
 
 //Models
+#include "Ifnity/Graphics/Interfaces/IMeshDataBuilder.hpp"
 #include "Ifnity/Models/GeometicModels.hpp"
 
 //wOMDPW

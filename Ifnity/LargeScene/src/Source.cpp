@@ -466,7 +466,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 		
 			float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 			IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
-			glViewport(0, 0, m_ManagerDevice->GetWidth(), m_ManagerDevice->GetHeight());
+		
 		
 
 			const mat4 p = glm::perspective(45.0f, aspectRatio, 0.5f, 5000.0f);
@@ -476,7 +476,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 
 			m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, &perFrameData, sizeof(PerFrameData));
 
-			glEnable(GL_DEPTH_TEST);
+		
 			//glDisable(GL_BLEND);
 
 		
