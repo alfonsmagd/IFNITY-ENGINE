@@ -18,7 +18,7 @@ struct IFNITY_API VertexAttributeDescription
     bool haveIndexBuffer = false;
     std::string name;
 
-    VertexAttributeDescription& setName(const std::string& value) { name = value; return *this; }
+    VertexAttributeDescription&           setName(const std::string& value) { name = value; return *this; }
     constexpr VertexAttributeDescription& setFormat(rhi::Format value) { format = value; return *this; }
     constexpr VertexAttributeDescription& setArraySize(uint32_t value) { arraySize = value; return *this; }
     constexpr VertexAttributeDescription& setBufferIndexLocation(uint32_t value) { index = value; return *this; }
