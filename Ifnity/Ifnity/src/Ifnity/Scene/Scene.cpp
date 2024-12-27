@@ -148,7 +148,7 @@ void loadScene(const char* fileName, Scene& scene)
 
 	if(!f)
 	{
-		printf("Cannot open scene file '%s'. Please run SceneConverter from Chapter7 and/or MergeMeshes from Chapter 9", fileName);
+		IFNITY_LOG(LogApp, ERROR, "Cannot load file %s\n", fileName);
 		return;
 	}
 
@@ -158,7 +158,16 @@ void loadScene(const char* fileName, Scene& scene)
 	scene.hierarchy_.resize(sz);
 	scene.globalTransform_.resize(sz);
 	scene.localTransform_.resize(sz);
-	// TODO: check > -1
+	// check > -1
+	for(const auto& node : scene.hierarchy_)
+	{
+		if(node.parent_ < -1 || node.firstChild_ < -1 || node.nextSibling_ < -1 || node.level_ < -1)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Invalid hierarchy data in the scene file %s\n", fileName);
+			fclose(f);
+			return;
+		}
+	}
 	// TODO: recalculate changedAtThisLevel() - find max depth of a node [or save scene.maxLevel]
 	fread(scene.localTransform_.data(), sizeof(glm::mat4), sz, f);
 	fread(scene.globalTransform_.data(), sizeof(glm::mat4), sz, f);

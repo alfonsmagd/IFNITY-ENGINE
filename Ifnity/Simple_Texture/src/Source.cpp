@@ -1097,7 +1097,7 @@ return texColor;
 
 
 
-		const mat4 mg = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 0.0f, -1.0f));
+		const mat4 mg = glm::rotate(mat4(1.0f), App::GetTime(), vec3(0.0f, 0.0f, -1.0f));
 		const mat4 fg = glm::ortho(-aspectRatio, aspectRatio, -1.f, 1.f, 1.f, -1.f);
 		const mat4 mvpg = fg * mg;
 

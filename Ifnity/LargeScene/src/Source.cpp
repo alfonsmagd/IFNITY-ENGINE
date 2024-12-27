@@ -454,7 +454,7 @@ float4 main_ps(PSInput input) : SV_TARGET
 		m_meshData = meshAssimp.meshData;
 		header = meshAssimp.meshFileHeader;
 
-		//m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp(8,1.2f));
+		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp(8,1.2f));
 		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
 
 	}

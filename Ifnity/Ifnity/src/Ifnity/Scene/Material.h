@@ -1,11 +1,17 @@
 #pragma once
 
+//Materals is based on the book 3D Graphics Rendering Cookbook by Sergey Kosarevsky and Viktor Latypov 
+
 #include <cstdint>
 
 #include "Ifnity/Utils/vec4.hpp"
 
 #include <string>
 #include <vector>
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <assimp\material.h>
 
 
 
@@ -52,4 +58,12 @@ void mergeMaterialLists(
 	// Output:
 	std::vector<MaterialDescription>& allMaterials,
 	std::vector<std::string>& newTextures                                // all textures (merged from oldTextures, only unique items)
+);
+
+
+
+MaterialDescription convertAIMaterialsToDescriptions(const aiMaterial* M, std::vector<std::string>& files, std::vector<std::string>& opacityMapss);
+
+void convertAndDownscaleAllTextures(
+	const std::vector<MaterialDescription>& materials, const std::string& basePath, std::vector<std::string>& files, std::vector<std::string>& opacityMaps
 );
