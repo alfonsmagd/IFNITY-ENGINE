@@ -2,11 +2,94 @@
 #include "IMeshDataBuilder.hpp"
 #include "Ifnity\Graphics\Interfaces\IMeshObject.hpp"
 #include <Ifnity\Graphics\VtxData.hpp>
+#include <Ifnity\Scene\Scene.h>
+#include <Ifnity\Scene\Material.h>
 
 
 
 
 IFNITY_NAMESPACE
+
+aiScene* MeshDataBuilderAssimp::getAIScenePointer(const char* fileName)
+{
+	
+	const unsigned int flags = 0 |
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_Triangulate |
+		aiProcess_GenSmoothNormals |
+		aiProcess_LimitBoneWeights |
+		aiProcess_SplitLargeMeshes |
+		aiProcess_ImproveCacheLocality |
+		aiProcess_RemoveRedundantMaterials |
+		aiProcess_FindDegenerates |
+		aiProcess_FindInvalidData |
+		aiProcess_GenUVCoords;
+
+	const aiScene* scene = aiImportFile(fileName, flags);
+
+	if(!scene || !scene->HasMeshes())
+	{
+		IFNITY_LOG(LogCore, ERROR, "Unable to get aiScene  '%s'\n", fileName);
+		return nullptr;
+	}
+}
+
+void MeshDataBuilderAssimp::processScene(const  SceneConfig& cfg , MeshData& meshData)
+{
+	//Extract scale and information data
+	m_meshScale = cfg.scale;
+
+
+	// extract base model path
+	const std::size_t pathSeparator = cfg.fileName.find_last_of("/\\");
+	const std::string basePath = (pathSeparator != std::string::npos) ? cfg.fileName.substr(0, pathSeparator + 1) : std::string();
+
+	//1.First load the mesh data in the future will be recalcultaded boundingbox.
+	const aiScene* scene = getAIScenePointer(cfg.fileName.c_str());
+
+	if(!scene)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Unable to load aiScene");
+		return;
+	}
+	loadFileAssimp(scene, meshData);
+
+	//2.Save the mesh data
+	if(!cfg.outputMesh.empty())
+	{
+		saveMeshData(cfg.outputMesh.c_str(), meshData);
+	}
+
+	//3.Material Conversion 
+
+	Scene ourScene;
+
+	std::vector<MaterialDescription> materials;
+	std::vector<std::string>& materialNames = ourScene.materialNames_;
+
+	std::vector<std::string> files;
+	std::vector<std::string> opacityMaps;
+
+	for(unsigned int m = 0; m < scene->mNumMaterials; m++)
+	{
+		aiMaterial* mm = scene->mMaterials[ m ];
+
+		printf("Material [%s] %u\n", mm->GetName().C_Str(), m);
+		materialNames.push_back(std::string(mm->GetName().C_Str()));
+
+		MaterialDescription D = convertAIMaterialToDescription(mm, files, opacityMaps);
+		materials.push_back(D);
+		dumpMaterial(files, D);
+	}
+	
+}
+
+
+
+
+
+
+
 
 void MeshDataBuilderCacheFile::buildMeshData(MeshObjectDescription& description)
 {
@@ -53,6 +136,26 @@ bool MeshDataBuilderAssimp::loadFileAssimp(const char* fileName, MeshData& meshD
 
 	return true;
 }
+
+bool MeshDataBuilderAssimp::loadFileAssimp(const aiScene* const scene , MeshData& meshData)
+{
+	if(!scene || !scene->HasMeshes())
+	{
+		IFNITY_LOG(LogCore, ERROR, "Unable to load aiScene");
+		return false;
+	}
+	
+	meshData.meshes_.reserve(scene->mNumMeshes);
+	//meshData.boxes_.reserve(scene->mNumMeshes);
+
+	for(unsigned int i = 0; i != scene->mNumMeshes; i++)
+	{
+		meshData.meshes_.push_back(convertAIMesh(scene->mMeshes[ i ], meshData));
+	}
+
+	return true;
+}
+
 
 Mesh MeshDataBuilderAssimp::convertAIMesh(const aiMesh* m, MeshData& meshData)
 {

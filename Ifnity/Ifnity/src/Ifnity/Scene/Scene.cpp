@@ -9,6 +9,13 @@
 #include <algorithm>
 #include <numeric>
 
+//RapidJson includes 
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/document.h>
+#include <rapidjson/rapidjson.h>
+
+IFNITY_NAMESPACE
+
 void saveStringList(FILE* f, const std::vector<std::string>& lines);
 void loadStringList(FILE* f, std::vector<std::string>& lines);
 
@@ -544,3 +551,41 @@ void deleteSceneNodes(Scene& scene, const std::vector<uint32_t>& nodesToDelete)
 	// 5) scene node names list is not modified, but in principle it can be (remove all non-used items and adjust the nameForNode_ map)
 	// 6) Material names list is not modified also, but if some materials fell out of use
 }
+
+std::vector<SceneConfig> readSceneConfig(const char* fileName)
+{
+	//Read configuration file in ifstream to convert to rapidjson::IStreamWrapper
+	std::ifstream ifs(fileName);
+	if(!ifs.is_open())
+	{
+		IFNITY_LOG(LogApp, ERROR, "Cannot load file " ,fileName);
+		exit(EXIT_FAILURE);
+	}
+
+	
+	rapidjson::IStreamWrapper isw(ifs);  //Creation of rapidjson::IStreamWrapper object
+	rapidjson::Document document;	//Save in memory the json file
+	const rapidjson::ParseResult parseResult = document.ParseStream(isw); //Converion analisys result 
+	assert(!parseResult.IsError());
+	assert(document.IsArray());
+
+	std::vector<SceneConfig> configList;
+
+	for(rapidjson::SizeType i = 0; i < document.Size(); i++)
+	{
+		configList.emplace_back(SceneConfig{
+			.fileName = document[ i ][ "input_scene" ].GetString(),
+			.outputMesh = document[ i ][ "output_mesh" ].GetString(),
+			.outputScene = document[ i ][ "output_scene" ].GetString(),
+			.outputMaterials = document[ i ][ "output_materials" ].GetString(),
+			.scale = (float)document[ i ][ "scale" ].GetDouble(),
+			.calculateLODs = document[ i ][ "calculate_LODs" ].GetBool(),
+			.mergeInstances = document[ i ][ "merge_instances" ].GetBool()
+			});
+	}
+
+	return configList;
+	
+}
+
+IFNITY_END_NAMESPACE

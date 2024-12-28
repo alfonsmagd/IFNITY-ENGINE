@@ -2,19 +2,13 @@
 
 //Materals is based on the book 3D Graphics Rendering Cookbook by Sergey Kosarevsky and Viktor Latypov 
 
-#include <cstdint>
-
+#include "pch.h"
 #include "Ifnity/Utils/vec4.hpp"
 
-#include <string>
-#include <vector>
-#include <cstdint>
-#include <string>
-#include <vector>
 #include <assimp\material.h>
 
 
-
+IFNITY_NAMESPACE
 
 enum MaterialFlags
 {
@@ -62,8 +56,12 @@ void mergeMaterialLists(
 
 
 
-MaterialDescription convertAIMaterialsToDescriptions(const aiMaterial* M, std::vector<std::string>& files, std::vector<std::string>& opacityMapss);
+MaterialDescription convertAIMaterialToDescription(const aiMaterial* M, std::vector<std::string>& files, std::vector<std::string>& opacityMaps);
 
 void convertAndDownscaleAllTextures(
 	const std::vector<MaterialDescription>& materials, const std::string& basePath, std::vector<std::string>& files, std::vector<std::string>& opacityMaps
 );
+
+void dumpMaterial(const std::vector<std::string>& files, const MaterialDescription& d);
+
+IFNITY_END_NAMESPACE

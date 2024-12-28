@@ -48,10 +48,6 @@ struct  IFNITY_API Mesh final
 
 	/** Information about stream element (size pretty much defines everything else, the "semantics" is defined by the shader) */
 	uint32_t streamElementSize[ kMaxStreams ] = { 0 };
-
-
-
-	
 };
 
 /**
@@ -77,32 +73,72 @@ struct IFNITY_API MeshFileHeader
 	/* According to your needs, you may add additional metadata fields */
 };
 
+/**
+ * @brief Represents the data required to draw a mesh.
+ */
 struct IFNITY_API DrawData
 {
-	uint32_t meshIndex;
-	uint32_t materialIndex;
-	uint32_t LOD;
-	uint32_t indexOffset;
-	uint32_t vertexOffset;
-	uint32_t transformIndex;
+	uint32_t meshIndex;       /**< Index of the mesh to draw */
+	uint32_t materialIndex;   /**< Index of the material to use */
+	uint32_t LOD;             /**< Level of detail to use */
+	uint32_t indexOffset;     /**< Offset to the index data */
+	uint32_t vertexOffset;    /**< Offset to the vertex data */
+	uint32_t transformIndex;  /**< Index of the transform to apply */
 };
 
+/**
+ * @brief Represents the data of a mesh including indices, vertices, and mesh descriptors.
+ */
 struct IFNITY_API MeshData
 {
-	std::vector<uint32_t> indexData_;
-	std::vector<float> vertexData_;
-	std::vector<Mesh> meshes_;
-	
+	std::vector<uint32_t> indexData_; /**< Index data */
+	std::vector<float> vertexData_;   /**< Vertex data */
+	std::vector<Mesh> meshes_;        /**< Mesh descriptors */
 };
 
 static_assert(sizeof(DrawData) == sizeof(uint32_t) * 6);
 
+/**
+ * @brief Loads mesh data from a file.
+ * @param filename The name of the file to load.
+ * @param out The output MeshData structure.
+ * @return The MeshFileHeader containing metadata about the loaded mesh data.
+ */
 IFNITY_API MeshFileHeader loadMeshData(const char* filename, MeshData& out);
 
+/**
+ * @brief Combines index and vertex data into a single buffer.
+ * @param indexData The index data to combine.
+ * @param vertexData The vertex data to combine.
+ * @param combinedBuffer The output combined buffer.
+ */
 IFNITY_API void combineBuffers(const std::vector<uint32_t>& indexData, const std::vector<float>& vertexData, std::vector<uint8_t>& combinedBuffer);
 
+/**
+ * @brief Loads a combined buffer from a file.
+ * @param file The file to load from.
+ * @param header The MeshFileHeader containing metadata about the mesh data.
+ * @param combinedBuffer The output combined buffer.
+ */
 IFNITY_API void loadCombinedBuffer(FILE* file, MeshFileHeader& header, std::vector<uint8_t>& combinedBuffer);
 
-IFNITY_API void saveMeshData(const char* filename, const MeshData& data, MeshFileHeader& fheader);
+/**
+ * @brief Saves mesh data to a file.
+ * @param filename The name of the file to save to.
+ * @param data The MeshData to save.
+ * @param fheader The MeshFileHeader containing metadata about the mesh data.
+ */
+IFNITY_API  void  saveMeshData(const char* filename, const MeshData& data, MeshFileHeader& fheader);
+
+/**
+ * @brief Saves mesh data to a file. in this case the header 
+ * isnt not saved , its only use to write the header data , and then if you
+ * want get the MeshFileHeader you need loadMeshData to get it.
+ * 
+ * 
+ * @param filename The name of the file to save to.
+ * @param data The MeshData to save.
+ */
+IFNITY_API  void saveMeshData(const char* filename, const MeshData& data);
 
 IFNITY_END_NAMESPACE

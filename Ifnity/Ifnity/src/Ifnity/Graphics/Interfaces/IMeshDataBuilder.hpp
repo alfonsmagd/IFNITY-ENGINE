@@ -15,25 +15,30 @@ class IFNITY_API IMeshDataBuilder
 {
 public:
 	virtual ~IMeshDataBuilder() = default;
+
 	virtual void buildMeshData(MeshObjectDescription& description) = 0;
 };
 
 class  IFNITY_API MeshDataBuilderAssimp: public IMeshDataBuilder
 {
-private:
-	 bool loadFileAssimp(const char* fileName, MeshData& meshData);
-	 Mesh convertAIMesh(const aiMesh* m,       MeshData& meshData);
-	
+
 public:
 	MeshDataBuilderAssimp(uint16_t numElementsPerVertex, float meshScale): m_numElementsPerVertex(numElementsPerVertex), m_meshScale(meshScale) {};
-
+	
 	void buildMeshData(MeshObjectDescription& description) override;
 
 private:
+	bool loadFileAssimp(const char* fileName, MeshData& meshData);
+	bool loadFileAssimp(const aiScene* const scene, MeshData& meshData);
+	[[nodiscard]] aiScene* getAIScenePointer(const char* fileName);
+	Mesh convertAIMesh(const aiMesh* m, MeshData& meshData);
+	void processScene(const struct SceneConfig& cfg, MeshData& meshData);
+private:
 	const uint16_t m_numElementsPerVertex;  // Number of elements per vertex pos,normal,tg, example
-	const float    m_meshScale;
+	float		   m_meshScale;
 	uint32_t       m_indexOffset = 0;
 	uint32_t       m_vertexOffset = 0;
+	
 
 };
 

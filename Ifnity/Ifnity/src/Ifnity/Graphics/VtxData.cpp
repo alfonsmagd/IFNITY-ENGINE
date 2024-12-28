@@ -7,8 +7,6 @@ IFNITY_NAMESPACE
 IFNITY_API MeshFileHeader loadMeshData(const char* meshFile, MeshData& out)
 {
 
-
-
 	FILE* f = fopen(meshFile, "rb");
 
 	assert(f); 
@@ -134,7 +132,41 @@ IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data,  MeshFi
 
 }
 
+IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data)
+{
+	// Generar el archivo con la extensión .meshdata
+	std::string meshFileStr = meshFile + std::string(".meshdata");
 
+	FILE* f = fopen(meshFileStr.c_str(), "wb");
+
+	assert(f);
+
+	if(!f)
+	{
+		IFNITY_LOG(LogApp, ERROR, "Cannot open %s", meshFile);
+		exit(EXIT_FAILURE);
+	}
+
+	const MeshFileHeader header{
+		.magicValue = 0x12345678,
+		.meshCount = static_cast<uint32_t>(data.meshes_.size()),
+		.dataBlockStartOffset = (uint32_t)(sizeof(MeshFileHeader) + data.meshes_.size() * sizeof(Mesh)),
+		.indexDataSize = static_cast<uint32_t>(data.indexData_.size() * sizeof(uint32_t)),
+		.vertexDataSize = static_cast<uint32_t>(data.vertexData_.size() * sizeof(float))
+	};
+
+	// Escribir el encabezado
+	fwrite(&header, 1, sizeof(header), f);
+
+	// Escribir los descriptores de malla
+	fwrite(data.meshes_.data(), sizeof(Mesh), data.meshes_.size(), f);
+
+	// Escribir los datos de índice y vértice
+	fwrite(data.indexData_.data(), 1, header.indexDataSize, f);
+	fwrite(data.vertexData_.data(), 1, header.vertexDataSize, f);
+
+	fclose(f);
+}
 
 IFNITY_END_NAMESPACE
 

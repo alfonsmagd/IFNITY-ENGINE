@@ -17,6 +17,8 @@
 #include <stb_image_write.h>
 #include <stb_image_resize2.h>
 
+IFNITY_NAMESPACE
+
 //This will be added to util functions in the future
 inline int addUnique(std::vector<std::string>& files, const std::string& file)
 {
@@ -414,3 +416,17 @@ void convertAndDownscaleAllTextures(
 
 	std::transform(std::execution::par, std::begin(files), std::end(files), std::begin(files), converter);
 }
+
+void dumpMaterial(const std::vector<std::string>& files, const MaterialDescription& d)
+{
+	printf("files: %d\n", (int)files.size());
+	printf("maps: %u/%u/%u/%u/%u\n", (uint32_t)d.albedoMap_, (uint32_t)d.ambientOcclusionMap_, (uint32_t)d.emissiveMap_, (uint32_t)d.opacityMap_, (uint32_t)d.metallicRoughnessMap_);
+	printf(" albedo:    %s\n", (d.albedoMap_ < 0xFFFF) ? files[ d.albedoMap_ ].c_str() : "");
+	printf(" occlusion: %s\n", (d.ambientOcclusionMap_ < 0xFFFF) ? files[ d.ambientOcclusionMap_ ].c_str() : "");
+	printf(" emission:  %s\n", (d.emissiveMap_ < 0xFFFF) ? files[ d.emissiveMap_ ].c_str() : "");
+	printf(" opacity:   %s\n", (d.opacityMap_ < 0xFFFF) ? files[ d.opacityMap_ ].c_str() : "");
+	printf(" MeR:       %s\n", (d.metallicRoughnessMap_ < 0xFFFF) ? files[ d.metallicRoughnessMap_ ].c_str() : "");
+	printf(" Normal:    %s\n", (d.normalMap_ < 0xFFFF) ? files[ d.normalMap_ ].c_str() : "");
+}
+
+IFNITY_END_NAMESPACE

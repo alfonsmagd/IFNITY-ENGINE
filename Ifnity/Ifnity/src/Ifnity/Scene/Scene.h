@@ -3,15 +3,31 @@
 
 
 #pragma once
+#include "pch.h"
 
-#include <string>
 #include <unordered_map>
-#include <vector>
+
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
+
+IFNITY_NAMESPACE
+
 using glm::mat4;
+
+
+struct IFNITY_API SceneConfig
+{
+	std::string fileName;
+	std::string outputMesh;
+	std::string outputScene;
+	std::string outputMaterials;
+	std::string outputBoxes;
+	float scale;
+	bool calculateLODs;
+	bool mergeInstances;
+};
 
 // we do not define std::vector<Node*> Children - this is already present in the aiNode from assimp
 
@@ -34,7 +50,7 @@ struct Hierarchy
 /* This scene is converted into a descriptorSet(s) in MultiRenderer class
    This structure is also used as a storage type in SceneExporter tool
  */
-struct Scene
+struct  IFNITY_API Scene
 {
 	// local transformations for each node and global transforms
 	// + an array of 'dirty/changed' local transforms
@@ -187,3 +203,16 @@ void mergeScenes(Scene& scene, const std::vector<Scene*>& scenes, const std::vec
  * @param nodesToDelete The nodes to delete.
  */
 void deleteSceneNodes(Scene& scene, const std::vector<uint32_t>& nodesToDelete);
+
+
+
+/**
+ * @brief Reads the scene configuration from a file.
+ *
+ * @param fileName The name of the file from which to read the scene configuration.
+ * @return A vector of SceneConfig objects read from the file.
+ */
+std::vector<SceneConfig> readSceneConfig(const char* fileName);
+
+
+IFNITY_END_NAMESPACE

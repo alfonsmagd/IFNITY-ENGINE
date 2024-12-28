@@ -118,7 +118,8 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 include_directories(${DXC_INCLUDE_DIR})
 #include assimp
 include_directories(${PROJECT_SOURCE_DIR}/vendor/assimp/include)
-
+#include RapidJson its only header library its not necessary to link it with add_subdirectory
+include_directories(${PROJECT_SOURCE_DIR}/vendor/rapidjson/include)
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
