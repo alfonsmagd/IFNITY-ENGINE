@@ -526,12 +526,12 @@ public:
 		};
 
 		//meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 1.f));
-		meshAssimp.meshFileHeader = loadMeshData(test3Result.c_str(), meshAssimp.meshData);
+		/*meshAssimp.meshFileHeader = loadMeshData(test3Result.c_str(), meshAssimp.meshData);
 		m_meshData = meshAssimp.meshData;
-		header = meshAssimp.meshFileHeader;
+		header = meshAssimp.meshFileHeader;*/
 
-		//m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp(8,1.2f));
-		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
+		m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp<rhi::VertexScene>(0.01f));
+		//m_MeshScene = m_ManagerDevice->GetRenderDevice()->CreateMeshObject(meshAssimp);
 
 
 	}

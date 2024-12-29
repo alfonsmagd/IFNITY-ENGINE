@@ -32,7 +32,8 @@ namespace OpenGL
 
 		if(!file)
 		{
-			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file '%s'\n", fileName);
+			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file {}\n", fileName);
+			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file {}\n", std::string(fileName));
 			return std::string();
 		}
 

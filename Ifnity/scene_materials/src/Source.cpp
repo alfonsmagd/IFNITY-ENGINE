@@ -199,6 +199,7 @@ public:
 
 	void Initialize() override
 	{
+		auto& vfs = IFNITY::VFS::GetInstance();
 		auto vSceneconfig = IFNITY::readSceneConfig("data/sceneconverter.json");
 
 

@@ -9,10 +9,35 @@ IFNITY_NAMESPACE
 
 
 
-VFS& VFS::GetInstance()
+VFS& VFS::GetInstance(const std::string& physicalPath)
 {
-    static VFS instance;
-    return instance;
+    static VFS* instance = nullptr;
+    if(!instance)
+    {
+        instance = new VFS(physicalPath);
+    }
+    return *instance;
+}
+
+
+
+VFS::VFS(const std::string& physicalPath)
+{
+
+
+    auto createAndMount = [ & ](const std::string& virtualPath, const std::string& subPath)
+        {
+            std::string fullPath = physicalPath + subPath;
+            std::filesystem::create_directories(fullPath);
+            m_MountPoints[ virtualPath ] = { fullPath };
+        };
+
+  
+    createAndMount("/meshes", "/meshes");
+    createAndMount("/scenes", "/scenes");
+    createAndMount("/cameras", "/cameras");
+    createAndMount("/out_textures", "/out_textures");
+
 }
 
 bool VFS::Mount(const std::string& virtualPath, const std::string& physicalPath , FolderType type)
