@@ -6,7 +6,7 @@
 #include <Ifnity\Scene\Material.h>
 
 
-
+#define _TEST_MODE
 
 IFNITY_NAMESPACE
 
@@ -32,10 +32,13 @@ aiScene* MeshDataBuilderAssimp::getAIScenePointer(const char* fileName)
 		IFNITY_LOG(LogCore, ERROR, "Unable to get aiScene  '%s'\n", fileName);
 		return nullptr;
 	}
+	return const_cast<aiScene*>(scene);
 }
 
 void MeshDataBuilderAssimp::processScene(const  SceneConfig& cfg , MeshData& meshData)
 {
+	IFNITY_LOG(LogCore, INFO, "Process Scene started");
+
 	//Extract scale and information data
 	m_meshScale = cfg.scale;
 
@@ -44,14 +47,11 @@ void MeshDataBuilderAssimp::processScene(const  SceneConfig& cfg , MeshData& mes
 	const std::size_t pathSeparator = cfg.fileName.find_last_of("/\\");
 	const std::string basePath = (pathSeparator != std::string::npos) ? cfg.fileName.substr(0, pathSeparator + 1) : std::string();
 
-	//1.First load the mesh data in the future will be recalcultaded boundingbox.
+	//1.First load the mesh data in the future will be recalcultaded boundingbox.this ensure that
+	//scene its valid 
 	const aiScene* scene = getAIScenePointer(cfg.fileName.c_str());
 
-	if(!scene)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Unable to load aiScene");
-		return;
-	}
+	
 	loadFileAssimp(scene, meshData);
 
 	//2.Save the mesh data
@@ -81,6 +81,39 @@ void MeshDataBuilderAssimp::processScene(const  SceneConfig& cfg , MeshData& mes
 		materials.push_back(D);
 		dumpMaterial(files, D);
 	}
+
+	// 3. Texture processing, rescaling and packing
+	convertAndDownscaleAllTextures(materials, basePath, files, opacityMaps);
+	// 4. Save materials
+	saveMaterials(cfg.outputMaterials.c_str(), materials, files);
+
+	std::vector<MaterialDescription> allMaterials;
+	std::vector<std::string> files2;
+	loadMaterials(cfg.outputMaterials.c_str(), allMaterials, files2);
+
+
+
+	// 5 Scene hierarchy conversion
+	traverse(scene, ourScene, scene->mRootNode, -1, 0);
+
+	saveScene(cfg.outputScene.c_str(), ourScene);
+
+	//6. Check if scene its correct 
+
+	#ifdef _TEST_MODE
+
+		Scene ourScene_check;
+		loadScene(cfg.outputScene.c_str(), ourScene_check);
+		if( !(ourScene_check == ourScene))
+		{
+			IFNITY_LOG(LogCore, ERROR, "The scene its not loading correctly TestMode {}",	cfg.outputScene.c_str());
+		}
+		//This is only for testing purposes.
+		checkMaterialsAndFiles(materials, files, allMaterials, files2);
+	#endif
+
+
+
 	
 }
 
@@ -261,9 +294,13 @@ void MeshDataBuilderAssimp::buildMeshData(MeshObjectDescription& description)
 	saveMeshData(description.filePath.c_str(), description.meshData, description.meshFileHeader);
 
 
-
-	
 }
+
+void MeshDataBuilderAssimp::buildSceneData(MeshObjectDescription& description)
+{
+	processScene(description.sceneConfig, description.meshData);
+}
+
 
 void MeshDataBuilderGeometryModel::buildMeshData(MeshObjectDescription& description)
 {

@@ -2,7 +2,7 @@
 
 
 
-#include "Scene.h"
+
 #include "Ifnity/Utils/Utils.hpp"
 #include <stack>
 
@@ -14,8 +14,36 @@
 #include <rapidjson/document.h>
 #include <rapidjson/rapidjson.h>
 
-IFNITY_NAMESPACE
+//Assimp includes
+#include <assimp/scene.h>
 
+
+#include "Scene.h"
+
+IFNITY_NAMESPACE
+void makePrefix(int ofs) { for(int i = 0; i < ofs; i++) printf("\t"); }
+glm::mat4 toMat4(const aiMatrix4x4& from)
+{
+	glm::mat4 to;
+	to[ 0 ][ 0 ] = (float)from.a1; to[ 0 ][ 1 ] = (float)from.b1;  to[ 0 ][ 2 ] = (float)from.c1; to[ 0 ][ 3 ] = (float)from.d1;
+	to[ 1 ][ 0 ] = (float)from.a2; to[ 1 ][ 1 ] = (float)from.b2;  to[ 1 ][ 2 ] = (float)from.c2; to[ 1 ][ 3 ] = (float)from.d2;
+	to[ 2 ][ 0 ] = (float)from.a3; to[ 2 ][ 1 ] = (float)from.b3;  to[ 2 ][ 2 ] = (float)from.c3; to[ 2 ][ 3 ] = (float)from.d3;
+	to[ 3 ][ 0 ] = (float)from.a4; to[ 3 ][ 1 ] = (float)from.b4;  to[ 3 ][ 2 ] = (float)from.c4; to[ 3 ][ 3 ] = (float)from.d4;
+	return to;
+}
+void printMat4(const aiMatrix4x4& m)
+{
+	if(!m.IsIdentity())
+	{
+		for(int i = 0; i < 4; i++)
+			for(int j = 0; j < 4; j++)
+				printf("%f ;", m[ i ][ j ]);
+	}
+	else
+	{
+		printf(" Identity");
+	}
+}
 void saveStringList(FILE* f, const std::vector<std::string>& lines);
 void loadStringList(FILE* f, std::vector<std::string>& lines);
 
@@ -104,6 +132,7 @@ int findNodeByName(const Scene& scene, const std::string& name)
 
 	return -1;
 }
+
 
 int getNodeLevel(const Scene& scene, int n)
 {
@@ -558,11 +587,9 @@ std::vector<SceneConfig> readSceneConfig(const char* fileName)
 	std::ifstream ifs(fileName);
 	if(!ifs.is_open())
 	{
-		IFNITY_LOG(LogApp, ERROR, "Cannot load file " ,fileName);
+		IFNITY_LOG(LogApp, ERROR, "Cannot load file %s " , fileName);
 		exit(EXIT_FAILURE);
 	}
-
-	
 	rapidjson::IStreamWrapper isw(ifs);  //Creation of rapidjson::IStreamWrapper object
 	rapidjson::Document document;	//Save in memory the json file
 	const rapidjson::ParseResult parseResult = document.ParseStream(isw); //Converion analisys result 
@@ -587,5 +614,52 @@ std::vector<SceneConfig> readSceneConfig(const char* fileName)
 	return configList;
 	
 }
+
+void traverse(const aiScene* sourceScene, Scene& scene, aiNode* N, int parent, int ofs)
+{
+	int newNode = addNode(scene, parent, ofs);
+
+	if(N->mName.C_Str())
+	{
+		makePrefix(ofs); printf("Node[%d].name = %s\n", newNode, N->mName.C_Str());
+
+		uint32_t stringID = (uint32_t)scene.names_.size();
+		scene.names_.push_back(std::string(N->mName.C_Str()));
+		scene.nameForNode_[ newNode ] = stringID;
+	}
+
+	for(size_t i = 0; i < N->mNumMeshes; i++)
+	{
+		int newSubNode = addNode(scene, newNode, ofs + 1);;
+
+		uint32_t stringID = (uint32_t)scene.names_.size();
+		scene.names_.push_back(std::string(N->mName.C_Str()) + "_Mesh_" + std::to_string(i));
+		scene.nameForNode_[ newSubNode ] = stringID;
+
+		int mesh = (int)N->mMeshes[ i ];
+		scene.meshes_[ newSubNode ] = mesh;
+		scene.materialForNode_[ newSubNode ] = sourceScene->mMeshes[ mesh ]->mMaterialIndex;
+
+		makePrefix(ofs); printf("Node[%d].SubNode[%d].mesh     = %d\n", newNode, newSubNode, (int)mesh);
+		makePrefix(ofs); printf("Node[%d].SubNode[%d].material = %d\n", newNode, newSubNode, sourceScene->mMeshes[ mesh ]->mMaterialIndex);
+
+		scene.globalTransform_[ newSubNode ] = glm::mat4(1.0f);
+		scene.localTransform_[ newSubNode ] = glm::mat4(1.0f);
+	}
+
+	scene.globalTransform_[ newNode ] = glm::mat4(1.0f);
+	scene.localTransform_[ newNode ] = toMat4(N->mTransformation);
+
+	if(N->mParent != nullptr)
+	{
+		makePrefix(ofs); printf("\tNode[%d].parent         = %s\n", newNode, N->mParent->mName.C_Str());
+		makePrefix(ofs); printf("\tNode[%d].localTransform = ", newNode); printMat4(N->mTransformation); printf("\n");
+	}
+
+	for(unsigned int n = 0; n < N->mNumChildren; n++)
+	  traverse(sourceScene, scene, N->mChildren[n], newNode, ofs + 1);
+}
+
+
 
 IFNITY_END_NAMESPACE

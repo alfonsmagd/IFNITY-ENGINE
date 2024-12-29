@@ -18,7 +18,7 @@ using glm::mat4;
 
 #define SELECT_API_SELECTOR 0
 
-using namespace IFNITY::rhi;
+
 
 
 

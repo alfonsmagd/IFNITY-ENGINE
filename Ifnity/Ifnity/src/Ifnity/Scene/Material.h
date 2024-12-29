@@ -37,6 +37,18 @@ struct PACKED_STRUCT MaterialDescription final
 	uint64_t metallicRoughnessMap_ = INVALID_TEXTURE;
 	uint64_t normalMap_ = INVALID_TEXTURE;
 	uint64_t opacityMap_ = INVALID_TEXTURE;
+
+     bool operator==(const MaterialDescription& rhs) const
+     {
+		 //Check MaterialDescription for testing purposes
+         return ambientOcclusionMap_ == rhs.ambientOcclusionMap_ &&
+                emissiveMap_ == rhs.emissiveMap_ &&
+                albedoMap_ == rhs.albedoMap_ &&
+                metallicRoughnessMap_ == rhs.metallicRoughnessMap_ &&
+                normalMap_ == rhs.normalMap_ &&
+                // Añade más comparaciones según sea necesario
+                true;
+     }
 };
 
 static_assert(sizeof(MaterialDescription) % 16 == 0, "MaterialDescription should be padded to 16 bytes");
@@ -63,5 +75,12 @@ void convertAndDownscaleAllTextures(
 );
 
 void dumpMaterial(const std::vector<std::string>& files, const MaterialDescription& d);
+
+
+bool compareMaterials(const std::vector<MaterialDescription>& materials1, const std::vector<MaterialDescription>& materials2);
+
+void checkMaterialsAndFiles(const std::vector<MaterialDescription>& materials, const std::vector<std::string>& files,
+	const std::vector<MaterialDescription>& allMaterials, const std::vector<std::string>& files2);
+
 
 IFNITY_END_NAMESPACE

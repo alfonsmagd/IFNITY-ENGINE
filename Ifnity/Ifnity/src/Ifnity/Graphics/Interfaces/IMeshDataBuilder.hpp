@@ -17,6 +17,7 @@ public:
 	virtual ~IMeshDataBuilder() = default;
 
 	virtual void buildMeshData(MeshObjectDescription& description) = 0;
+	inline virtual void buildSceneData(MeshObjectDescription& description) {};
 };
 
 class  IFNITY_API MeshDataBuilderAssimp: public IMeshDataBuilder
@@ -24,8 +25,11 @@ class  IFNITY_API MeshDataBuilderAssimp: public IMeshDataBuilder
 
 public:
 	MeshDataBuilderAssimp(uint16_t numElementsPerVertex, float meshScale): m_numElementsPerVertex(numElementsPerVertex), m_meshScale(meshScale) {};
+
+	MeshDataBuilderAssimp(uint16_t numElemntsPerVertex): m_numElementsPerVertex(numElemntsPerVertex) {};
 	
 	void buildMeshData(MeshObjectDescription& description) override;
+	void buildSceneData(MeshObjectDescription& description) override;
 
 private:
 	bool loadFileAssimp(const char* fileName, MeshData& meshData);

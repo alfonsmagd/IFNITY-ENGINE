@@ -63,3 +63,22 @@ inline void eraseSelected(std::vector<T>& v, const std::vector<Index>& selection
     // Intercambiar el contenido del vector original con el vector temporal
     v.swap(temp);
 }
+
+
+template<typename T>
+concept StringOrCharPointer = std::is_same_v<T, std::string> || std::is_same_v<T, const char*>;
+
+template <StringOrCharPointer T>
+bool compareVectors(const std::vector<T>& vec1, const std::vector<T>& vec2)
+{
+    if(vec1.size() != vec2.size())
+        return false;
+
+    for(size_t i = 0; i < vec1.size(); ++i)
+    {
+        if(vec1[ i ] != vec2[ i ])
+            return false;
+    }
+
+    return true;
+}

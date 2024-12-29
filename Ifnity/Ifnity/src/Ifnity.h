@@ -20,6 +20,12 @@
 #include "Ifnity/Graphics/Interfaces/IMeshDataBuilder.hpp"
 #include "Ifnity/Models/GeometicModels.hpp"
 
+//Materials
+#include "Ifnity/Scene/Material.h"
+
+//Scene
+#include "Ifnity/Scene/Scene.h"
+
 //wOMDPW
 //Entry Point this include have put at the end of the file.
 #include "Ifnity/EntryPoint.h"

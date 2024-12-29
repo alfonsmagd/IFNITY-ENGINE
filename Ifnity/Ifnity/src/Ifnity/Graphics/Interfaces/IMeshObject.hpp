@@ -4,7 +4,8 @@
 #include "pch.h"
 #include "Ifnity/Graphics/VtxData.hpp"
 #include "Ifnity/Models/GeometicModels.hpp"
-#include "Ifnity\Graphics\Interfaces\IMeshDataBuilder.hpp"
+#include "Ifnity/Graphics/Interfaces/IMeshDataBuilder.hpp"
+#include "Ifnity/Scene/Scene.h"
 
 
 IFNITY_NAMESPACE
@@ -24,10 +25,12 @@ struct IFNITY_API MeshObjectDescription
 	bool isLargeMesh = false;
 	bool isGeometryModel = false;
 
+
 	//MeshData 
 	MeshData meshData;
 	MeshFileHeader meshFileHeader;
 	IMeshDataBuilder* meshDataBuilder = nullptr;
+	SceneConfig sceneConfig;
 
 
 

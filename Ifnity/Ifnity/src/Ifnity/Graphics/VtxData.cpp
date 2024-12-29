@@ -139,7 +139,6 @@ IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data)
 
 	FILE* f = fopen(meshFileStr.c_str(), "wb");
 
-	assert(f);
 
 	if(!f)
 	{

@@ -5,9 +5,6 @@
 #pragma once
 #include "pch.h"
 
-#include <unordered_map>
-
-
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
@@ -15,6 +12,7 @@
 IFNITY_NAMESPACE
 
 using glm::mat4;
+
 
 
 struct IFNITY_API SceneConfig
@@ -45,6 +43,16 @@ struct Hierarchy
 	int lastSibling_;
 	// cached node level
 	int level_;
+
+	// comparison operator for testing purposes
+	bool operator==(const Hierarchy& rhs) const
+	{
+		return parent_ == rhs.parent_ &&
+			firstChild_ == rhs.firstChild_ &&
+			nextSibling_ == rhs.nextSibling_ &&
+			lastSibling_ == rhs.lastSibling_ &&
+			level_ == rhs.level_;
+	}
 };
 
 /* This scene is converted into a descriptorSet(s) in MultiRenderer class
@@ -77,6 +85,19 @@ struct  IFNITY_API Scene
 
 	// Debug list of material names
 	std::vector<std::string> materialNames_;
+
+	bool operator==(const Scene& rhs) const
+	{
+		return localTransform_ == rhs.localTransform_ &&
+			globalTransform_ == rhs.globalTransform_ &&
+			hierarchy_ == rhs.hierarchy_ &&
+			meshes_ == rhs.meshes_ &&
+			materialForNode_ == rhs.materialForNode_ &&
+			nameForNode_ == rhs.nameForNode_ &&
+			names_ == rhs.names_ &&
+			materialNames_ == rhs.materialNames_;
+	};
+
 };
 
 
@@ -117,7 +138,9 @@ int findNodeByName(const Scene& scene, const std::string& name);
  */
 inline std::string getNodeName(const Scene& scene, int node)
 {
-	int strID = scene.nameForNode_.contains(node) ? scene.nameForNode_.at(node) : -1;
+
+	auto it = scene.nameForNode_.find(node);
+	int strID = (it != scene.nameForNode_.end()) ? it->second : -1;
 	return (strID > -1) ? scene.names_[ strID ] : std::string();
 }
 
@@ -213,6 +236,11 @@ void deleteSceneNodes(Scene& scene, const std::vector<uint32_t>& nodesToDelete);
  * @return A vector of SceneConfig objects read from the file.
  */
 std::vector<SceneConfig> readSceneConfig(const char* fileName);
+
+void traverse(const aiScene* sourceScene, Scene& scene, aiNode* N, int parent, int ofs);
+
+
+
 
 
 IFNITY_END_NAMESPACE

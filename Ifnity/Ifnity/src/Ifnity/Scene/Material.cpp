@@ -9,12 +9,16 @@
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 
+
+
 //stl
 #include <unordered_map>
 #include <execution>
 
 #include <stb_image.h>
 #include <stb_image_write.h>
+
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include <stb_image_resize2.h>
 
 IFNITY_NAMESPACE
@@ -391,7 +395,11 @@ std::string convertTexture(const std::string& file, const std::string& basePath,
 
 	stbir_resize_uint8_linear(src, texWidth, texHeight, 0, dst, newW, newH, 0, (stbir_pixel_layout)texChannels);
 
-	stbi_write_png(newFile.c_str(), newW, newH, texChannels, dst, 0);
+	if(!stbi_write_png(newFile.c_str(), newW, newH, texChannels, dst, 0))
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to write texture [%s]", newFile.c_str());
+		exit(255);
+	}
 
 	if(pixels)
 		stbi_image_free(pixels);
@@ -421,12 +429,32 @@ void dumpMaterial(const std::vector<std::string>& files, const MaterialDescripti
 {
 	printf("files: %d\n", (int)files.size());
 	printf("maps: %u/%u/%u/%u/%u\n", (uint32_t)d.albedoMap_, (uint32_t)d.ambientOcclusionMap_, (uint32_t)d.emissiveMap_, (uint32_t)d.opacityMap_, (uint32_t)d.metallicRoughnessMap_);
-	printf(" albedo:    %s\n", (d.albedoMap_ < 0xFFFF) ? files[ d.albedoMap_ ].c_str() : "");
-	printf(" occlusion: %s\n", (d.ambientOcclusionMap_ < 0xFFFF) ? files[ d.ambientOcclusionMap_ ].c_str() : "");
-	printf(" emission:  %s\n", (d.emissiveMap_ < 0xFFFF) ? files[ d.emissiveMap_ ].c_str() : "");
-	printf(" opacity:   %s\n", (d.opacityMap_ < 0xFFFF) ? files[ d.opacityMap_ ].c_str() : "");
-	printf(" MeR:       %s\n", (d.metallicRoughnessMap_ < 0xFFFF) ? files[ d.metallicRoughnessMap_ ].c_str() : "");
-	printf(" Normal:    %s\n", (d.normalMap_ < 0xFFFF) ? files[ d.normalMap_ ].c_str() : "");
+	printf(" albedo:    %s\n", (d.albedoMap_ < 0xFFFF) ? files[ d.albedoMap_ ].c_str() : "No file");
+	printf(" occlusion: %s\n", (d.ambientOcclusionMap_ < 0xFFFF) ? files[ d.ambientOcclusionMap_ ].c_str() : "No file");
+	printf(" emission:  %s\n", (d.emissiveMap_ < 0xFFFF) ? files[ d.emissiveMap_ ].c_str() : "No file");
+	printf(" opacity:   %s\n", (d.opacityMap_ < 0xFFFF) ? files[ d.opacityMap_ ].c_str() : "No file");
+	printf(" MeR:       %s\n", (d.metallicRoughnessMap_ < 0xFFFF) ? files[ d.metallicRoughnessMap_ ].c_str() : "No file");
+	printf(" Normal:    %s\n", (d.normalMap_ < 0xFFFF) ? files[ d.normalMap_ ].c_str() : "No file");
+}
+
+bool compareMaterials(const std::vector<MaterialDescription>& materials1, const std::vector<MaterialDescription>& materials2)
+{
+	if(materials1.size() != materials2.size())
+		return false;
+	for(size_t i = 0; i < materials1.size(); i++)
+		if(!(materials1[ i ] == materials2[ i ]))
+			return false;
+	return true;
+	
+}
+
+void checkMaterialsAndFiles(const std::vector<MaterialDescription>& materials, const std::vector<std::string>& files,
+	const std::vector<MaterialDescription>& allMaterials, const std::vector<std::string>& files2)
+{
+	
+	compareMaterials(materials, allMaterials) ? std::cout << "Materials are equal." << std::endl : std::cout << "Materials are not equal." << std::endl;
+
+	compareVectors(files, files2) ? std::cout << "Files are equal." << std::endl : std::cout << "Files are not equal." << std::endl;
 }
 
 IFNITY_END_NAMESPACE
