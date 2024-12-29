@@ -20,30 +20,29 @@ public:
 	inline virtual void buildSceneData(MeshObjectDescription& description) {};
 };
 
-class  IFNITY_API MeshDataBuilderAssimp: public IMeshDataBuilder
+template <typename VertexType>
+class IFNITY_API MeshDataBuilderAssimp: public IMeshDataBuilder
 {
-
 public:
-	MeshDataBuilderAssimp(uint16_t numElementsPerVertex, float meshScale): m_numElementsPerVertex(numElementsPerVertex), m_meshScale(meshScale) {};
+    MeshDataBuilderAssimp(float meshScale)
+        : m_meshScale(meshScale), m_numElementsPerVertex(rhi::VertexTraits<VertexType>::numElements)
+    {}
 
-	MeshDataBuilderAssimp(uint16_t numElemntsPerVertex): m_numElementsPerVertex(numElemntsPerVertex) {};
-	
-	void buildMeshData(MeshObjectDescription& description) override;
-	void buildSceneData(MeshObjectDescription& description) override;
+    void buildMeshData(MeshObjectDescription& description) override;
+    void buildSceneData(MeshObjectDescription& description) override;
 
 private:
-	bool loadFileAssimp(const char* fileName, MeshData& meshData);
-	bool loadFileAssimp(const aiScene* const scene, MeshData& meshData);
-	[[nodiscard]] aiScene* getAIScenePointer(const char* fileName);
-	Mesh convertAIMesh(const aiMesh* m, MeshData& meshData);
-	void processScene(const struct SceneConfig& cfg, MeshData& meshData);
-private:
-	const uint16_t m_numElementsPerVertex;  // Number of elements per vertex pos,normal,tg, example
-	float		   m_meshScale;
-	uint32_t       m_indexOffset = 0;
-	uint32_t       m_vertexOffset = 0;
-	
+    bool loadFileAssimp(const char* fileName, MeshData& meshData);
+    bool loadFileAssimp(const aiScene* const scene, MeshData& meshData);
+    [[nodiscard]] aiScene* getAIScenePointer(const char* fileName);
+    Mesh convertAIMesh(const aiMesh* m, MeshData& meshData);
+    void processScene(const struct SceneConfig& cfg, MeshData& meshData);
 
+private:
+    const uint16_t m_numElementsPerVertex;
+    float m_meshScale;
+    uint32_t m_indexOffset = 0;
+    uint32_t m_vertexOffset = 0;
 };
 
 class IFNITY_API MeshDataBuilderCacheFile: public IMeshDataBuilder

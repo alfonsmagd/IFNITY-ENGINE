@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.8)
 # Nombre del proyecto
 project(SkyBox_Camera)
 
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_SUPPRESS_REGENERATION true)
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 
 
@@ -46,8 +49,13 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     ${CMAKE_SOURCE_DIR}/../Shaders
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
 )
+
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/../data
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
 )
+
+# Filtrar y mostrar solo los destinos que generan archivos .exe
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Executables")

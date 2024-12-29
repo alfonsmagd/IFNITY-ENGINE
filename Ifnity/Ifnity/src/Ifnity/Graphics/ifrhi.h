@@ -59,6 +59,33 @@ struct Color
 
 namespace rhi {
 
+
+
+    struct IFNITY_API VertexScene
+    {
+        
+    };
+
+    struct IFNITY_API VertexBasic
+    {
+    };
+
+    template <typename T>
+    struct IFNITY_API VertexTraits;
+
+    template <>
+    struct VertexTraits<VertexScene>
+    {
+        static constexpr uint16_t numElements = 8;
+    };
+
+    template <>
+    struct VertexTraits<VertexBasic>
+    {
+        static constexpr uint16_t numElements = 3;
+    };
+
+
     //TYPES 
 
     /**

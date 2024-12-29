@@ -17,7 +17,6 @@ add_subdirectory(Simple_Texture)
 add_subdirectory(Tetahedre)
 add_subdirectory(Skybox_Camera)
 add_subdirectory(MeshGeometrical_Draw)
-add_subdirectory(LargeScene)
 add_subdirectory(infinite_plane)
 add_subdirectory(scene_materials)
 

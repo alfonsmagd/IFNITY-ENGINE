@@ -221,7 +221,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # Filtrar y mostrar solo los destinos que generan archivos .exe
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Executables")
+
 
 # Copiar nvml.lib al directorio de enlace
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD

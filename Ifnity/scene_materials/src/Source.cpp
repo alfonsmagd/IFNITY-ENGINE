@@ -213,7 +213,7 @@ public:
 			.sceneConfig = vSceneconfig[ 0 ]
 		};
 
-		MeshDataBuilderAssimp builder(8);
+		MeshDataBuilderAssimp<rhi::VertexScene> builder(8);
 
 		builder.buildSceneData(meshAssimp);
 

@@ -638,10 +638,11 @@ void traverse(const aiScene* sourceScene, Scene& scene, aiNode* N, int parent, i
 
 		int mesh = (int)N->mMeshes[ i ];
 		scene.meshes_[ newSubNode ] = mesh;
-		scene.materialForNode_[ newSubNode ] = sourceScene->mMeshes[ mesh ]->mMaterialIndex;
+		int indexmat = scene.materialForNode_[ newSubNode ] = sourceScene->mMeshes[ mesh ]->mMaterialIndex;
 
 		makePrefix(ofs); printf("Node[%d].SubNode[%d].mesh     = %d\n", newNode, newSubNode, (int)mesh);
-		makePrefix(ofs); printf("Node[%d].SubNode[%d].material = %d\n", newNode, newSubNode, sourceScene->mMeshes[ mesh ]->mMaterialIndex);
+		makePrefix(ofs); printf("Node[%d].SubNode[%d].material = %d  materialName =%s\n",
+			newNode, newSubNode, sourceScene->mMeshes[ mesh ]->mMaterialIndex, sourceScene->mMaterials[indexmat]->GetName().C_Str());
 
 		scene.globalTransform_[ newSubNode ] = glm::mat4(1.0f);
 		scene.localTransform_[ newSubNode ] = glm::mat4(1.0f);
@@ -649,6 +650,8 @@ void traverse(const aiScene* sourceScene, Scene& scene, aiNode* N, int parent, i
 
 	scene.globalTransform_[ newNode ] = glm::mat4(1.0f);
 	scene.localTransform_[ newNode ] = toMat4(N->mTransformation);
+
+
 
 	if(N->mParent != nullptr)
 	{

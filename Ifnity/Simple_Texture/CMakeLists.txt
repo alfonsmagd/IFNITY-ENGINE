@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.10)
 project(Simple_Texture)
 
 # C++ 17 standar 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 
