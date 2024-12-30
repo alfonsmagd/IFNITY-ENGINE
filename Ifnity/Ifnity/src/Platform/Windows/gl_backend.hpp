@@ -8,6 +8,7 @@
 #include "Ifnity/Graphics/Features/CubeMapTextures.hpp"
 #include "gl_constans.hpp"
 #include <glad\glad.h>
+#include <span>
  
 IFNITY_NAMESPACE
 
@@ -145,6 +146,8 @@ namespace OpenGL
         Texture(TextureDescription& desc);
         Texture(GLenum type, int width, int height, GLenum internalFormat);
         Texture(int w, int h, const void* img);
+        Texture(Texture&& other);
+          
 
 		//Destructor
          ~Texture();
@@ -251,7 +254,7 @@ namespace OpenGL
         std::vector<DrawData> shapes_;
 
         void loadScene(const char* sceneFile);
-
+		uint64_t getTextureHandleBindless(uint64_t idx, const std::span<Texture>& textures);
     };
 };
 

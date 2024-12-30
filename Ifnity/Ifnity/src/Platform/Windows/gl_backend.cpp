@@ -1002,17 +1002,24 @@ namespace OpenGL
 
 	Texture::Texture(TextureDescription& desc)
 	{
-		// Load texture from image file
-		//Force now, TODO: Generalize this 
+		// Verificar si el contexto de OpenGL está activo
+		if(!glfwGetCurrentContext())
+		{
+			IFNITY_LOG(LogApp, ERROR, "El contexto de OpenGL no está activo.");
+			return;
+		}
+
+		// Forzar el formato a R8G8B8A8
 		desc.format = rhi::Format::R8G8B8A8;
+
+		// Cargar la textura desde el archivo
 		const void* img = LoadTextureFromFileDescription(desc);
 		if(!img)
 		{
 			IFNITY_LOG(LogApp, ERROR, "Failed to load texture from file.");
 			return;
 		}
-		// Verificar si el contexto de OpenGL está activo
-	
+
 		GLenum format = OpenGL::c_FormatMap[ (uint8_t)desc.format ].glFormat;
 		GLenum wrapping = ConvertToOpenGLTextureWrapping(desc.wrapping);
 		GLenum type = ConvertToOpenGLTextureTarget(desc.dimension);
@@ -1022,33 +1029,53 @@ namespace OpenGL
 
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
-	
+
+		if(m_TextureID == 0)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Failed to create texture.");
+			FreeTexture(img);
+			return;
+		}
+
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_LEVEL, 0);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, wrapping);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, wrapping);
 
-
-		//numMipMaps generation and Texture MipMaps  
-	    GLsizei numMipmaps = getNumMipMapLevels2D(width,height);
-
+		// Generar mipmaps y almacenar la textura
+		GLsizei numMipmaps = getNumMipMapLevels2D(width, height);
 		glTextureStorage2D(m_TextureID, numMipmaps, GL_RGBA8, width, height);
+		GLenum error = glGetError();
+		if(error != GL_NO_ERROR)
+		{
+			IFNITY_LOG(LogApp, ERROR, "OpenGL error after glTextureStorage2D: ", error);
+			FreeTexture(img);
+			return;
+		}
+
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, img);
-		
-			
+		error = glGetError();
+		if(error != GL_NO_ERROR)
+		{
+			IFNITY_LOG(LogApp, ERROR, "OpenGL error after glTextureSubImage2D: ", error);
+			FreeTexture(img);
+			return;
+		}
+
 		glGenerateTextureMipmap(m_TextureID);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_LEVEL, numMipmaps - 1);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_ANISOTROPY, 16);
-		
-		
-		
+
 		m_HandleBindless = glGetTextureHandleARB(m_TextureID);
 		glMakeTextureHandleResidentARB(m_HandleBindless);
-		// Free the image
+
+		// Liberar la imagen
 		FreeTexture(img);
-	
+
+		// Llenar la descripción de la textura
+		m_TextureDescription = desc;
 	}
 
 	Texture::Texture(GLenum type, int width, int height, GLenum internalFormat)
@@ -1078,6 +1105,13 @@ namespace OpenGL
 	
 	}
 
+	Texture::Texture(Texture&& other):m_TextureID(other.m_TextureID), m_HandleBindless(other.m_HandleBindless)
+	{
+		other.m_TextureID = 0;
+		other.m_HandleBindless = 0;
+	}
+	
+
 	SceneObject::SceneObject(const char* meshFile, const char* sceneFile, const char* materialFile)
 	{
 		//1.First load the mesh file
@@ -1089,7 +1123,9 @@ namespace OpenGL
 		loadMaterials(materialFile, materials_, textureFiles);
 
 
+
 		//3 .Load textures
+		allMaterialTextures_.reserve(textureFiles.size());
 		TextureDescription desc;
 		desc.setDimension(rhi::TextureDimension::TEXTURE2D);
 		desc.setFlag(TextureDescription::TextureFlags::IS_ARB_BINDLESS_TEXTURE,true);
@@ -1101,6 +1137,15 @@ namespace OpenGL
 			allMaterialTextures_.emplace_back(desc);
 		}
 
+		//4. Bind material textures
+		for(auto& mtl : materials_)
+		{
+			mtl.ambientOcclusionMap_  = getTextureHandleBindless(mtl.ambientOcclusionMap_, allMaterialTextures_);
+			mtl.emissiveMap_          = getTextureHandleBindless(mtl.emissiveMap_, allMaterialTextures_);
+			mtl.albedoMap_            = getTextureHandleBindless(mtl.albedoMap_, allMaterialTextures_);
+			mtl.metallicRoughnessMap_ = getTextureHandleBindless(mtl.metallicRoughnessMap_, allMaterialTextures_);
+			mtl.normalMap_            = getTextureHandleBindless(mtl.normalMap_, allMaterialTextures_);
+		}
 	
 
 	}
@@ -1131,6 +1176,11 @@ namespace OpenGL
 		IFNITY::markAsChanged(scene_, 0);
 		IFNITY::recalculateGlobalTransforms(scene_);
 	
+	}
+
+	uint64_t SceneObject::getTextureHandleBindless(uint64_t idx, const std::span<Texture>& textures)
+	{
+		 return idx == INVALID_TEXTURE ? 0 : textures[ idx ].getHandleBindless();
 	}
 
 };
