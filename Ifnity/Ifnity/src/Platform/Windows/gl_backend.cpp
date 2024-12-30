@@ -524,6 +524,8 @@ namespace OpenGL
 				data += cubemap.w_ * cubemap.h_ * cubemap.comp_ * Bitmap::getBytesPerComponent(cubemap.fmt_);
 			}
 			glBindTextures(1, 1, &cubemapTex);
+		  
+		
 		}
 
 		ITexture* texture = new Texture(desc, cubemapTex);

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(IFNITYPROYECT)
+project(IFNITYPROYECT CXX C)
 
 # Define la opción y propágala a los subdirectorios
 option(BUILD_SHARED_IFNITY "Build Ifnity as a shared library dll " OFF)

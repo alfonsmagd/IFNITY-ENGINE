@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(Ifnity)
+project(Ifnity CXX C)
 
 
 #Options and Functions 
@@ -9,6 +9,7 @@ endfunction()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C STANDARD 11)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_SKIP_INSTALL_RULES true)
@@ -132,8 +133,8 @@ file(GLOB_RECURSE SOURCE_FILES
 )
 
 # Vendor Source Files 
-set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.cpp)
-
+set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.c)
+set_source_files_properties(${GLAD_SOURCE} PROPERTIES LANGUAGE CXX)
 
 # Add precompiled header
 
