@@ -11,6 +11,14 @@ using vec2 = glm::vec2;
 
 namespace OpenGL
 {
+	int getNumMipMapLevels2D(int w, int h)
+	{
+		int levels = 1;
+		while((w | h) >> levels)
+			levels += 1;
+		return levels;
+	}
+
 	void CheckOpenGLError(const char* stmt, const char* fname, int line)
 	{
 		GLenum err = glGetError();
@@ -975,6 +983,28 @@ namespace OpenGL
 	}
 
 
+
+	Texture::Texture(const TextureDescription& desc)
+	{}
+
+	Texture::Texture(GLenum type, int width, int height, GLenum internalFormat)
+	{}
+
+	Texture::Texture(int w, int h, const void* img)
+	{
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
+		int numMipmaps = getNumMipMapLevels2D(w, h);
+		glTextureStorage2D(m_TextureID, numMipmaps, GL_RGBA8, w, h);
+		glTextureSubImage2D(m_TextureID, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, img);
+		glGenerateTextureMipmap(m_TextureID);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_LEVEL, numMipmaps - 1);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_ANISOTROPY, 16);
+		m_HandleBindless = glGetTextureHandleARB(m_TextureID);
+		glMakeTextureHandleResidentARB(m_HandleBindless);
+	
+	}
 
 };
 

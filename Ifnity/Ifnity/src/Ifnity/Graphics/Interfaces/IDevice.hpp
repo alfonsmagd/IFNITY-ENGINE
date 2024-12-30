@@ -8,6 +8,7 @@
 #include "ITexture.hpp"
 #include "IGraphicsPipeline.hpp"
 #include "IMeshObject.hpp"
+#include "ISceneObject.hpp"
 
 
 IFNITY_NAMESPACE

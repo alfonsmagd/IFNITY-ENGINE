@@ -8,13 +8,16 @@
 #include "Ifnity/Graphics/Features/CubeMapTextures.hpp"
 #include "gl_constans.hpp"
 #include <glad\glad.h>
-
+ 
 IFNITY_NAMESPACE
 
 
 
 namespace OpenGL
 {
+	//Forward declaration
+	struct MaterialDescription;
+
     //-------------------------------------------------//
     //  DEVICE OPENGL                                  //
     //-------------------------------------------------//
@@ -138,10 +141,19 @@ namespace OpenGL
 
         //Constructor 
         Texture(TextureDescription desc, uint32_t uid) : m_TextureDescription(desc), m_TextureID(uid){ }
+        Texture(const TextureDescription& desc);
+        Texture(GLenum type, int width, int height, GLenum internalFormat);
+        Texture(int w, int h, const void* img);
+
+        GLuint64 getHandleBindless() const { return m_HandleBindless; }
 
     private:
-        uint32_t m_TextureID;
+
+
+
+        uint32_t m_TextureID = 0;
         TextureDescription m_TextureDescription;
+        GLuint64 m_HandleBindless = 0;
     };
 
     //-------------------------------------------------  //
@@ -211,6 +223,31 @@ namespace OpenGL
 
 	//-------------------------------------------------  //
 
+    
+     //-------------------------------------------------  //
+     // SceneObject OPENGL                                //
+	//----------------------------------------------------//
+
+    class SceneObject final: public ISceneObject
+    {
+    public:
+        SceneObject(
+            const char* meshFile,
+            const char* sceneFile,
+            const char* materialFile);
+
+        //std::vector<GLTexture> allMaterialTextures_;
+
+        MeshFileHeader header_;
+        MeshData meshData_;
+
+        Scene scene_;
+        std::vector<MaterialDescription> materials_;
+        std::vector<DrawData> shapes_;
+
+        void loadScene(const char* sceneFile);
+
+    };
 };
 
 
