@@ -6,6 +6,7 @@
 #include "Ifnity/Models/GeometicModels.hpp"
 #include "Ifnity/Graphics/Interfaces/IMeshDataBuilder.hpp"
 #include "Ifnity/Scene/Scene.h"
+#include "Ifnity/Scene/Material.h"
 
 
 IFNITY_NAMESPACE
@@ -24,6 +25,7 @@ struct IFNITY_API MeshObjectDescription
 	std::string  filePath;
 	bool isLargeMesh = false;
 	bool isGeometryModel = false;
+	bool isScene = false;
 
 
 	//MeshData 

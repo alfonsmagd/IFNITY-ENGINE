@@ -33,6 +33,14 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
     case rhi::TextureDimension::TEXTURECUBE:
         img = stbi_loadf(desc.filepath.c_str(), &w, &h, &comp, 3);
         break;
+    case rhi::TextureDimension::TEXTURE2D:
+		if(desc.format == rhi::Format::R8G8B8A8)
+       img = stbi_load(desc.filepath.c_str(), &w, &h, &comp, STBI_rgb_alpha);
+        else
+        {
+			img = stbi_load(desc.filepath.c_str(), &w, &h, &comp, STBI_rgb);
+        }
+		break;
     default:
         img = stbi_load(desc.filepath.c_str(), &w, &h, &comp, 3);
         break;
@@ -51,7 +59,7 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
 	
 }
 
-void FreeTexture(const void* img)
+ void FreeTexture(const void* img)
 {
 	stbi_image_free(const_cast<void*>(img));
 

@@ -37,25 +37,20 @@ struct IFNITY_API TextureDescription
     std::string filepath;
 	
 
-    bool isShaderResource = true; // Note: isShaderResource is initialized to 'true' for backward compatibility
-    bool isRenderTarget = false;
-    bool isUAV = false;
-    bool isTypeless = false;
-    bool isShadingRateSurface = false;
+    enum TextureFlags: uint32_t
+    {
+        IS_SHADER_RESOURCE = 1 << 0,
+        IS_RENDER_TARGET = 1 << 1,
+        IS_UAV = 1 << 2,
+        IS_TYPELESS = 1 << 3,
+        IS_SHADING_RATE_SURFACE = 1 << 4,
+        IS_VIRTUAL = 1 << 5,
+        USE_CLEAR_VALUE = 1 << 6,
+        KEEP_INITIAL_STATE = 1 << 7,
+		IS_ARB_BINDLESS_TEXTURE = 1 << 8       //ARB_bindless_texture extension used in OpenGL 4.6 see glad.h for more information 
+    };
 
-
-    // Indicates that the texture is created with no backing memory,
-    // and memory is bound to the texture later using bindTextureMemory.
-    // On DX12, the texture resource is created at the time of memory binding.
-    bool isVirtual = false;
-
-    Color clearValue;
-    bool useClearValue = false;
-
-    // If keepInitialState is true, command lists that use the texture will automatically
-    // begin tracking the texture from the initial state and transition it to the initial state 
-    // on command list close.
-    bool keepInitialState = false;
+    uint32_t flags = IS_SHADER_RESOURCE; // Inicializado con IS_SHADER_RESOURCE para compatib
 
     constexpr TextureDescription& setWidth(uint32_t value) { width = value; return *this; }
     constexpr TextureDescription& setHeight(uint32_t value) { height = value; return *this; }
@@ -67,15 +62,23 @@ struct IFNITY_API TextureDescription
     constexpr TextureDescription& setFormat(rhi::Format value) { format = value; return *this; }
     constexpr TextureDescription& setDimension(rhi::TextureDimension value) { dimension = value; return *this; }
     TextureDescription&           setDebugName(const std::string& value) { debugName = value; return *this; }
-    constexpr TextureDescription& setIsRenderTarget(bool value) { isRenderTarget = value; return *this; }
-    constexpr TextureDescription& setIsUAV(bool value) { isUAV = value; return *this; }
-    constexpr TextureDescription& setIsTypeless(bool value) { isTypeless = value; return *this; }
-    constexpr TextureDescription& setIsVirtual(bool value) { isVirtual = value; return *this; }
-    constexpr TextureDescription& setClearValue(const Color& value) { clearValue = value; useClearValue = true; return *this; }
-    constexpr TextureDescription& setUseClearValue(bool value) { useClearValue = value; return *this; }
-    constexpr TextureDescription& setKeepInitialState(bool value) { keepInitialState = value; return *this; }
     TextureDescription& setFilePath(std::string filepath) { this->filepath = filepath;  return *this; }
 	constexpr TextureDescription& setWrapping(rhi::TextureWrapping value) { wrapping = value; return *this; }
+
+	//Set the flags
+    constexpr TextureDescription& setFlag(TextureFlags flag, bool enabled)
+    {
+     
+
+		flags = enabled ? flags | flag : flags & ~flag;
+        return *this;
+    }
+
+    // GetFlag active
+    constexpr bool hasFlag(TextureFlags flag) const
+    {
+        return (flags & flag) != 0;
+    }
   
 };
 

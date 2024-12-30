@@ -135,7 +135,7 @@ IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data,  MeshFi
 IFNITY_API void saveMeshData(const char* meshFile, const MeshData& data)
 {
 	// Generar el archivo con la extensión .meshdata
-	std::string meshFileStr = meshFile + std::string(".meshdata");
+	std::string meshFileStr = meshFile;
 
 	FILE* f = fopen(meshFileStr.c_str(), "wb");
 

@@ -176,8 +176,15 @@ private:
 
 class Source: public IFNITY::App
 {
+private:
+	BufferHandle m_UBO;
+	BufferHandle m_StorageBuffer;
+	GraphicsDeviceManager* m_ManagerDevice;
+	SceneObjectHandler m_SceneObject;
+
+
 public:
-	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
 		// Obtener el contexto de ImGui desde IFNITY  DLL
 		/*ImGuiContext* context = GetImGuiContext();
@@ -201,7 +208,7 @@ public:
 	{
 		auto& vfs = IFNITY::VFS::GetInstance();
 		auto vSceneconfig = IFNITY::readSceneConfig("data/sceneconverter.json");
-
+		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
 		MeshObjectDescription meshAssimp =
 		{
@@ -214,11 +221,18 @@ public:
 			.sceneConfig = vSceneconfig[ 0 ]
 		};
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder(8);
+		//MeshDataBuilderAssimp<rhi::VertexScene> builder(8);
 
-		builder.buildSceneData(meshAssimp);
+		//builder.buildSceneData(meshAssimp);
+
+		//Create a SceneObject with the data.
+		m_SceneObject = rdevice->CreateSceneObject(meshAssimp.sceneConfig.outputMesh.c_str(),
+												   meshAssimp.sceneConfig.outputScene.c_str(),
+												   meshAssimp.sceneConfig.outputMaterials.c_str());
 
 
+
+		auto d3 = 33;
 
 	}
 	
@@ -250,7 +264,7 @@ IFNITY::App* IFNITY::CreateApp()
 {
 
 
-	auto api = IFNITY::rhi::GraphicsAPI::VULKAN;
+	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
 
 	//return new Source_TestD3D12(api);

@@ -362,6 +362,11 @@ namespace OpenGL
 		switch(desc.dimension)
 		{
 		case rhi::TextureDimension::TEXTURE2D:
+			if(desc.hasFlag(TextureDescription::TextureFlags::IS_ARB_BINDLESS_TEXTURE))
+			{
+				//Create a bindless texture
+				return TextureHandle(new Texture(desc));
+			}
 			return CreateTexture2DImpl(desc);
 			break;
 
@@ -384,6 +389,9 @@ namespace OpenGL
 			return nullptr;
 		}
 		// Check if ist not a large mesh 
+
+		
+
 
 		if(!desc.isLargeMesh)
 		{
@@ -419,6 +427,13 @@ namespace OpenGL
 			IFNITY_LOG(LogApp, ERROR, "MeshDataBuilder its invalid");
 			return nullptr;
 		}
+	}
+
+	SceneObjectHandler Device::CreateSceneObject(const char* meshes, const char* scene, const char* materials)
+	{
+		//Create a SceneObject with the data. 
+		SceneObject* sceneObject = new SceneObject(meshes, scene, materials);
+		return SceneObjectHandler(sceneObject);
 	}
 
 
@@ -934,6 +949,7 @@ namespace OpenGL
 	}
 
 	
+	
 
 
 	void MeshObject::Draw()
@@ -984,11 +1000,67 @@ namespace OpenGL
 
 
 
-	Texture::Texture(const TextureDescription& desc)
-	{}
+	Texture::Texture(TextureDescription& desc)
+	{
+		// Load texture from image file
+		//Force now, TODO: Generalize this 
+		desc.format = rhi::Format::R8G8B8A8;
+		const void* img = LoadTextureFromFileDescription(desc);
+		if(!img)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Failed to load texture from file.");
+			return;
+		}
+		// Verificar si el contexto de OpenGL está activo
+	
+		GLenum format = OpenGL::c_FormatMap[ (uint8_t)desc.format ].glFormat;
+		GLenum wrapping = ConvertToOpenGLTextureWrapping(desc.wrapping);
+		GLenum type = ConvertToOpenGLTextureTarget(desc.dimension);
+
+		int width = desc.width;
+		int height = desc.height;
+
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
+	
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_LEVEL, 0);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, wrapping);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, wrapping);
+
+
+		//numMipMaps generation and Texture MipMaps  
+	    GLsizei numMipmaps = getNumMipMapLevels2D(width,height);
+
+		glTextureStorage2D(m_TextureID, numMipmaps, GL_RGBA8, width, height);
+		glTextureSubImage2D(m_TextureID, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, img);
+		
+			
+		glGenerateTextureMipmap(m_TextureID);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_LEVEL, numMipmaps - 1);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_ANISOTROPY, 16);
+		
+		
+		
+		m_HandleBindless = glGetTextureHandleARB(m_TextureID);
+		glMakeTextureHandleResidentARB(m_HandleBindless);
+		// Free the image
+		FreeTexture(img);
+	
+	}
 
 	Texture::Texture(GLenum type, int width, int height, GLenum internalFormat)
 	{}
+
+    //Destructor 
+	Texture::~Texture()
+	{
+		if(m_HandleBindless)
+			glMakeTextureHandleNonResidentARB(m_HandleBindless);
+		glDeleteTextures(1, &m_TextureID);
+	}
 
 	Texture::Texture(int w, int h, const void* img)
 	{
@@ -1003,6 +1075,61 @@ namespace OpenGL
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MAX_ANISOTROPY, 16);
 		m_HandleBindless = glGetTextureHandleARB(m_TextureID);
 		glMakeTextureHandleResidentARB(m_HandleBindless);
+	
+	}
+
+	SceneObject::SceneObject(const char* meshFile, const char* sceneFile, const char* materialFile)
+	{
+		//1.First load the mesh file
+		header_ = loadMeshData(meshFile, meshData_);
+		loadScene(sceneFile);
+		
+		//2.Load materials 
+		std::vector<std::string> textureFiles;
+		loadMaterials(materialFile, materials_, textureFiles);
+
+
+		//3 .Load textures
+		TextureDescription desc;
+		desc.setDimension(rhi::TextureDimension::TEXTURE2D);
+		desc.setFlag(TextureDescription::TextureFlags::IS_ARB_BINDLESS_TEXTURE,true);
+		desc.setFormat(rhi::Format::R8G8B8A8);
+
+		for(const auto& f : textureFiles)
+		{
+			desc.setFilePath(f.c_str());
+			allMaterialTextures_.emplace_back(desc);
+		}
+
+	
+
+	}
+
+	void SceneObject::loadScene(const char* sceneFile)
+	{
+		IFNITY::loadScene(sceneFile, scene_);
+		
+		// prepare draw data buffer
+		for(const auto& c : scene_.meshes_)
+		{
+			auto material = scene_.materialForNode_.find(c.first);
+			if(material != scene_.materialForNode_.end())
+			{
+				shapes_.push_back(
+					DrawData{
+						.meshIndex = c.second, // c.second is the mesh index
+						.materialIndex = material->second, // material->second is the material index
+						.LOD = 0,
+						.indexOffset = meshData_.meshes_ [ c.second ].indexOffset,
+						.vertexOffset = meshData_.meshes_[ c.second ].vertexOffset,
+						.transformIndex = c.first // c.first is the node index
+					});
+			}
+		}
+
+		// force recalculation of all global transformations
+		IFNITY::markAsChanged(scene_, 0);
+		IFNITY::recalculateGlobalTransforms(scene_);
 	
 	}
 

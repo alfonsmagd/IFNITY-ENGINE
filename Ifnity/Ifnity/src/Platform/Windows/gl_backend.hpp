@@ -3,7 +3,7 @@
 
 
 
-
+#pragma once
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
 #include "Ifnity/Graphics/Features/CubeMapTextures.hpp"
 #include "gl_constans.hpp"
@@ -16,7 +16,7 @@ IFNITY_NAMESPACE
 namespace OpenGL
 {
 	//Forward declaration
-	struct MaterialDescription;
+	
 
     //-------------------------------------------------//
     //  DEVICE OPENGL                                  //
@@ -60,6 +60,7 @@ namespace OpenGL
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)override;
+		SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override;
         void SetRenderState(const RenderState& state);
     private:
 		
@@ -141,17 +142,18 @@ namespace OpenGL
 
         //Constructor 
         Texture(TextureDescription desc, uint32_t uid) : m_TextureDescription(desc), m_TextureID(uid){ }
-        Texture(const TextureDescription& desc);
+        Texture(TextureDescription& desc);
         Texture(GLenum type, int width, int height, GLenum internalFormat);
         Texture(int w, int h, const void* img);
+
+		//Destructor
+         ~Texture();
 
         GLuint64 getHandleBindless() const { return m_HandleBindless; }
 
     private:
 
-
-
-        uint32_t m_TextureID = 0;
+        GLuint m_TextureID = 0 ;
         TextureDescription m_TextureDescription;
         GLuint64 m_HandleBindless = 0;
     };
@@ -191,6 +193,8 @@ namespace OpenGL
 
             // Constructor que toma un MeshObjectDescription
             MeshObject( const MeshObjectDescription&& desc, IDevice* device);
+
+			
                
 
 
@@ -228,7 +232,7 @@ namespace OpenGL
      // SceneObject OPENGL                                //
 	//----------------------------------------------------//
 
-    class SceneObject final: public ISceneObject
+    class IFNITY_API SceneObject final: public ISceneObject
     {
     public:
         SceneObject(
@@ -236,7 +240,8 @@ namespace OpenGL
             const char* sceneFile,
             const char* materialFile);
 
-        //std::vector<GLTexture> allMaterialTextures_;
+        //In this case device not create a specificic texture. 
+        std::vector<Texture> allMaterialTextures_;
 
         MeshFileHeader header_;
         MeshData meshData_;
