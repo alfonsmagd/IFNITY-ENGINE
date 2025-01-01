@@ -17,7 +17,7 @@ IFNITY_NAMESPACE
 namespace OpenGL
 {
 	//Forward declaration
-	
+	class SceneObject;
 
     //-------------------------------------------------//
     //  DEVICE OPENGL                                  //
@@ -62,6 +62,7 @@ namespace OpenGL
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)override;
 		SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override;
+		MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override;
         void SetRenderState(const RenderState& state);
     private:
 		
@@ -73,7 +74,7 @@ namespace OpenGL
 			Program CreateProgram(const char* vertexShader, const char* fragmentShader, const char* geometryShader);
 			BufferHandle CreateVertexAttAndIndexBuffer(const BufferDescription& desc);
             BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint32_t flags = 0);
-			BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags = 0);
+			BufferHandle CreateDefaultBoundBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags = 0);
             void GetMeshVAO(const std::string mesh);
             void SetupVertexAttributes(GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes);
 
@@ -189,21 +190,19 @@ namespace OpenGL
 	{
         public:
             //Constructor 
-			MeshObject() = default;
             MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize, IDevice* device);
 
             MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device);
 
             // Constructor que toma un MeshObjectDescription
             MeshObject( const MeshObjectDescription&& desc, IDevice* device);
-
-			
-               
-
+            MeshObject(const SceneObjectHandler& data, IDevice* device);
+           
 
             void Draw() override;
 			void Draw(const DrawDescription& desc) override;
 			void DrawIndexed() override;
+			void DrawIndirect() override;
 
 
 			MeshObjectDescription& GetMeshObjectDescription() { return m_MeshObjectDescription; }
@@ -218,6 +217,8 @@ namespace OpenGL
         BufferHandle m_BufferVertex;
 		BufferHandle m_BufferIndex;
         BufferHandle m_BufferIndirect;
+        BufferHandle m_BufferMaterials;
+        BufferHandle m_BufferModelMatrices;
 
 		MeshObjectDescription m_MeshObjectDescription;
 
@@ -243,6 +244,15 @@ namespace OpenGL
             const char* sceneFile,
             const char* materialFile);
 
+        //Implement Interface
+      
+        const MeshFileHeader& getHeader() const override { return header_; }
+        const MeshData& getMeshData() const override { return meshData_; }
+        const Scene& getScene() const override { return scene_; }
+        const std::vector<MaterialDescription>& getMaterials() const override { return materials_; }
+        const std::vector<DrawData>& getShapes() const override { return shapes_; }
+
+
         //In this case device not create a specificic texture. 
         std::vector<Texture> allMaterialTextures_;
 
@@ -254,8 +264,11 @@ namespace OpenGL
         std::vector<DrawData> shapes_;
 
         void loadScene(const char* sceneFile);
-		uint64_t getTextureHandleBindless(uint64_t idx, const std::span<Texture>& textures);
+        uint64_t getTextureHandleBindless(uint64_t idx, const std::span<Texture>& textures);
+
     };
+	
+  
 };
 
 

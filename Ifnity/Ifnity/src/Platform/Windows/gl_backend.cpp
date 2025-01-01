@@ -255,7 +255,7 @@ namespace OpenGL
 		}
 		else if(desc.type == BufferType::STORAGE_BUFFER)
 		{
-			return CreateDefaultBuffer(desc.byteSize, desc.data , desc.binding, GL_DYNAMIC_STORAGE_BIT);
+			return CreateDefaultBoundBuffer(desc.byteSize, desc.data , desc.binding, GL_DYNAMIC_STORAGE_BIT);
 
 		}
 		else
@@ -434,6 +434,11 @@ namespace OpenGL
 		//Create a SceneObject with the data. 
 		SceneObject* sceneObject = new SceneObject(meshes, scene, materials);
 		return SceneObjectHandler(sceneObject);
+	}
+
+	MeshObjectHandle Device::CreateMeshObjectFromScene(const SceneObjectHandler& scene)
+	{
+		return MeshObjectHandle(new MeshObject(scene, this));
 	}
 
 
@@ -750,7 +755,7 @@ namespace OpenGL
 		return BufferHandle(buffer);
 	}
 
-	BufferHandle Device::CreateDefaultBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags)
+	BufferHandle Device::CreateDefaultBoundBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags)
 	{
 		GLuint handle;
 		glCreateBuffers(1, &handle);
@@ -949,6 +954,98 @@ namespace OpenGL
 	}
 
 	
+
+
+	
+
+
+	
+
+    MeshObject::MeshObject(const SceneObjectHandler& data, IDevice* device)
+        : m_Device(device), 
+		m_header(&data->getHeader()), 
+		m_meshes(data->getMeshData().meshes_.data())
+    {
+		Device* dev = dynamic_cast<Device*>(m_Device);
+		if(!dev)
+		{
+			IFNITY_LOG(LogApp, ERROR, "Device its not a OpenGL Device");
+			return;
+		}
+
+		//Create VAO 
+		m_VAO = dev->CreateVAO();
+		
+		//Buffer index 
+		m_BufferIndex = dev->CreateDefaultBuffer(data->getHeader().indexDataSize, data->getMeshData().indexData_.data());
+		//Buffer Vertex
+		m_BufferVertex = dev->CreateDefaultBuffer(data->getHeader().vertexDataSize, data->getMeshData().vertexData_.data());
+		
+		//BufferMaterials. 
+		size_t materialSize = data->getMaterials().size() * sizeof(MaterialDescription);
+		m_BufferMaterials = dev->CreateDefaultBuffer(materialSize, data->getMaterials().data());
+
+		//BufferIndirect, add one more space for the number of draw commands + sizeof(GLsizei)
+		size_t indirectSize = sizeof(DrawElementsIndirectCommand) * data->getShapes().size() + sizeof(GLsizei);
+		m_BufferIndirect = dev->CreateDefaultBuffer(indirectSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		//BufferModelMatrix
+		size_t modelMatrixSize = sizeof(mat4) * data->getShapes().size();
+		m_BufferModelMatrices = dev->CreateDefaultBuffer(modelMatrixSize, nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		//Setup the vertex attributes position, uv, normal TODO: Change to Template Method.
+		std::vector<OpenGL::VertexAttribute> attributes =
+		{
+			{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), 0, 0}, // Position
+			{1, 2, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3), 0}, // UV
+			{2, 3, GL_FLOAT, GL_TRUE,  sizeof(vec3) + sizeof(vec3) + sizeof(vec2), sizeof(vec3) + sizeof(vec2), 0} // Normal
+		};
+
+		dev->SetupVertexAttributes(m_VAO, m_BufferVertex->GetBufferID(), m_BufferIndex->GetBufferID(), attributes);
+		
+
+		std::vector<uint8_t> drawCommands;
+
+		drawCommands.resize(sizeof(DrawElementsIndirectCommand) * data->getShapes().size() + sizeof(GLsizei));
+
+		// store the number of draw commands in the very beginning of the buffer
+		const GLsizei numCommands = (GLsizei)data->getShapes().size();
+		memcpy(drawCommands.data(), &numCommands, sizeof(numCommands));
+
+		//desplace the pointer to the next position to store the draw commands, get a valid pointer using launder 
+		//the compiler will not optimize the pointer away , using launder ensures that the pointer is type DrawElementsIndirectCommand
+		DrawElementsIndirectCommand* cmd = std::launder(
+			reinterpret_cast<DrawElementsIndirectCommand*>(drawCommands.data() + sizeof(GLsizei))
+		);
+
+		// prepare indirect commands buffer
+		for(size_t i = 0; i != data->getShapes().size(); i++)
+		{
+			const uint32_t meshIdx = data->getShapes()[ i ].meshIndex;
+			const uint32_t lod = data->getShapes()[ i ].LOD;
+			*cmd++ = {
+				.count_ = data->getMeshData().meshes_[ meshIdx ].getLODIndicesCount(lod),
+				.instanceCount_ = 1,
+				.firstIndex_ = data->getShapes()[ i ].indexOffset,
+				.baseVertex_ = data->getShapes()[ i ].vertexOffset,
+				.baseInstance_ = data->getShapes()[ i ].materialIndex
+			};
+		}
+		// upload the draw commands to the GPU
+		glNamedBufferSubData(m_BufferIndirect->GetBufferID(), 0, drawCommands.size(), drawCommands.data());
+
+		// upload the model matrices to the GPU
+		std::vector<mat4> matrices(data->getShapes().size());
+		size_t i = 0;
+		for(const auto& c : data->getShapes())
+			matrices[ i++ ] = data->getScene().globalTransform_[c.transformIndex];
+
+		glNamedBufferSubData(m_BufferModelMatrices->GetBufferID(), 0, matrices.size() * sizeof(mat4), matrices.data());
+
+    }
+
+
+	
 	
 
 
@@ -988,6 +1085,29 @@ namespace OpenGL
 				mesh.vertexOffset
 			);
 		}
+	}
+
+	void MeshObject::DrawIndirect()
+	{
+		//Get the size of the draw commands 
+
+		GLsizei numCommands = (m_BufferIndex->GetBufferDescription().byteSize - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand) ;
+
+
+		glBindVertexArray(m_VAO);
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_Materials, m_BufferMaterials->GetBufferID());
+		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_ModelMatrices, m_BufferModelMatrices->GetBufferID());
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_BufferIndirect->GetBufferID());
+		glBindBuffer(GL_PARAMETER_BUFFER, m_BufferIndirect->GetBufferID());
+
+		glMultiDrawElementsIndirectCount(GL_TRIANGLES,                 // mode 
+										GL_UNSIGNED_INT,               // type
+										(const void*)sizeof(GLsizei),  // indirect
+										0, 						  // drawcount reading from the beginning of the buffer
+										numCommands,       
+										0);
+	
+	
 	}
 
 	MeshObject::~MeshObject()

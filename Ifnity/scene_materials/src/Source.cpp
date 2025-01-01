@@ -7,6 +7,10 @@
 
 using namespace IFNITY;
 using namespace IFNITY::rhi;
+using glm::vec3;
+using glm::vec4;
+using glm::vec2;
+using glm::mat4;
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
@@ -176,29 +180,49 @@ private:
 
 class Source: public IFNITY::App
 {
+	#define GRID  0 
+	#define SCENE 1
+	#define kBufferIndex_PerFrame 0
+
+	struct PerFrameData
+	{
+		mat4 view;
+		mat4 proj;
+		vec4 cameraPos;
+	};
+
 private:
+	SceneObjectHandler m_SceneObject;
+	MeshObjectHandle m_MeshObject;
 	BufferHandle m_UBO;
 	BufferHandle m_StorageBuffer;
 	GraphicsDeviceManager* m_ManagerDevice;
-	SceneObjectHandler m_SceneObject;
+	GraphicsPipelineHandle m_GraphicsPipeline[ 2 ];
+	std::shared_ptr<IShader> m_vs[ 2 ];
+	std::shared_ptr<IShader> m_ps[ 2 ];
+
+
+	//Scene Mesh Objects
+	MeshFileHeader header;
+	MeshData m_meshData;
+	MeshObjectHandle m_MeshScene;
+
+	// Camera objects 
+	IFNITY::EventCameraListener m_CameraListener;
+	CameraPositioner_FirstPerson m_camera;
 
 
 public:
-	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	Source(IFNITY::rhi::GraphicsAPI api):
+		IFNITY::App(api),
+		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
+		m_camera(vec3(35.f, 0.5f, -10.f), vec3(-1.0f, -90, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_CameraListener(&m_camera)
 	{
-		// Obtener el contexto de ImGui desde IFNITY  DLL
-		/*ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
-		{
-			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
-			return;
-		}*/
-
-		// Establecer el contexto de ImGui en la aplicación principal
-		//ImGui::SetCurrentContext(context);
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
-		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
+		PushLayer(new IFNITY::CameraLayer(&m_CameraListener));
+		PushOverlay(new IFNITY::ImguiLayer());
 		
 		
 
@@ -206,19 +230,105 @@ public:
 
 	void Initialize() override
 	{
+
+
+		m_ManagerDevice = &App::GetApp().GetManagerDevice();
+
+
+		IFNITY::ShaderCompiler::Initialize();
+
 		auto& vfs = IFNITY::VFS::GetInstance();
+
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
+
+		m_vs[ GRID ] = std::make_shared<IShader>();
+		m_ps[ GRID ] = std::make_shared<IShader>();
+		m_vs[ SCENE ] = std::make_shared<IShader>();
+		m_ps[ SCENE ] = std::make_shared<IShader>();
+
+
 		auto vSceneconfig = IFNITY::readSceneConfig("data/sceneconverter.json");
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
+
+		//Create Shaders Description 
+		ShaderCreateDescription DescriptionShader;
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "GL01_grid.vert";
+			m_vs[ GRID ]->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "GL01_grid.frag";
+			m_ps[ GRID ]->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "scene_wireframe.vs";
+			m_vs[ SCENE ]->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "scene_wireframe.fs";
+			m_ps[ SCENE ]->SetShaderDescription(DescriptionShader);
+
+		}
+
+
+		//Compiler Shaders 
+		ShaderCompiler::CompileShader(m_vs[ GRID ].get());
+		ShaderCompiler::CompileShader(m_ps[ GRID ].get());
+		ShaderCompiler::CompileShader(m_vs[ SCENE ].get());
+		ShaderCompiler::CompileShader(m_ps[ SCENE ].get());
+
+
+		GraphicsPipelineDescription gdesc;
+		BlendState blendstate;
+		blendstate.setBlendEnable(true).
+				   setSrcBlend(BlendFactor::SRC_ALPHA).
+			       setDestBlend(BlendFactor::ONE_MINUS_SRC_ALPHA);
+
+		gdesc.SetVertexShader(m_vs[ GRID ].get()).
+			  SetPixelShader(m_ps[ GRID ].get()).
+			  SetRenderState(RenderState{ .depthTest = true, .depthWrite = true , .blendState = blendstate });
+
+
+		m_GraphicsPipeline[ GRID ] = rdevice->CreateGraphicsPipeline(gdesc);
+
+
+
+		BufferDescription DescriptionBuffer;
+		DescriptionBuffer.SetBufferType(BufferType::CONSTANT_BUFFER)
+			.SetByteSize(sizeof(PerFrameData))
+			.SetDebugName("UBO MVP PERFRAME DATA ")
+			.SetStrideSize(0)
+			.SetOffset(0)
+			.SetBindingPoint(kBufferIndex_PerFrame);
+
+		m_UBO = rdevice->CreateBuffer(DescriptionBuffer);
+
+
+
+
+
+
+
+
+
+
+
+
+
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[0].fileName,
+			.filePath = vSceneconfig[3].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 0 ]
+			.sceneConfig = vSceneconfig[ 3 ]
 		};
 
 		//MeshDataBuilderAssimp<rhi::VertexScene> builder(8);
@@ -230,15 +340,43 @@ public:
 												   meshAssimp.sceneConfig.outputScene.c_str(),
 												   meshAssimp.sceneConfig.outputMaterials.c_str());
 
+		//Create the m_SceneObject with the device
+		m_MeshObject = rdevice->CreateMeshObjectFromScene(m_SceneObject);
 
 
-		auto d3 = 33;
+
 
 	}
 	
 	void Render() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Render App");
+			m_GraphicsPipeline[ GRID ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
+
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+		IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
+
+		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+		const mat4 view = m_camera.getViewMatrix();
+
+		const PerFrameData perFrameData = { .view = view, .proj = p, .cameraPos = glm::vec4(m_camera.getPosition(), 1.0f) };
+
+		m_ManagerDevice->GetRenderDevice()->WriteBuffer(m_UBO, &perFrameData, sizeof(PerFrameData));
+
+		//Draw Description 
+		DrawDescription desc;
+		ViewPortState descViewPort;
+		descViewPort.width = m_ManagerDevice->GetWidth();
+		descViewPort.height = m_ManagerDevice->GetHeight();
+		descViewPort.minDepth = 0.0f;
+		descViewPort.maxDepth = 1.0f;
+
+		desc.SetViewPortState(descViewPort);
+		//desc.rasterizationState.fillMode = FillModeType::Wireframe;
+		desc.size = 6;  //Two triangles 
+		desc.indices = nullptr;
+		desc.isIndexed = false;
+
+		m_ManagerDevice->GetRenderDevice()->Draw(desc);
 	}
 	void Animate() override
 	{

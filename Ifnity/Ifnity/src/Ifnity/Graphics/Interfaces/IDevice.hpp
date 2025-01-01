@@ -80,6 +80,7 @@ public:
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) = 0;
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) = 0;
 	virtual SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) = 0;
+	virtual MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) = 0;
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
 };

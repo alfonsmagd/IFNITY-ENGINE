@@ -62,7 +62,7 @@ public:
 	virtual void DrawIndexed() = 0;
 
 	virtual MeshObjectDescription& GetMeshObjectDescription() = 0;
-
+	virtual void DrawIndirect() = 0;
 };
 
 
