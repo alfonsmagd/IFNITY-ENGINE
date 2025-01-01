@@ -205,7 +205,7 @@ private:
 	//Scene Mesh Objects
 	MeshFileHeader header;
 	MeshData m_meshData;
-	MeshObjectHandle m_MeshScene;
+	
 
 	// Camera objects 
 	IFNITY::EventCameraListener m_CameraListener;
@@ -265,12 +265,12 @@ public:
 		}
 		{
 			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "scene_wireframe.vs";
+			DescriptionShader.FileName = "Scene.vert";
 			m_vs[ SCENE ]->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "scene_wireframe.fs";
+			DescriptionShader.FileName = "Scene.fs";
 			m_ps[ SCENE ]->SetShaderDescription(DescriptionShader);
 
 		}
@@ -282,7 +282,7 @@ public:
 		ShaderCompiler::CompileShader(m_vs[ SCENE ].get());
 		ShaderCompiler::CompileShader(m_ps[ SCENE ].get());
 
-
+		//GRID PIPELINE DESC 
 		GraphicsPipelineDescription gdesc;
 		BlendState blendstate;
 		blendstate.setBlendEnable(true).
@@ -295,6 +295,18 @@ public:
 
 
 		m_GraphicsPipeline[ GRID ] = rdevice->CreateGraphicsPipeline(gdesc);
+
+		//SCENE PIPELINE DESC
+		//Create RenderState to render Scene
+		BlendState blendstateScene;
+		blendstate.disableBlend();
+
+		GraphicsPipelineDescription gdescScene;
+		gdescScene.SetVertexShader(m_vs[ SCENE ].get())
+			.SetPixelShader(m_ps[ SCENE ].get())
+			.SetRenderState(RenderState{ .depthTest = true , .blendState = blendstateScene });
+
+		m_GraphicsPipeline[ SCENE ] = rdevice->CreateGraphicsPipeline(gdescScene);
 
 
 
@@ -310,25 +322,15 @@ public:
 
 
 
-
-
-
-
-
-
-
-
-
-
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[3].fileName,
+			.filePath = vSceneconfig[0].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 3 ]
+			.sceneConfig = vSceneconfig[ 0 ]
 		};
 
 		//MeshDataBuilderAssimp<rhi::VertexScene> builder(8);
@@ -377,6 +379,11 @@ public:
 		desc.isIndexed = false;
 
 		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+
+
+		//Change the Pipeline to render the Scene
+		m_GraphicsPipeline[ SCENE ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
+		m_MeshObject->DrawIndirect();
 	}
 	void Animate() override
 	{

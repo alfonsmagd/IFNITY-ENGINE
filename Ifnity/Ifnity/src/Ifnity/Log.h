@@ -22,6 +22,8 @@
             logger->info(fmt, ##__VA_ARGS__); \
         } \
     } while (0)
+
+#define STRMESSAGE(msg, var) (std::string(msg) + std::string(var))
 namespace IFNITY
 {
 

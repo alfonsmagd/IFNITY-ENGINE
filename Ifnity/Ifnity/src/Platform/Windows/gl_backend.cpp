@@ -24,7 +24,7 @@ namespace OpenGL
 		GLenum err = glGetError();
 		if(err != GL_NO_ERROR)
 		{
-			IFNITY_LOG(LogApp, ERROR, "OpenGL error ", err, " at ", fname, ":", line, " - for ", stmt);
+			printf("OpenGL error %d at %s:%d - for %s\n", err, fname, line, stmt);
 			exit(1);
 		}
 	}
@@ -40,9 +40,9 @@ namespace OpenGL
 
 		if(!file)
 		{
-			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file {}\n", fileName);
-			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file {}\n", std::string(fileName));
-			return std::string();
+			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file \n" + std::string(fileName));
+			
+		
 		}
 
 		fseek(file, 0L, SEEK_END);
@@ -272,8 +272,9 @@ namespace OpenGL
 		{
 
 			//iMPLMENTA AQUI QUE LE MANDO UN
-			GL_CHECK(glBindBuffer(GL_UNIFORM_BUFFER, buffer->GetBufferID()));
-			GL_CHECK(glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data));
+			/*GL_CHECK(glBindBuffer(GL_UNIFORM_BUFFER, buffer->GetBufferID()));
+			GL_CHECK(glBufferSubData(GL_UNIFORM_BUFFER, 0, size, data));*/
+			GL_CHECK(glNamedBufferSubData(buffer->GetBufferID(), offset, size, data));
 
 		}
 		else
@@ -587,6 +588,7 @@ namespace OpenGL
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n", infoLog);
 		};
 		#if _DEBUG
+		IFNITY_LOG(LogCore, TRACE, "Vertex Shader Source: " + std::string( vertexShader));
 		printShaderSource(vertexShader);
 		#endif
 
@@ -602,7 +604,8 @@ namespace OpenGL
 		};
 
 		#if _DEBUG
-		printShaderSource(fragmentShader);
+			IFNITY_LOG(LogCore, TRACE, STRMESSAGE("Fragment Shader Source: ", fragmentShader));
+			printShaderSource(fragmentShader);
 		#endif
 		const GLuint program = glCreateProgram();
 		glAttachShader(program, shaderVertex);
@@ -1032,7 +1035,7 @@ namespace OpenGL
 			};
 		}
 		// upload the draw commands to the GPU
-		glNamedBufferSubData(m_BufferIndirect->GetBufferID(), 0, drawCommands.size(), drawCommands.data());
+		GL_CHECK(glNamedBufferSubData(m_BufferIndirect->GetBufferID(), 0, drawCommands.size(), drawCommands.data()));
 
 		// upload the model matrices to the GPU
 		std::vector<mat4> matrices(data->getShapes().size());
@@ -1040,7 +1043,7 @@ namespace OpenGL
 		for(const auto& c : data->getShapes())
 			matrices[ i++ ] = data->getScene().globalTransform_[c.transformIndex];
 
-		glNamedBufferSubData(m_BufferModelMatrices->GetBufferID(), 0, matrices.size() * sizeof(mat4), matrices.data());
+		GL_CHECK(glNamedBufferSubData(m_BufferModelMatrices->GetBufferID(), 0, matrices.size() * sizeof(mat4), matrices.data()));
 
     }
 
@@ -1091,21 +1094,22 @@ namespace OpenGL
 	{
 		//Get the size of the draw commands 
 
-		GLsizei numCommands = (m_BufferIndex->GetBufferDescription().byteSize - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand) ;
+		
+		GLsizei maxDrawCount = (GLsizei)((m_BufferIndirect->GetBufferDescription().byteSize - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand));
 
 
-		glBindVertexArray(m_VAO);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_Materials, m_BufferMaterials->GetBufferID());
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_ModelMatrices, m_BufferModelMatrices->GetBufferID());
-		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_BufferIndirect->GetBufferID());
-		glBindBuffer(GL_PARAMETER_BUFFER, m_BufferIndirect->GetBufferID());
+		GL_CHECK(glBindVertexArray(m_VAO));
+		GL_CHECK(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_Materials, m_BufferMaterials->GetBufferID()));
+		GL_CHECK(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_ModelMatrices, m_BufferModelMatrices->GetBufferID()));
+		GL_CHECK(glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_BufferIndirect->GetBufferID()));
+		GL_CHECK(glBindBuffer(GL_PARAMETER_BUFFER, m_BufferIndirect->GetBufferID()));
 
-		glMultiDrawElementsIndirectCount(GL_TRIANGLES,                 // mode 
+		GL_CHECK(glMultiDrawElementsIndirectCount(GL_TRIANGLES,                 // mode 
 										GL_UNSIGNED_INT,               // type
 										(const void*)sizeof(GLsizei),  // indirect
 										0, 						  // drawcount reading from the beginning of the buffer
-										numCommands,       
-										0);
+										maxDrawCount,
+										0));
 	
 	
 	}
