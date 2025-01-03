@@ -136,23 +136,30 @@ namespace OpenGL
    //  TEXTURE OPENGL                                  //
    //-------------------------------------------------//
 
-    class Texture final: public ITexture
+    class IFNITY_API Texture final: public ITexture
     {
     public:
         virtual TextureDescription GetTextureDescription() override { return m_TextureDescription; }
         virtual uint32_t           GetTextureID() override { return m_TextureID; }
 
         //Constructor 
+		Texture() = default;
         Texture(TextureDescription desc, uint32_t uid) : m_TextureDescription(desc), m_TextureID(uid){ }
         Texture(TextureDescription& desc);
         Texture(GLenum type, int width, int height, GLenum internalFormat);
         Texture(int w, int h, const void* img);
-        Texture(Texture&& other);
-          
 
+        #ifndef BUILD_SHARED_IFNITY
+            Texture(Texture&& other) noexcept;
+            Texture(const Texture& other) = delete;
+        #endif // !BUILD_SHARED_IFNITY
+
+      
+
+       
 		//Destructor
          ~Texture();
-
+         
         GLuint64 getHandleBindless() const { return m_HandleBindless; }
 
     private:
@@ -221,11 +228,16 @@ namespace OpenGL
         BufferHandle m_BufferModelMatrices;
 
 		MeshObjectDescription m_MeshObjectDescription;
+        std::vector<GLuint> m_baseMaterialInstances;
+		std::vector<GLuint> m_MeshIdx;
+		std::vector<GLuint> m_MeshCount;
+		std::vector<GLuint> m_MeshBaseVertex;
 
 
 		IDevice* m_Device; // avoid circular reference
         const MeshFileHeader* m_header;
 		const Mesh* m_meshes;
+		const SceneObjectHandler m_scene;
 	
 	};
 

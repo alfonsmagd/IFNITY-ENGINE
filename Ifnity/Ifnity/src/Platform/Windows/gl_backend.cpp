@@ -967,7 +967,8 @@ namespace OpenGL
     MeshObject::MeshObject(const SceneObjectHandler& data, IDevice* device)
         : m_Device(device), 
 		m_header(&data->getHeader()), 
-		m_meshes(data->getMeshData().meshes_.data())
+		m_meshes(data->getMeshData().meshes_.data()),
+		m_scene(data)
     {
 		Device* dev = dynamic_cast<Device*>(m_Device);
 		if(!dev)
@@ -1020,8 +1021,9 @@ namespace OpenGL
 		DrawElementsIndirectCommand* cmd = std::launder(
 			reinterpret_cast<DrawElementsIndirectCommand*>(drawCommands.data() + sizeof(GLsizei))
 		);
-
-		// prepare indirect commands buffer
+		m_baseMaterialInstances.resize(data->getShapes().size());
+		m_MeshIdx.resize(data->getShapes().size());
+		////// prepare indirect commands buffer
 		for(size_t i = 0; i != data->getShapes().size(); i++)
 		{
 			const uint32_t meshIdx = data->getShapes()[ i ].meshIndex;
@@ -1033,8 +1035,11 @@ namespace OpenGL
 				.baseVertex_ = data->getShapes()[ i ].vertexOffset,
 				.baseInstance_ = data->getShapes()[ i ].materialIndex
 			};
+			m_baseMaterialInstances[i] = data->getShapes()[i].materialIndex;
+			m_MeshIdx[ i ] = meshIdx;
+
 		}
-		// upload the draw commands to the GPU
+		//// upload the draw commands to the GPU
 		GL_CHECK(glNamedBufferSubData(m_BufferIndirect->GetBufferID(), 0, drawCommands.size(), drawCommands.data()));
 
 		// upload the model matrices to the GPU
@@ -1092,25 +1097,41 @@ namespace OpenGL
 
 	void MeshObject::DrawIndirect()
 	{
+		
 		//Get the size of the draw commands 
 
-		
+		//
 		GLsizei maxDrawCount = (GLsizei)((m_BufferIndirect->GetBufferDescription().byteSize - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand));
 
 
 		GL_CHECK(glBindVertexArray(m_VAO));
 		GL_CHECK(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_Materials, m_BufferMaterials->GetBufferID()));
 		GL_CHECK(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_ModelMatrices, m_BufferModelMatrices->GetBufferID()));
-		GL_CHECK(glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_BufferIndirect->GetBufferID()));
-		GL_CHECK(glBindBuffer(GL_PARAMETER_BUFFER, m_BufferIndirect->GetBufferID()));
+		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
 
-		GL_CHECK(glMultiDrawElementsIndirectCount(GL_TRIANGLES,                 // mode 
-										GL_UNSIGNED_INT,               // type
-										(const void*)sizeof(GLsizei),  // indirect
-										0, 						  // drawcount reading from the beginning of the buffer
-										maxDrawCount,
-										0));
-	
+		//GL_CHECK(glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_BufferIndirect->GetBufferID()));
+		//GL_CHECK(glBindBuffer(GL_PARAMETER_BUFFER, m_BufferIndirect->GetBufferID()));
+
+		//GL_CHECK(glMultiDrawElementsIndirectCount(GL_TRIANGLES,                 // mode 
+		//								GL_UNSIGNED_INT,               // type
+		//								(const void*)sizeof(GLsizei),  // indirect
+		//								0, 						  // drawcount reading from the beginning of the buffer
+		//								maxDrawCount,
+		// 			0));
+		for(uint32_t i = 0; i < m_header->meshCount; ++i)
+		{
+			const Mesh& mesh = m_meshes[ m_MeshIdx[i] ];
+			glDrawElementsInstancedBaseVertexBaseInstance(
+				GL_TRIANGLES,                                      // Modo de dibujo
+				mesh.getLODIndicesCount(0),                        // Cantidad de índices
+				GL_UNSIGNED_INT,                                   // Tipo de índice
+				(void*)(mesh.indexOffset * sizeof(uint32_t)),      // Puntero a los índices
+				1,                                                 // Una instancia (puedes poner 1 si solo dibujas una instancia)
+				mesh.vertexOffset,                                 // Desplazamiento de vértices
+				m_baseMaterialInstances[i]                                                // baseInstance (puedes poner 0 si solo tienes una instancia)
+			);
+		}
+
 	
 	}
 
@@ -1229,11 +1250,23 @@ namespace OpenGL
 	
 	}
 
-	Texture::Texture(Texture&& other):m_TextureID(other.m_TextureID), m_HandleBindless(other.m_HandleBindless)
+	#ifndef BUILD_SHARED_IFNITY
+	Texture::Texture(Texture&& other) noexcept:
+		m_TextureID(other.m_TextureID),
+		m_HandleBindless(other.m_HandleBindless),
+		m_TextureDescription(std::move(other.m_TextureDescription))
 	{
 		other.m_TextureID = 0;
 		other.m_HandleBindless = 0;
 	}
+
+
+	#endif // !BUILD_SHARED_IFNITY
+
+
+
+	
+	
 	
 
 	SceneObject::SceneObject(const char* meshFile, const char* sceneFile, const char* materialFile)
@@ -1250,6 +1283,10 @@ namespace OpenGL
 
 		//3 .Load textures
 		allMaterialTextures_.reserve(textureFiles.size());
+
+		#ifdef BUILD_SHARED_IFNITY
+			assert(allMaterialTextures_.capacity() >= textureFiles.size());
+		#endif // BUILD_SHARED_IFNITY
 		TextureDescription desc;
 		desc.setDimension(rhi::TextureDimension::TEXTURE2D);
 		desc.setFlag(TextureDescription::TextureFlags::IS_ARB_BINDLESS_TEXTURE,true);

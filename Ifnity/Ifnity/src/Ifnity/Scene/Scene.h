@@ -235,7 +235,7 @@ void deleteSceneNodes(Scene& scene, const std::vector<uint32_t>& nodesToDelete);
  * @param fileName The name of the file from which to read the scene configuration.
  * @return A vector of SceneConfig objects read from the file.
  */
-std::vector<SceneConfig> readSceneConfig(const char* fileName);
+IFNITY_API std::vector<SceneConfig>  readSceneConfig(const char* fileName);
 
 void traverse(const aiScene* sourceScene, Scene& scene, aiNode* N, int parent, int ofs);
 

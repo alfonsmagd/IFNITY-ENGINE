@@ -581,7 +581,7 @@ void deleteSceneNodes(Scene& scene, const std::vector<uint32_t>& nodesToDelete)
 	// 6) Material names list is not modified also, but if some materials fell out of use
 }
 
-std::vector<SceneConfig> readSceneConfig(const char* fileName)
+IFNITY_API std::vector<SceneConfig> readSceneConfig(const char* fileName)
 {
 	//Read configuration file in ifstream to convert to rapidjson::IStreamWrapper
 	std::ifstream ifs(fileName);
