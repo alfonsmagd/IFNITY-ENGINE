@@ -20,13 +20,13 @@ public:
 
 	void OnUpdate() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Update App");
+		//FNITY_LOG(LogApp, INFO, "Update App");
 	}
 
 
 	void onEventReceived(const IFNITY::WindowResize& event) override
 	{
-		IFNITY_LOG(LogApp, WARNING, event.ToString() + "Example Layer");
+		//IFNITY_LOG(LogApp, WARNING, event.ToString() + "Example Layer");
 	}
 	void ConnectToEventBusImpl(void* bus) override
 	{
@@ -211,6 +211,11 @@ private:
 	IFNITY::EventCameraListener m_CameraListener;
 	CameraPositioner_FirstPerson m_camera;
 
+	//FPS Counter
+	IFNITY::FpsCounter m_FpsCounter;
+	float deltaSeconds = 0.0f;
+	double timeStamp = 0.0;
+
 
 public:
 	Source(IFNITY::rhi::GraphicsAPI api):
@@ -352,10 +357,16 @@ public:
 	
 	void Render() override
 	{
-			m_GraphicsPipeline[ GRID ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
+		//Update FPS 
+		const double newTimeStamp = App::GetTime();
+		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
+		timeStamp = newTimeStamp;
+		m_FpsCounter.tick(deltaSeconds);
+
+		m_GraphicsPipeline[ GRID ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
 
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
-		IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
+		//IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
 
 		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
 		const mat4 view = m_camera.getViewMatrix();
@@ -387,7 +398,7 @@ public:
 	}
 	void Animate() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Animate App");
+		//IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
 	~Source() override {}
 };

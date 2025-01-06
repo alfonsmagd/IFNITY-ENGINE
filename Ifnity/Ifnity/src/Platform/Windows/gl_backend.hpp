@@ -210,6 +210,7 @@ namespace OpenGL
 			void Draw(const DrawDescription& desc) override;
 			void DrawIndexed() override;
 			void DrawIndirect() override;
+			void DrawInstancedDirect() override;
 
 
 			MeshObjectDescription& GetMeshObjectDescription() { return m_MeshObjectDescription; }

@@ -1107,20 +1107,37 @@ namespace OpenGL
 		GL_CHECK(glBindVertexArray(m_VAO));
 		GL_CHECK(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_Materials, m_BufferMaterials->GetBufferID()));
 		GL_CHECK(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_ModelMatrices, m_BufferModelMatrices->GetBufferID()));
-		//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
 
-		//GL_CHECK(glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_BufferIndirect->GetBufferID()));
-		//GL_CHECK(glBindBuffer(GL_PARAMETER_BUFFER, m_BufferIndirect->GetBufferID()));
+		GL_CHECK(glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_BufferIndirect->GetBufferID()));
+		GL_CHECK(glBindBuffer(GL_PARAMETER_BUFFER, m_BufferIndirect->GetBufferID()));
 
-		//GL_CHECK(glMultiDrawElementsIndirectCount(GL_TRIANGLES,                 // mode 
-		//								GL_UNSIGNED_INT,               // type
-		//								(const void*)sizeof(GLsizei),  // indirect
-		//								0, 						  // drawcount reading from the beginning of the buffer
-		//								maxDrawCount,
-		// 			0));
+		GL_CHECK(glMultiDrawElementsIndirectCount(GL_TRIANGLES,                 // mode 
+										GL_UNSIGNED_INT,               // type
+										(const void*)sizeof(GLsizei),  // indirect
+										0, 						  // drawcount reading from the beginning of the buffer
+										maxDrawCount,
+		 			0));
+		
+
+	
+	}
+
+	void MeshObject::DrawInstancedDirect()
+	{
+		//Get the size of the draw commands 
+
+		//
+		GLsizei maxDrawCount = (GLsizei)((m_BufferIndirect->GetBufferDescription().byteSize - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand));
+
+
+		GL_CHECK(glBindVertexArray(m_VAO));
+		GL_CHECK(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_Materials, m_BufferMaterials->GetBufferID()));
+		GL_CHECK(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, kBufferIndex_ModelMatrices, m_BufferModelMatrices->GetBufferID()));
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
 		for(uint32_t i = 0; i < m_header->meshCount; ++i)
 		{
-			const Mesh& mesh = m_meshes[ m_MeshIdx[i] ];
+			const Mesh& mesh = m_meshes[ m_MeshIdx[ i ] ];
 			glDrawElementsInstancedBaseVertexBaseInstance(
 				GL_TRIANGLES,                                      // Modo de dibujo
 				mesh.getLODIndicesCount(0),                        // Cantidad de índices
@@ -1128,10 +1145,13 @@ namespace OpenGL
 				(void*)(mesh.indexOffset * sizeof(uint32_t)),      // Puntero a los índices
 				1,                                                 // Una instancia (puedes poner 1 si solo dibujas una instancia)
 				mesh.vertexOffset,                                 // Desplazamiento de vértices
-				m_baseMaterialInstances[i]                                                // baseInstance (puedes poner 0 si solo tienes una instancia)
+				m_baseMaterialInstances[ i ]                                                // baseInstance (puedes poner 0 si solo tienes una instancia)
 			);
 		}
-
+	
+	
+	
+	
 	
 	}
 

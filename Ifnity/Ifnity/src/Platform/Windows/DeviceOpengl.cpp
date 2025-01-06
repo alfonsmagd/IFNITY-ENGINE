@@ -74,7 +74,7 @@ bool DeviceOpengl::InitializeDeviceAndContext()
 	//Initialize GLAD
 	InitializeGLAD();
 
-	SetVSync(true);
+	SetVSync(false);
 	//Print OpenGL information
 	IFNITY_LOG(LogApp, WARNING, GetOpenGLInfo().c_str());
 
