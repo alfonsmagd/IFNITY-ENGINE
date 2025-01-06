@@ -1,67 +1,17 @@
 #pragma once 
 
-#include "UtilsVulkan.h"
+
 #include "Ifnity/GraphicsDeviceManager.hpp"
 #include  "Platform/ImguiRender/ImguiVulkanRender.h"
-
+#include "vk_mem_alloc.h"
+#include <VkBootstrap.h>
 IFNITY_NAMESPACE
 
 // Data
 
 
 
- IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
-	VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
-	VkDebugUtilsMessageTypeFlagsEXT             messageType,
-	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	void* pUserData)
-{
-	// Select prefix depending on flags passed to the callback
-	std::string prefix("");
 
-	if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-	{
-		prefix = "VERBOSE: ";
-	}
-	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-	{
-		prefix = "INFO: ";
-	}
-	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-	{
-		prefix = "WARNING: ";
-	}
-	else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-	{
-		prefix = "ERROR: ";
-	}
-
-	std::cerr << prefix << " validation layer: " << pCallbackData->pMessage << std::endl;
-
-	return VK_FALSE;
-}
-
- IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
-{
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-	if (func != nullptr)
-	{
-		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-	}
-	else
-	{
-		return VK_ERROR_EXTENSION_NOT_PRESENT;
-	}
-}
-
-IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
- {
-	 auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-	 if (func != nullptr)
-	 {
-		 func(instance, debugMessenger, pAllocator);
-	 }
- }
 
 class DeviceVulkan final : public GraphicsDeviceManager
 {
@@ -82,7 +32,7 @@ private:
 
 
 	// Depth buffer
-	ImageBlock m_DepthBuffer;
+	//ImageBlock m_DepthBuffer;
 	
 	// Render pass
 	VkRenderPass m_RenderPass = VK_NULL_HANDLE;

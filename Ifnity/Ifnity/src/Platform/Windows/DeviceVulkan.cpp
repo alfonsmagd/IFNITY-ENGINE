@@ -1,6 +1,7 @@
 
 
 #include "DeviceVulkan.h"
+#include "UtilsVulkan.h"
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
@@ -431,22 +432,8 @@ bool DeviceVulkan::CreateDevice()
 	m_Device = deviceRet.value();
 
 #ifdef _DEBUG
-	VkDebugUtilsMessengerCreateInfoEXT create_info;
-	create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-	create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-	create_info.pfnUserCallback = debugUtilsMessengerCallback;
-	create_info.pNext = NULL;
-	create_info.flags = 0;
-
-
-	if (CreateDebugUtilsMessengerEXT(m_Instance, &create_info, nullptr, &debugUtilsMessenger) != VK_SUCCESS)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to create debug utils messenger in Vulkan Device");
-		return false;
-
-	}
-
+	// Create debug utils messenger
+	//setupDebugCallbacksVK(m_Instance.instance, &debugUtilsMessenger);
 	setupCallbacks(m_Device.device);
 
 #endif
