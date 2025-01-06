@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.8)
 
 # Nombre del proyecto
 project(Sandbox)
 
 # C++ 17 standar 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 
@@ -27,7 +27,7 @@ add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 add_dependencies(${PROJECT_NAME} Ifnity)
 
 if(BUILD_SHARED_IFNITY)
-    target_compile_definitions(Sandbox PRIVATE IFNITY_USE_SHARED)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_USE_SHARED)
     message("IFNITY_USE_SHARED CREATE  = ON ")
 endif()
 
@@ -49,3 +49,13 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     ${CMAKE_SOURCE_DIR}/../Shaders
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
 )
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/../data
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
+)
+
+# Filtrar y mostrar solo los destinos que generan archivos .exe
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Executables")

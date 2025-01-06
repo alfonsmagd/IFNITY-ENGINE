@@ -3,18 +3,22 @@
 
 
 
-
+#pragma once
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
 #include "Ifnity/Graphics/Features/CubeMapTextures.hpp"
 #include "gl_constans.hpp"
 #include <glad\glad.h>
-
+#include <span>
+ 
 IFNITY_NAMESPACE
 
 
 
 namespace OpenGL
 {
+	//Forward declaration
+	class SceneObject;
+
     //-------------------------------------------------//
     //  DEVICE OPENGL                                  //
     //-------------------------------------------------//
@@ -55,9 +59,13 @@ namespace OpenGL
         void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
 
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
-
+		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
+		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)override;
+		SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override;
+		MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override;
+        void SetRenderState(const RenderState& state);
     private:
-
+		
 		    GLuint GetVAO() const { return m_VAO; }
 			GLuint CreateVAO();
 		    TextureHandle CreateTexture2DImpl(TextureDescription& desc);
@@ -65,7 +73,14 @@ namespace OpenGL
 	    	Program CreateProgram(const char* vertexShader, const char* fragmentShader);
 			Program CreateProgram(const char* vertexShader, const char* fragmentShader, const char* geometryShader);
 			BufferHandle CreateVertexAttAndIndexBuffer(const BufferDescription& desc);
+            BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint32_t flags = 0);
+			BufferHandle CreateDefaultBoundBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags = 0);
             void GetMeshVAO(const std::string mesh);
+            void SetupVertexAttributes(GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes);
+
+			
+            
+
 
             Program m_Program; ///< The program used by the device.
 
@@ -73,6 +88,9 @@ namespace OpenGL
 			BufferHandle m_VertexBuffer; ///< The vertex buffer used by the device.
 
 			std::unordered_map<std::string_view, GLuint> m_MeshVAOs; ///< The buffers used by save VAO by ID Mesh.
+            
+            //Friend class 
+            friend class MeshObject;
     };
 
 
@@ -92,6 +110,8 @@ namespace OpenGL
 		Buffer(GLuint bufferID, const BufferDescription& desc): 
             m_BufferID(bufferID),
             m_Description(desc) {}
+
+    
 		//Destructor
 		virtual ~Buffer() = default;
 
@@ -116,18 +136,37 @@ namespace OpenGL
    //  TEXTURE OPENGL                                  //
    //-------------------------------------------------//
 
-    class Texture final: public ITexture
+    class IFNITY_API Texture final: public ITexture
     {
     public:
         virtual TextureDescription GetTextureDescription() override { return m_TextureDescription; }
         virtual uint32_t           GetTextureID() override { return m_TextureID; }
 
         //Constructor 
+		Texture() = default;
         Texture(TextureDescription desc, uint32_t uid) : m_TextureDescription(desc), m_TextureID(uid){ }
+        Texture(TextureDescription& desc);
+        Texture(GLenum type, int width, int height, GLenum internalFormat);
+        Texture(int w, int h, const void* img);
+
+        #ifndef BUILD_SHARED_IFNITY
+            Texture(Texture&& other) noexcept;
+            Texture(const Texture& other) = delete;
+        #endif // !BUILD_SHARED_IFNITY
+
+      
+
+       
+		//Destructor
+         ~Texture();
+         
+        GLuint64 getHandleBindless() const { return m_HandleBindless; }
 
     private:
-        uint32_t m_TextureID;
+
+        GLuint m_TextureID = 0 ;
         TextureDescription m_TextureDescription;
+        GLuint64 m_HandleBindless = 0;
     };
 
     //-------------------------------------------------  //
@@ -144,10 +183,105 @@ namespace OpenGL
         ~GraphicsPipeline();
       
 		 const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
+		 void BindPipeline(IDevice* device) override;
 		 void  SetProgram(Program program) { m_Program = program; }
-		
+		 void SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = desc; }
 
     };
+
+    //-------------------------------------------------  //
+   //  MESHObject OPENGL                              //
+   //----------------------------------------------------//
+
+	class MeshObject final: public IMeshObject
+	{
+        public:
+            //Constructor 
+            MeshObject(const void* indices, size_t indicesSize, const void* vertexattrib, size_t vertexattribSize, IDevice* device);
+
+            MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device);
+
+            // Constructor que toma un MeshObjectDescription
+            MeshObject( const MeshObjectDescription&& desc, IDevice* device);
+            MeshObject(const SceneObjectHandler& data, IDevice* device);
+           
+
+            void Draw() override;
+			void Draw(const DrawDescription& desc) override;
+			void DrawIndexed() override;
+			void DrawIndirect() override;
+			void DrawInstancedDirect() override;
+
+
+			MeshObjectDescription& GetMeshObjectDescription() { return m_MeshObjectDescription; }
+            //Destructor 
+            ~MeshObject();
+            
+
+				
+    private:
+
+		GLuint m_VAO; ///< The vertex array object used by the device.
+        BufferHandle m_BufferVertex;
+		BufferHandle m_BufferIndex;
+        BufferHandle m_BufferIndirect;
+        BufferHandle m_BufferMaterials;
+        BufferHandle m_BufferModelMatrices;
+
+		MeshObjectDescription m_MeshObjectDescription;
+        std::vector<GLuint> m_baseMaterialInstances;
+		std::vector<GLuint> m_MeshIdx;
+		std::vector<GLuint> m_MeshCount;
+		std::vector<GLuint> m_MeshBaseVertex;
+
+
+		IDevice* m_Device; // avoid circular reference
+        const MeshFileHeader* m_header;
+		const Mesh* m_meshes;
+		const SceneObjectHandler m_scene;
+	
+	};
+
+	//-------------------------------------------------  //
+
+    
+     //-------------------------------------------------  //
+     // SceneObject OPENGL                                //
+	//----------------------------------------------------//
+
+    class IFNITY_API SceneObject final: public ISceneObject
+    {
+    public:
+        SceneObject(
+            const char* meshFile,
+            const char* sceneFile,
+            const char* materialFile);
+
+        //Implement Interface
+      
+        const MeshFileHeader& getHeader() const override { return header_; }
+        const MeshData& getMeshData() const override { return meshData_; }
+        const Scene& getScene() const override { return scene_; }
+        const std::vector<MaterialDescription>& getMaterials() const override { return materials_; }
+        const std::vector<DrawData>& getShapes() const override { return shapes_; }
+
+
+        //In this case device not create a specificic texture. 
+        std::vector<Texture> allMaterialTextures_;
+
+        MeshFileHeader header_;
+        MeshData meshData_;
+
+        Scene scene_;
+        std::vector<MaterialDescription> materials_;
+        std::vector<DrawData> shapes_;
+
+        void loadScene(const char* sceneFile);
+        uint64_t getTextureHandleBindless(uint64_t idx, const std::span<Texture>& textures);
+
+    };
+	
+  
 };
 
 

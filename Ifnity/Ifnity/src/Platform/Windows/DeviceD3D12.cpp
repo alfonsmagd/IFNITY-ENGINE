@@ -153,13 +153,14 @@ void DeviceD3D12::OnUpdate()
 	
 
 	//PopulateCommandList();
-	/*DrawElements(m_PipelineState,m_RootSignature);*/
+	DrawElements(m_PipelineState,m_RootSignature);
 	//ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
 
 
-	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+	 barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	m_CommandList->ResourceBarrier(1, &barrier);
+	
 	// Done recording commands.
 	ThrowIfFailed(m_CommandList->Close());
 
@@ -805,8 +806,9 @@ void DeviceD3D12::OnResize()
 	//	D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
 	  // Transition the resource from its initial state to be used as a depth buffer.
-	m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
+		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+	m_CommandList->ResourceBarrier(1, &barrier);
 	// Execute the resize commands.
 	ThrowIfFailed(m_CommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { m_CommandList.Get() };
@@ -845,7 +847,7 @@ void DeviceD3D12::FlushCommandQueue()
 	// Wait until the GPU has completed commands up to this fence point.
 	if (m_Fence->GetCompletedValue() < m_CurrentFence)
 	{
-		HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
 
 		// Fire event when GPU hits current fence.  
 		ThrowIfFailed(m_Fence->SetEventOnCompletion(m_CurrentFence, eventHandle));
@@ -1024,7 +1026,7 @@ void DeviceD3D12::PopulateCommandList()
 	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = CurrentBackBufferView();
 	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = DepthStencilView();
 	m_CommandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
-	m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
+	//m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
 
 	
 	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -1055,6 +1057,7 @@ void DeviceD3D12::DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
 {
 	m_CommandList->SetPipelineState(pipelineState.Get());
 	m_CommandList->SetGraphicsRootSignature(rootSignature.Get());
+	
 
 	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);

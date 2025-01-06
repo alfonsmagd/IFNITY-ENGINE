@@ -12,7 +12,6 @@ namespace IFNITY
 	void Log::init()
 	{
 		spdlog::set_pattern("%^[%T] %n %v%$");
-
 		log_AppLogger = spdlog::stdout_color_mt("[IFNITY-APP]");
 		log_AppLogger->set_level(spdlog::level::trace);
 

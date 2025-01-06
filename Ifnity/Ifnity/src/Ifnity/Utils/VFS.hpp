@@ -29,9 +29,12 @@ class IFNITY_API VFS
 public:
     /**
      * @brief Gets the singleton instance of the VFS.
+     * @param physicalPath The physical path to initialize the VFS with, if it hasn't been created yet.
      * @return Reference to the VFS instance.
      */
-    static VFS& GetInstance();
+    static VFS& GetInstance(const std::string& physicalPath = "data");
+
+	
 
     /**
      * @brief Mounts a physical path to a virtual path.
@@ -83,6 +86,7 @@ public:
 
 private:
     VFS() = default;
+    VFS(const std::string& physicalPath);
     ~VFS() = default;
 
     VFS(const VFS&) = delete;

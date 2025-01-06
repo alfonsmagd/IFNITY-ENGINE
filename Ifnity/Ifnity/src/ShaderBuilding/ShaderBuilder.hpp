@@ -59,14 +59,14 @@ public:
      * @param outputFilePath Path to the output GLSL file.
      * @return true if the conversion was successful, false otherwise.
      */
-    static bool ShaderCompiler::CompileSpirV2Glsl(const std::string& inputFilePath, const std::string& outputFilePath);
+    static bool CompileSpirV2Glsl(const std::string& inputFilePath, const std::string& outputFilePath);
 
     /**
      * @brief Loads a SPIR-V file and returns its content as a vector of uint32_t.
      * @param filename Name of the SPIR-V file.
      * @return Vector of uint32_t containing the SPIR-V file content.
      */
-    static std::vector<uint32_t> ShaderCompiler::load_spirv_file(const std::string& filename);
+    static std::vector<uint32_t> load_spirv_file(const std::string& filename);
 
     /**
      * @brief Creates a shader blob from source code.
@@ -74,7 +74,7 @@ public:
      * @param sourceBlob Resulting shader blob.
      * @return HRESULT indicating the result of the blob creation.
      */
-    static HRESULT ShaderCompiler::CreateShaderBlob(const std::wstring& shaderSource, ComPtr<IDxcBlobEncoding>& sourceBlob);
+    static HRESULT CreateShaderBlob(const std::wstring& shaderSource, ComPtr<IDxcBlobEncoding>& sourceBlob);
 
     /**
      * @brief Compiles a shader blob.
@@ -83,7 +83,7 @@ public:
      * @param result Compilation result.
      * @return HRESULT indicating the result of the compilation.
      */
-    static HRESULT ShaderCompiler::CompileShaderBlob(ComPtr<IDxcBlobEncoding>& sourceBlob, std::vector<const wchar_t*>& args, ComPtr<IDxcResult>& result);
+    static HRESULT CompileShaderBlob(ComPtr<IDxcBlobEncoding>& sourceBlob, std::vector<const wchar_t*>& args, ComPtr<IDxcResult>& result);
 
     /**
 	 * @brief Get Shader File Path in the VFS, this is used to get the shader file path storage in VFS.

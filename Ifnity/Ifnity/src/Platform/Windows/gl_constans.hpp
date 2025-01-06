@@ -1,33 +1,67 @@
-
 #include "Ifnity/Graphics/ifrhi.h"
 #include <glad/glad.h>
 
-
 IFNITY_NAMESPACE
-
 
 namespace OpenGL
 {
+    static constexpr GLuint kBufferIndex_PerFrameUniforms = 0;
+    static constexpr GLuint kBufferIndex_ModelMatrices = 1;
+    static constexpr GLuint kBufferIndex_Materials = 2;
+    /**
+     * @brief Structure representing a vertex attribute in OpenGL.
+     */
+    struct VertexAttribute
+    {
+        GLuint index;          /**< Index of the vertex attribute. */
+        GLint size;            /**< Size of the vertex attribute. */
+        GLenum type;           /**< Data type of the vertex attribute. */
+        GLboolean normalized;  /**< Whether the attribute is normalized. */
+        GLsizei stride;        /**< Stride between consecutive attributes. */
+        size_t offset;         /**< Offset of the attribute in the buffer. */
+        GLuint bindingindex;   /**< Binding index of the attribute. */
+    };
+
+    /**
+     * @brief Structure representing a draw elements indirect command in OpenGL.
+     */
+    struct DrawElementsIndirectCommand
+    {
+        GLuint count_;          /**< Number of elements to be rendered. */
+        GLuint instanceCount_;  /**< Number of instances to be rendered. */
+        GLuint firstIndex_;     /**< Index of the first element. */
+        GLuint baseVertex_;     /**< Base vertex index. */
+        GLuint baseInstance_;   /**< Base instance index. */
+    };
+
+    /**
+     * @brief Structure mapping RHI format to OpenGL format.
+     */
     struct FormatMapping
     {
-        rhi::Format rhiFormat;
-        GLenum glFormat;
+        rhi::Format rhiFormat;  /**< RHI format. */
+        GLenum glFormat;        /**< Corresponding OpenGL format. */
     };
 
     static const std::array<FormatMapping, size_t(rhi::Format::COUNT)> c_FormatMap = { {
-        { rhi::Format::R8G8B8_UINT,                                         GL_RGB8UI },
-        { rhi::Format::R8G8B8,                                              GL_RGB8   },
-        { rhi::Format::R32G32B32_FLOAT,                                     GL_RGB32F }                                          
+        { rhi::Format::R8G8B8_UINT, GL_RGB8UI },
+        { rhi::Format::R8G8B8, GL_RGB8 },
+        { rhi::Format::R8G8B8A8, GL_RGBA8 },
+        { rhi::Format::R32G32B32_FLOAT, GL_RGB32F }
     } };
 
-
-   inline void SetOpenGLRasterizationState(const RasterizationState& state)
+    /**
+     * @brief Sets the OpenGL rasterization state.
+     * 
+     * @param state The rasterization state to be set.
+     */
+    inline void SetOpenGLRasterizationState(const RasterizationState& state)
     {
         static rhi::CullModeType currentCullMode = rhi::CullModeType::FrontAndBack;
         static rhi::FrontFaceType currentFrontFace = rhi::FrontFaceType::CounterClockwise;
         static rhi::FillModeType currentFillMode = rhi::FillModeType::Solid;
 
-        // Configurar el modo de culling solo si es diferente al actual
+        // Configure culling mode if different from current
         if(state.cullMode != currentCullMode)
         {
             switch(state.cullMode)
@@ -51,7 +85,7 @@ namespace OpenGL
             currentCullMode = state.cullMode;
         }
 
-        // Configurar la orientación de la cara frontal solo si es diferente a la actual
+        // Configure front face orientation if different from current
         if(state.frontFace != currentFrontFace)
         {
             switch(state.frontFace)
@@ -66,7 +100,7 @@ namespace OpenGL
             currentFrontFace = state.frontFace;
         }
 
-        // Configurar el modo de polígono solo si es diferente al actual
+        // Configure polygon mode if different from current
         if(state.fillMode != currentFillMode)
         {
             switch(state.fillMode)
@@ -85,7 +119,13 @@ namespace OpenGL
         }
     }
 
-   inline GLenum ConvertToOpenGLTextureTarget(rhi::TextureDimension dimension)
+    /**
+     * @brief Converts RHI texture dimension to OpenGL texture target.
+     * 
+     * @param dimension The RHI texture dimension.
+     * @return The corresponding OpenGL texture target.
+     */
+    inline GLenum ConvertToOpenGLTextureTarget(rhi::TextureDimension dimension)
     {
         switch(dimension)
         {
@@ -108,28 +148,59 @@ namespace OpenGL
         case rhi::TextureDimension::TEXTURE3D:
             return GL_TEXTURE_3D;
         default:
-            return GL_TEXTURE_2D; // Valor por defecto
+            return GL_TEXTURE_2D; // Default value
         }
     }
 
-   inline GLenum ConvertToOpenGLTextureWrapping(rhi::TextureWrapping wrapping)
-   {
-	   switch(wrapping)
-	   {
-	   case rhi::TextureWrapping::REPEAT:
-		   return GL_REPEAT;
-	   case rhi::TextureWrapping::MIRRORED_REPEAT:
-		   return GL_MIRRORED_REPEAT;
-	   case rhi::TextureWrapping::CLAMP_TO_EDGE:
-		   return GL_CLAMP_TO_EDGE;
-	   case rhi::TextureWrapping::CLAMP_TO_BORDER:
-		   return GL_CLAMP_TO_BORDER;
-	   default:
-		   return GL_REPEAT; // Valor por defecto
-	   }
-   }
-}
-    
+    /**
+     * @brief Converts RHI texture wrapping to OpenGL texture wrapping.
+     * 
+     * @param wrapping The RHI texture wrapping.
+     * @return The corresponding OpenGL texture wrapping.
+     */
+    inline GLenum ConvertToOpenGLTextureWrapping(rhi::TextureWrapping wrapping)
+    {
+        switch(wrapping)
+        {
+        case rhi::TextureWrapping::REPEAT:
+            return GL_REPEAT;
+        case rhi::TextureWrapping::MIRRORED_REPEAT:
+            return GL_MIRRORED_REPEAT;
+        case rhi::TextureWrapping::CLAMP_TO_EDGE:
+            return GL_CLAMP_TO_EDGE;
+        case rhi::TextureWrapping::CLAMP_TO_BORDER:
+            return GL_CLAMP_TO_BORDER;
+        default:
+            return GL_REPEAT; // Default value
+        }
+    }
 
+    /**
+     * @brief Converts blend factor to OpenGL blend factor.
+     * 
+     * @param factor The blend factor.
+     * @return The corresponding OpenGL blend factor.
+     */
+    inline GLenum ConvertToOpenGLBlendFactor(BlendFactor factor)
+    {
+        switch(factor)
+        {
+        case BlendFactor::ZERO:
+            return GL_ZERO;
+        case BlendFactor::ONE:
+            return GL_ONE;
+        case BlendFactor::SRC_COLOR:
+            return GL_SRC_COLOR;
+        case BlendFactor::ONE_MINUS_SRC_COLOR:
+            return GL_ONE_MINUS_DST_COLOR;
+        case BlendFactor::SRC_ALPHA:
+            return GL_SRC_ALPHA;
+        case BlendFactor::ONE_MINUS_SRC_ALPHA:
+            return GL_ONE_MINUS_SRC_ALPHA;
+        default:
+            return GL_ONE; // Default value
+        }
+    }
+}
 
 IFNITY_END_NAMESPACE

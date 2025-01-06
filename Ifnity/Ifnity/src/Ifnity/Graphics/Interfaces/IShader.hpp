@@ -27,7 +27,7 @@ enum IFNITY_API ShaderCompileFlagType: uint32_t
 	ENABLE_SPIRV = 0x4,
 	PACK_MATRIX_ROW_MAJOR = 0x8,
 
-	DEFAULT_FLAG = 0x0C
+	DEFAULT_FLAG = 0x0C     
 	// Agrega más flags según sea necesario
 };
 

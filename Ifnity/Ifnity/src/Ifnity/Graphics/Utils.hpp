@@ -20,10 +20,6 @@ namespace Utils
 
 	//Util function to save HDR images 
 	IFNITY_API void saveHDR(const Bitmap& bitmap, const char* filename);
-
-
-
-
 }
 
 IFNITY_END_NAMESPACE

@@ -10,7 +10,7 @@
 
 IFNITY_NAMESPACE 
 
-
+typedef signed long long int int64;
 
 
 
@@ -58,6 +58,33 @@ struct Color
 
 
 namespace rhi {
+
+
+
+    struct IFNITY_API VertexScene
+    {
+        
+    };
+
+    struct IFNITY_API VertexBasic
+    {
+    };
+
+    template <typename T>
+    struct IFNITY_API VertexTraits;
+
+    template <>
+    struct VertexTraits<VertexScene>
+    {
+        static constexpr uint16_t numElements = 8;
+    };
+
+    template <>
+    struct VertexTraits<VertexBasic>
+    {
+        static constexpr uint16_t numElements = 3;
+    };
+
 
     //TYPES 
 
@@ -153,6 +180,7 @@ namespace rhi {
     {
         R8G8B8_UINT, /**< R8G8B8 unsigned integer format */
         R8G8B8,      /**< R8G8B8 format */
+		R8G8B8A8,    /**< R8G8B8A8 format */
 		R32G32B32_FLOAT, /**< R32G32B32 float format */
         UNKNOWN,     /**< Unknown format */
         COUNT        /**< Format count */
@@ -188,6 +216,20 @@ namespace rhi {
         TEXTURE2DMSARRAY,   /**< 2D multisample texture array */
         TEXTURE3D,          /**< 3D texture */
         COUNT               /**< Dimension count */
+    };
+
+    /**
+     * @enum BlendFactor
+     * @brief Enum representing the blend factors used in rendering.
+     */
+    enum class BlendFactor: uint8_t
+    {
+        ZERO,               /**< Blend factor zero */
+        ONE,                /**< Blend factor one */
+        SRC_COLOR,          /**< Blend factor source color */
+        ONE_MINUS_SRC_ALPHA,/**< Blend factor one minus source alpha */
+		ONE_MINUS_SRC_COLOR,/**< Blend factor one minus source color */
+        SRC_ALPHA           /**< Blend factor source alpha */
     };
 
    

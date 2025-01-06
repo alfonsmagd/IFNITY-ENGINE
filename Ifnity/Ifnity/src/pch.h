@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <functional>
 #include <utility>
 #include <sstream>
@@ -23,6 +24,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <Ifnity/Graphics/ifrhi.h>
+#include "Ifnity\Utils\Utils.hpp"
 
 #ifdef _WIN64
 	#include  <Windows.h>

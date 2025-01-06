@@ -7,6 +7,9 @@
 #include "IBuffer.hpp"
 #include "ITexture.hpp"
 #include "IGraphicsPipeline.hpp"
+#include "IMeshObject.hpp"
+#include "ISceneObject.hpp"
+
 
 IFNITY_NAMESPACE
 
@@ -67,20 +70,17 @@ struct IFNITY_API DrawDescription
 class IFNITY_API IDevice {
 public:
 
-    /**
-     * @brief Se va usar para dibujar.
-     * 
-     * @param desc Descripción del dibujo.
-     */
     virtual void Draw(DrawDescription& desc) = 0;
     virtual GraphicsPipelineHandle CreateGraphicsPipeline(GraphicsPipelineDescription& desc) = 0;
 	virtual void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) = 0;
     virtual void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size) = 0;
 	virtual void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) {}; //todo abstract
 	virtual BufferHandle CreateBuffer(const BufferDescription& desc) = 0;
-
 	virtual TextureHandle CreateTexture(TextureDescription& desc) = 0;
-
+	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) = 0;
+	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) = 0;
+	virtual SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) = 0;
+	virtual MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) = 0;
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
 };

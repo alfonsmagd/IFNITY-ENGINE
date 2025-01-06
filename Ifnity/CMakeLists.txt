@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
-project(IFNITYPROYECT)
+project(IFNITYPROYECT CXX C)
 
 # Define la opción y propágala a los subdirectorios
-option(BUILD_SHARED_IFNITY "Build Ifnity as a shared library dll " OFF)
+option(BUILD_SHARED_IFNITY "Build Ifnity as a shared library dll " ON)
 # Asegurar modulos cmake
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
@@ -16,6 +16,9 @@ add_subdirectory(ShadersPipeLine)
 add_subdirectory(Simple_Texture)
 add_subdirectory(Tetahedre)
 add_subdirectory(Skybox_Camera)
+add_subdirectory(MeshGeometrical_Draw)
+add_subdirectory(scene_materials)
+
 #add_subdirectory(Source_VTXP_HLSL)
 #add_subdirectory(CubeMap_Texture)
 

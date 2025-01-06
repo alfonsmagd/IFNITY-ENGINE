@@ -1,12 +1,18 @@
 cmake_minimum_required(VERSION 3.8)
-project(Ifnity)
+project(Ifnity CXX C)
 
 
-#Options
+#Options and Functions 
+function(assign_vendor_folder target)
+    set_target_properties(${target} PROPERTIES FOLDER "Vendor")
+endfunction()
 
-
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_C STANDARD 11)
+
+set(CMAKE_SUPPRESS_REGENERATION true)
+set(CMAKE_SKIP_INSTALL_RULES true)
 
 if(MSVC)
     add_definitions(-DUNICODE -D_UNICODE)
@@ -66,16 +72,22 @@ set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
 
 # Add GLFW like a subdirectory to be built with the project
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
+ASSIGN_VENDOR_FOLDER(glfw)
+
 #add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glm)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor)
 # add D3D12MemoryAllocator 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator)
+ASSIGN_VENDOR_FOLDER(D3D12MemoryAllocator)
 # add vulkan bootstrap
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
+ASSIGN_VENDOR_FOLDER(vk-bootstrap)
 #add glslang 
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/SPIRV-Cross)
+
 #add assimp
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
+ASSIGN_VENDOR_FOLDER(assimp)
 
 
 
@@ -107,7 +119,8 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 include_directories(${DXC_INCLUDE_DIR})
 #include assimp
 include_directories(${PROJECT_SOURCE_DIR}/vendor/assimp/include)
-
+#include RapidJson its only header library its not necessary to link it with add_subdirectory
+include_directories(${PROJECT_SOURCE_DIR}/vendor/rapidjson/include)
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
@@ -120,8 +133,8 @@ file(GLOB_RECURSE SOURCE_FILES
 )
 
 # Vendor Source Files 
-set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.cpp)
-
+set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.c)
+set_source_files_properties(${GLAD_SOURCE} PROPERTIES LANGUAGE CXX)
 
 # Add precompiled header
 
@@ -160,10 +173,14 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
+ASSIGN_VENDOR_FOLDER(spirv-cross-core)
+ASSIGN_VENDOR_FOLDER(spirv-cross-c)
+ASSIGN_VENDOR_FOLDER(vk-bootstrap)
 #Link dxc
 target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
 #Target link assimp
 target_link_libraries(${PROJECT_NAME} PUBLIC assimp)
+ASSIGN_VENDOR_FOLDER(assimp)
 
 # Include Target Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
@@ -202,6 +219,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     COMPILE_FLAGS_DIST "-D IFNITY_DIST -O2"
     LINK_FLAGS_DIST "${CMAKE_SHARED_LINKER_FLAGS_DIST}"
 )
+
+# Filtrar y mostrar solo los destinos que generan archivos .exe
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 
 # Copiar nvml.lib al directorio de enlace
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD

@@ -11,17 +11,19 @@
 #define IFNITY_LOG(logger, level, fmt, ...) \
     do { \
         if (level == WARNING) { \
-            logger->warn(fmt, __VA_ARGS__); \
+            logger->warn(fmt, ##__VA_ARGS__); \
         } else if (level == ERROR) { \
-         logger->error(std::string(fmt) + " in function: " + __FUNCTION__, __VA_ARGS__); \
+            logger->error("{} in function: {}", fmt, __FUNCTION__, ##__VA_ARGS__); \
         } else if (level == TRACE) { \
-            logger->trace(fmt, __VA_ARGS__); \
+            logger->trace(fmt, ##__VA_ARGS__); \
         } else if (level == INFO) { \
-            logger->info(fmt, __VA_ARGS__); \
+            logger->info(fmt, ##__VA_ARGS__); \
         } else { \
-            logger->info(fmt, __VA_ARGS__); \
+            logger->info(fmt, ##__VA_ARGS__); \
         } \
     } while (0)
+
+#define STRMESSAGE(msg, var) (std::string(msg) + std::string(var))
 namespace IFNITY
 {
 

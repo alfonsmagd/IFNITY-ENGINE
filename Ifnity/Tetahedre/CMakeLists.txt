@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.10)
 # Nombre del proyecto
 project(Tetahedre)
 
-# C++ 17 standar 
-set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_SUPPRESS_REGENERATION true)
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 
 
@@ -55,3 +55,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     ${CMAKE_SOURCE_DIR}/../data
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
 )
+
+# Filtrar y mostrar solo los destinos que generan archivos .exe
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Executables")

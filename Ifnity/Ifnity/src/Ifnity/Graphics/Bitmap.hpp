@@ -70,7 +70,7 @@ struct IFNITY_API Bitmap
     * @param fmt Format of the bitmap
     * @return Number of bytes per component
     */
-   static int Bitmap::getBytesPerComponent(eBitmapFormat fmt)
+    static int getBytesPerComponent(eBitmapFormat fmt)
    {
        if(fmt == eBitmapFormat_UnsignedByte) return 1;
        if(fmt == eBitmapFormat_Float) return 4;

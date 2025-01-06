@@ -622,14 +622,14 @@ void main_ps(
 		VertexAttributeDescription indexDescription;
 		indexDescription.setName("Index")
 			.setOffset(sizeIndices)
-			.setElementStride(sizeof(GeometricModels::Vertex))
+			.setElementStride(sizeof(GeometricModels::VertexGeometry))
 			.setHaveIndexBuffer(true);
 		//.setData(m_Tetrahedron.GetIndices().data())
 
 
 		VertexAttributeDescription vertexDescription;
 		vertexDescription.setName("Vertex Position")
-			.setOffset(offsetof(GeometricModels::Vertex, position))
+			.setOffset(offsetof(GeometricModels::VertexGeometry, position))
 			.setArraySize(3)
 			.setIsInstanced(false)
 			.setBufferIndexLocation(0)
@@ -637,7 +637,7 @@ void main_ps(
 
 		VertexAttributeDescription normalDescription;
 		normalDescription.setName("Vertex Normal")
-			.setOffset(offsetof(GeometricModels::Vertex, normal))
+			.setOffset(offsetof(GeometricModels::VertexGeometry, normal))
 			.setArraySize(3)
 			.setIsInstanced(false)
 			.setBufferIndexLocation(1)
@@ -645,7 +645,7 @@ void main_ps(
 
 		VertexAttributeDescription tangentDescription;
 		tangentDescription.setName("Vertex Tangent")
-			.setOffset(offsetof(GeometricModels::Vertex, tangent))
+			.setOffset(offsetof(GeometricModels::VertexGeometry, tangent))
 			.setArraySize(3)
 			.setIsInstanced(false)
 			.setBufferIndexLocation(2)
@@ -1097,7 +1097,7 @@ return texColor;
 
 
 
-		const mat4 mg = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 0.0f, -1.0f));
+		const mat4 mg = glm::rotate(mat4(1.0f), App::GetTime(), vec3(0.0f, 0.0f, -1.0f));
 		const mat4 fg = glm::ortho(-aspectRatio, aspectRatio, -1.f, 1.f, 1.f, -1.f);
 		const mat4 mvpg = fg * mg;
 
