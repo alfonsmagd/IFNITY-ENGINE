@@ -4,6 +4,7 @@
 #include  "pch.h"
 
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 IFNITY_NAMESPACE
 
@@ -66,6 +67,10 @@ IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUti
 		func(instance, debugMessenger, pAllocator);
 	}
 }
+
+
+
+
 //
 bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT * debugMessenger)
 {
@@ -92,7 +97,29 @@ bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT * de
 	return true;
 }
 
-
+VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType type, uint64_t handle, const char* name)
+{
+	if(!name || !*name)
+	{
+		return VK_SUCCESS;
+	}
+	const VkDebugUtilsObjectNameInfoEXT ni = {
+		.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+		.objectType = type,
+		.objectHandle = handle,
+		.pObjectName = name,
+	};
+	
+	auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
+	if(func != nullptr)
+	{
+		return func(device,&ni);
+	}
+	else
+	{
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+}
 
 
 //Forward declaration

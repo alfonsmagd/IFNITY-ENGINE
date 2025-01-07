@@ -435,11 +435,9 @@ bool DeviceVulkan::CreateDevice()
 	// Create debug utils messenger
 	//setupDebugCallbacksVK(m_Instance.instance, &debugUtilsMessenger);
 	setupCallbacks(m_Device.device);
+	setDebugObjectName(m_Instance,m_Device.device, VK_OBJECT_TYPE_DEVICE, (uint64_t)m_Device.device, "Device Context:");
 
 #endif
-
-
-
 
 
 	return true;
