@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include  "pch.h"
@@ -8,118 +7,34 @@
 
 IFNITY_NAMESPACE
 
+
+extern PFN_vkSetDebugUtilsObjectNameEXT gvkSetDebugUtilsObjectNameEXT;
+
+
 #define VK_CHECK(result, errorMessage) \
     if ((result) != VK_SUCCESS) { \
         IFNITY_LOG(LogCore, ERROR, errorMessage); \
         \
     }
 
-
 IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT             messageType,
 	const VkDebugUtilsMessengerCallbackDataEXT * pCallbackData,
-	void* pUserData)
-{
-	// Select prefix depending on flags passed to the callback
-	std::string prefix("");
+	void* pUserData);
 
-	if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
-	{
-		prefix = "VERBOSE: ";
-	}
-	else if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
-	{
-		prefix = "INFO: ";
-	}
-	else if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
-	{
-		prefix = "WARNING: ";
-	}
-	else if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
-	{
-		prefix = "ERROR: ";
-	}
+IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 
-	std::cerr << prefix << " validation layer: " << pCallbackData->pMessage << std::endl;
-
-	return VK_FALSE;
-}
-
-IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkDebugUtilsMessengerEXT * pDebugMessenger)
-{
-	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-	if(func != nullptr)
-	{
-		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-	}
-	else
-	{
-		return VK_ERROR_EXTENSION_NOT_PRESENT;
-	}
-}
-
-IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks * pAllocator)
-{
-	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-	if(func != nullptr)
-	{
-		func(instance, debugMessenger, pAllocator);
-	}
-}
+ extern IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks * pAllocator);
 
 
+//Set debug object name without instance and previously luaded vkSetDebugUtilsObjectNameEXT 
+VkResult setDebugObjectName(VkDevice device, VkObjectType type, uint64_t handle, const char* name);
+bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT* debugMessenger);
+VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType type, uint64_t handle, const char* name);
+VkSemaphore createSemaphore(VkDevice device, const char* debugName);
+VkFence createFence(VkDevice device, const char* debugName);
 
-
-//
-bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT * debugMessenger)
-{
-	#ifdef _DEBUG
-	VkDebugUtilsMessengerCreateInfoEXT create_info;
-	create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	create_info.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-	create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-	create_info.pfnUserCallback = debugUtilsMessengerCallback;
-	create_info.pNext = NULL;
-	create_info.flags = 0;
-
-
-	if(CreateDebugUtilsMessengerEXT(instance, &create_info, nullptr, debugMessenger) != VK_SUCCESS)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to create debug utils messenger in Vulkan Device");
-		return false;
-
-	}
-
-
-	#endif
-
-	return true;
-}
-
-VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType type, uint64_t handle, const char* name)
-{
-	if(!name || !*name)
-	{
-		return VK_SUCCESS;
-	}
-	const VkDebugUtilsObjectNameInfoEXT ni = {
-		.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-		.objectType = type,
-		.objectHandle = handle,
-		.pObjectName = name,
-	};
-	
-	auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
-	if(func != nullptr)
-	{
-		return func(device,&ni);
-	}
-	else
-	{
-		return VK_ERROR_EXTENSION_NOT_PRESENT;
-	}
-}
 
 
 //Forward declaration

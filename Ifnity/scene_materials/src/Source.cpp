@@ -338,9 +338,9 @@ public:
 			.sceneConfig = vSceneconfig[ 0 ]
 		};
 
-		/*MeshDataBuilderAssimp<rhi::VertexScene> builder(8);
+		MeshDataBuilderAssimp<rhi::VertexScene> builder(8);
 
-	    builder.buildSceneData(meshAssimp);*/
+	    builder.buildSceneData(meshAssimp);
 
 		//Create a SceneObject with the data.
 		m_SceneObject = rdevice->CreateSceneObject(meshAssimp.sceneConfig.outputMesh.c_str(),

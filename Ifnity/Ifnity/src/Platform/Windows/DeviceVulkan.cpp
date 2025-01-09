@@ -708,7 +708,7 @@ bool DeviceVulkan::CreateFrameBuffer()
 bool DeviceVulkan::CreateCommandBuffers()
 {
 	m_CommandBuffers.resize(m_Framebuffers.size());
-
+	//vkGetDeviceQueue(m_Device.device, (int)m_GraphicsQueue, 0, &m_GraphicsQueue);
 	VkCommandBufferAllocateInfo bufferAllocInfo{};
 	bufferAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	bufferAllocInfo.commandPool = m_CommandPool;
@@ -875,6 +875,9 @@ void DeviceVulkan::setupCallbacks(VkDevice& i_device)
 
 			// Set flag if at least one function pointer is present
 			m_DebugUtilsSupported = (vkCreateDebugUtilsMessengerEXT != VK_NULL_HANDLE);
+
+			//Select global DebugLevel 
+			gvkSetDebugUtilsObjectNameEXT = vkSetDebugUtilsObjectNameEXT;
 		}
 		else
 		{
