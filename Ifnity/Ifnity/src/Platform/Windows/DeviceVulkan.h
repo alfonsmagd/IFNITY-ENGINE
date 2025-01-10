@@ -5,6 +5,8 @@
 #include  "Platform/ImguiRender/ImguiVulkanRender.h"
 #include "vk_mem_alloc.h"
 #include <VkBootstrap.h>
+#include "Platform\Vulkan\vulkan_classes.hpp"
+
 IFNITY_NAMESPACE
 
 // Data
@@ -15,9 +17,16 @@ IFNITY_NAMESPACE
 
 class DeviceVulkan final : public GraphicsDeviceManager
 {
+
+public:
+	Vulkan::CommandBuffer currentCommandBuffer_;
+	std::unique_ptr<Vulkan::VulkanImmediateCommands> immediate_;
+
+public:
+
+
+
 private:
-
-
 	vkb::Instance  m_Instance;  // Vulkan instance 
 	VmaAllocator   m_Allocator; // Vulkan memory allocator
 	VkSurfaceKHR   m_Surface;   // Vulkan surface
@@ -76,6 +85,11 @@ private:
 	PFN_vkQueueInsertDebugUtilsLabelEXT vkQueueInsertDebugUtilsLabelEXT{ nullptr };
 	PFN_vkQueueEndDebugUtilsLabelEXT vkQueueEndDebugUtilsLabelEXT{ nullptr };
 	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT{ nullptr };
+
+	//TEST Members to get functionality to move a Device class. 
+	
+
+	//Vulkan::CommandBuffer m_CommandBuffer;
 
 	float m_Color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -139,15 +153,20 @@ private:
 
 	//Imgui private methods
 	bool CreateImGuiDescriptorPool();
-
-
 	void setupCallbacks(VkDevice& i_device);
-
 	void BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[4]);
+
+	//TestMethods to move a Device class 
+
+
+
 
 	void EndRenderDocTrace(VkCommandBuffer commandBuffer);
 
 };
+
+
+
 
 
 

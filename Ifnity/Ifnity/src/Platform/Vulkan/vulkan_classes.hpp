@@ -9,8 +9,10 @@
 
 IFNITY_NAMESPACE
 
+class DeviceVulkan;
 namespace Vulkan
 {
+	
 	//Get struct 
 	struct SubmitHandle
 	{
@@ -84,6 +86,30 @@ namespace Vulkan
 		uint32_t numAvailableCommandBuffers_ = kMaxCommandBuffers;
 		uint32_t submitCounter_ = 1;
 	};
+
+
+	class CommandBuffer final
+	{
+	public:
+		CommandBuffer() = default;
+		explicit CommandBuffer(DeviceVulkan* ctx);
+		~CommandBuffer() ;
+
+		CommandBuffer& operator=(CommandBuffer&& other) = default;
+
+		
+
+	private:
+		friend class DeviceVulkan;
+
+		DeviceVulkan* ctx_;
+		const VulkanImmediateCommands::CommandBufferWrapper* wrapper_ = nullptr;
+
+	};
+
+
+
+
 
 
 }

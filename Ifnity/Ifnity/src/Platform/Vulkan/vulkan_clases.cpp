@@ -2,12 +2,38 @@
 
 #include "vulkan_classes.hpp"
 #include "../Windows/UtilsVulkan.h"
+#include "Platform/Windows/DeviceVulkan.h"
 
 IFNITY_NAMESPACE
 
 
 namespace Vulkan
 {
+
+
+	//-----------------------------------------------//
+	// CommandBuffer METHODS
+	//-----------------------------------------------//
+	Vulkan::CommandBuffer::CommandBuffer(DeviceVulkan* ctx): ctx_(ctx), wrapper_(&ctx->immediate_->acquire())
+	{}
+
+	CommandBuffer::~CommandBuffer()
+	{
+	}
+
+
+
+
+
+
+
+
+
+
+	//-----------------------------------------------//
+	// VulkanImmediateCommands METHODS
+	//-----------------------------------------------//
+
 
 	VulkanImmediateCommands::VulkanImmediateCommands(VkDevice device, uint32_t queueFamilyIndex, const char* debugName):
 		device_(device), queueFamilyIndex_(queueFamilyIndex), debugName_(debugName)
