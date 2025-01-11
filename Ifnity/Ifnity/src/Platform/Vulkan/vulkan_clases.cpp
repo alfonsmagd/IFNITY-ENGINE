@@ -19,6 +19,8 @@ namespace Vulkan
 
 	CommandBuffer::~CommandBuffer()
 	{
+
+
 	}
 
 
@@ -82,7 +84,7 @@ namespace Vulkan
 	VulkanImmediateCommands::~VulkanImmediateCommands()
 	{
 		// 1. Wait for all command buffers to finish executing TODO: DANGER
-
+		waitAll();
 
 		for(auto& buf : buffers_)
 		{

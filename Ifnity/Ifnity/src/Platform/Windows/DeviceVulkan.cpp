@@ -249,6 +249,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		!CreateRenderPass() ||
 		!CreateFrameBuffer() ||
 		!CreateCommandBuffers() ||
+		!createVulkanImmediateCommands() ||
 		!CreateSyncObjects() 
 
 		)
@@ -317,6 +318,7 @@ DeviceVulkan::~DeviceVulkan()
 	DestroySyncObjects();
 	DestroyCommandBuffers();
 	DestroyCommandPool();
+	DestroyImmediateCommands();
 	CleanFrameBuffers();
 	DestroyRenderPass();
 
@@ -557,6 +559,11 @@ void DeviceVulkan::CleanFrameBuffers()
 void DeviceVulkan::DestroyRenderPass()
 {
 	vkDestroyRenderPass(m_Device.device, m_RenderPass, nullptr);
+}
+
+void DeviceVulkan::DestroyImmediateCommands()
+{
+	immediate_.reset();
 }
 
 bool DeviceVulkan::CreateDepthBuffer()
@@ -909,6 +916,23 @@ void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char
 		IFNITY_LOG(LogCore, WARNING, "{} not present, debug utils are disabled.", VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		IFNITY_LOG(LogCore, WARNING, "Try running the sample from inside a Vulkan graphics debugger (e.g. RenderDoc)");
 	}
+}
+
+bool DeviceVulkan::createVulkanImmediateCommands()
+{
+	immediate_ = std::make_unique<Vulkan::VulkanImmediateCommands>(m_Device.device, deviceQueues_.graphicsQueueFamilyIndex,
+		"Creating Immediate Commands");
+
+	return true;
+}
+
+Vulkan::CommandBuffer& DeviceVulkan::acquireCommandBuffer()
+{
+	IFNITY_ASSERT_MSG(!currentCommandBuffer_.ctx_, "Cannot acquire more than 1 command buffer simultaneously");
+
+	currentCommandBuffer_ = Vulkan::CommandBuffer(this);
+
+	return currentCommandBuffer_;
 }
 
 void DeviceVulkan::EndRenderDocTrace(VkCommandBuffer commandBuffer)

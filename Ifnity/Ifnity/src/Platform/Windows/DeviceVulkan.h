@@ -141,6 +141,7 @@ private:
 	void DestroyCommandBuffers();
 	void CleanFrameBuffers();
 	void DestroyRenderPass();
+	void DestroyImmediateCommands();
 	
 	//OnRender private methods
 	bool AcquireNextImage();
@@ -155,7 +156,8 @@ private:
 	void BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[4]);
 
 	//TestMethods to move a Device class 
-	//void CreateVulkanImmediateCommands();
+	bool createVulkanImmediateCommands();
+	Vulkan::CommandBuffer& acquireCommandBuffer();
 
 
 
