@@ -11,7 +11,8 @@ IFNITY_NAMESPACE
 
 // Data
 
-
+//Rembeber that vkb its a namespace that contains the Vulkan Bootstrapper.
+//Vulkan:: its a namespace that contains the Vulkan Classes dessigned by IFNITY.
 
 class DeviceVulkan final : public GraphicsDeviceManager
 {

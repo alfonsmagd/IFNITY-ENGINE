@@ -7,19 +7,103 @@
 
 IFNITY_NAMESPACE
 
+const char* getVulkanResultString(VkResult result)
+{
+	#define RESULT_CASE(res) \
+  case res:              \
+    return #res
+	switch(result)
+	{
+		RESULT_CASE(VK_SUCCESS);
+		RESULT_CASE(VK_NOT_READY);
+		RESULT_CASE(VK_TIMEOUT);
+		RESULT_CASE(VK_EVENT_SET);
+		RESULT_CASE(VK_EVENT_RESET);
+		RESULT_CASE(VK_INCOMPLETE);
+		RESULT_CASE(VK_ERROR_OUT_OF_HOST_MEMORY);
+		RESULT_CASE(VK_ERROR_OUT_OF_DEVICE_MEMORY);
+		RESULT_CASE(VK_ERROR_INITIALIZATION_FAILED);
+		RESULT_CASE(VK_ERROR_DEVICE_LOST);
+		RESULT_CASE(VK_ERROR_MEMORY_MAP_FAILED);
+		RESULT_CASE(VK_ERROR_LAYER_NOT_PRESENT);
+		RESULT_CASE(VK_ERROR_EXTENSION_NOT_PRESENT);
+		RESULT_CASE(VK_ERROR_FEATURE_NOT_PRESENT);
+		RESULT_CASE(VK_ERROR_INCOMPATIBLE_DRIVER);
+		RESULT_CASE(VK_ERROR_TOO_MANY_OBJECTS);
+		RESULT_CASE(VK_ERROR_FORMAT_NOT_SUPPORTED);
+		RESULT_CASE(VK_ERROR_SURFACE_LOST_KHR);
+		RESULT_CASE(VK_ERROR_OUT_OF_DATE_KHR);
+		RESULT_CASE(VK_ERROR_INCOMPATIBLE_DISPLAY_KHR);
+		RESULT_CASE(VK_ERROR_NATIVE_WINDOW_IN_USE_KHR);
+		RESULT_CASE(VK_ERROR_VALIDATION_FAILED_EXT);
+		RESULT_CASE(VK_ERROR_FRAGMENTED_POOL);
+		RESULT_CASE(VK_ERROR_UNKNOWN);
+		// Provided by VK_VERSION_1_1
+		RESULT_CASE(VK_ERROR_OUT_OF_POOL_MEMORY);
+		// Provided by VK_VERSION_1_1
+		RESULT_CASE(VK_ERROR_INVALID_EXTERNAL_HANDLE);
+		// Provided by VK_VERSION_1_2
+		RESULT_CASE(VK_ERROR_FRAGMENTATION);
+		// Provided by VK_VERSION_1_2
+		RESULT_CASE(VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS);
+		// Provided by VK_KHR_swapchain
+		RESULT_CASE(VK_SUBOPTIMAL_KHR);
+		// Provided by VK_NV_glsl_shader
+		RESULT_CASE(VK_ERROR_INVALID_SHADER_NV);
+		#ifdef VK_ENABLE_BETA_EXTENSIONS
+		// Provided by VK_KHR_video_queue
+		RESULT_CASE(VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR);
+		#endif
+		#ifdef VK_ENABLE_BETA_EXTENSIONS
+		// Provided by VK_KHR_video_queue
+		RESULT_CASE(VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR);
+		#endif
+		#ifdef VK_ENABLE_BETA_EXTENSIONS
+		// Provided by VK_KHR_video_queue
+		RESULT_CASE(VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR);
+		#endif
+		#ifdef VK_ENABLE_BETA_EXTENSIONS
+		// Provided by VK_KHR_video_queue
+		RESULT_CASE(VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR);
+		#endif
+		#ifdef VK_ENABLE_BETA_EXTENSIONS
+		// Provided by VK_KHR_video_queue
+		RESULT_CASE(VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR);
+		#endif
+		#ifdef VK_ENABLE_BETA_EXTENSIONS
+		// Provided by VK_KHR_video_queue
+		RESULT_CASE(VK_ERROR_VIDEO_STD_VERSION_NOT_SUPPORTED_KHR);
+		#endif
+		// Provided by VK_EXT_image_drm_format_modifier
+		RESULT_CASE(VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
+		// Provided by VK_KHR_global_priority
+		RESULT_CASE(VK_ERROR_NOT_PERMITTED_KHR);
+		// Provided by VK_EXT_full_screen_exclusive
+		RESULT_CASE(VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT);
+		// Provided by VK_KHR_deferred_host_operations
+		RESULT_CASE(VK_THREAD_IDLE_KHR);
+		// Provided by VK_KHR_deferred_host_operations
+		RESULT_CASE(VK_THREAD_DONE_KHR);
+		// Provided by VK_KHR_deferred_host_operations
+		RESULT_CASE(VK_OPERATION_DEFERRED_KHR);
+		// Provided by VK_KHR_deferred_host_operations
+		RESULT_CASE(VK_OPERATION_NOT_DEFERRED_KHR);
+	default:
+		return "Unknown VkResult Value";
+	}
+	#undef RESULT_CASE
+}
+
+
+
 PFN_vkSetDebugUtilsObjectNameEXT gvkSetDebugUtilsObjectNameEXT = nullptr;
 
-#define VK_CHECK(result, errorMessage) \
-    if ((result) != VK_SUCCESS) { \
-        IFNITY_LOG(LogCore, ERROR, errorMessage); \
-        \
-    }
 
 
 IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT             messageType,
-	const VkDebugUtilsMessengerCallbackDataEXT * pCallbackData,
+	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
 	void* pUserData)
 {
 	// Select prefix depending on flags passed to the callback
@@ -47,7 +131,7 @@ IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
 	return VK_FALSE;
 }
 
-IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT * pCreateInfo, const VkAllocationCallbacks * pAllocator, VkDebugUtilsMessengerEXT * pDebugMessenger)
+IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 	if(func != nullptr)
@@ -60,7 +144,7 @@ IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const V
 	}
 }
 
- IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
+IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
 {
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	if(func != nullptr)
@@ -97,7 +181,7 @@ VkResult setDebugObjectName(VkDevice device, VkObjectType type, uint64_t handle,
 
 
 //
-bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT * debugMessenger)
+bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT* debugMessenger)
 {
 	#ifdef _DEBUG
 	VkDebugUtilsMessengerCreateInfoEXT create_info;
@@ -134,11 +218,11 @@ VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType t
 		.objectHandle = handle,
 		.pObjectName = name,
 	};
-	
+
 	auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
 	if(func != nullptr)
 	{
-		return func(device,&ni);
+		return func(device, &ni);
 	}
 	else
 	{
@@ -154,8 +238,8 @@ VkSemaphore createSemaphore(VkDevice device, const char* debugName)
 		.flags = 0,
 	};
 	VkSemaphore semaphore = VK_NULL_HANDLE;
-	VK_CHECK(vkCreateSemaphore(device, &ci, nullptr, &semaphore),"error create semaphore");
-	VK_CHECK(setDebugObjectName(device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)semaphore, debugName),"error set debug Object Name type Semaphore");
+	VK_CHECK(vkCreateSemaphore(device, &ci, nullptr, &semaphore), "error create semaphore");
+	VK_CHECK(setDebugObjectName(device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)semaphore, debugName), "error set debug Object Name type Semaphore");
 	return semaphore;
 }
 
@@ -167,10 +251,12 @@ VkFence createFence(VkDevice device, const char* debugName)
 		.flags = 0,
 	};
 	VkFence fence = VK_NULL_HANDLE;
-	VK_CHECK(vkCreateFence(device, &ci, nullptr, &fence),"error create fence ");
-	VK_CHECK(setDebugObjectName(device, VK_OBJECT_TYPE_FENCE, (uint64_t)fence, debugName),"error debug objet name type fence");
+	VK_CHECK(vkCreateFence(device, &ci, nullptr, &fence), "error create fence ");
+	VK_CHECK(setDebugObjectName(device, VK_OBJECT_TYPE_FENCE, (uint64_t)fence, debugName), "error debug objet name type fence");
 	return fence;
 }
+
+
 
 //Forward declaration
 

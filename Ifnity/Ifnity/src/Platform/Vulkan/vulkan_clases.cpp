@@ -178,6 +178,177 @@ namespace Vulkan
 	
 	}
 
+	void VulkanImmediateCommands::wait(const SubmitHandle handle)
+	{
+		
+
+		if(handle.empty())
+		{
+			vkDeviceWaitIdle(device_);
+			return;
+		}
+
+		if(isReady(handle))
+		{
+			return;
+		}
+
+		if(!buffers_[ handle.bufferIndex_ ].isEncoding_)
+		{
+			// we are waiting for a buffer which has not been submitted - this is probably a logic error somewhere in the calling code
+			IFNITY_LOG(LogCore, ERROR, "Waiting for a buffer which has not been submitted , this is a probably logic error somewhere in the calling code");
+			return;
+		}
+
+		VK_ASSERT(vkWaitForFences(device_, 1, &buffers_[ handle.bufferIndex_ ].fence_, VK_TRUE, UINT64_MAX));
+
+		purge();
+	}
+
+	void VulkanImmediateCommands::waitAll()
+	{
+		
+
+		VkFence fences[ kMaxCommandBuffers ];
+
+		uint32_t numFences = 0;
+
+		for(const auto& buf : buffers_)
+		{
+			if(buf.cmdBuf_ != VK_NULL_HANDLE && !buf.isEncoding_)
+			{
+				fences[ numFences++ ] = buf.fence_;
+			}
+		}
+
+		if(numFences)
+		{
+			VK_ASSERT(vkWaitForFences(device_, numFences, fences, VK_TRUE, UINT64_MAX));
+		}
+
+		purge();
+	}
+
+	bool VulkanImmediateCommands::isReady(const SubmitHandle handle, bool fastCheckNoVulkan) const
+	{
+		assert(handle.bufferIndex_ < kMaxCommandBuffers);
+
+		if(handle.empty())
+		{
+			// a null handle
+			return true;
+		}
+
+		const CommandBufferWrapper& buf = buffers_[ handle.bufferIndex_ ];
+
+		if(buf.cmdBuf_ == VK_NULL_HANDLE)
+		{
+			// already recycled and not yet reused
+			return true;
+		}
+
+		if(buf.handle_.submitId_ != handle.submitId_)
+		{
+			// already recycled and reused by another command buffer
+			return true;
+		}
+
+		if(fastCheckNoVulkan)
+		{
+			// do not ask the Vulkan API about it, just let it retire naturally (when submitId for this bufferIndex gets incremented)
+			return false;
+		}
+
+		VkResult fenceStatus = vkGetFenceStatus(device_, buf.fence_);
+		if(fenceStatus == VK_SUCCESS)
+		{
+			return true;
+		}
+		return false;
+
+	}
+
+	SubmitHandle VulkanImmediateCommands::submit(const CommandBufferWrapper& wrapper)
+	{
+		
+		assert(wrapper.isEncoding_);
+		VK_ASSERT(vkEndCommandBuffer(wrapper.cmdBuf_));
+
+		const VkPipelineStageFlags waitStageMasks[] = { VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT };
+		VkSemaphore waitSemaphores[] = { VK_NULL_HANDLE, VK_NULL_HANDLE };
+		uint32_t numWaitSemaphores = 0;
+		if(waitSemaphore_)
+		{
+			waitSemaphores[ numWaitSemaphores++ ] = waitSemaphore_;
+		}
+		if(lastSubmitSemaphore_)
+		{
+			waitSemaphores[ numWaitSemaphores++ ] = lastSubmitSemaphore_;
+		}
+
+		
+		const VkSubmitInfo si = {
+			 .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+			 .waitSemaphoreCount = numWaitSemaphores,
+			 .pWaitSemaphores = numWaitSemaphores ? waitSemaphores : nullptr,
+			 .pWaitDstStageMask = waitStageMasks,
+			 .commandBufferCount = 1u,
+			 .pCommandBuffers = &wrapper.cmdBuf_,
+			 .signalSemaphoreCount = 1u,
+			 .pSignalSemaphores = &wrapper.semaphore_,
+		};
+		VK_ASSERT(vkQueueSubmit(queue_, 1u, &si, wrapper.fence_));
+		
+
+		lastSubmitSemaphore_ = wrapper.semaphore_;
+		lastSubmitHandle_ = wrapper.handle_;
+		waitSemaphore_ = VK_NULL_HANDLE;
+
+		// reset
+		const_cast<CommandBufferWrapper&>(wrapper).isEncoding_ = false;
+		submitCounter_++;
+
+		if(!submitCounter_)
+		{
+			// skip the 0 value - when uint32_t wraps around (null SubmitHandle)
+			submitCounter_++;
+		}
+
+		return lastSubmitHandle_;
+	}
+
+	void VulkanImmediateCommands::waitSemaphore(VkSemaphore semaphore)
+	{
+		assert(waitSemaphore_ == VK_NULL_HANDLE);
+
+		waitSemaphore_ = semaphore;
+	}
+
+	VkSemaphore VulkanImmediateCommands::acquireLastSubmitSemaphore()
+	{
+		return std::exchange(lastSubmitSemaphore_, VK_NULL_HANDLE);
+	}
+
+	VkFence VulkanImmediateCommands::getVkFence(SubmitHandle handle) const
+	{
+		if(handle.empty())
+		{
+			return VK_NULL_HANDLE;
+		}
+
+		return buffers_[ handle.bufferIndex_ ].fence_;
+	}
+
+	SubmitHandle VulkanImmediateCommands::getLastSubmitHandle() const
+	{
+		return lastSubmitHandle_;
+	}
+
+	SubmitHandle VulkanImmediateCommands::getNextSubmitHandle() const
+	{
+		return nextSubmitHandle_;
+	}
+
 	//-----------------------------------------------//
 
 }

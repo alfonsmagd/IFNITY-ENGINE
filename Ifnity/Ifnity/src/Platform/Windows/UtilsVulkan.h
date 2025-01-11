@@ -8,6 +8,22 @@
 IFNITY_NAMESPACE
 
 
+#define VK_CHECK(result, errorMessage) \
+    if ((result) != VK_SUCCESS) { \
+        IFNITY_LOG(LogCore, ERROR, errorMessage); \
+        \
+    }
+
+#define VK_ASSERT(func)                                            \
+  {                                                                \
+    const VkResult vk_assert_result = func;                        \
+    if (vk_assert_result != VK_SUCCESS) {                          \
+      IFNITY_LOG(LogCore,ERROR,"Vulkan API call failed: %s:%i\n  %s\n  %s\n", \
+                    getVulkanResultString(vk_assert_result)); \
+      assert(false);                                               \
+    }                                                              \
+  }
+
 extern PFN_vkSetDebugUtilsObjectNameEXT gvkSetDebugUtilsObjectNameEXT;
 
 
@@ -34,7 +50,7 @@ bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT* deb
 VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType type, uint64_t handle, const char* name);
 VkSemaphore createSemaphore(VkDevice device, const char* debugName);
 VkFence createFence(VkDevice device, const char* debugName);
-
+const char* getVulkanResultString(VkResult result);
 
 
 //Forward declaration
