@@ -13,8 +13,6 @@ IFNITY_NAMESPACE
 
 
 
-
-
 class DeviceVulkan final : public GraphicsDeviceManager
 {
 
@@ -23,7 +21,7 @@ public:
 	std::unique_ptr<Vulkan::VulkanImmediateCommands> immediate_;
 
 public:
-
+	Vulkan::DeviceQueues deviceQueues_;
 
 
 private:
@@ -36,8 +34,7 @@ private:
 	vkb::PhysicalDevice m_PhysicalDevice; // Vulkan physical device bootstrapper. 
 
 	VkCommandPool m_CommandPool = VK_NULL_HANDLE;
-	VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
-	VkQueue m_PresentQueue  = VK_NULL_HANDLE;
+
 
 
 	// Depth buffer
@@ -157,7 +154,7 @@ private:
 	void BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[4]);
 
 	//TestMethods to move a Device class 
-
+	//void CreateVulkanImmediateCommands();
 
 
 

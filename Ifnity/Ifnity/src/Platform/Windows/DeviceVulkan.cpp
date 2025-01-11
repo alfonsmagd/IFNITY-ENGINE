@@ -162,7 +162,7 @@ void DeviceVulkan::OnUpdate()
 	submitInfo.commandBufferCount = 1;
 	submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentFrame];
 
-	if (vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
+	if (vkQueueSubmit(deviceQueues_.graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to submit command buffer");
 		
@@ -178,7 +178,7 @@ void DeviceVulkan::OnUpdate()
 
 	presentInfo.pImageIndices = &imageIndex;
 
-	result = vkQueuePresentKHR(m_PresentQueue, &presentInfo);
+	result = vkQueuePresentKHR(deviceQueues_.presentQueue, &presentInfo);
 	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
 	{
 		return ResizeSwapChain();
@@ -466,7 +466,8 @@ bool DeviceVulkan::GetQueue()
 		IFNITY_LOG(LogCore, ERROR, "Failed to get graphics queue in Vulkan Device");
 		return false;
 	}
-	m_GraphicsQueue = graphQueueRet.value();
+	deviceQueues_.graphicsQueue = graphQueueRet.value();
+	deviceQueues_.graphicsQueueFamilyIndex = m_Device.get_queue_index(vkb::QueueType::graphics).value();
 
 	auto presentQueueRet = m_Device.get_queue(vkb::QueueType::present);
 	if (!presentQueueRet.has_value())
@@ -474,7 +475,8 @@ bool DeviceVulkan::GetQueue()
 		IFNITY_LOG(LogCore, ERROR, "Failed to get present  queue in Vulkan Device");
 		return false;
 	}
-	m_PresentQueue = presentQueueRet.value();
+	deviceQueues_.presentQueue = presentQueueRet.value();
+	deviceQueues_.presentQueueFamilyIndex = m_Device.get_queue_index(vkb::QueueType::present).value();
 
 
 
@@ -506,7 +508,7 @@ bool DeviceVulkan::CreateCommandPool()
 {
 	VkCommandPoolCreateInfo pool_info{};
 	pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-	pool_info.queueFamilyIndex = m_Device.get_queue_index(vkb::QueueType::graphics).value();
+	pool_info.queueFamilyIndex = deviceQueues_.graphicsQueueFamilyIndex;
 	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 	if (vkCreateCommandPool(m_Device, &pool_info, nullptr, &m_CommandPool) != VK_SUCCESS)
@@ -801,7 +803,7 @@ bool DeviceVulkan::InitGui()
 	init_info.Instance = m_Instance;
 	init_info.PhysicalDevice = m_PhysicalDevice;
 	init_info.Device = m_Device;
-	init_info.Queue = m_GraphicsQueue;
+	init_info.Queue = deviceQueues_.graphicsQueue;
 	init_info.PipelineCache = VK_NULL_HANDLE;
 	init_info.DescriptorPool = m_ImGuiDescriptorPool;
 	init_info.RenderPass = m_RenderPass;

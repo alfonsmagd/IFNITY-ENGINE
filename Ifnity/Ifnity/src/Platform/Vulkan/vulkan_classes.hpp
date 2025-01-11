@@ -10,9 +10,23 @@
 IFNITY_NAMESPACE
 
 class DeviceVulkan;
+
 namespace Vulkan
+
 {
-	
+	struct DeviceQueues final
+	{
+		const static uint32_t INVALID = 0xFFFFFFFF;
+		uint32_t graphicsQueueFamilyIndex = INVALID;
+		uint32_t computeQueueFamilyIndex = INVALID;
+		uint32_t presentQueueFamilyIndex = INVALID;
+
+		VkQueue graphicsQueue = VK_NULL_HANDLE;
+		VkQueue computeQueue = VK_NULL_HANDLE;
+		VkQueue presentQueue = VK_NULL_HANDLE;
+	};
+
+
 	//Get struct 
 	struct SubmitHandle
 	{

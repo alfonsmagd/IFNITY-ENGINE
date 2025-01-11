@@ -178,5 +178,7 @@ namespace Vulkan
 	
 	}
 
+	//-----------------------------------------------//
+
 }
 IFNITY_END_NAMESPACE
