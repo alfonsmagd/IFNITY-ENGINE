@@ -980,7 +980,7 @@ class SwapchainBuilder {
         uint32_t array_layer_count = 1;
         uint32_t min_image_count = 0;
         uint32_t required_min_image_count = 0;
-        VkImageUsageFlags image_usage_flags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        VkImageUsageFlags image_usage_flags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT ;
         uint32_t graphics_queue_index = 0;
         uint32_t present_queue_index = 0;
         VkSurfaceTransformFlagBitsKHR pre_transform = static_cast<VkSurfaceTransformFlagBitsKHR>(0);

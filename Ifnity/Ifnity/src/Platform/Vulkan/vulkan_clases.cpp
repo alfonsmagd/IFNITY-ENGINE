@@ -10,11 +10,70 @@ IFNITY_NAMESPACE
 namespace Vulkan
 {
 
+	//-----------------------------------------------//
+	// VulkanSwapchain METHODS
+	//-----------------------------------------------//
+
+
+	VulkanSwapchain::VulkanSwapchain(DeviceVulkan& ctx, uint32_t width, uint32_t height):
+		ctx_(ctx), device_(ctx.device_), graphicsQueue_(ctx.deviceQueues_.graphicsQueue), width_(width), height_(height)
+	{
+		//1. Using vkb::Bootstrap to get it surface information and max numbers of images.
+		surfaceFormat_ = { ctx.swapchainBootStraap_.image_format , ctx.swapchainBootStraap_.color_space };
+		numSwapchainImages_ = ctx.swapchainBootStraap_.image_count;
+
+		//2.Acquire the SwapChain semaphore. 
+		acquireSemaphore_ = createSemaphore(device_, "Semaphore: swapchain-acquire");
+
+		//3. Building VulkanImages Image are building first with vkb::SwapchainBuilder 
+		char debugNameImage[ 256 ] = { 0 };
+		char debugNameImageView[ 256 ] = { 0 };
+	
+		for(uint32_t i = 0; i < numSwapchainImages_; i++)
+		{
+			snprintf(debugNameImage, sizeof(debugNameImage) - 1, "Image: swapchain %u", i);
+			snprintf(debugNameImageView, sizeof(debugNameImageView) - 1, "Image View: swapchain %u", i);
+			VulkanImage image = {
+				 .vkImage_ = ctx.swapchainBootStraap_.get_images().value()[ i ],
+				 .vkUsageFlags_ = ctx.swapchainBootStraap_.image_usage_flags,
+				 .vkExtent_ = VkExtent3D{.width = width_, .height = height_, .depth = 1},
+				 .vkType_ = VK_IMAGE_TYPE_2D,
+				 .vkImageFormat_ = surfaceFormat_.format,
+				 .isSwapchainImage_ = true,
+				 .isOwningVkImage_ = false,
+				 .isDepthFormat_ = VulkanImage::isDepthFormat(surfaceFormat_.format),
+				 .isStencilFormat_ = VulkanImage::isStencilFormat(surfaceFormat_.format),
+			};
+
+			VK_ASSERT(setDebugObjectName(device_, VK_OBJECT_TYPE_IMAGE, (uint64_t)image.vkImage_, debugNameImage));
+
+			image.imageView_ = image.createImageView(device_,
+				VK_IMAGE_VIEW_TYPE_2D,
+				surfaceFormat_.format,
+				VK_IMAGE_ASPECT_COLOR_BIT,
+				0,
+				VK_REMAINING_MIP_LEVELS,
+				0,
+				1,
+				{},
+				nullptr,
+				debugNameImageView);
+
+			swapchainTextures_[ i ] = image;
+		}//end for loop
+
+	}
+
+
+
+
+
+
 
 	//-----------------------------------------------//
 	// CommandBuffer METHODS
 	//-----------------------------------------------//
-	Vulkan::CommandBuffer::CommandBuffer(DeviceVulkan* ctx): ctx_(ctx), wrapper_(&ctx->immediate_->acquire())
+	Vulkan::CommandBuffer::CommandBuffer(DeviceVulkan* ctx) : ctx_(ctx), wrapper_(&ctx->immediate_->acquire())
 	{}
 
 	CommandBuffer::~CommandBuffer()
@@ -25,9 +84,40 @@ namespace Vulkan
 
 
 
+	//-----------------------------------------------//
+	// VulkanImage METHODS
+	//-----------------------------------------------//
 
+	VkImageView VulkanImage::createImageView(VkDevice device, VkImageViewType type, VkFormat format, VkImageAspectFlags aspectMask, uint32_t baseLevel, uint32_t numLevels, uint32_t baseLayer, uint32_t numLayers, const VkComponentMapping mapping, const VkSamplerYcbcrConversionInfo* ycbcr, const char* debugName) const
+	{
+		
+		const VkImageViewCreateInfo ci = {
+			 .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+			 .pNext = ycbcr,
+			 .image = vkImage_,
+			 .viewType = type,
+			 .format = format,
+			 .components = mapping,
+			 .subresourceRange = {aspectMask, baseLevel, numLevels ? numLevels : numLevels_, baseLayer, numLayers},
+		};
+		VkImageView vkView = VK_NULL_HANDLE;
+		VK_ASSERT(vkCreateImageView(device, &ci, nullptr, &vkView));
+		VK_ASSERT(setDebugObjectName(device, VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)vkView, debugName));
 
+		return vkView;
+	}
 
+	bool VulkanImage::isDepthFormat(VkFormat format)
+	{
+		return (format == VK_FORMAT_D16_UNORM) || (format == VK_FORMAT_X8_D24_UNORM_PACK32) || (format == VK_FORMAT_D32_SFLOAT) ||
+			(format == VK_FORMAT_D16_UNORM_S8_UINT) || (format == VK_FORMAT_D24_UNORM_S8_UINT) || (format == VK_FORMAT_D32_SFLOAT_S8_UINT);
+	}
+
+	bool VulkanImage::isStencilFormat(VkFormat format)
+	{
+		return (format == VK_FORMAT_S8_UINT) || (format == VK_FORMAT_D16_UNORM_S8_UINT) || (format == VK_FORMAT_D24_UNORM_S8_UINT) ||
+			(format == VK_FORMAT_D32_SFLOAT_S8_UINT);
+	}
 
 
 
@@ -50,8 +140,8 @@ namespace Vulkan
 			 .queueFamilyIndex = queueFamilyIndex,
 		};
 
-		
-		VK_CHECK(vkCreateCommandPool(device, &ci, nullptr, &commandPool_),"Failed create command pool ");
+
+		VK_CHECK(vkCreateCommandPool(device, &ci, nullptr, &commandPool_), "Failed create command pool ");
 		setDebugObjectName(device, VK_OBJECT_TYPE_COMMAND_POOL, (uint64_t)commandPool_, debugName);
 
 		//3. Create command buffer allocate info with primary level and command buffer count 1
@@ -76,7 +166,7 @@ namespace Vulkan
 			}
 			buf.semaphore_ = createSemaphore(device, semaphoreName);
 			buf.fence_ = createFence(device, fenceName);
-			VK_CHECK(vkAllocateCommandBuffers(device, &ai, &buf.cmdBufAllocated_),"Error allocate commandbuffer %u",i);
+			VK_CHECK(vkAllocateCommandBuffers(device, &ai, &buf.cmdBufAllocated_), "Error allocate commandbuffer %u", i);
 			buffers_[ i ].handle_.bufferIndex_ = i;
 		}
 	}
@@ -94,7 +184,7 @@ namespace Vulkan
 		}
 
 		vkDestroyCommandPool(device_, commandPool_, nullptr);
-	
+
 	}
 
 	void VulkanImmediateCommands::purge()
@@ -115,8 +205,8 @@ namespace Vulkan
 
 			if(result == VK_SUCCESS)
 			{
-				VK_CHECK(vkResetCommandBuffer(buf.cmdBuf_, VkCommandBufferResetFlags{ 0 }),"Fail Reset CommandBuffer while purge cmdb function");
-				VK_CHECK(vkResetFences(device_, 1, &buf.fence_),"Fail Reset Fences while purge its running");
+				VK_CHECK(vkResetCommandBuffer(buf.cmdBuf_, VkCommandBufferResetFlags{ 0 }), "Fail Reset CommandBuffer while purge cmdb function");
+				VK_CHECK(vkResetFences(device_, 1, &buf.fence_), "Fail Reset Fences while purge its running");
 				buf.cmdBuf_ = VK_NULL_HANDLE;
 				numAvailableCommandBuffers_++;
 			}
@@ -124,7 +214,7 @@ namespace Vulkan
 			{
 				if(result != VK_TIMEOUT)
 				{
-					VK_CHECK(result,"Error TIMEOUT while purge its running and WaitForFences ");
+					VK_CHECK(result, "Error TIMEOUT while purge its running and WaitForFences ");
 				}
 			}
 		}
@@ -141,7 +231,7 @@ namespace Vulkan
 
 		while(!numAvailableCommandBuffers_)
 		{
-			IFNITY_LOG(LogCore,INFO,"Waiting for command buffers...\n");
+			IFNITY_LOG(LogCore, INFO, "Waiting for command buffers...\n");
 			purge();
 		}
 
@@ -172,17 +262,17 @@ namespace Vulkan
 			 .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
 			 .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
 		};
-		VK_CHECK(vkBeginCommandBuffer(current->cmdBuf_, &bi),"Error begin command buffer");
+		VK_CHECK(vkBeginCommandBuffer(current->cmdBuf_, &bi), "Error begin command buffer");
 
 		nextSubmitHandle_ = current->handle_;
 
 		return *current;
-	
+
 	}
 
 	void VulkanImmediateCommands::wait(const SubmitHandle handle)
 	{
-		
+
 
 		if(handle.empty())
 		{
@@ -209,7 +299,7 @@ namespace Vulkan
 
 	void VulkanImmediateCommands::waitAll()
 	{
-		
+
 
 		VkFence fences[ kMaxCommandBuffers ];
 
@@ -272,7 +362,7 @@ namespace Vulkan
 
 	SubmitHandle VulkanImmediateCommands::submit(const CommandBufferWrapper& wrapper)
 	{
-		
+
 		assert(wrapper.isEncoding_);
 		VK_ASSERT(vkEndCommandBuffer(wrapper.cmdBuf_));
 
@@ -288,7 +378,7 @@ namespace Vulkan
 			waitSemaphores[ numWaitSemaphores++ ] = lastSubmitSemaphore_;
 		}
 
-		
+
 		const VkSubmitInfo si = {
 			 .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
 			 .waitSemaphoreCount = numWaitSemaphores,
@@ -300,7 +390,7 @@ namespace Vulkan
 			 .pSignalSemaphores = &wrapper.semaphore_,
 		};
 		VK_ASSERT(vkQueueSubmit(queue_, 1u, &si, wrapper.fence_));
-		
+
 
 		lastSubmitSemaphore_ = wrapper.semaphore_;
 		lastSubmitHandle_ = wrapper.handle_;

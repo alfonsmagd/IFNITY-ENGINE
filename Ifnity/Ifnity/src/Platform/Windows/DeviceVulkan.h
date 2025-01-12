@@ -20,6 +20,8 @@ class DeviceVulkan final : public GraphicsDeviceManager
 public:
 	Vulkan::CommandBuffer currentCommandBuffer_;
 	std::unique_ptr<Vulkan::VulkanImmediateCommands> immediate_;
+	vkb::Device    device_; // Vulkan device bootstrapper
+	vkb::Swapchain swapchainBootStraap_; // Vulkan swapchain
 
 public:
 	Vulkan::DeviceQueues deviceQueues_;
@@ -29,8 +31,8 @@ private:
 	vkb::Instance  m_Instance;  // Vulkan instance 
 	VmaAllocator   m_Allocator; // Vulkan memory allocator
 	VkSurfaceKHR   m_Surface;   // Vulkan surface
-	vkb::Swapchain m_Swapchain; // Vulkan swapchain
-	vkb::Device    m_Device; // Vulkan device bootstrapper
+
+	
 	
 	vkb::PhysicalDevice m_PhysicalDevice; // Vulkan physical device bootstrapper. 
 

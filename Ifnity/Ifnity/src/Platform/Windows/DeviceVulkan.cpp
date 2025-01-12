@@ -21,21 +21,21 @@ static void check_vk_result(VkResult err)
 
 void DeviceVulkan::OnUpdate()
 {
-	if (vkWaitForFences(m_Device.device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+	if (vkWaitForFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to wait for fences");
 
 	}
 
-	if (vkResetFences(m_Device.device, 1, &m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
+	if (vkResetFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to reset fences");
 
 	}
 
 	uint32_t imageIndex = 0;
-	VkResult result = vkAcquireNextImageKHR(m_Device.device,
-		m_Swapchain,
+	VkResult result = vkAcquireNextImageKHR(device_.device,
+		swapchainBootStraap_,
 		UINT64_MAX,
 		m_ImageAvailableSemaphores[m_CurrentFrame],
 		VK_NULL_HANDLE,
@@ -86,7 +86,7 @@ void DeviceVulkan::OnUpdate()
 
 	rpInfo.renderArea.offset.x = 0;
 	rpInfo.renderArea.offset.y = 0;
-	rpInfo.renderArea.extent = m_Swapchain.extent;
+	rpInfo.renderArea.extent = swapchainBootStraap_.extent;
 	rpInfo.framebuffer = m_Framebuffers[imageIndex];
 
 	rpInfo.clearValueCount = 2;
@@ -95,14 +95,14 @@ void DeviceVulkan::OnUpdate()
 	VkViewport viewport{};
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(m_Swapchain.extent.width);
-	viewport.height = static_cast<float>(m_Swapchain.extent.height);
+	viewport.width = static_cast<float>(swapchainBootStraap_.extent.width);
+	viewport.height = static_cast<float>(swapchainBootStraap_.extent.height);
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 
 	VkRect2D scissor{};
 	scissor.offset = { 0, 0 };
-	scissor.extent = m_Swapchain.extent;
+	scissor.extent = swapchainBootStraap_.extent;
 
 	BeginRenderDocTrace(m_CommandBuffers[m_CurrentFrame], "Render Pass Begin 11111", color);
 	vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame], &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -174,7 +174,7 @@ void DeviceVulkan::OnUpdate()
 	presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphores[m_CurrentFrame];
 
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &m_Swapchain.swapchain;
+	presentInfo.pSwapchains = &swapchainBootStraap_.swapchain;
 
 	presentInfo.pImageIndices = &imageIndex;
 
@@ -298,7 +298,7 @@ void DeviceVulkan::InitializeGui()
 void DeviceVulkan::InternalPreDestroy()
 {
 	//Wait devide to finish and get idle state.
-	vkDeviceWaitIdle(m_Device.device);
+	vkDeviceWaitIdle(device_.device);
 }
 
 void DeviceVulkan::ClearBackBuffer(float* color)
@@ -312,7 +312,7 @@ DeviceVulkan::~DeviceVulkan()
 	
 
 	//Destroy Descriptor Pool 
-	vkDestroyDescriptorPool(m_Device.device, m_ImGuiDescriptorPool, nullptr);
+	vkDestroyDescriptorPool(device_.device, m_ImGuiDescriptorPool, nullptr);
 
 	//Destroy Sync Objects
 	DestroySyncObjects();
@@ -333,10 +333,10 @@ DeviceVulkan::~DeviceVulkan()
 	
 
 	// Destroy VkBootStrap
-	m_Swapchain.destroy_image_views(m_SwapchainImageViews);
+	swapchainBootStraap_.destroy_image_views(m_SwapchainImageViews);
 
-	vkb::destroy_swapchain(m_Swapchain);
-	vkb::destroy_device(m_Device);
+	vkb::destroy_swapchain(swapchainBootStraap_);
+	vkb::destroy_device(device_);
 	vkb::destroy_surface(m_Instance, m_Surface);
 	vkb::destroy_instance(m_Instance);
 
@@ -431,13 +431,13 @@ bool DeviceVulkan::CreateDevice()
 		IFNITY_LOG(LogCore, ERROR, "Failed to create device in Vulkan Device");
 		return false;
 	}
-	m_Device = deviceRet.value();
+	device_ = deviceRet.value();
 
 #ifdef _DEBUG
 	// Create debug utils messenger
 	//setupDebugCallbacksVK(m_Instance.instance, &debugUtilsMessenger);
-	setupCallbacks(m_Device.device);
-	setDebugObjectName(m_Instance,m_Device.device, VK_OBJECT_TYPE_DEVICE, (uint64_t)m_Device.device, "Device Context:");
+	setupCallbacks(device_.device);
+	setDebugObjectName(m_Instance,device_.device, VK_OBJECT_TYPE_DEVICE, (uint64_t)device_.device, "Device Context:");
 
 #endif
 
@@ -449,7 +449,7 @@ bool DeviceVulkan::CreateVmaAllocator()
 {
 	VmaAllocatorCreateInfo allocatorInfo{};
 	allocatorInfo.physicalDevice = m_PhysicalDevice.physical_device;
-	allocatorInfo.device = m_Device.device;
+	allocatorInfo.device = device_.device;
 	allocatorInfo.instance = m_Instance.instance;
 	if (vmaCreateAllocator(&allocatorInfo, &m_Allocator) != VK_SUCCESS)
 	{
@@ -462,23 +462,23 @@ bool DeviceVulkan::CreateVmaAllocator()
 
 bool DeviceVulkan::GetQueue()
 {
-	auto graphQueueRet = m_Device.get_queue(vkb::QueueType::graphics);
+	auto graphQueueRet = device_.get_queue(vkb::QueueType::graphics);
 	if (!graphQueueRet.has_value())
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get graphics queue in Vulkan Device");
 		return false;
 	}
 	deviceQueues_.graphicsQueue = graphQueueRet.value();
-	deviceQueues_.graphicsQueueFamilyIndex = m_Device.get_queue_index(vkb::QueueType::graphics).value();
+	deviceQueues_.graphicsQueueFamilyIndex = device_.get_queue_index(vkb::QueueType::graphics).value();
 
-	auto presentQueueRet = m_Device.get_queue(vkb::QueueType::present);
+	auto presentQueueRet = device_.get_queue(vkb::QueueType::present);
 	if (!presentQueueRet.has_value())
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get present  queue in Vulkan Device");
 		return false;
 	}
 	deviceQueues_.presentQueue = presentQueueRet.value();
-	deviceQueues_.presentQueueFamilyIndex = m_Device.get_queue_index(vkb::QueueType::present).value();
+	deviceQueues_.presentQueueFamilyIndex = device_.get_queue_index(vkb::QueueType::present).value();
 
 
 
@@ -487,21 +487,26 @@ bool DeviceVulkan::GetQueue()
 
 bool DeviceVulkan::CreateSwapChain()
 {
-	vkb::SwapchainBuilder swapChainBuild{ m_Device };
+	vkb::SwapchainBuilder swapChainBuild{ device_ };
 
 	/* VK_PRESENT_MODE_FIFO_KHR enables vsync */
-	auto swapChainBuildRet = swapChainBuild.set_old_swapchain(m_Swapchain).set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).build();
+	auto swapChainBuildRet = swapChainBuild.set_old_swapchain(swapchainBootStraap_).
+											set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).
+											add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT).
+											build();
 	if (!swapChainBuildRet)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create swapchain in Vulkan Device");
 		return false;
 	}
 
-	vkb::destroy_swapchain(m_Swapchain);
-	m_Swapchain = swapChainBuildRet.value();
+	
 
+	vkb::destroy_swapchain(swapchainBootStraap_);
+	swapchainBootStraap_ = swapChainBuildRet.value();
+	
 	//Get image_count 
-	m_commandBufferCount = m_Swapchain.image_count;
+	m_commandBufferCount = swapchainBootStraap_.image_count;
 
 	return true;
 }
@@ -513,7 +518,7 @@ bool DeviceVulkan::CreateCommandPool()
 	pool_info.queueFamilyIndex = deviceQueues_.graphicsQueueFamilyIndex;
 	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-	if (vkCreateCommandPool(m_Device, &pool_info, nullptr, &m_CommandPool) != VK_SUCCESS)
+	if (vkCreateCommandPool(device_, &pool_info, nullptr, &m_CommandPool) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create command pool in Vulkan Device");
 		return false;
@@ -524,7 +529,7 @@ bool DeviceVulkan::CreateCommandPool()
 
 bool DeviceVulkan::DestroyCommandPool()
 {
-	vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+	vkDestroyCommandPool(device_, m_CommandPool, nullptr);
 	return false;
 }
 
@@ -532,16 +537,16 @@ void DeviceVulkan::DestroySyncObjects()
 {
 	for (size_t i = 0; i < 3; i++)
 	{
-		vkDestroySemaphore(m_Device.device, m_ImageAvailableSemaphores[i], nullptr);
-		vkDestroySemaphore(m_Device.device, m_RenderFinishedSemaphores[i], nullptr);
-		vkDestroyFence(m_Device.device, m_InFlightFences[i], nullptr);
+		vkDestroySemaphore(device_.device, m_ImageAvailableSemaphores[i], nullptr);
+		vkDestroySemaphore(device_.device, m_RenderFinishedSemaphores[i], nullptr);
+		vkDestroyFence(device_.device, m_InFlightFences[i], nullptr);
 	}
 	
 }
 
 void DeviceVulkan::DestroyCommandBuffers()
 {
-	vkFreeCommandBuffers(m_Device.device,
+	vkFreeCommandBuffers(device_.device,
 		m_CommandPool, 
 		static_cast<uint32_t>(m_CommandBuffers.size()),
 		m_CommandBuffers.data());
@@ -552,13 +557,13 @@ void DeviceVulkan::CleanFrameBuffers()
 {
 	for (auto& framebuffer : m_Framebuffers)
 	{
-		vkDestroyFramebuffer(m_Device.device, framebuffer, nullptr);
+		vkDestroyFramebuffer(device_.device, framebuffer, nullptr);
 	}
 }
 
 void DeviceVulkan::DestroyRenderPass()
 {
-	vkDestroyRenderPass(m_Device.device, m_RenderPass, nullptr);
+	vkDestroyRenderPass(device_.device, m_RenderPass, nullptr);
 }
 
 void DeviceVulkan::DestroyImmediateCommands()
@@ -570,7 +575,7 @@ bool DeviceVulkan::CreateDepthBuffer()
 {
 	/*VkExtent3D depthImageExtent = {
 	   m_Swapchain.extent.width,
-	   m_Swapchain.extent.height,
+	   swapchainBootStraap_.extent.height,
 	   1
 	};
 
@@ -623,7 +628,7 @@ bool DeviceVulkan::CreateRenderPass()
 	std::array<VkAttachmentDescription, 1> attachments = {};
 
 	// Color attachment
-	attachments[0].format = m_Swapchain.image_format;								// Use the color format selected by the swapchain
+	attachments[0].format = swapchainBootStraap_.image_format;								// Use the color format selected by the swapchain
 	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;                                 // We don't use multi sampling in this example
 	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;                            // Clear this attachment at the start of the render pass
 	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;                          // Keep its contents after the render pass is finished (for displaying it)
@@ -676,7 +681,7 @@ bool DeviceVulkan::CreateRenderPass()
 	renderPassInfo.dependencyCount = static_cast<uint32_t>(dependencies.size()); // Number of subpass dependencies
 	renderPassInfo.pDependencies = dependencies.data();                          // Subpass dependencies used by the render pass
 
-	VK_CHECK(vkCreateRenderPass(m_Device.device, &renderPassInfo, nullptr, &m_RenderPass), "Failed to create render pass");
+	VK_CHECK(vkCreateRenderPass(device_.device, &renderPassInfo, nullptr, &m_RenderPass), "Failed to create render pass");
 
 
 	return true;
@@ -684,8 +689,8 @@ bool DeviceVulkan::CreateRenderPass()
 
 bool DeviceVulkan::CreateFrameBuffer()
 {
-	m_SwapchainImages     = m_Swapchain.get_images().value();
-	m_SwapchainImageViews = m_Swapchain.get_image_views().value();
+	m_SwapchainImages     = swapchainBootStraap_.get_images().value();
+	m_SwapchainImageViews = swapchainBootStraap_.get_image_views().value();
 
 
 	VkImageView attachments[1] = {};
@@ -697,8 +702,8 @@ bool DeviceVulkan::CreateFrameBuffer()
 	frameBufferCreateInfo.renderPass = m_RenderPass;
 	frameBufferCreateInfo.attachmentCount = 1;
 	frameBufferCreateInfo.pAttachments = attachments;
-	frameBufferCreateInfo.width = m_Swapchain.extent.width;
-	frameBufferCreateInfo.height = m_Swapchain.extent.height;
+	frameBufferCreateInfo.width = swapchainBootStraap_.extent.width;
+	frameBufferCreateInfo.height = swapchainBootStraap_.extent.height;
 	frameBufferCreateInfo.layers = 1;
 
 	//Create Framebuffers for each swapchain image view
@@ -707,7 +712,7 @@ bool DeviceVulkan::CreateFrameBuffer()
 	for (size_t i = 0; i < m_Framebuffers.size(); i++)
 	{
 		attachments[0] = m_SwapchainImageViews.at(i);
-		VK_CHECK(vkCreateFramebuffer(m_Device.device, &frameBufferCreateInfo, nullptr, &m_Framebuffers[i]), "Failed to create framebuffer");
+		VK_CHECK(vkCreateFramebuffer(device_.device, &frameBufferCreateInfo, nullptr, &m_Framebuffers[i]), "Failed to create framebuffer");
 
 	}
 
@@ -724,7 +729,7 @@ bool DeviceVulkan::CreateCommandBuffers()
 	bufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	bufferAllocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
 
-	if (vkAllocateCommandBuffers(m_Device.device, &bufferAllocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
+	if (vkAllocateCommandBuffers(device_.device, &bufferAllocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to allocate command buffers");
 		return false;
@@ -748,9 +753,9 @@ bool DeviceVulkan::CreateSyncObjects()
 
 	for (size_t i = 0; i < 3; i++)
 	{
-		if (vkCreateSemaphore(m_Device.device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS ||
-			vkCreateSemaphore(m_Device.device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS ||
-			vkCreateFence(m_Device.device, &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
+		if (vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS ||
+			vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS ||
+			vkCreateFence(device_.device, &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
 		{
 			IFNITY_LOG(LogCore, ERROR, "Failed to create synchronization objects for a frame");
 			return false;
@@ -764,7 +769,7 @@ bool DeviceVulkan::CreateSyncObjects()
 bool DeviceVulkan::AcquireNextImage()
 {
 	//Get the index of the next available swapchain image
-	VkResult result = vkAcquireNextImageKHR(m_Device.device, m_Swapchain.swapchain, UINT64_MAX, m_PresentSemaphore, (VkFence)nullptr, &m_imageIndex);
+	VkResult result = vkAcquireNextImageKHR(device_.device, swapchainBootStraap_.swapchain, UINT64_MAX, m_PresentSemaphore, (VkFence)nullptr, &m_imageIndex);
 
 	if (result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
@@ -809,7 +814,7 @@ bool DeviceVulkan::InitGui()
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = m_Instance;
 	init_info.PhysicalDevice = m_PhysicalDevice;
-	init_info.Device = m_Device;
+	init_info.Device = device_;
 	init_info.Queue = deviceQueues_.graphicsQueue;
 	init_info.PipelineCache = VK_NULL_HANDLE;
 	init_info.DescriptorPool = m_ImGuiDescriptorPool;
@@ -840,7 +845,7 @@ bool DeviceVulkan::CreateImGuiDescriptorPool()
 	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 	pool_info.pPoolSizes = pool_sizes;
 
-	if (vkCreateDescriptorPool(m_Device, &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
+	if (vkCreateDescriptorPool(device_, &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create descriptor pool for ImGui");
 		return false;
@@ -920,7 +925,7 @@ void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char
 
 bool DeviceVulkan::createVulkanImmediateCommands()
 {
-	immediate_ = std::make_unique<Vulkan::VulkanImmediateCommands>(m_Device.device, deviceQueues_.graphicsQueueFamilyIndex,
+	immediate_ = std::make_unique<Vulkan::VulkanImmediateCommands>(device_.device, deviceQueues_.graphicsQueueFamilyIndex,
 		"Creating Immediate Commands");
 
 	return true;
