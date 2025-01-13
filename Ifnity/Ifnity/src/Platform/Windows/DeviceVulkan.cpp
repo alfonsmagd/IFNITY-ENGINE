@@ -244,12 +244,12 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		!CreateDevice() ||
 		!CreateVmaAllocator() ||
 		!GetQueue() ||
+		!createVulkanImmediateCommands() ||
 		!CreateSwapChain() ||
 		!CreateCommandPool() ||
 		!CreateRenderPass() ||
 		!CreateFrameBuffer() ||
 		!CreateCommandBuffers() ||
-		!createVulkanImmediateCommands() ||
 		!CreateSyncObjects() 
 
 		)
@@ -507,6 +507,8 @@ bool DeviceVulkan::CreateSwapChain()
 	
 	//Get image_count 
 	m_commandBufferCount = swapchainBootStraap_.image_count;
+
+	Vulkan::VulkanSwapchain swapchain(*this,swapchainBootStraap_.extent.width,swapchainBootStraap_.extent.height);
 
 	return true;
 }
@@ -925,6 +927,7 @@ void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char
 
 bool DeviceVulkan::createVulkanImmediateCommands()
 {
+	IFNITY_ASSERT_MSG(deviceQueues_.graphicsQueueFamilyIndex != deviceQueues_.INVALID, "call CreateQueue First to get graphicsQueueFamilyIndex valid  ");
 	immediate_ = std::make_unique<Vulkan::VulkanImmediateCommands>(device_.device, deviceQueues_.graphicsQueueFamilyIndex,
 		"Creating Immediate Commands");
 

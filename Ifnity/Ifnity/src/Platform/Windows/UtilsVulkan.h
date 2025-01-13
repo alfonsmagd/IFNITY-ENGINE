@@ -51,7 +51,15 @@ VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType t
 VkSemaphore createSemaphore(VkDevice device, const char* debugName);
 VkFence createFence(VkDevice device, const char* debugName);
 const char* getVulkanResultString(VkResult result);
-
+void imageMemoryBarrier(VkCommandBuffer buffer,
+    VkImage image,
+    VkAccessFlags srcAccessMask,
+    VkAccessFlags dstAccessMask,
+    VkImageLayout oldImageLayout,
+    VkImageLayout newImageLayout,
+    VkPipelineStageFlags srcStageMask,
+    VkPipelineStageFlags dstStageMask,
+	VkImageSubresourceRange subresourceRange);
 
 //Forward declaration
 

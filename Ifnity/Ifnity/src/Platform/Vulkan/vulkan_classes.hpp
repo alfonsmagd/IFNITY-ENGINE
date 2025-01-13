@@ -161,14 +161,14 @@ namespace Vulkan
 		 	const VkSamplerYcbcrConversionInfo* ycbcr = nullptr,
 		 	const char* debugName = nullptr) const;
 
-		 /*void generateMipmap(VkCommandBuffer commandBuffer) const;
+		 //void generateMipmap(VkCommandBuffer commandBuffer) const;
 		 void transitionLayout(VkCommandBuffer commandBuffer,
 			 VkImageLayout newImageLayout,
 			 VkPipelineStageFlags srcStageMask,
 			 VkPipelineStageFlags dstStageMask,
 			 const VkImageSubresourceRange& subresourceRange) const;
 
-		 [[nodiscard]] VkImageAspectFlags getImageAspectFlags() const;*/
+		 //[[nodiscard]] VkImageAspectFlags getImageAspectFlags() const;
 
 		 // framebuffers can render only into one level/layer
 
@@ -212,10 +212,11 @@ namespace Vulkan
 		VulkanSwapchain(DeviceVulkan& ctx, uint32_t width, uint32_t height);
 		~VulkanSwapchain();
 
+		VulkanImage getCurrentTexture();
 		/*VkResult present(VkSemaphore waitSemaphore);
 		VkImage getCurrentVkImage() const;
 		VkImageView getCurrentVkImageView() const;
-		TextureHandle getCurrentTexture();
+		
 		const VkSurfaceFormatKHR& getSurfaceFormat() const;
 		uint32_t getNumSwapchainImages() const;*/
 

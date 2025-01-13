@@ -256,7 +256,27 @@ VkFence createFence(VkDevice device, const char* debugName)
 	return fence;
 }
 
-
+void imageMemoryBarrier(VkCommandBuffer buffer,
+	VkImage image,
+	VkAccessFlags srcAccessMask,
+	VkAccessFlags dstAccessMask,
+	VkImageLayout oldImageLayout,
+	VkImageLayout newImageLayout,
+	VkPipelineStageFlags srcStageMask,
+	VkPipelineStageFlags dstStageMask,
+	VkImageSubresourceRange subresourceRange)
+{
+	const VkImageMemoryBarrier barrier = {
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+		.srcAccessMask = srcAccessMask,
+		.dstAccessMask = dstAccessMask,
+		.oldLayout = oldImageLayout,
+		.newLayout = newImageLayout,
+		.image = image,
+		.subresourceRange = subresourceRange,
+	};
+	vkCmdPipelineBarrier(buffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+}
 
 //Forward declaration
 
