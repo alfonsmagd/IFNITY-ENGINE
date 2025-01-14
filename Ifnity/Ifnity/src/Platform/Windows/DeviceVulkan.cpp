@@ -21,6 +21,13 @@ static void check_vk_result(VkResult err)
 
 void DeviceVulkan::OnUpdate()
 {
+
+	//Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
+
+
+	//auto texture = getCurrentTexture();
+
+
 	if (vkWaitForFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to wait for fences");
@@ -336,6 +343,7 @@ DeviceVulkan::~DeviceVulkan()
 	swapchainBootStraap_.destroy_image_views(m_SwapchainImageViews);
 
 	vkb::destroy_swapchain(swapchainBootStraap_);
+	swapchain_.reset();
 	vkb::destroy_device(device_);
 	vkb::destroy_surface(m_Instance, m_Surface);
 	vkb::destroy_instance(m_Instance);
@@ -492,6 +500,7 @@ bool DeviceVulkan::CreateSwapChain()
 	/* VK_PRESENT_MODE_FIFO_KHR enables vsync */
 	auto swapChainBuildRet = swapChainBuild.set_old_swapchain(swapchainBootStraap_).
 											set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).
+											set_desired_format({ VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }).
 											add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT).
 											build();
 	if (!swapChainBuildRet)
@@ -508,7 +517,9 @@ bool DeviceVulkan::CreateSwapChain()
 	//Get image_count 
 	m_commandBufferCount = swapchainBootStraap_.image_count;
 
-	Vulkan::VulkanSwapchain swapchain(*this,swapchainBootStraap_.extent.width,swapchainBootStraap_.extent.height);
+	swapchain_ = std::make_unique<Vulkan::VulkanSwapchain>(*this,
+		swapchainBootStraap_.extent.width,
+		swapchainBootStraap_.extent.height);
 
 	return true;
 }
@@ -552,7 +563,7 @@ void DeviceVulkan::DestroyCommandBuffers()
 		m_CommandPool, 
 		static_cast<uint32_t>(m_CommandBuffers.size()),
 		m_CommandBuffers.data());
-
+	
 }
 
 void DeviceVulkan::CleanFrameBuffers()
@@ -941,6 +952,31 @@ Vulkan::CommandBuffer& DeviceVulkan::acquireCommandBuffer()
 	currentCommandBuffer_ = Vulkan::CommandBuffer(this);
 
 	return currentCommandBuffer_;
+}
+
+Vulkan::VulkanImage DeviceVulkan::getCurrentTexture()
+{
+
+	//Verify that have swapchain
+	if(!hasSwapchain())
+	{
+		return {};
+	}
+
+	Vulkan::VulkanImage tex = swapchain_->getCurrentTexture();
+
+	//TODO: Check VERIFY THAT text is valid image. 
+
+	IFNITY_ASSERT_MSG(tex.vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid image format");
+
+	return tex;
+
+
+}
+
+bool DeviceVulkan::hasSwapchain() const noexcept
+{
+	return swapchain_ != nullptr;
 }
 
 void DeviceVulkan::EndRenderDocTrace(VkCommandBuffer commandBuffer)

@@ -22,6 +22,7 @@ public:
 	std::unique_ptr<Vulkan::VulkanImmediateCommands> immediate_;
 	vkb::Device    device_; // Vulkan device bootstrapper
 	vkb::Swapchain swapchainBootStraap_; // Vulkan swapchain
+	std::unique_ptr<Vulkan::VulkanSwapchain> swapchain_;
 
 public:
 	Vulkan::DeviceQueues deviceQueues_;
@@ -160,7 +161,8 @@ private:
 	//TestMethods to move a Device class 
 	bool createVulkanImmediateCommands();
 	Vulkan::CommandBuffer& acquireCommandBuffer();
-
+	Vulkan::VulkanImage getCurrentTexture();
+	bool hasSwapchain() const noexcept;
 
 
 	void EndRenderDocTrace(VkCommandBuffer commandBuffer);
