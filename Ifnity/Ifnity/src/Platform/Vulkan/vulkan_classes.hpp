@@ -125,7 +125,12 @@ namespace Vulkan
 
 		DeviceVulkan* ctx_;
 		const VulkanImmediateCommands::CommandBufferWrapper* wrapper_ = nullptr;
+		
+		SubmitHandle lastSubmitHandle_ = {};
 
+		VkPipeline lastPipelineBound_ = VK_NULL_HANDLE;
+
+		bool isRendering_ = false;
 	};
 
 
@@ -212,14 +217,16 @@ namespace Vulkan
 		VulkanSwapchain(DeviceVulkan& ctx, uint32_t width, uint32_t height);
 		~VulkanSwapchain();
 
+
+		VkResult present(VkSemaphore waitSemaphore);
 		VulkanImage getCurrentTexture();
-		/*VkResult present(VkSemaphore waitSemaphore);
+		/*
 		VkImage getCurrentVkImage() const;
 		VkImageView getCurrentVkImageView() const;
 		
 		const VkSurfaceFormatKHR& getSurfaceFormat() const;
 		uint32_t getNumSwapchainImages() const;*/
-
+		uint32_t getCurrentImageIndex() const;
 	private:
 		DeviceVulkan& ctx_;
 		VkDevice device_ = VK_NULL_HANDLE;

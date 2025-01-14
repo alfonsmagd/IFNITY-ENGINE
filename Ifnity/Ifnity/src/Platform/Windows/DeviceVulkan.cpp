@@ -19,62 +19,22 @@ static void check_vk_result(VkResult err)
 }
 
 
+
+
 void DeviceVulkan::OnUpdate()
 {
-	if (vkWaitForFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to wait for fences");
-
-	}
-
-	if (vkResetFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to reset fences");
-
-	}
-
-	uint32_t imageIndex = 0;
-	VkResult result = vkAcquireNextImageKHR(device_.device,
-		swapchainBootStraap_,
-		UINT64_MAX,
-		m_ImageAvailableSemaphores[m_CurrentFrame],
-		VK_NULL_HANDLE,
-		&imageIndex);
-
-	if (result == VK_ERROR_OUT_OF_DATE_KHR)
-	{
-		return ResizeSwapChain();
-	}
-	else
-	{
-		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
-		{
-			IFNITY_LOG(LogCore, ERROR, "Failed to acquire next image");
-		}
-	}
+	//First get acquire the command buffer 
+	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
 
 
-	if (vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame], 0) != VK_SUCCESS)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to reset command buffer");
-	}
+	Vulkan::VulkanImage currentTexture = getCurrentSwapChainTexture();
 
-	VkCommandBufferBeginInfo cmdBeginInfo{};
-	cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-	if (vkBeginCommandBuffer(m_CommandBuffers[m_CurrentFrame], &cmdBeginInfo) != VK_SUCCESS)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to begin command buffer");
-	}
-
-	
 
 	VkClearValue colorClearValue;
-    colorClearValue.color = { { m_Color[0], m_Color[1], m_Color[2], m_Color[3] } };
+	colorClearValue.color = { { m_Color[ 0 ], m_Color[ 1 ], m_Color[ 2 ], m_Color[ 3 ] } };
 
-	float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
-	
+	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
+
 	VkClearValue depthValue;
 	depthValue.depthStencil.depth = 1.0f;
 
@@ -87,7 +47,7 @@ void DeviceVulkan::OnUpdate()
 	rpInfo.renderArea.offset.x = 0;
 	rpInfo.renderArea.offset.y = 0;
 	rpInfo.renderArea.extent = swapchainBootStraap_.extent;
-	rpInfo.framebuffer = m_Framebuffers[imageIndex];
+	rpInfo.framebuffer = m_Framebuffers[ swapchain_->getCurrentImageIndex()];
 
 	rpInfo.clearValueCount = 2;
 	rpInfo.pClearValues = clearValues;
@@ -104,8 +64,9 @@ void DeviceVulkan::OnUpdate()
 	scissor.offset = { 0, 0 };
 	scissor.extent = swapchainBootStraap_.extent;
 
-	BeginRenderDocTrace(m_CommandBuffers[m_CurrentFrame], "Render Pass Begin 11111", color);
-	vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame], &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+	vkCmdBeginRenderPass(cmdBuffer.wrapper_->cmdBuf_, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+	
 
 	///* the rendering itself happens here */
 	//if (!mUseChangedShader) {
@@ -128,74 +89,210 @@ void DeviceVulkan::OnUpdate()
 	//vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
 
 	// imgui overlay
+
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+
+	vkCmdEndRenderPass(cmdBuffer.wrapper_->cmdBuf_);
+	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+
+	submit(cmdBuffer, currentTexture);
+
 	
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]);
-
-	vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]);
-	EndRenderDocTrace(m_CommandBuffers[m_CurrentFrame]);
-
-	if (vkEndCommandBuffer(m_CommandBuffers[m_CurrentFrame]) != VK_SUCCESS)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to end command buffer ");
-		
-	}
-
-	///* upload UBO data after commands are created */
-	//void* data;
-	//vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc, &data);
-	//std::memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
-	//vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc);
-
-	/* submit command buffer */
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-
-	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	submitInfo.pWaitDstStageMask = &waitStage;
-
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[m_CurrentFrame];
-
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[m_CurrentFrame];
-
-	submitInfo.commandBufferCount = 1;
-	submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentFrame];
-
-	if (vkQueueSubmit(deviceQueues_.graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
-	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to submit command buffer");
-		
-	}
-
-	VkPresentInfoKHR presentInfo{};
-	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	presentInfo.waitSemaphoreCount = 1;
-	presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphores[m_CurrentFrame];
-
-	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &swapchainBootStraap_.swapchain;
-
-	presentInfo.pImageIndices = &imageIndex;
-
-	result = vkQueuePresentKHR(deviceQueues_.presentQueue, &presentInfo);
-	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-	{
-		return ResizeSwapChain();
-	}
-	else
-	{
-		if (result != VK_SUCCESS)
-		{
-			IFNITY_LOG(LogCore, ERROR, "Failed to present image");	
-		
-		}
-	}
-
-	m_CurrentFrame = (m_CurrentFrame + 1) % 3;
-
-
 }
+
+
+
+
+
+
+
+
+//void DeviceVulkan::OnUpdate()
+//{
+//	//First get acquire the command buffer 
+//	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
+//
+//	//Get Texture available to use. Remember that getCurrentTexture return a VulkanImage
+//	// and WaitForFences , ResetFences and AcquireNextImageKHR, then immediate set the semaphore to acquireSemaphore_
+//	Vulkan::VulkanImage texture = getCurrentTexture();
+//
+//
+//
+//	if (vkWaitForFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
+//	{
+//		IFNITY_LOG(LogCore, ERROR, "Failed to wait for fences");
+//
+//	}
+//
+//	if (vkResetFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
+//	{
+//		IFNITY_LOG(LogCore, ERROR, "Failed to reset fences");
+//
+//	}
+//
+//	uint32_t imageIndex = 0;
+//	VkResult result = vkAcquireNextImageKHR(device_.device,
+//		swapchainBootStraap_,
+//		UINT64_MAX,
+//		m_ImageAvailableSemaphores[m_CurrentFrame],
+//		VK_NULL_HANDLE,
+//		&imageIndex);
+//
+//	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+//	{
+//		return ResizeSwapChain();
+//	}
+//	else
+//	{
+//		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+//		{
+//			IFNITY_LOG(LogCore, ERROR, "Failed to acquire next image");
+//		}
+//	}
+//
+//
+//	if (vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame], 0) != VK_SUCCESS)
+//	{
+//		IFNITY_LOG(LogCore, ERROR, "Failed to reset command buffer");
+//	}
+//
+//	VkCommandBufferBeginInfo cmdBeginInfo{};
+//	cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+//	cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+//
+//	if (vkBeginCommandBuffer(m_CommandBuffers[m_CurrentFrame], &cmdBeginInfo) != VK_SUCCESS)
+//	{
+//		IFNITY_LOG(LogCore, ERROR, "Failed to begin command buffer");
+//	}
+//
+//	
+//
+//	VkClearValue colorClearValue;
+//    colorClearValue.color = { { m_Color[0], m_Color[1], m_Color[2], m_Color[3] } };
+//
+//	float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
+//	
+//	VkClearValue depthValue;
+//	depthValue.depthStencil.depth = 1.0f;
+//
+//	VkClearValue clearValues[] = { colorClearValue, depthValue };
+//
+//	VkRenderPassBeginInfo rpInfo{};
+//	rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+//	rpInfo.renderPass = m_RenderPass;
+//
+//	rpInfo.renderArea.offset.x = 0;
+//	rpInfo.renderArea.offset.y = 0;
+//	rpInfo.renderArea.extent = swapchainBootStraap_.extent;
+//	rpInfo.framebuffer = m_Framebuffers[imageIndex];
+//
+//	rpInfo.clearValueCount = 2;
+//	rpInfo.pClearValues = clearValues;
+//
+//	VkViewport viewport{};
+//	viewport.x = 0.0f;
+//	viewport.y = 0.0f;
+//	viewport.width = static_cast<float>(swapchainBootStraap_.extent.width);
+//	viewport.height = static_cast<float>(swapchainBootStraap_.extent.height);
+//	viewport.minDepth = 0.0f;
+//	viewport.maxDepth = 1.0f;
+//
+//	VkRect2D scissor{};
+//	scissor.offset = { 0, 0 };
+//	scissor.extent = swapchainBootStraap_.extent;
+//
+//	BeginRenderDocTrace(m_CommandBuffers[m_CurrentFrame], "Render Pass Begin 11111", color);
+//	vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame], &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+//
+//	///* the rendering itself happens here */
+//	//if (!mUseChangedShader) {
+//	//  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
+//	//} else {
+//	//  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
+//	//}
+//
+//	///* required for dynamic viewport */
+//	//vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
+//	//vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
+//
+//	///* the triangle drawing itself */
+//	//VkDeviceSize offset = 0;
+//	//vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
+//
+//	//vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
+//	//vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
+//
+//	//vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
+//
+//	// imgui overlay
+//	
+//	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]);
+//
+//	vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]);
+//	EndRenderDocTrace(m_CommandBuffers[m_CurrentFrame]);
+//
+//	if (vkEndCommandBuffer(m_CommandBuffers[m_CurrentFrame]) != VK_SUCCESS)
+//	{
+//		IFNITY_LOG(LogCore, ERROR, "Failed to end command buffer ");
+//		
+//	}
+//
+//	///* upload UBO data after commands are created */
+//	//void* data;
+//	//vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc, &data);
+//	//std::memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
+//	//vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc);
+//
+//	/* submit command buffer */
+//	VkSubmitInfo submitInfo{};
+//	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+//
+//	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+//	submitInfo.pWaitDstStageMask = &waitStage;
+//
+//	submitInfo.waitSemaphoreCount = 1;
+//	submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[m_CurrentFrame];
+//
+//	submitInfo.signalSemaphoreCount = 1;
+//	submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[m_CurrentFrame];
+//
+//	submitInfo.commandBufferCount = 1;
+//	submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentFrame];
+//
+//	if (vkQueueSubmit(deviceQueues_.graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
+//	{
+//		IFNITY_LOG(LogCore, ERROR, "Failed to submit command buffer");
+//		
+//	}
+//
+//	VkPresentInfoKHR presentInfo{};
+//	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+//	presentInfo.waitSemaphoreCount = 1;
+//	presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphores[m_CurrentFrame];
+//
+//	presentInfo.swapchainCount = 1;
+//	presentInfo.pSwapchains = &swapchainBootStraap_.swapchain;
+//
+//	presentInfo.pImageIndices = &imageIndex;
+//
+//	result = vkQueuePresentKHR(deviceQueues_.presentQueue, &presentInfo);
+//	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+//	{
+//		return ResizeSwapChain();
+//	}
+//	else
+//	{
+//		if (result != VK_SUCCESS)
+//		{
+//			IFNITY_LOG(LogCore, ERROR, "Failed to present image");	
+//		
+//		}
+//	}
+//
+//	m_CurrentFrame = (m_CurrentFrame + 1) % 3;
+//
+//
+//}
 
 unsigned int DeviceVulkan::GetWidth() const
 {
@@ -283,7 +380,7 @@ void DeviceVulkan::SetVSync(bool enabled)
 
 bool DeviceVulkan::IsVSync() const
 {
-	return false;
+	return true;
 }
 
 void DeviceVulkan::ResizeSwapChain()
@@ -336,6 +433,7 @@ DeviceVulkan::~DeviceVulkan()
 	swapchainBootStraap_.destroy_image_views(m_SwapchainImageViews);
 
 	vkb::destroy_swapchain(swapchainBootStraap_);
+	swapchain_.reset();
 	vkb::destroy_device(device_);
 	vkb::destroy_surface(m_Instance, m_Surface);
 	vkb::destroy_instance(m_Instance);
@@ -492,6 +590,7 @@ bool DeviceVulkan::CreateSwapChain()
 	/* VK_PRESENT_MODE_FIFO_KHR enables vsync */
 	auto swapChainBuildRet = swapChainBuild.set_old_swapchain(swapchainBootStraap_).
 											set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).
+											set_desired_format({ VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }).
 											add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT).
 											build();
 	if (!swapChainBuildRet)
@@ -508,7 +607,9 @@ bool DeviceVulkan::CreateSwapChain()
 	//Get image_count 
 	m_commandBufferCount = swapchainBootStraap_.image_count;
 
-	Vulkan::VulkanSwapchain swapchain(*this,swapchainBootStraap_.extent.width,swapchainBootStraap_.extent.height);
+	swapchain_ = std::make_unique<Vulkan::VulkanSwapchain>(*this,
+		swapchainBootStraap_.extent.width,
+		swapchainBootStraap_.extent.height);
 
 	return true;
 }
@@ -552,7 +653,7 @@ void DeviceVulkan::DestroyCommandBuffers()
 		m_CommandPool, 
 		static_cast<uint32_t>(m_CommandBuffers.size()),
 		m_CommandBuffers.data());
-
+	
 }
 
 void DeviceVulkan::CleanFrameBuffers()
@@ -823,7 +924,7 @@ bool DeviceVulkan::InitGui()
 	init_info.RenderPass = m_RenderPass;
 	init_info.Subpass = 0;
 	init_info.MinImageCount = 3;
-	init_info.ImageCount = 3;
+	init_info.ImageCount = Vulkan::VulkanImmediateCommands::kMaxCommandBuffers;
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init_info.CheckVkResultFn = check_vk_result;
 	ImGui_ImplVulkan_Init(&init_info);
@@ -941,6 +1042,80 @@ Vulkan::CommandBuffer& DeviceVulkan::acquireCommandBuffer()
 	currentCommandBuffer_ = Vulkan::CommandBuffer(this);
 
 	return currentCommandBuffer_;
+}
+
+Vulkan::VulkanImage DeviceVulkan::getCurrentSwapChainTexture()
+{
+
+	//Verify that have swapchain
+	if(!hasSwapchain())
+	{
+		return {};
+	}
+
+	Vulkan::VulkanImage tex = swapchain_->getCurrentTexture();
+
+	//TODO: Check VERIFY THAT text is valid image. 
+
+	IFNITY_ASSERT_MSG(tex.vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid image format");
+
+	return tex;
+
+
+}
+
+bool DeviceVulkan::hasSwapchain() const noexcept
+{
+	return swapchain_ != nullptr;
+}
+
+Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::VulkanImage tex)
+{
+	auto vkCmdBuffer = static_cast<Vulkan::CommandBuffer*>(&commandBuffer);
+
+
+	IFNITY_ASSERT_MSG(vkCmdBuffer,"Not vkcmdbuffer ");
+	IFNITY_ASSERT_MSG(vkCmdBuffer->ctx_, "Commandbuffer has not Vulkancontext assign.");
+	IFNITY_ASSERT_MSG(vkCmdBuffer->wrapper_, "Commandbuffer has not command buffer wrapper ");
+
+	//Prepare image to be presented
+	//if(tex.vkImage_)
+	//{
+
+	//	IFNITY_ASSERT_MSG(tex.isSwapchainImage_,"No SwapChainImage acquire to submit");
+
+	//	//// prepare image for presentation the image might be coming from a compute shader
+	//	//const VkPipelineStageFlagBits srcStage = (tex.vkImageLayout_ == VK_IMAGE_LAYOUT_GENERAL)
+	//	//	? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+	//	//	: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+	//	//tex.transitionLayout(vkCmdBuffer->wrapper_->cmdBuf_,
+	//	//	VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+	//	//	srcStage,
+	//	//	VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, // wait for all subsequent operations
+	//	//	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
+	//}
+
+	const bool shouldPresent = hasSwapchain() && tex.vkImage_ != VK_NULL_HANDLE;
+
+	vkCmdBuffer->lastSubmitHandle_ = immediate_->submit(*vkCmdBuffer->wrapper_);
+
+	if(shouldPresent)
+	{
+		swapchain_->present(immediate_->acquireLastSubmitSemaphore());
+	}
+
+	//processDeferredTasks();
+
+	Vulkan::SubmitHandle handle = vkCmdBuffer->lastSubmitHandle_;
+
+	// reset
+	currentCommandBuffer_ = {};
+
+	return handle;
+
+
+	
 }
 
 void DeviceVulkan::EndRenderDocTrace(VkCommandBuffer commandBuffer)

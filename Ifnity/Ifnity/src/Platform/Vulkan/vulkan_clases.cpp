@@ -16,7 +16,7 @@ namespace Vulkan
 
 
 	VulkanSwapchain::VulkanSwapchain(DeviceVulkan& ctx, uint32_t width, uint32_t height):
-		ctx_(ctx), device_(ctx.device_), graphicsQueue_(ctx.deviceQueues_.graphicsQueue), width_(width), height_(height)
+		ctx_(ctx), device_(ctx.device_), graphicsQueue_(ctx.deviceQueues_.graphicsQueue), width_(width), height_(height), swapchain_(ctx.swapchainBootStraap_.swapchain)
 	{
 		//1. Using vkb::Bootstrap to get it surface information and max numbers of images.
 		surfaceFormat_ = { ctx.swapchainBootStraap_.image_format , ctx.swapchainBootStraap_.color_space };
@@ -73,6 +73,28 @@ namespace Vulkan
 		vkDestroySemaphore(device_, acquireSemaphore_, nullptr);
 	}
 
+	VkResult VulkanSwapchain::present(VkSemaphore waitSemaphore)
+	{
+		
+		const VkPresentInfoKHR pi = {
+			 .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+			 .waitSemaphoreCount = 1,
+			 .pWaitSemaphores = &waitSemaphore,
+			 .swapchainCount = 1u,
+			 .pSwapchains = &swapchain_,
+			 .pImageIndices = &currentImageIndex_,
+		};
+		VkResult r = vkQueuePresentKHR(graphicsQueue_, &pi);
+		if(r != VK_SUCCESS && r != VK_SUBOPTIMAL_KHR && r != VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			VK_ASSERT(r);
+		}
+		getNextImage_ = true;
+
+		//Return error 
+		return r;
+	}
+
 	VulkanImage VulkanSwapchain::getCurrentTexture()
 	{
 		if(getNextImage_)
@@ -105,6 +127,11 @@ namespace Vulkan
 			return swapchainTextures_[ currentImageIndex_ ];
 		}
 		return {};
+	}
+
+	uint32_t VulkanSwapchain::getCurrentImageIndex() const
+	{
+		return currentImageIndex_;
 	}
 
 
