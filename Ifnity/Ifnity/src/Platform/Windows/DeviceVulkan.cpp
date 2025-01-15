@@ -1079,22 +1079,22 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 	IFNITY_ASSERT_MSG(vkCmdBuffer->wrapper_, "Commandbuffer has not command buffer wrapper ");
 
 	//Prepare image to be presented
-	//if(tex.vkImage_)
-	//{
+	if(tex.vkImage_)
+	{
 
-	//	IFNITY_ASSERT_MSG(tex.isSwapchainImage_,"No SwapChainImage acquire to submit");
+		IFNITY_ASSERT_MSG(tex.isSwapchainImage_,"No SwapChainImage acquire to submit");
 
-	//	//// prepare image for presentation the image might be coming from a compute shader
-	//	//const VkPipelineStageFlagBits srcStage = (tex.vkImageLayout_ == VK_IMAGE_LAYOUT_GENERAL)
-	//	//	? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
-	//	//	: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		// prepare image for presentation the image might be coming from a compute shader
+		const VkPipelineStageFlagBits srcStage = (tex.vkImageLayout_ == VK_IMAGE_LAYOUT_GENERAL)
+			? VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT
+			: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
-	//	//tex.transitionLayout(vkCmdBuffer->wrapper_->cmdBuf_,
-	//	//	VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-	//	//	srcStage,
-	//	//	VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, // wait for all subsequent operations
-	//	//	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
-	//}
+		tex.transitionLayout(vkCmdBuffer->wrapper_->cmdBuf_,
+			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			srcStage,
+			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, // wait for all subsequent operations
+			VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
+	}
 
 	const bool shouldPresent = hasSwapchain() && tex.vkImage_ != VK_NULL_HANDLE;
 

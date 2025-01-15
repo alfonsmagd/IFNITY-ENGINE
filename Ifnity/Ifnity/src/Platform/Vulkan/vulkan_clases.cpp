@@ -71,6 +71,7 @@ namespace Vulkan
 			vkDestroyImageView(device_, image.imageView_, nullptr);
 		}
 		vkDestroySemaphore(device_, acquireSemaphore_, nullptr);
+		vkDestroyFence(device_, acquireFence_, nullptr);
 	}
 
 	VkResult VulkanSwapchain::present(VkSemaphore waitSemaphore)
