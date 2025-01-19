@@ -1,6 +1,7 @@
 #include "gl_backend.hpp"
 #include <GLFW\glfw3.h>
 #include "..\..\..\vendor\glfw\deps\stb_image_write.h"
+#include "Ifnity\Graphics\Utils.hpp"
 
 
 
@@ -34,79 +35,9 @@ namespace OpenGL
         CheckOpenGLError(#stmt, __FILE__, __LINE__); \
     } while (0)
 
-	std::string readShaderFile(const char* fileName)
-	{
-		FILE* file = fopen(fileName, "r");
+	
 
-		if(!file)
-		{
-			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file \n" + std::string(fileName));
-			
-		
-		}
-
-		fseek(file, 0L, SEEK_END);
-		const auto bytesinfile = ftell(file);
-		fseek(file, 0L, SEEK_SET);
-
-		char* buffer = (char*)alloca(static_cast<size_t>(bytesinfile) + 1);
-		const size_t bytesread = fread(buffer, 1, bytesinfile, file);
-		fclose(file);
-
-		buffer[ bytesread ] = 0;
-
-		static constexpr unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
-
-		if(bytesread > 3)
-		{
-			if(!memcmp(buffer, BOM, 3))
-				memset(buffer, ' ', 3);
-		}
-
-		std::string code(buffer);
-
-		while(code.find("#include ") != code.npos)
-		{
-			const auto pos = code.find("#include ");
-			const auto p1 = code.find('<', pos);
-			const auto p2 = code.find('>', pos);
-			if(p1 == code.npos || p2 == code.npos || p2 <= p1)
-			{
-				IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot include  shader file '%s'\n", fileName);
-				return std::string();
-			}
-			const std::string name = code.substr(p1 + 1, p2 - p1 - 1);
-			const std::string include = readShaderFile(name.c_str());
-			code.replace(pos, p2 - pos + 1, include.c_str());
-		}
-
-		return code;
-	}
-
-	void printShaderSource(const char* text)
-	{
-		int line = 1;
-		IFNITY_LOG(LogCore, TRACE, "Shader source code Start : -------------------------------------------------------------\n");
-		printf("\n(%3i) ", line);
-
-		while(text && *text++)
-		{
-			if(*text == '\n')
-			{
-				printf("\n(%3i) ", ++line);
-			}
-			else if(*text == '\r')
-			{
-			}
-			else
-			{
-				printf("%c", *text);
-			}
-		}
-
-		printf("\n");
-		IFNITY_LOG(LogCore, TRACE, "Shader source code END : -------------------------------------------------------------\n");
-	}
+	
 
 	Device::Device()
 	{}
@@ -164,14 +95,14 @@ namespace OpenGL
 			const auto& vsfile = vs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
 			const auto& psfile = fs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
 
-			vertexCode = readShaderFile(vsfile.c_str());
-			fragmentCode = readShaderFile(psfile.c_str());
+			vertexCode =   Utils::readShaderFile(vsfile.c_str());
+			fragmentCode = Utils::readShaderFile(psfile.c_str());
 
 			if(gs)
 			{
 				const auto& gsfile = gs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
 
-				geometryCode = readShaderFile(gsfile.c_str());
+				geometryCode = Utils::readShaderFile(gsfile.c_str());
 			}
 		}
 		catch(std::ifstream::failure& e)
@@ -589,7 +520,7 @@ namespace OpenGL
 		};
 		#if _DEBUG
 		IFNITY_LOG(LogCore, TRACE, "Vertex Shader Source: " + std::string( vertexShader));
-		printShaderSource(vertexShader);
+		Utils::printShaderSource(vertexShader);
 		#endif
 
 		const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -605,7 +536,7 @@ namespace OpenGL
 
 		#if _DEBUG
 			IFNITY_LOG(LogCore, TRACE, STRMESSAGE("Fragment Shader Source: ", fragmentShader));
-			printShaderSource(fragmentShader);
+			Utils::printShaderSource(fragmentShader);
 		#endif
 		const GLuint program = glCreateProgram();
 		glAttachShader(program, shaderVertex);
@@ -652,7 +583,7 @@ namespace OpenGL
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n", infoLog);
 		}
 		#if _DEBUG
-		printShaderSource(vertexShader);
+		Utils::printShaderSource(vertexShader);
 		#endif
 
 		// Compile fragment shader
@@ -666,7 +597,7 @@ namespace OpenGL
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n", infoLog);
 		}
 		#if _DEBUG
-		printShaderSource(fragmentShader);
+		Utils::printShaderSource(fragmentShader);
 		#endif
 
 		// Compile geometry shader if provided
@@ -683,7 +614,7 @@ namespace OpenGL
 				IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n", infoLog);
 			}
 			#if _DEBUG
-			printShaderSource(geometryShader);
+			Utils::printShaderSource(geometryShader);
 			#endif
 		}
 

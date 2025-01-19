@@ -26,6 +26,9 @@
 //Scene
 #include "Ifnity/Scene/Scene.h"
 
+//Utils Vulkan to test Vulkan API
+#include "Platform\Windows\UtilsVulkan.h"
+
 //wOMDPW
 //Entry Point this include have put at the end of the file.
 #include "Ifnity/EntryPoint.h"

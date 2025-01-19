@@ -17,7 +17,9 @@ IFNITY_NAMESPACE
     MESH,
     SCENES,
     CAMERAS,
-    TEXTURES
+    TEXTURES,
+
+    NO_DEFINED
 };
 
 /**
@@ -83,6 +85,9 @@ public:
      * @return A vector of file names.
      */
     std::vector<std::string> ListFiles(const std::string& virtualPath, const std::string& subdirectory) const;
+
+
+    std::vector<std::string> ListFilesInCurrentDirectory(const std::string& virtualPath, bool onlyfilename = false) const;
 
 private:
     VFS() = default;

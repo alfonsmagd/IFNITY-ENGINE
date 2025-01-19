@@ -6,9 +6,6 @@
 #include "pch.h"
 #include  "Interfaces/IBuffer.hpp"
 #include "Bitmap.hpp"
-
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../vendor/stb_image/stb_image_write.h"
 
 IFNITY_NAMESPACE
@@ -20,6 +17,9 @@ namespace Utils
 
 	//Util function to save HDR images 
 	IFNITY_API void saveHDR(const Bitmap& bitmap, const char* filename);
+
+	IFNITY_API void printShaderSource(const char* text);
+	IFNITY_API std::string readShaderFile(const char* fileName);
 }
 
 IFNITY_END_NAMESPACE

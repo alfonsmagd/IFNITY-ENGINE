@@ -16,6 +16,17 @@ class DeviceVulkan;
 
 namespace Vulkan
 {
+	//-----------------------------------------------//
+	// STRUCTS
+	//-----------------------------------------------//
+	struct ShaderModuleState final
+	{
+		VkShaderModule sm = VK_NULL_HANDLE;
+		uint32_t pushConstantsSize = 0;
+	};
+
+
+
 	struct DeviceQueues final
 	{
 		const static uint32_t INVALID = 0xFFFFFFFF;
@@ -50,6 +61,17 @@ namespace Vulkan
 			return (uint64_t(submitId_) << 32) + bufferIndex_;
 		}
 	};
+
+	//-----------------------------------//
+	// CLASSES--------------------------//
+	//-----------------------------------//
+
+
+
+
+
+
+
 
 	//-----------------------------------------------//
 	// VulkanImmediateCommands 

@@ -2,10 +2,59 @@
 
 
 #include "UtilsVulkan.h"
-
+#include "Ifnity\Graphics\Utils.hpp"
+#include <glslang\Public\resource_limits_c.h>
 
 
 IFNITY_NAMESPACE
+
+
+
+//-----------------------------------------------//
+//STATIC UTILS METHODS INSIDE FILE IMPLEMENTATION//
+//-----------------------------------------------//
+static glslang_stage_t getGLSLangShaderStage(VkShaderStageFlagBits stage)
+{
+	switch(stage)
+	{
+	case VK_SHADER_STAGE_VERTEX_BIT:
+		return GLSLANG_STAGE_VERTEX;
+	case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+		return GLSLANG_STAGE_TESSCONTROL;
+	case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+		return GLSLANG_STAGE_TESSEVALUATION;
+	case VK_SHADER_STAGE_GEOMETRY_BIT:
+		return GLSLANG_STAGE_GEOMETRY;
+	case VK_SHADER_STAGE_FRAGMENT_BIT:
+		return GLSLANG_STAGE_FRAGMENT;
+	case VK_SHADER_STAGE_COMPUTE_BIT:
+		return GLSLANG_STAGE_COMPUTE;
+	case VK_SHADER_STAGE_TASK_BIT_EXT:
+		return GLSLANG_STAGE_TASK;
+	case VK_SHADER_STAGE_MESH_BIT_EXT:
+		return GLSLANG_STAGE_MESH;
+
+		// ray tracing
+	case VK_SHADER_STAGE_RAYGEN_BIT_KHR:
+		return GLSLANG_STAGE_RAYGEN;
+	case VK_SHADER_STAGE_ANY_HIT_BIT_KHR:
+		return GLSLANG_STAGE_ANYHIT;
+	case VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR:
+		return GLSLANG_STAGE_CLOSESTHIT;
+	case VK_SHADER_STAGE_MISS_BIT_KHR:
+		return GLSLANG_STAGE_MISS;
+	case VK_SHADER_STAGE_INTERSECTION_BIT_KHR:
+		return GLSLANG_STAGE_INTERSECT;
+	case VK_SHADER_STAGE_CALLABLE_BIT_KHR:
+		return GLSLANG_STAGE_CALLABLE;
+	default:
+		assert(false);
+	};
+	assert(false);
+	return GLSLANG_STAGE_COUNT;
+}
+
+
 
 const char* getVulkanResultString(VkResult result)
 {
@@ -278,65 +327,161 @@ void imageMemoryBarrier(VkCommandBuffer buffer,
 	vkCmdPipelineBarrier(buffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-//Forward declaration
 
-//struct VkRenderData
-//{
-//	GLFWwindow* rdWindow = nullptr;
-//
-//	int rdWidth = 0;
-//	int rdHeight = 0;
-//
-//	unsigned int rdTriangleCount = 0;
-//
-//	VmaAllocator rdAllocator = nullptr;
-//
-//	vkb::Instance rdVkbInstance{};
-//	vkb::PhysicalDevice rdVkbPhysicalDevice{};
-//	vkb::Device rdVkbDevice{};
-//	vkb::Swapchain rdVkbSwapchain{};
-//
-//	std::vector<VkImage> rdSwapchainImages;
-//	std::vector<VkImageView> rdSwapchainImageViews;
-//	std::vector<VkFramebuffer> rdFramebuffers;
-//
-//	VkQueue rdGraphicsQueue = VK_NULL_HANDLE;
-//	VkQueue rdPresentQueue = VK_NULL_HANDLE;
-//
-//	VkImage rdDepthImage = VK_NULL_HANDLE;
-//	VkImageView rdDepthImageView = VK_NULL_HANDLE;
-//	VkFormat rdDepthFormat;
-//	VmaAllocation rdDepthImageAlloc = VK_NULL_HANDLE;
-//
-//	VkRenderPass rdRenderpass;
-//	VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
-//	VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
-//	VkPipeline rdChangedPipeline = VK_NULL_HANDLE;
-//
-//	VkCommandPool rdCommandPool = VK_NULL_HANDLE;
-//	VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
-//
-//	VkSemaphore rdPresentSemaphore = VK_NULL_HANDLE;
-//	VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
-//	VkFence rdRenderFence = VK_NULL_HANDLE;
-//
-//	VkImage rdTextureImage = VK_NULL_HANDLE;
-//	VkImageView rdTextureImageView = VK_NULL_HANDLE;
-//	VkSampler rdTextureSampler = VK_NULL_HANDLE;
-//	VmaAllocation rdTextureImageAlloc = nullptr;
-//
-//	VkDescriptorPool rdTextureDescriptorPool = VK_NULL_HANDLE;
-//	VkDescriptorSetLayout rdTextureDescriptorLayout = VK_NULL_HANDLE;
-//	VkDescriptorSet rdTextureDescriptorSet = VK_NULL_HANDLE;
-//
-//	VkBuffer rdUboBuffer = VK_NULL_HANDLE;
-//	VmaAllocation rdUboBufferAlloc = nullptr;
-//
-//	VkDescriptorPool rdUBODescriptorPool = VK_NULL_HANDLE;
-//	VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
-//	VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
-//
-//	VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
-//};
+void saveSPIRVBinaryFile(const char* filename, const uint8_t* code, size_t size)
+{
+	FILE* f = fopen(filename, "wb");
+
+	if(!f)
+		return;
+
+	fwrite(code, sizeof(uint8_t), size, f);
+	fclose(f);
+}
+
+VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vector<uint8_t>* outSPIRV, const glslang_resource_t* glslLangResource)
+{
+	glslang_initialize_process();
+
+	if(!outSPIRV)
+	{
+		IFNITY_LOG(LogCore, ERROR, "outSPIRV is null, check it out");
+		return VK_ERROR_INITIALIZATION_FAILED;
+	}
+
+	const glslang_input_t input = {
+		.language = GLSLANG_SOURCE_GLSL,
+		.stage = getGLSLangShaderStage(stage),
+		.client = GLSLANG_CLIENT_VULKAN,
+		.client_version = GLSLANG_TARGET_VULKAN_1_3,
+		.target_language = GLSLANG_TARGET_SPV,
+		.target_language_version = GLSLANG_TARGET_SPV_1_6,
+		.code = code,
+		.default_version = 100,
+		.default_profile = GLSLANG_NO_PROFILE,
+		.force_default_version_and_profile = false,
+		.forward_compatible = false,
+		.messages = GLSLANG_MSG_DEFAULT_BIT,
+		.resource = glslLangResource,
+	};
+
+	glslang_shader_t* shader = glslang_shader_create(&input);
+	
+
+	if(!glslang_shader_preprocess(shader, &input))
+	{
+		IFNITY_LOG(LogCore,TRACE,"Shader preprocessing failed:\n");
+		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_shader_get_info_log(shader));
+		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_shader_get_info_debug_log(shader));
+		
+		assert(false);
+		IFNITY_LOG(LogCore, ERROR, "glslang_shader_preprocess() failed");
+		return VK_ERROR_INITIALIZATION_FAILED;
+	}
+
+	if(!glslang_shader_parse(shader, &input))
+	{
+		IFNITY_LOG(LogCore,TRACE,"Shader parsing failed:\n");
+		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_shader_get_info_log(shader));
+		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_shader_get_info_debug_log(shader));
+		Utils::printShaderSource(glslang_shader_get_preprocessed_code(shader));
+		IFNITY_LOG(LogCore, ERROR, "glslang_shader_parse() failed");
+		return VK_ERROR_INITIALIZATION_FAILED;
+	}
+
+	glslang_program_t* program = glslang_program_create();
+	glslang_program_add_shader(program, shader);
+
+	//SCOPE_EXIT{
+	//  glslang_program_delete(program);
+	//};
+
+	if(!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
+	{
+		IFNITY_LOG(LogCore,TRACE,"Shader linking failed:\n");
+		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_program_get_info_log(program));
+		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_program_get_info_debug_log(program));
+		IFNITY_LOG(LogCore, ERROR, "glslang program link() failed");
+		return VK_ERROR_INITIALIZATION_FAILED;
+	}
+
+	glslang_spv_options_t options = {
+		.generate_debug_info = true,
+		.strip_debug_info = false,
+		.disable_optimizer = false,
+		.optimize_size = true,
+		.disassemble = false,
+		.validate = true,
+		.emit_nonsemantic_shader_debug_info = false,
+		.emit_nonsemantic_shader_debug_source = false,
+	};
+
+	glslang_program_SPIRV_generate_with_options(program, input.stage, &options);
+
+	if(glslang_program_SPIRV_get_messages(program))
+	{
+		IFNITY_LOG(LogCore,ERROR,"%s\n", glslang_program_SPIRV_get_messages(program));
+	}
+
+	const uint8_t* spirv = reinterpret_cast<const uint8_t*>(glslang_program_SPIRV_get_ptr(program));
+	const size_t numBytes = glslang_program_SPIRV_get_size(program) * sizeof(uint32_t);
+
+	*outSPIRV = std::vector(spirv, spirv + numBytes);
+
+	glslang_program_delete(program);
+	glslang_shader_delete(shader);
+
+	glslang_finalize_process();
+	return VK_SUCCESS;
+}
+
+bool endsWith(const char* s, const char* part)
+{
+	const size_t sLength = strlen(s);
+	const size_t partLength = strlen(part);
+	return sLength < partLength ? false : strcmp(s + sLength - partLength, part) == 0;
+}
+
+VkShaderStageFlagBits vkShaderStageFromFileName(const char* fileName)
+{
+	if(endsWith(fileName, ".vert"))
+		return VK_SHADER_STAGE_VERTEX_BIT;
+
+	if(endsWith(fileName, ".frag"))
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+
+	if(endsWith(fileName, ".geom"))
+		return VK_SHADER_STAGE_GEOMETRY_BIT;
+
+	if(endsWith(fileName, ".comp"))
+		return VK_SHADER_STAGE_COMPUTE_BIT;
+
+	if(endsWith(fileName, ".tesc"))
+		return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+
+	if(endsWith(fileName, ".tese"))
+		return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+
+	return VK_SHADER_STAGE_VERTEX_BIT;
+}
+
+
+
+IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename)
+{
+	std::string shaderSource = Utils::readShaderFile(sourceFilename);
+
+	assert(!shaderSource.empty());
+
+	std::vector<uint8_t> spirv;
+	compileShaderVK(vkShaderStageFromFileName(sourceFilename), shaderSource.c_str(), &spirv, glslang_default_resource());
+
+	assert(!spirv.empty());
+
+	saveSPIRVBinaryFile(destFilename, spirv.data(), spirv.size());
+}
+
+
+
 
 IFNITY_END_NAMESPACE

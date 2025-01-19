@@ -165,6 +165,11 @@ private:
 	bool hasSwapchain() const noexcept;
 	Vulkan::SubmitHandle submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::VulkanImage present );
 
+	//This move to device create s
+	Vulkan::ShaderModuleState createShaderModuleFromSpirVconst (const void* spirv,
+		size_t numBytes,
+		const char* debugName);
+	
 	void EndRenderDocTrace(VkCommandBuffer commandBuffer);
 
 };

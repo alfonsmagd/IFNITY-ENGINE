@@ -49,6 +49,12 @@ set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "")
 set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "")
 set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "")
 
+#Sets GLSLANG
+set(ENABLE_GLSLANG_BINARIES  OFF  CACHE BOOL "")
+set(ENABLE_HLSL              OFF  CACHE BOOL "")
+set(ENABLE_CTEST             OFF  CACHE BOOL "")
+set(ENABLE_OPT               OFF  CACHE BOOL "")
+set(SKIP_GLSLANG_INSTALL     ON   CACHE BOOL "")
 
 # Buscar nvml.dll en el sistema
 find_file(NVML_LIBRARY
@@ -89,8 +95,9 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/SPIRV-Cross)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/assimp)
 ASSIGN_VENDOR_FOLDER(assimp)
 
-
-
+#add glslang
+add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glslang)
+ASSIGN_VENDOR_FOLDER(glslang)
 
 
 # Include directories
@@ -122,6 +129,12 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 #include RapidJson its only header library its not necessary to link it with add_subdirectory
 include_directories(${PROJECT_SOURCE_DIR}/vendor/rapidjson/include)
 
+#include glslang 
+include_directories(deps/src/glslang/glslang/Include)
+include_directories(deps/src/glslang)
+include_directories(deps/src/glslang/StandAlone)
+include_directories(deps/src/glslang/src)
+
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
 # Source files
@@ -134,6 +147,11 @@ file(GLOB_RECURSE SOURCE_FILES
 
 # Vendor Source Files 
 set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.c)
+# Add glslang source files
+set(GLSLANG_SOURCES
+    ${PROJECT_SOURCE_DIR}/vendor/glslang/glslang/ResourceLimits/ResourceLimits.cpp
+    ${PROJECT_SOURCE_DIR}/vendor/glslang/glslang/ResourceLimits/resource_limits_c.cpp
+)
 set_source_files_properties(${GLAD_SOURCE} PROPERTIES LANGUAGE CXX)
 
 # Add precompiled header
@@ -143,11 +161,11 @@ set(PCH_SOURCES ${PROJECT_SOURCE_DIR}/src/pch.cpp)
 
 # Add library
 if(BUILD_SHARED_IFNITY)
-	add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+	add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE}  ${GLSLANG_SOURCES})
     target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS BUILD_SHARED_IFNITY)
      message("IFNITY LIKE DLL BUILD SHARED IFNITY = ON ")
 else()
-	add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE})
+	add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE}  ${GLSLANG_SOURCES})
 endif()
 
 
@@ -173,6 +191,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
+target_link_libraries(${PROJECT_NAME} PUBLIC glslang)
 ASSIGN_VENDOR_FOLDER(spirv-cross-core)
 ASSIGN_VENDOR_FOLDER(spirv-cross-c)
 ASSIGN_VENDOR_FOLDER(vk-bootstrap)

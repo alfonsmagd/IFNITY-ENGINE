@@ -7,3 +7,6 @@
 [submodule "Ifnity/Ifnity/vendor/rapidjson"]
 	path = Ifnity/Ifnity/vendor/rapidjson
 	url = https://github.com/Tencent/rapidjson.git
+[submodule "Ifnity/Ifnity/vendor/glslang"]
+	path = Ifnity/Ifnity/vendor/glslang
+	url = https://github.com/KhronosGroup/glslang.git

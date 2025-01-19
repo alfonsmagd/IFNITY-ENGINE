@@ -4,6 +4,7 @@
 #include "UtilsVulkan.h"
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
+#include <spirv_cross\spirv_reflect.hpp>
 
 //#define IMGUI_DEMO 
 
@@ -1116,6 +1117,11 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 
 
 	
+}
+
+Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const void* spirv, size_t numBytes, const char* debugName)
+{
+	return Vulkan::ShaderModuleState();
 }
 
 void DeviceVulkan::EndRenderDocTrace(VkCommandBuffer commandBuffer)
