@@ -228,33 +228,27 @@ public:
 				return nullptr;
 			};
 
-		IFNITY::testShaderCompilation(getFileName(".vert"), "Shaders/testShader/main.vert.spirv");
-		IFNITY::testShaderCompilation(getFileName(".frag"), "Shaders/testShader/main.frag.spirv");
+		IFNITY::testShaderCompilation(getFileName(".vert"), "Shaders/testShader/main.vert.spv");
+		IFNITY::testShaderCompilation(getFileName(".frag"), "Shaders/testShader/main.frag.spv");
 
 		IFNITY_LOG(LogApp, INFO, "END APP ONLY TEST SHADER BUILDING ");
 
 
 		
-		/*m_vs = std::make_shared<IShader>();
+		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
 
 		ShaderCreateDescription DescriptionShader;
 		{
-			DescriptionShader.EntryPoint = L"main_vs";
-			DescriptionShader.Profile = L"vs_6_0";
-			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
-			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
-			DescriptionShader.ShaderSource = shaderSource3;
-			DescriptionShader.FileName = "vsTriangle";
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "triangle01.vert";
+			DescriptionShader.FileName = "glm.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
-			DescriptionShader.EntryPoint = L"main_ps";
-			DescriptionShader.Profile = L"ps_6_0";
-			DescriptionShader.Type = ShaderType::PIXEL_SHADER;
-			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
-			DescriptionShader.ShaderSource = shaderSource3;
-			DescriptionShader.FileName = "psTriangle";
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "triangle01.frag";
+			DescriptionShader.FileName = "glm.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
 
@@ -264,9 +258,9 @@ public:
 
 		GraphicsPipelineDescription gdesc;
 		gdesc.SetVertexShader(m_vs.get()).
-			SetPixelShader(m_ps.get());*/
+			  SetPixelShader(m_ps.get());
 
-		GraphicsPipelineDescription gdesc;
+		//GraphicsPipelineDescription gdesc;
 
 		auto renderdevice = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 	

@@ -100,6 +100,36 @@ namespace Utils
 		return code;
 	}
 
+	std::tuple<std::string, std::string, std::string> readShaderFilesByAPI(const rhi::GraphicsAPI& api, const IShader* vs, const IShader* fs, const IShader* gs)
+	{
+		if(!vs || !fs)
+		{
+			throw std::runtime_error("Vertex shader or fragment shader is missing.");
+		}
+
+		const auto& vsfile = vs->GetShaderDescpritionbyAPI(api).Filepath;
+		const auto& psfile = fs->GetShaderDescpritionbyAPI(api).Filepath;
+		const auto& gsfile = gs ? gs->GetShaderDescpritionbyAPI(api).Filepath : "";
+
+		std::string vertexCode, fragmentCode, geometryCode;
+		try
+		{
+			vertexCode = Utils::readShaderFile(vsfile.c_str());
+			fragmentCode = Utils::readShaderFile(psfile.c_str());
+
+			if(!gsfile.empty())
+			{
+				geometryCode = Utils::readShaderFile(gsfile.c_str());
+			}
+		}
+		catch(const std::ifstream::failure& e)
+		{
+			throw std::runtime_error("ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " + std::string(e.what()));
+		}
+
+		return { vertexCode, fragmentCode, geometryCode };
+	}
+
 }
 
 IFNITY_END_NAMESPACE

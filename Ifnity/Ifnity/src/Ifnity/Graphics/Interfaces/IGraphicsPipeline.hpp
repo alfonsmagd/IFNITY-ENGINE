@@ -62,7 +62,6 @@ struct IFNITY_API RenderState
 struct IFNITY_API GraphicsPipelineDescription
 {
 	RasterizationState rasterizationState;
-
 	RenderState renderState;
 
 	IShader* vs = nullptr;

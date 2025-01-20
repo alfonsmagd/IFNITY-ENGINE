@@ -47,7 +47,7 @@ private:
 	//ImageBlock m_DepthBuffer;
 	
 	// Render pass
-	VkRenderPass m_RenderPass = VK_NULL_HANDLE;
+	VkRenderPass m_RenderPass = VK_NULL_HANDLE ;
 
 	// Frame buffer and Image, ImageViews
 	std::vector<VkImage>  m_SwapchainImages;

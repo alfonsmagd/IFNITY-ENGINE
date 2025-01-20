@@ -2,16 +2,18 @@
 // This header file is built to define utility functions and classes for the Graphics module.
 
 
-
+#pragma once
 #include "pch.h"
 #include  "Interfaces/IBuffer.hpp"
 #include "Bitmap.hpp"
 #include "../vendor/stb_image/stb_image_write.h"
+#include "Ifnity\Graphics\Interfaces\IShader.hpp"
 
 IFNITY_NAMESPACE
 
 namespace Utils
 {
+
 
 	IFNITY_API BufferDescription CreateConstantBufferDescription(uint64_t byteSize, const std::string& debugName);
 
@@ -20,6 +22,10 @@ namespace Utils
 
 	IFNITY_API void printShaderSource(const char* text);
 	IFNITY_API std::string readShaderFile(const char* fileName);
+
+	std::tuple<std::string, std::string, std::string> readShaderFilesByAPI(const rhi::GraphicsAPI& api, const  IShader* vs, const IShader* fs, const IShader* gs);
+   
+
 }
 
 IFNITY_END_NAMESPACE

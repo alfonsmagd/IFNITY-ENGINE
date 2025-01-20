@@ -241,7 +241,7 @@ HRESULT ShaderCompiler::ChekingLocalShaders(IShader& shader)
 
 	//Reslolve spirv path
 	path = vfs.ResolvePath("Shaders", "vk");
-	description.Filepath = path + "//" + description.FileName + ".spv";
+	description.Filepath = path + "//" + description.FileName;
 	shader.AddShaderDescription(rhi::GraphicsAPI::VULKAN, description);
 
 	//Resolve glsl path
