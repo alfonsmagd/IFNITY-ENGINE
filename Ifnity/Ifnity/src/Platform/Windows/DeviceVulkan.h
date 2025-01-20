@@ -6,6 +6,7 @@
 #include "vk_mem_alloc.h"
 #include <VkBootstrap.h>
 #include "Platform\Vulkan\vulkan_classes.hpp"
+#include "vk_backend.hpp"
 
 IFNITY_NAMESPACE
 
@@ -18,13 +19,14 @@ class DeviceVulkan final : public GraphicsDeviceManager
 {
 
 public:
+	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
+
+public:
 	Vulkan::CommandBuffer currentCommandBuffer_;
 	std::unique_ptr<Vulkan::VulkanImmediateCommands> immediate_;
 	vkb::Device    device_; // Vulkan device bootstrapper
 	vkb::Swapchain swapchainBootStraap_; // Vulkan swapchain
 	std::unique_ptr<Vulkan::VulkanSwapchain> swapchain_;
-
-public:
 	Vulkan::DeviceQueues deviceQueues_;
 
 
@@ -93,6 +95,9 @@ private:
 	//Vulkan::CommandBuffer m_CommandBuffer;
 
 	float m_Color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+	//DeviceHandle 
+	DeviceHandle m_RenderDevice;
 
 protected:
 	// Heredado vía GraphicsDeviceManager

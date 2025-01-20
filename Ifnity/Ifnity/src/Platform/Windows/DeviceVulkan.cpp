@@ -357,7 +357,8 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 	}
 
 	IFNITY_LOG(LogCore, INFO, "Vulkan Device and Context Initialized");
-
+	
+	m_RenderDevice = Vulkan::CreateDevice();
 
 
 	return true;

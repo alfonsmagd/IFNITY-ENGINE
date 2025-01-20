@@ -4,9 +4,11 @@
 
 #include <Ifnity.h>
 
-
-
+using namespace IFNITY;
 using namespace IFNITY::rhi;
+
+
+
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
@@ -176,8 +178,14 @@ private:
 
 class Source: public IFNITY::App
 {
+private:
+	BufferHandle m_UBO;
+	GraphicsDeviceManager* m_ManagerDevice;
+	GraphicsPipelineHandle m_GraphicsPipeline;
+	std::shared_ptr<IShader> m_vs;
+	std::shared_ptr<IShader> m_ps;
 public:
-	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
 		// Obtener el contexto de ImGui desde IFNITY  DLL
 		/*ImGuiContext* context = GetImGuiContext();
@@ -224,6 +232,43 @@ public:
 		IFNITY::testShaderCompilation(getFileName(".frag"), "Shaders/testShader/main.frag.spirv");
 
 		IFNITY_LOG(LogApp, INFO, "END APP ONLY TEST SHADER BUILDING ");
+
+
+		
+		/*m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
+
+		ShaderCreateDescription DescriptionShader;
+		{
+			DescriptionShader.EntryPoint = L"main_vs";
+			DescriptionShader.Profile = L"vs_6_0";
+			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "vsTriangle";
+			m_vs->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.EntryPoint = L"main_ps";
+			DescriptionShader.Profile = L"ps_6_0";
+			DescriptionShader.Type = ShaderType::PIXEL_SHADER;
+			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.ShaderSource = shaderSource3;
+			DescriptionShader.FileName = "psTriangle";
+			m_ps->SetShaderDescription(DescriptionShader);
+		}
+
+		ShaderCompiler::CompileShader(m_vs.get());
+		ShaderCompiler::CompileShader(m_ps.get());
+
+
+		GraphicsPipelineDescription gdesc;
+		gdesc.SetVertexShader(m_vs.get()).
+			SetPixelShader(m_ps.get());*/
+
+		GraphicsPipelineDescription gdesc;
+
+		auto renderdevice = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 	
 		exit(0);
 
