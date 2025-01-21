@@ -25,6 +25,7 @@ namespace Vulkan
 		uint32_t pushConstantsSize = 0;
 	};
 
+	
 
 
 	struct DeviceQueues final

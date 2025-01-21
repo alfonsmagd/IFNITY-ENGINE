@@ -315,6 +315,7 @@ bool DeviceVulkan::InitInternalInstance()
 		Builder.set_app_name("Example Vulkan Application")
 		.request_validation_layers()
 		.use_default_debug_messenger()
+		.require_api_version(1,3,0)
 		.build();
 
 	if (!inst_ret)
@@ -357,8 +358,12 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 	}
 
 	IFNITY_LOG(LogCore, INFO, "Vulkan Device and Context Initialized");
+	//Get properties2 
+	IFNITY_ASSERT_MSG(m_PhysicalDevice.physical_device != VK_NULL_HANDLE,"No physical device create");
+	getPhysicalDeviceProperties2(m_PhysicalDevice.physical_device);
 	
-	m_RenderDevice = Vulkan::CreateDevice(device_);
+	m_RenderDevice = Vulkan::CreateDevice(device_,this);
+
 
 
 	return true;
@@ -871,6 +876,20 @@ bool DeviceVulkan::CreateSyncObjects()
 	return true;
 }
 
+void DeviceVulkan::getPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice)
+{
+	properties2 = {};
+	properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+	vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
+
+}
+
+void DeviceVulkan::createWeaknessDeviceReference()
+{
+
+
+}
+
 bool DeviceVulkan::AcquireNextImage()
 {
 	//Get the index of the next available swapchain image
@@ -935,6 +954,40 @@ bool DeviceVulkan::InitGui()
 
 
 	return true;
+}
+
+void DeviceVulkan::CheckSpirvVersion(VkPhysicalDevice physicalDevice)
+{
+	VkPhysicalDeviceProperties deviceProperties;
+	vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+
+	uint32_t apiVersion = deviceProperties.apiVersion;
+	uint32_t major = VK_VERSION_MAJOR(apiVersion);
+	uint32_t minor = VK_VERSION_MINOR(apiVersion);
+	uint32_t patch = VK_VERSION_PATCH(apiVersion);
+
+	std::cout << "Vulkan API Version: " << major << "." << minor << "." << patch << std::endl;
+
+	if(major == 1 && minor == 0)
+	{
+		std::cout << "Supported SPIR-V Version: 1.0" << std::endl;
+	}
+	else if(major == 1 && minor == 1)
+	{
+		std::cout << "Supported SPIR-V Version: 1.3" << std::endl;
+	}
+	else if(major == 1 && minor == 2)
+	{
+		std::cout << "Supported SPIR-V Version: 1.5" << std::endl;
+	}
+	else if(major == 1 && minor == 3)
+	{
+		std::cout << "Supported SPIR-V Version: 1.6" << std::endl;
+	}
+	else
+	{
+		std::cout << "Unknown Vulkan API Version" << std::endl;
+	}
 }
 
 bool DeviceVulkan::CreateImGuiDescriptorPool()

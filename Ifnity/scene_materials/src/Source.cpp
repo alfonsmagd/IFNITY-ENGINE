@@ -338,9 +338,9 @@ public:
 			.sceneConfig = vSceneconfig[ 0 ]
 		};
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder(8);
+		MeshDataBuilderAssimp<rhi::VertexScene> builder(0.1);
 
-	    builder.buildSceneData(meshAssimp);
+	    //builder.buildSceneData(meshAssimp);
 
 		//Create a SceneObject with the data.
 		m_SceneObject = rdevice->CreateSceneObject(meshAssimp.sceneConfig.outputMesh.c_str(),
@@ -394,7 +394,7 @@ public:
 
 		//Change the Pipeline to render the Scene
 		m_GraphicsPipeline[ SCENE ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
-		m_MeshObject->DrawIndirect();
+		m_MeshObject->DrawInstancedDirect();
 	}
 	void Animate() override
 	{

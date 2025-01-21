@@ -10,6 +10,8 @@
 IFNITY_NAMESPACE
 
 
+#pragma region DEFINES AND MACROS
+
 #define VK_CHECK(result, errorMessage) \
     if ((result) != VK_SUCCESS) { \
         IFNITY_LOG(LogCore, ERROR, errorMessage); \
@@ -34,6 +36,8 @@ extern PFN_vkSetDebugUtilsObjectNameEXT gvkSetDebugUtilsObjectNameEXT;
         IFNITY_LOG(LogCore, ERROR, errorMessage); \
         \
     }
+
+#pragma endregion
 
 IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
@@ -64,12 +68,14 @@ void imageMemoryBarrier(VkCommandBuffer buffer,
 	VkImageSubresourceRange subresourceRange);
 
 void saveSPIRVBinaryFile(const char* filename, const uint8_t * code, size_t size);
+glslang_resource_t getGlslangResource(const VkPhysicalDeviceLimits & limits);
 
 
 VkResult compileShaderVK(VkShaderStageFlagBits stage,
     const char* code,
     std::vector<uint8_t>*outSPIRV,
     const glslang_resource_t * glslLangResource);
+
 
 
 IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);

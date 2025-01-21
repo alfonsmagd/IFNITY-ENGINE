@@ -1,4 +1,6 @@
 #pragma once
+
+
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
 #include "../Vulkan/vulkan_classes.hpp"
 
@@ -10,6 +12,9 @@ namespace Vulkan
 	//------------------------------------------------------------------------------------//
 	//  DEVICE VULKAN                                                                      //
 	//-------------------------------------------------------------------------------------//
+
+    
+
     class Device final: public IDevice
     {
     public:
@@ -18,6 +23,7 @@ namespace Vulkan
         */
         Device();
 		Device(VkDevice vkDevice);
+        Device(VkDevice vkDevice, DeviceVulkan* ptr);
        
         virtual ~Device();
 
@@ -41,21 +47,28 @@ namespace Vulkan
         SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override;
         MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override;
         void SetRenderState(const RenderState& state);
+
+		
     
     private:
 		// Add private members here
-		ShaderModuleState createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName);
+		ShaderModuleState createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const;
+        ShaderModuleState createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const ;
+
 		VkDevice vkDevice_ = VK_NULL_HANDLE;
+		VkPhysicalDevice vkPhysicalDevice_ = VK_NULL_HANDLE;
+
+        DeviceVulkan* m_DeviceVulkan = nullptr;
+		
     };
 
-    inline DeviceHandle CreateDevice()
+    //Please constructor are not safe if you dont create the 
+    template<typename... Args>
+    inline DeviceHandle CreateDevice(Args&&... args)
     {
-        return std::make_shared<Device>();
+       
+        return std::make_shared<Device>(std::forward<Args>(args)...);
     }
-	inline DeviceHandle CreateDevice(VkDevice vkDevice)
-	{
-		return std::make_shared<Device>(vkDevice);
-	}
 
 //------------------------------------------------------------------------------------//
 //  G PIPELINE  VULKAN                                                                 //
@@ -72,6 +85,8 @@ namespace Vulkan
         const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
         void  BindPipeline(struct IDevice* device) override;
     
+    private:
+        friend GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc);
     
     };
 }

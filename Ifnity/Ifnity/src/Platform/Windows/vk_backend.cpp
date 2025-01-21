@@ -6,6 +6,7 @@
 //GLSLANG INCLUDES
 #include <glslang\Public\resource_limits_c.h>
 #include <spirv_cross/spirv_reflect.hpp>
+#include "DeviceVulkan.h"
 
 IFNITY_NAMESPACE
 
@@ -27,6 +28,16 @@ namespace Vulkan
 		// Constructor implementation
 	}
 
+	Device::Device(VkDevice vkDevice, DeviceVulkan* ptr): vkDevice_(vkDevice), m_DeviceVulkan(ptr)
+    {
+    
+		IFNITY_ASSERT_MSG(vkDevice_ != VK_NULL_HANDLE, "VkDevice is null");
+		IFNITY_ASSERT_MSG(m_DeviceVulkan != nullptr, "DeviceVulkan is null");
+		
+    }
+
+	
+
     Device::~Device()
     {
         // Destructor implementation
@@ -43,6 +54,11 @@ namespace Vulkan
         auto* vs = desc.vs;
         auto* fs = desc.ps;
         auto* gs = desc.gs;
+
+        //Get if files are binary, other solution its get the extension. 
+        bool vsbinary = desc.vs->GetShaderDescription().APIflag & ShaderAPIflag::SPIRV_BIN;
+		bool fsbinary = desc.ps->GetShaderDescription().APIflag & ShaderAPIflag::SPIRV_BIN;
+		bool gsbinary = desc.gs ? desc.gs->GetShaderDescription().APIflag & ShaderAPIflag::SPIRV_BIN : false;
 
         if(!vs || !fs)
         {
@@ -78,10 +94,8 @@ namespace Vulkan
 		// 2. compile shaders
 		GraphicsPipeline* pipeline = new GraphicsPipeline();
 
-        std::vector<uint8_t> spirv;
-        compileShaderVK(VK_SHADER_STAGE_VERTEX_BIT, vShaderCode, &spirv, glslang_default_resource());
-
-		createShaderModuleFromSpirV(spirv.data(), spirv.size(), "Vertex Shader");
+		pipeline->m_vertex   = createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader");
+		pipeline->m_fragment = createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader");
 
 
        
@@ -147,7 +161,7 @@ namespace Vulkan
         throw std::runtime_error("The function or operation is not implemented.");
     }
 
-    ShaderModuleState Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName)
+    ShaderModuleState Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const
     {
         VkShaderModule vkShaderModule = VK_NULL_HANDLE;
 
@@ -182,6 +196,23 @@ namespace Vulkan
             }
 
 			return { .sm = vkShaderModule, .pushConstantsSize = pushConstantSize };
+        }
+    }
+
+    ShaderModuleState Device::createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const 
+    {
+        std::vector<uint8_t> spirv;
+        if(isBinary)
+        {
+            return createShaderModuleFromSpirV(shaderCode, codeSize, debugName);
+        }
+        else
+        {
+
+			const glslang_resource_t resource = getGlslangResource(m_DeviceVulkan->properties2.properties.limits);
+            
+            compileShaderVK(stage, shaderCode, &spirv, &resource);
+            return createShaderModuleFromSpirV(spirv.data(), spirv.size(), debugName);
         }
     }
 

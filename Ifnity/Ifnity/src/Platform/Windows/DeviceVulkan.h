@@ -15,11 +15,12 @@ IFNITY_NAMESPACE
 //Rembeber that vkb its a namespace that contains the Vulkan Bootstrapper.
 //Vulkan:: its a namespace that contains the Vulkan Classes dessigned by IFNITY.
 
-class DeviceVulkan final : public GraphicsDeviceManager
+class DeviceVulkan final : public GraphicsDeviceManager 
 {
 
 public:
 	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
+
 
 public:
 	Vulkan::CommandBuffer currentCommandBuffer_;
@@ -28,13 +29,12 @@ public:
 	vkb::Swapchain swapchainBootStraap_; // Vulkan swapchain
 	std::unique_ptr<Vulkan::VulkanSwapchain> swapchain_;
 	Vulkan::DeviceQueues deviceQueues_;
-
+	VkPhysicalDeviceProperties2 properties2; //Physical Device Properties 2
 
 private:
 	vkb::Instance  m_Instance;  // Vulkan instance 
 	VmaAllocator   m_Allocator; // Vulkan memory allocator
 	VkSurfaceKHR   m_Surface;   // Vulkan surface
-
 	
 	
 	vkb::PhysicalDevice m_PhysicalDevice; // Vulkan physical device bootstrapper. 
@@ -102,27 +102,16 @@ private:
 protected:
 	// Heredado vía GraphicsDeviceManager
 	void OnUpdate() override;
-
 	unsigned int GetWidth() const override;
-
 	unsigned int GetHeight() const override;
-
 	bool InitInternalInstance() override;
-
 	bool InitializeDeviceAndContext() override;
-
 	bool ConfigureSpecificHintsGLFW() const override;
-
 	void SetVSync(bool enabled) override;
-
 	bool IsVSync() const override;
-
 	void ResizeSwapChain() override;
-
 	void InitializeGui() override;
-
 	void InternalPreDestroy() override;
-
 	void ClearBackBuffer(float* color) override;
 
 private:
@@ -142,6 +131,9 @@ private:
 	bool CreateFrameBuffer();
 	bool CreateCommandBuffers();
 	bool CreateSyncObjects();
+	
+	void getPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice);
+	void createWeaknessDeviceReference();
 
 	//Destroy private methods
 	bool DestroyCommandPool();
@@ -157,6 +149,7 @@ private:
 	bool SubmitCommandBuffer();
 	bool PresentImage();
 	bool InitGui();
+	void CheckSpirvVersion(VkPhysicalDevice physicalDevice);
 
 	//Imgui private methods
 	bool CreateImGuiDescriptorPool();
@@ -177,6 +170,8 @@ private:
 	
 	void EndRenderDocTrace(VkCommandBuffer commandBuffer);
 
+
+	
 };
 
 
