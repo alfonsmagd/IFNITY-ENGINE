@@ -5,7 +5,8 @@
 #include <pch.h>
 #include <VkBootstrap.h>
 #include "vk_mem_alloc.h"
-#include <Ifnity\Graphics\Interfaces\ITexture.hpp>
+
+
 
 
 
@@ -16,6 +17,70 @@ class DeviceVulkan;
 
 namespace Vulkan
 {
+
+	//================================================================================================
+	//ENUMS
+	//================================================================================================
+
+	enum class VertexFormat: uint8_t
+	{
+		Invalid = 0,
+		Float1,
+		Float2,
+		Float3,
+		Float4,
+
+		Byte1,
+		Byte2,
+		Byte3,
+		Byte4,
+		UByte1,
+		UByte2,
+		UByte3,
+		UByte4,
+
+		Short1,
+		Short2,
+		Short3,
+		Short4,
+
+		UShort1,
+		UShort2,
+		UShort3,
+		UShort4,
+
+		Byte2Norm,
+		Byte4Norm,
+
+		UByte2Norm,
+		UByte4Norm,
+
+		Short2Norm,
+		Short4Norm,
+
+		UShort2Norm,
+		UShort4Norm,
+
+		Int1,
+		Int2,
+		Int3,
+		Int4,
+
+		UInt1,
+		UInt2,
+		UInt3,
+		UInt4,
+
+		HalfFloat1,
+		HalfFloat2,
+		HalfFloat3,
+		HalfFloat4,
+
+		Int_2_10_10_10_REV,
+	};
+
+	enum { MAX_COLOR_ATTACHMENTS = 8 };
+
 	//-----------------------------------------------//
 	// STRUCTS
 	//-----------------------------------------------//
@@ -25,8 +90,92 @@ namespace Vulkan
 		uint32_t pushConstantsSize = 0;
 	};
 
-	
 
+	// Structure to hold a single specialization constant entry
+	struct SpecializationConstantEntry
+	{
+		uint32_t constantId = 0; // ID of the specialization constant
+		uint32_t offset = 0; // Offset within ShaderSpecializationConstantDesc::data
+		size_t size = 0; // Size of the specialization constant
+	};
+
+	// Structure to hold a description of specialization constants
+	struct SpecializationConstantDesc
+	{
+		enum { SPECIALIZATION_CONSTANTS_MAX = 16 }; // Maximum number of specialization constants
+		SpecializationConstantEntry entries[ SPECIALIZATION_CONSTANTS_MAX ] = {}; // Array of specialization constant entries
+		const void* data = nullptr; // Pointer to the data of specialization constants
+		size_t dataSize = 0; // Size of the data
+
+		// Function to get the number of specialization constants
+		uint32_t getNumSpecializationConstants() const
+		{
+			uint32_t n = 0;
+			while(n < SPECIALIZATION_CONSTANTS_MAX && entries[ n ].size)
+			{
+				n++;
+			}
+			return n;
+		}
+	};
+
+	struct VertexInput final
+	{
+		enum { VERTEX_ATTRIBUTES_MAX = 16 };
+		enum { VERTEX_BUFFER_MAX = 16 };
+		struct VertexAttribute final
+		{
+			uint32_t location = 0; // a buffer which contains this attribute stream
+			uint32_t binding = 0;
+			VertexFormat format = VertexFormat::Invalid; // per-element format
+			uintptr_t offset = 0; // an offset where the first element of this attribute stream starts
+		} attributes[ VERTEX_ATTRIBUTES_MAX ];
+		struct VertexInputBinding final
+		{
+			uint32_t stride = 0;
+		} inputBindings[ VERTEX_BUFFER_MAX ];
+
+		uint32_t getNumAttributes() const
+		{
+			uint32_t n = 0;
+			while(n < VERTEX_ATTRIBUTES_MAX && attributes[ n ].format != VertexFormat::Invalid)
+			{
+				n++;
+			}
+			return n;
+		}
+		uint32_t getNumInputBindings() const
+		{
+			uint32_t n = 0;
+			while(n < VERTEX_BUFFER_MAX && inputBindings[ n ].stride)
+			{
+				n++;
+			}
+			return n;
+		}
+
+		bool operator==(const VertexInput& other) const
+		{
+			return memcmp(this, &other, sizeof(VertexInput)) == 0;
+		}
+	};
+
+	struct RenderPipelineState final
+	{
+		uint32_t numBindings_ = 0;
+		uint32_t numAttributes_ = 0;
+		VkVertexInputBindingDescription vkBindings_[ VertexInput::VERTEX_BUFFER_MAX ] = {};
+		VkVertexInputAttributeDescription vkAttributes_[ VertexInput::VERTEX_ATTRIBUTES_MAX ] = {};
+
+		// non-owning, the last seen VkDescriptorSetLayout from VulkanContext::vkDSL_ (if the context has a new layout, invalidate all VkPipeline objects)
+		VkDescriptorSetLayout lastVkDescriptorSetLayout_ = VK_NULL_HANDLE;
+
+		VkShaderStageFlags shaderStageFlags_ = 0;
+		VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
+		VkPipeline pipeline_ = VK_NULL_HANDLE;
+
+		void* specConstantDataStorage_ = nullptr;
+	};
 
 	struct DeviceQueues final
 	{
@@ -63,16 +212,16 @@ namespace Vulkan
 		}
 	};
 
+	//-----------------------------------=============//
+	// CLASSES--------------------------==============//
 	//-----------------------------------//
-	// CLASSES--------------------------//
-	//-----------------------------------//
 
 
 
 
 
 
-
+	#pragma region CLASSES 
 
 	//-----------------------------------------------//
 	// VulkanImmediateCommands 
@@ -137,18 +286,18 @@ namespace Vulkan
 	public:
 		CommandBuffer() = default;
 		explicit CommandBuffer(DeviceVulkan* ctx);
-		~CommandBuffer() ;
+		~CommandBuffer();
 
 		CommandBuffer& operator=(CommandBuffer&& other) = default;
 
-		
+
 
 	private:
 		friend class DeviceVulkan;
 
 		DeviceVulkan* ctx_;
 		const VulkanImmediateCommands::CommandBufferWrapper* wrapper_ = nullptr;
-		
+
 		SubmitHandle lastSubmitHandle_ = {};
 
 		VkPipeline lastPipelineBound_ = VK_NULL_HANDLE;
@@ -174,31 +323,31 @@ namespace Vulkan
 		 * Setting `numLevels` to a non-zero value will override `mipLevels_` value from the original Vulkan image, and can be used to create
 		 * image views with different number of levels.
 		 */
-		 [[nodiscard]] VkImageView createImageView(VkDevice device,
-		 	VkImageViewType type,
-		 	VkFormat format,
-		 	VkImageAspectFlags aspectMask,
-		 	uint32_t baseLevel,
-		 	uint32_t numLevels = VK_REMAINING_MIP_LEVELS,
-		 	uint32_t baseLayer = 0,
-		 	uint32_t numLayers = 1,
-		 	const VkComponentMapping mapping = { .r = VK_COMPONENT_SWIZZLE_IDENTITY,
-		 													.g = VK_COMPONENT_SWIZZLE_IDENTITY,
-		 													.b = VK_COMPONENT_SWIZZLE_IDENTITY,
-		 													.a = VK_COMPONENT_SWIZZLE_IDENTITY },
-		 	const VkSamplerYcbcrConversionInfo* ycbcr = nullptr,
-		 	const char* debugName = nullptr) const;
+		[[nodiscard]] VkImageView createImageView(VkDevice device,
+			VkImageViewType type,
+			VkFormat format,
+			VkImageAspectFlags aspectMask,
+			uint32_t baseLevel,
+			uint32_t numLevels = VK_REMAINING_MIP_LEVELS,
+			uint32_t baseLayer = 0,
+			uint32_t numLayers = 1,
+			const VkComponentMapping mapping = { .r = VK_COMPONENT_SWIZZLE_IDENTITY,
+															.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+															.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+															.a = VK_COMPONENT_SWIZZLE_IDENTITY },
+			const VkSamplerYcbcrConversionInfo* ycbcr = nullptr,
+			const char* debugName = nullptr) const;
 
-		 //void generateMipmap(VkCommandBuffer commandBuffer) const;
-		 void transitionLayout(VkCommandBuffer commandBuffer,
-			 VkImageLayout newImageLayout,
-			 VkPipelineStageFlags srcStageMask,
-			 VkPipelineStageFlags dstStageMask,
-			 const VkImageSubresourceRange& subresourceRange) const;
+		//void generateMipmap(VkCommandBuffer commandBuffer) const;
+		void transitionLayout(VkCommandBuffer commandBuffer,
+			VkImageLayout newImageLayout,
+			VkPipelineStageFlags srcStageMask,
+			VkPipelineStageFlags dstStageMask,
+			const VkImageSubresourceRange& subresourceRange) const;
 
-		 //[[nodiscard]] VkImageAspectFlags getImageAspectFlags() const;
+		//[[nodiscard]] VkImageAspectFlags getImageAspectFlags() const;
 
-		 // framebuffers can render only into one level/layer
+		// framebuffers can render only into one level/layer
 
 		[[nodiscard]] static bool isDepthFormat(VkFormat format);
 		[[nodiscard]] static bool isStencilFormat(VkFormat format);
@@ -246,7 +395,7 @@ namespace Vulkan
 		/*
 		VkImage getCurrentVkImage() const;
 		VkImageView getCurrentVkImageView() const;
-		
+
 		const VkSurfaceFormatKHR& getSurfaceFormat() const;
 		uint32_t getNumSwapchainImages() const;*/
 		uint32_t getCurrentImageIndex() const;
@@ -266,7 +415,7 @@ namespace Vulkan
 		VkFence acquireFence_ = VK_NULL_HANDLE;
 	};
 
-
+	#pragma endregion CLASSES
 }
 
 IFNITY_END_NAMESPACE

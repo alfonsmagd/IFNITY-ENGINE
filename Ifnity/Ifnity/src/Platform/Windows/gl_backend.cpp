@@ -732,9 +732,9 @@ namespace OpenGL
 
 		for(const auto& attr : attributes)
 		{
-			glEnableVertexArrayAttrib(vao, attr.index);
-			glVertexArrayAttribFormat(vao, attr.index, attr.size, attr.type, attr.normalized, attr.offset);
-			glVertexArrayAttribBinding(vao, attr.index, attr.bindingindex);
+			glEnableVertexArrayAttrib(vao, attr.location);
+			glVertexArrayAttribFormat(vao, attr.location, attr.size, attr.type, attr.normalized, attr.offset);
+			glVertexArrayAttribBinding(vao, attr.location, attr.bindingindex);
 		}
 	}
 

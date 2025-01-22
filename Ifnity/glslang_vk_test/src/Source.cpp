@@ -262,7 +262,8 @@ public:
 
 		//GraphicsPipelineDescription gdesc;
 
-		auto renderdevice = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
+		m_GraphicsPipeline->BindPipeline(m_ManagerDevice->GetRenderDevice());
 	
 		exit(0);
 

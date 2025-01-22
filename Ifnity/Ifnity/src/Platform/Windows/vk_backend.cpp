@@ -92,11 +92,16 @@ namespace Vulkan
         const char* gShaderCode = gs ? geometryCode.c_str() : nullptr;
 
 		// 2. compile shaders
-		GraphicsPipeline* pipeline = new GraphicsPipeline();
+		GraphicsPipeline* pipeline = new GraphicsPipeline(std::move(desc));
 
 		pipeline->m_vertex   = createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader");
 		pipeline->m_fragment = createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader");
 
+		//3. Create the pipeline
+		pipeline->configureRenderPipelineState();
+
+
+        return GraphicsPipelineHandle(pipeline);
 
        
     }
@@ -161,6 +166,37 @@ namespace Vulkan
         throw std::runtime_error("The function or operation is not implemented.");
     }
 
+	//--------------------------------------------------------------------------------------------------//
+	//                  Device Specific Methods                                                         //
+	//--------------------------------------------------------------------------------------------------//
+
+    VkPipeline Device::getVkPipeline(GraphicsPipeline* gp) const
+    {
+		IFNITY_ASSERT_MSG(gp != nullptr, "GraphicsPipeline is null");
+
+		RenderPipelineState* rps = &gp->m_rVkPipelineState;
+
+        if(rps->pipeline_ != VK_NULL_HANDLE)
+        {
+            return rps->pipeline_;
+        }
+        
+        // build a new Vulkan pipeline
+
+        VkPipelineLayout layout = VK_NULL_HANDLE;
+        VkPipeline pipeline = VK_NULL_HANDLE;
+
+        const GraphicsPipelineDescription& desc = gp->m_Description;
+
+		//const uint32_t numColorAttachments = &gp->m_rVkPipelineState.numColorAttachments_; only one color attachment format 
+
+        // Not all attachments are valid. We need to create color blend attachments only for active attachments
+        VkPipelineColorBlendAttachmentState colorBlendAttachmentStates[ MAX_COLOR_ATTACHMENTS ] = {};
+        VkFormat colorAttachmentFormats[ MAX_COLOR_ATTACHMENTS ] = {};
+
+		return VK_NULL_HANDLE;
+    }
+
     ShaderModuleState Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const
     {
         VkShaderModule vkShaderModule = VK_NULL_HANDLE;
@@ -181,6 +217,9 @@ namespace Vulkan
             }
 
             size_t numElements = numBytes / sizeof(uint32_t);
+
+			//todo: move to heap compilerRefelction to stack 
+
             spirv_cross::CompilerReflection compiler((const uint32_t*)spirv,numElements);
 
             // Refleja los recursos del shader
@@ -224,9 +263,53 @@ namespace Vulkan
 	
 	void GraphicsPipeline::BindPipeline( IDevice* device)
 	{
-		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		Device* vkDevice = dynamic_cast<Device*>(device);
+		IFNITY_ASSERT_MSG(vkDevice != nullptr, "Device is not a Vulkan Device");
+
+        
+		auto vkpipeline = vkDevice->getVkPipeline(this);
+
+
+		
 	}
+
+    void GraphicsPipeline::setSpecializationConstant(const SpecializationConstantDesc& spec)
+    {
+        if(spec.data && spec.dataSize)
+        {
+			// copy into a local storage //First Reserve the memory,
+            m_rVkPipelineState.specConstantDataStorage_ = malloc(spec.dataSize);
+			memcpy(m_rVkPipelineState.specConstantDataStorage_, spec.data, spec.dataSize); //Copy the data in the memory VkPipeline 
+			specInfo.data = m_rVkPipelineState.specConstantDataStorage_; // GetInformation from the data
+        }
+    
+    
+    }
+
+    void GraphicsPipeline::configureRenderPipelineState()
+    {
+    
+		//Not implemented yet BUT UPDATE THE RENDER PIPELINE STATE and configure inside 
+		m_rVkPipelineState.numBindings_ = m_vertexInput.getNumInputBindings();
+		m_rVkPipelineState.numAttributes_ = m_vertexInput.getNumAttributes();
+
+        bool bufferAlreadyBound[ VertexInput::VERTEX_BUFFER_MAX ] = {};
+	
+        for(uint32_t i = 0; i != m_rVkPipelineState.numAttributes_; i++)
+        {
+            const auto& attr = m_vertexInput.attributes[ i ];
+
+            m_rVkPipelineState.vkAttributes_[ i ] = {
+                 .location = attr.location, .binding = attr.binding,  .offset = (uint32_t)attr.offset };
+
+            if(!bufferAlreadyBound[ attr.binding ])
+            {
+                bufferAlreadyBound[ attr.binding ] = true;
+                m_rVkPipelineState.vkBindings_[ m_rVkPipelineState.numBindings_++ ] = {
+                     .binding = attr.binding, .stride = m_vertexInput.inputBindings[ attr.binding ].stride, .inputRate = VK_VERTEX_INPUT_RATE_VERTEX };
+            }
+        }
+    }
 
 }
 

@@ -13,7 +13,7 @@ namespace OpenGL
      */
     struct VertexAttribute
     {
-        GLuint index;          /**< Index of the vertex attribute. */
+        GLuint location;          /**< Index of the vertex attribute. */
         GLint size;            /**< Size of the vertex attribute. */
         GLenum type;           /**< Data type of the vertex attribute. */
         GLboolean normalized;  /**< Whether the attribute is normalized. */

@@ -47,6 +47,10 @@ namespace Vulkan
         SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override;
         MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override;
         void SetRenderState(const RenderState& state);
+        
+
+		//Vulkan Specific 
+        VkPipeline getVkPipeline(struct GraphicsPipeline* gp) const;
 
 		
     
@@ -75,18 +79,29 @@ namespace Vulkan
 //-------------------------------------------------------------------------------------//
     class GraphicsPipeline final: public IGraphicsPipeline
     {
+    private:
         GraphicsPipelineDescription m_Description;
 		ShaderModuleState m_vertex;
 		ShaderModuleState m_fragment;
-
+		RenderPipelineState m_rVkPipelineState;
+		VertexInput        m_vertexInput;
+        SpecializationConstantDesc specInfo = {};
 	public:
 		//Destructor 
         ~GraphicsPipeline() {};
+        GraphicsPipeline(GraphicsPipelineDescription&& desc):m_Description(std::move(desc)) {};
         const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
         void  BindPipeline(struct IDevice* device) override;
+        ShaderModuleState  getVertexShaderModule()   { return m_vertex; }
+        ShaderModuleState  getFragmentShaderModule() { return m_fragment; }
+        void  setSpecializationConstant(const SpecializationConstantDesc& spec);
+        void  SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = desc; }
     
     private:
+		void   configureRenderPipelineState();
+		friend class Device;
         friend GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc);
+
     
     };
 }
