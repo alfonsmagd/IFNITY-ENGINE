@@ -76,7 +76,11 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage,
     std::vector<uint8_t>*outSPIRV,
     const glslang_resource_t * glslLangResource);
 
-
+VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
+    VkDescriptorType descriptorType,
+    uint32_t descriptorCount,
+    VkShaderStageFlags stageFlags,
+    const VkSampler * immutableSamplers = nullptr);
 
 IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);
 

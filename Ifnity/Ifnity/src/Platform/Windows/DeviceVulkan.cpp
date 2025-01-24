@@ -12,10 +12,10 @@ IFNITY_NAMESPACE
 
 static void check_vk_result(VkResult err)
 {
-	if (err == 0)
+	if(err == 0)
 		return;
 	fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-	if (err < 0)
+	if(err < 0)
 		abort();
 }
 
@@ -48,7 +48,7 @@ void DeviceVulkan::OnUpdate()
 	rpInfo.renderArea.offset.x = 0;
 	rpInfo.renderArea.offset.y = 0;
 	rpInfo.renderArea.extent = swapchainBootStraap_.extent;
-	rpInfo.framebuffer = m_Framebuffers[ swapchain_->getCurrentImageIndex()];
+	rpInfo.framebuffer = m_Framebuffers[ swapchain_->getCurrentImageIndex() ];
 
 	rpInfo.clearValueCount = 2;
 	rpInfo.pClearValues = clearValues;
@@ -67,7 +67,7 @@ void DeviceVulkan::OnUpdate()
 
 	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
 	vkCmdBeginRenderPass(cmdBuffer.wrapper_->cmdBuf_, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
-	
+
 
 	///* the rendering itself happens here */
 	//if (!mUseChangedShader) {
@@ -98,7 +98,7 @@ void DeviceVulkan::OnUpdate()
 
 	submit(cmdBuffer, currentTexture);
 
-	
+
 }
 
 
@@ -315,10 +315,10 @@ bool DeviceVulkan::InitInternalInstance()
 		Builder.set_app_name("Example Vulkan Application")
 		.request_validation_layers()
 		.use_default_debug_messenger()
-		.require_api_version(1,3,0)
+		.require_api_version(1, 3, 0)
 		.build();
 
-	if (!inst_ret)
+	if(!inst_ret)
 	{
 		//Report Error Log
 		IFNITY_LOG(LogCore, ERROR, "Failed to create Vulkan instance");
@@ -338,7 +338,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 
 
 
-	if (!CreateSurface() ||
+	if(!CreateSurface() ||
 		!CreatePhysicalDevice() ||
 		!CreateDevice() ||
 		!CreateVmaAllocator() ||
@@ -349,7 +349,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		!CreateRenderPass() ||
 		!CreateFrameBuffer() ||
 		!CreateCommandBuffers() ||
-		!CreateSyncObjects() 
+		!CreateSyncObjects()
 
 		)
 	{
@@ -359,10 +359,12 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 
 	IFNITY_LOG(LogCore, INFO, "Vulkan Device and Context Initialized");
 	//Get properties2 
-	IFNITY_ASSERT_MSG(m_PhysicalDevice.physical_device != VK_NULL_HANDLE,"No physical device create");
+	IFNITY_ASSERT_MSG(m_PhysicalDevice.physical_device != VK_NULL_HANDLE, "No physical device create");
 	getPhysicalDeviceProperties2(m_PhysicalDevice.physical_device);
-	
-	m_RenderDevice = Vulkan::CreateDevice(device_,this);
+
+	growDescriptorPool(16, 16);
+
+	m_RenderDevice = Vulkan::CreateDevice(device_, this);
 
 
 
@@ -372,7 +374,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 bool DeviceVulkan::ConfigureSpecificHintsGLFW() const
 {
 	//Verify that Vulkan is supported
-	if (!glfwVulkanSupported())
+	if(!glfwVulkanSupported())
 	{
 		IFNITY_LOG(LogCore, ERROR, "Vulkan is not supported");
 		return false;
@@ -382,8 +384,7 @@ bool DeviceVulkan::ConfigureSpecificHintsGLFW() const
 }
 
 void DeviceVulkan::SetVSync(bool enabled)
-{
-}
+{}
 
 bool DeviceVulkan::IsVSync() const
 {
@@ -391,8 +392,7 @@ bool DeviceVulkan::IsVSync() const
 }
 
 void DeviceVulkan::ResizeSwapChain()
-{
-}
+{}
 
 void DeviceVulkan::InitializeGui()
 {
@@ -413,7 +413,7 @@ void DeviceVulkan::ClearBackBuffer(float* color)
 
 DeviceVulkan::~DeviceVulkan()
 {
-	
+
 
 	//Destroy Descriptor Pool 
 	vkDestroyDescriptorPool(device_.device, m_ImGuiDescriptorPool, nullptr);
@@ -430,12 +430,14 @@ DeviceVulkan::~DeviceVulkan()
 	vmaDestroyAllocator(m_Allocator);
 
 	// Destroy Debug Utils Messenger
-	if (debugUtilsMessenger != VK_NULL_HANDLE)
+	if(debugUtilsMessenger != VK_NULL_HANDLE)
 	{
 		DestroyDebugUtilsMessengerEXT(m_Instance, debugUtilsMessenger, nullptr);
 	}
-	
 
+	//Destroy 
+	vkDestroyDescriptorSetLayout(device_, vkDSL_, nullptr);
+	vkDestroyDescriptorPool(device_, vkDPool_, nullptr);
 	// Destroy VkBootStrap
 	swapchainBootStraap_.destroy_image_views(m_SwapchainImageViews);
 
@@ -445,7 +447,7 @@ DeviceVulkan::~DeviceVulkan()
 	vkb::destroy_surface(m_Instance, m_Surface);
 	vkb::destroy_instance(m_Instance);
 
-	
+
 
 	IFNITY_LOG(LogCore, INFO, "Delete Device Vulkan Render.");
 
@@ -456,7 +458,7 @@ bool DeviceVulkan::CreateSurface()
 	VkResult result = VK_ERROR_UNKNOWN;
 	result = glfwCreateWindowSurface(m_Instance, m_Window, nullptr, &m_Surface);
 
-	if (result != VK_SUCCESS)
+	if(result != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create window surface in Vulkan");
 		return false;
@@ -469,16 +471,23 @@ bool DeviceVulkan::CreatePhysicalDevice()
 {
 
 	vkb::PhysicalDeviceSelector physicalDevSel{ m_Instance };
-	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface).select();
-	if (!physicalDevSelRet)
+
+	//Try to enable INDEXING FEATURES   
+	VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures {};
+	indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+	indexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+	indexingFeatures.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;
+	indexingFeatures.descriptorBindingUpdateUnusedWhilePending = VK_TRUE;
+	indexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+	indexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
+	indexingFeatures.runtimeDescriptorArray = VK_TRUE;
+
+	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface).add_required_extension_features(indexingFeatures).select();
+	if(!physicalDevSelRet)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to select physical device in Vulkan Device");
 		return false;
 	}
-
-
-
-
 
 	m_PhysicalDevice = physicalDevSelRet.value();
 
@@ -492,23 +501,23 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	std::vector<VkExtensionProperties> extensions(extensionCount);
 	vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extensionCount, extensions.data());
 
-	for (const auto& ext : extensions)
+	for(const auto& ext : extensions)
 	{
 		IFNITY_LOG(LogCore, INFO, "Supported extension: {}", ext.extensionName);
 	}
 
 	// Verificar si VK_EXT_debug_marker está en la lista de extensiones soportadas
 	bool debugMarkerSupported = false;
-	for (const auto& ext : extensions)
+	for(const auto& ext : extensions)
 	{
-		if (strcmp(ext.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
+		if(strcmp(ext.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
 		{
 			debugMarkerSupported = true;
 			break;
 		}
 	}
 
-	if (debugMarkerSupported)
+	if(debugMarkerSupported)
 	{
 		IFNITY_LOG(LogCore, INFO, "VK_EXT_debug_marker is supported");
 	}
@@ -529,22 +538,24 @@ bool DeviceVulkan::CreateDevice()
 {
 	vkb::DeviceBuilder deviceBuilder{ m_PhysicalDevice };
 
-	
+
+
+
 	auto deviceRet = deviceBuilder.build();
-	if (!deviceRet)
+	if(!deviceRet)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create device in Vulkan Device");
 		return false;
 	}
 	device_ = deviceRet.value();
 
-#ifdef _DEBUG
+	#ifdef _DEBUG
 	// Create debug utils messenger
 	//setupDebugCallbacksVK(m_Instance.instance, &debugUtilsMessenger);
 	setupCallbacks(device_.device);
-	setDebugObjectName(m_Instance,device_.device, VK_OBJECT_TYPE_DEVICE, (uint64_t)device_.device, "Device Context:");
+	setDebugObjectName(m_Instance, device_.device, VK_OBJECT_TYPE_DEVICE, (uint64_t)device_.device, "Device Context:");
 
-#endif
+	#endif
 
 
 	return true;
@@ -556,7 +567,7 @@ bool DeviceVulkan::CreateVmaAllocator()
 	allocatorInfo.physicalDevice = m_PhysicalDevice.physical_device;
 	allocatorInfo.device = device_.device;
 	allocatorInfo.instance = m_Instance.instance;
-	if (vmaCreateAllocator(&allocatorInfo, &m_Allocator) != VK_SUCCESS)
+	if(vmaCreateAllocator(&allocatorInfo, &m_Allocator) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create VMA allocator in Vulkan Device");
 		return false;
@@ -568,7 +579,7 @@ bool DeviceVulkan::CreateVmaAllocator()
 bool DeviceVulkan::GetQueue()
 {
 	auto graphQueueRet = device_.get_queue(vkb::QueueType::graphics);
-	if (!graphQueueRet.has_value())
+	if(!graphQueueRet.has_value())
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get graphics queue in Vulkan Device");
 		return false;
@@ -577,7 +588,7 @@ bool DeviceVulkan::GetQueue()
 	deviceQueues_.graphicsQueueFamilyIndex = device_.get_queue_index(vkb::QueueType::graphics).value();
 
 	auto presentQueueRet = device_.get_queue(vkb::QueueType::present);
-	if (!presentQueueRet.has_value())
+	if(!presentQueueRet.has_value())
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get present  queue in Vulkan Device");
 		return false;
@@ -596,21 +607,21 @@ bool DeviceVulkan::CreateSwapChain()
 
 	/* VK_PRESENT_MODE_FIFO_KHR enables vsync */
 	auto swapChainBuildRet = swapChainBuild.set_old_swapchain(swapchainBootStraap_).
-											set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).
-											set_desired_format({ VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }).
-											add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT).
-											build();
-	if (!swapChainBuildRet)
+		set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).
+		set_desired_format({ VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }).
+		add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT).
+		build();
+	if(!swapChainBuildRet)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create swapchain in Vulkan Device");
 		return false;
 	}
 
-	
+
 
 	vkb::destroy_swapchain(swapchainBootStraap_);
 	swapchainBootStraap_ = swapChainBuildRet.value();
-	
+
 	//Get image_count 
 	m_commandBufferCount = swapchainBootStraap_.image_count;
 
@@ -628,7 +639,7 @@ bool DeviceVulkan::CreateCommandPool()
 	pool_info.queueFamilyIndex = deviceQueues_.graphicsQueueFamilyIndex;
 	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-	if (vkCreateCommandPool(device_, &pool_info, nullptr, &m_CommandPool) != VK_SUCCESS)
+	if(vkCreateCommandPool(device_, &pool_info, nullptr, &m_CommandPool) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create command pool in Vulkan Device");
 		return false;
@@ -645,27 +656,27 @@ bool DeviceVulkan::DestroyCommandPool()
 
 void DeviceVulkan::DestroySyncObjects()
 {
-	for (size_t i = 0; i < 3; i++)
+	for(size_t i = 0; i < 3; i++)
 	{
-		vkDestroySemaphore(device_.device, m_ImageAvailableSemaphores[i], nullptr);
-		vkDestroySemaphore(device_.device, m_RenderFinishedSemaphores[i], nullptr);
-		vkDestroyFence(device_.device, m_InFlightFences[i], nullptr);
+		vkDestroySemaphore(device_.device, m_ImageAvailableSemaphores[ i ], nullptr);
+		vkDestroySemaphore(device_.device, m_RenderFinishedSemaphores[ i ], nullptr);
+		vkDestroyFence(device_.device, m_InFlightFences[ i ], nullptr);
 	}
-	
+
 }
 
 void DeviceVulkan::DestroyCommandBuffers()
 {
 	vkFreeCommandBuffers(device_.device,
-		m_CommandPool, 
+		m_CommandPool,
 		static_cast<uint32_t>(m_CommandBuffers.size()),
 		m_CommandBuffers.data());
-	
+
 }
 
 void DeviceVulkan::CleanFrameBuffers()
 {
-	for (auto& framebuffer : m_Framebuffers)
+	for(auto& framebuffer : m_Framebuffers)
 	{
 		vkDestroyFramebuffer(device_.device, framebuffer, nullptr);
 	}
@@ -738,14 +749,14 @@ bool DeviceVulkan::CreateRenderPass()
 	std::array<VkAttachmentDescription, 1> attachments = {};
 
 	// Color attachment
-	attachments[0].format = swapchainBootStraap_.image_format;								// Use the color format selected by the swapchain
-	attachments[0].samples = VK_SAMPLE_COUNT_1_BIT;                                 // We don't use multi sampling in this example
-	attachments[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;                            // Clear this attachment at the start of the render pass
-	attachments[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;                          // Keep its contents after the render pass is finished (for displaying it)
-	attachments[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;                 // Similar to loadOp, but for stenciling (we don't use stencil here)
-	attachments[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;               // Similar to storeOp, but for stenciling (we don't use stencil here)
-	attachments[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                       // Layout at render pass start. Initial doesn't matter, so we use undefined
-	attachments[0].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                   // Layout to which the attachment is transitioned when the render pass is finished
+	attachments[ 0 ].format = swapchainBootStraap_.image_format;								// Use the color format selected by the swapchain
+	attachments[ 0 ].samples = VK_SAMPLE_COUNT_1_BIT;                                 // We don't use multi sampling in this example
+	attachments[ 0 ].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;                            // Clear this attachment at the start of the render pass
+	attachments[ 0 ].storeOp = VK_ATTACHMENT_STORE_OP_STORE;                          // Keep its contents after the render pass is finished (for displaying it)
+	attachments[ 0 ].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;                 // Similar to loadOp, but for stenciling (we don't use stencil here)
+	attachments[ 0 ].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;               // Similar to storeOp, but for stenciling (we don't use stencil here)
+	attachments[ 0 ].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                       // Layout at render pass start. Initial doesn't matter, so we use undefined
+	attachments[ 0 ].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                   // Layout to which the attachment is transitioned when the render pass is finished
 	// As we want to present the color attachment, we transition to PRESENT_KHR
 // Setup attachment references
 	VkAttachmentReference colorReference = {};
@@ -771,12 +782,12 @@ bool DeviceVulkan::CreateRenderPass()
 
 	// Setup dependency and add implicit layout transition from final to initial layout for the color attachment.
 	// (The actual usage layout is preserved through the layout specified in the attachment reference).
-	dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependencies[0].dstSubpass = 0;
-	dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependencies[0].srcAccessMask = VK_ACCESS_NONE;
-	dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+	dependencies[ 0 ].srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependencies[ 0 ].dstSubpass = 0;
+	dependencies[ 0 ].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependencies[ 0 ].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependencies[ 0 ].srcAccessMask = VK_ACCESS_NONE;
+	dependencies[ 0 ].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
 
 
 	//Create the render pass
@@ -799,11 +810,11 @@ bool DeviceVulkan::CreateRenderPass()
 
 bool DeviceVulkan::CreateFrameBuffer()
 {
-	m_SwapchainImages     = swapchainBootStraap_.get_images().value();
+	m_SwapchainImages = swapchainBootStraap_.get_images().value();
 	m_SwapchainImageViews = swapchainBootStraap_.get_image_views().value();
 
 
-	VkImageView attachments[1] = {};
+	VkImageView attachments[ 1 ] = {};
 
 
 	VkFramebufferCreateInfo frameBufferCreateInfo = {};
@@ -819,10 +830,10 @@ bool DeviceVulkan::CreateFrameBuffer()
 	//Create Framebuffers for each swapchain image view
 	m_Framebuffers.resize(m_SwapchainImageViews.size());
 
-	for (size_t i = 0; i < m_Framebuffers.size(); i++)
+	for(size_t i = 0; i < m_Framebuffers.size(); i++)
 	{
-		attachments[0] = m_SwapchainImageViews.at(i);
-		VK_CHECK(vkCreateFramebuffer(device_.device, &frameBufferCreateInfo, nullptr, &m_Framebuffers[i]), "Failed to create framebuffer");
+		attachments[ 0 ] = m_SwapchainImageViews.at(i);
+		VK_CHECK(vkCreateFramebuffer(device_.device, &frameBufferCreateInfo, nullptr, &m_Framebuffers[ i ]), "Failed to create framebuffer");
 
 	}
 
@@ -839,7 +850,7 @@ bool DeviceVulkan::CreateCommandBuffers()
 	bufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	bufferAllocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
 
-	if (vkAllocateCommandBuffers(device_.device, &bufferAllocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
+	if(vkAllocateCommandBuffers(device_.device, &bufferAllocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to allocate command buffers");
 		return false;
@@ -861,11 +872,11 @@ bool DeviceVulkan::CreateSyncObjects()
 	VkSemaphoreCreateInfo semaphoreInfo{};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	for (size_t i = 0; i < 3; i++)
+	for(size_t i = 0; i < 3; i++)
 	{
-		if (vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[i]) != VK_SUCCESS ||
-			vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[i]) != VK_SUCCESS ||
-			vkCreateFence(device_.device, &fenceInfo, nullptr, &m_InFlightFences[i]) != VK_SUCCESS)
+		if(vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[ i ]) != VK_SUCCESS ||
+			vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[ i ]) != VK_SUCCESS ||
+			vkCreateFence(device_.device, &fenceInfo, nullptr, &m_InFlightFences[ i ]) != VK_SUCCESS)
 		{
 			IFNITY_LOG(LogCore, ERROR, "Failed to create synchronization objects for a frame");
 			return false;
@@ -876,11 +887,108 @@ bool DeviceVulkan::CreateSyncObjects()
 	return true;
 }
 
+VkResult DeviceVulkan::growDescriptorPool(uint32_t maxTextures, uint32_t maxSamplers)
+{
+
+	currentMaxTextures_ = maxTextures;
+	currentMaxSamplers_ = maxSamplers;
+
+
+
+	if(!(maxTextures <= vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSampledImages))
+	{
+		IFNITY_LOG(LogCore, ERROR, "Max Textures exceeded %u (max %u)", maxTextures, vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSampledImages);
+	}
+
+	if(!(maxSamplers <= vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSamplers))
+	{
+		IFNITY_LOG(LogCore, ERROR, "Max Sampler exceeded %u (max %u)", maxSamplers, vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSampledImages);
+	}
+
+	// Deallocate Descriptor Pool , Descriptor set layout
+
+
+
+	/////////////////////////////////////////////////////////
+	const uint32_t kBinding_NumBindings = 3;
+
+	// create default descriptor set layout which is going to be shared by graphics pipelines
+	VkShaderStageFlags stageFlags = VK_SHADER_STAGE_VERTEX_BIT |
+									VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT |
+									VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT |
+									VK_SHADER_STAGE_FRAGMENT_BIT |
+									VK_SHADER_STAGE_COMPUTE_BIT;
+	//Create Descriptor set layout binding. 
+	const VkDescriptorSetLayoutBinding bindings[ kBinding_NumBindings ] =
+	{
+		 descriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxTextures, stageFlags),
+		 descriptorSetLayoutBinding(1, VK_DESCRIPTOR_TYPE_SAMPLER, maxSamplers, stageFlags),
+		 descriptorSetLayoutBinding(2, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, maxTextures, stageFlags)
+	};
+
+	const uint32_t flags = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT |
+						   VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT |
+						   VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+	//Fill bindingflags for each binding
+	VkDescriptorBindingFlags bindingFlags[ kBinding_NumBindings ];
+	for(int i = 0; i < kBinding_NumBindings; ++i)
+	{
+		bindingFlags[ i ] = flags;
+	}
+	const VkDescriptorSetLayoutBindingFlagsCreateInfo setLayoutBindingFlagsCI = 
+	{
+		 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
+		 .bindingCount = uint32_t(true ? kBinding_NumBindings : kBinding_NumBindings - 1), //exclude the last if we use acceleration structure
+		 .pBindingFlags = bindingFlags,
+	};
+	const VkDescriptorSetLayoutCreateInfo dslci = 
+	{
+		 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+		 .pNext = &setLayoutBindingFlagsCI,
+		 .flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT_EXT,
+		 .bindingCount = uint32_t(true ? kBinding_NumBindings : kBinding_NumBindings - 1),//exclude the last if we use acceleration structure
+		 .pBindings = bindings,
+	};
+
+	VK_ASSERT(vkCreateDescriptorSetLayout(device_, &dslci, nullptr, &vkDSL_));
+	VK_ASSERT(setDebugObjectName(
+		device_, VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, (uint64_t)vkDSL_, "Descriptor Set Layout: DeviceVulkan::vkDSL_"));
+
+
+	{
+		// create default descriptor pool and allocate 1 descriptor set
+		const VkDescriptorPoolSize poolSizes[ kBinding_NumBindings ]
+		{
+			 VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, maxTextures},
+			 VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_SAMPLER, maxSamplers},
+			 VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, maxTextures}
+		};
+		const VkDescriptorPoolCreateInfo ci = 
+		{
+			 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+			 .flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
+			 .maxSets = 1,
+			 .poolSizeCount = uint32_t(TRUE ? kBinding_NumBindings : kBinding_NumBindings - 1),
+			 .pPoolSizes = poolSizes,
+		};
+		VK_ASSERT(vkCreateDescriptorPool(device_, &ci, nullptr, &vkDPool_));
+		const VkDescriptorSetAllocateInfo ai = {
+			 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+			 .descriptorPool = vkDPool_,
+			 .descriptorSetCount = 1,
+			 .pSetLayouts = &vkDSL_,
+		};
+		VK_ASSERT(vkAllocateDescriptorSets(device_, &ai, &vkDSet_));
+	}
+
+	return VkResult();
+}
+
 void DeviceVulkan::getPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice)
 {
-	properties2 = {};
-	properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
-	vkGetPhysicalDeviceProperties2(physicalDevice, &properties2);
+
+	vkGetPhysicalDeviceProperties2(physicalDevice, &vkPhysicalDeviceProperties2_);
+	properties2 = vkPhysicalDeviceProperties2_;
 
 }
 
@@ -895,14 +1003,14 @@ bool DeviceVulkan::AcquireNextImage()
 	//Get the index of the next available swapchain image
 	VkResult result = vkAcquireNextImageKHR(device_.device, swapchainBootStraap_.swapchain, UINT64_MAX, m_PresentSemaphore, (VkFence)nullptr, &m_imageIndex);
 
-	if (result == VK_ERROR_OUT_OF_DATE_KHR)
+	if(result == VK_ERROR_OUT_OF_DATE_KHR)
 	{
 		//Swapchain is out of date (e.g. the window was resized) and
 		//must be recreated:
 		ResizeSwapChain();
 		return false;
 	}
-	else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+	else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to acquire next swapchain image");
 		return false;
@@ -929,7 +1037,7 @@ bool DeviceVulkan::PresentImage()
 bool DeviceVulkan::InitGui()
 {
 	// Create descriptor pool
-	if (!CreateImGuiDescriptorPool())
+	if(!CreateImGuiDescriptorPool())
 	{
 		return false;
 	}
@@ -1003,7 +1111,7 @@ bool DeviceVulkan::CreateImGuiDescriptorPool()
 	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 	pool_info.pPoolSizes = pool_sizes;
 
-	if (vkCreateDescriptorPool(device_, &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
+	if(vkCreateDescriptorPool(device_, &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create descriptor pool for ImGui");
 		return false;
@@ -1016,62 +1124,62 @@ bool DeviceVulkan::CreateImGuiDescriptorPool()
 
 void DeviceVulkan::setupCallbacks(VkDevice& i_device)
 {
-	
-		// Check if the debug utils extension is present (which is the case if run from a graphics debugger)
-		bool extensionPresent = false;
-		uint32_t extensionCount;
-		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-		std::vector<VkExtensionProperties> extensions(extensionCount);
-		vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-		for (auto& extension : extensions)
+
+	// Check if the debug utils extension is present (which is the case if run from a graphics debugger)
+	bool extensionPresent = false;
+	uint32_t extensionCount;
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+	std::vector<VkExtensionProperties> extensions(extensionCount);
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
+	for(auto& extension : extensions)
+	{
+		if(strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
 		{
-			if (strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
-			{
-				extensionPresent = true;
-				break;
-			}
+			extensionPresent = true;
+			break;
 		}
+	}
 
-		if (extensionPresent)
-		{
-			// As with an other extension, function pointers need to be manually loaded
-			vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT"));
-			vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT"));
-			vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkCmdBeginDebugUtilsLabelEXT"));
-			vkCmdInsertDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdInsertDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkCmdInsertDebugUtilsLabelEXT"));
-			vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkCmdEndDebugUtilsLabelEXT"));
-			vkQueueBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkQueueBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkQueueBeginDebugUtilsLabelEXT"));
-			vkQueueInsertDebugUtilsLabelEXT = reinterpret_cast<PFN_vkQueueInsertDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkQueueInsertDebugUtilsLabelEXT"));
-			vkQueueEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkQueueEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkQueueEndDebugUtilsLabelEXT"));
-			vkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT"));
+	if(extensionPresent)
+	{
+		// As with an other extension, function pointers need to be manually loaded
+		vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT"));
+		vkDestroyDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkDestroyDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT"));
+		vkCmdBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkCmdBeginDebugUtilsLabelEXT"));
+		vkCmdInsertDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdInsertDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkCmdInsertDebugUtilsLabelEXT"));
+		vkCmdEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkCmdEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkCmdEndDebugUtilsLabelEXT"));
+		vkQueueBeginDebugUtilsLabelEXT = reinterpret_cast<PFN_vkQueueBeginDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkQueueBeginDebugUtilsLabelEXT"));
+		vkQueueInsertDebugUtilsLabelEXT = reinterpret_cast<PFN_vkQueueInsertDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkQueueInsertDebugUtilsLabelEXT"));
+		vkQueueEndDebugUtilsLabelEXT = reinterpret_cast<PFN_vkQueueEndDebugUtilsLabelEXT>(vkGetInstanceProcAddr(m_Instance, "vkQueueEndDebugUtilsLabelEXT"));
+		vkSetDebugUtilsObjectNameEXT = reinterpret_cast<PFN_vkSetDebugUtilsObjectNameEXT>(vkGetInstanceProcAddr(m_Instance, "vkSetDebugUtilsObjectNameEXT"));
 
-			// Set flag if at least one function pointer is present
-			m_DebugUtilsSupported = (vkCreateDebugUtilsMessengerEXT != VK_NULL_HANDLE);
+		// Set flag if at least one function pointer is present
+		m_DebugUtilsSupported = (vkCreateDebugUtilsMessengerEXT != VK_NULL_HANDLE);
 
-			//Select global DebugLevel 
-			gvkSetDebugUtilsObjectNameEXT = vkSetDebugUtilsObjectNameEXT;
-		}
-		else
-		{
-			IFNITY_LOG(LogCore, WARNING, "{} not present, debug utils are disabled.", VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-			IFNITY_LOG(LogCore, WARNING, "Try running the sample from inside a Vulkan graphics debugger (e.g. RenderDoc)");
+		//Select global DebugLevel 
+		gvkSetDebugUtilsObjectNameEXT = vkSetDebugUtilsObjectNameEXT;
+	}
+	else
+	{
+		IFNITY_LOG(LogCore, WARNING, "{} not present, debug utils are disabled.", VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		IFNITY_LOG(LogCore, WARNING, "Try running the sample from inside a Vulkan graphics debugger (e.g. RenderDoc)");
 
-		}
-	
+	}
+
 
 }
 
-void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[4])
+void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[ 4 ])
 {
-	if (vkCmdBeginDebugUtilsLabelEXT)
+	if(vkCmdBeginDebugUtilsLabelEXT)
 	{
 		VkDebugUtilsLabelEXT labelInfo{};
 		labelInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
 		labelInfo.pLabelName = markerName;
-		labelInfo.color[0] = color[0];
-		labelInfo.color[1] = color[1];
-		labelInfo.color[2] = color[2];
-		labelInfo.color[3] = color[3];
+		labelInfo.color[ 0 ] = color[ 0 ];
+		labelInfo.color[ 1 ] = color[ 1 ];
+		labelInfo.color[ 2 ] = color[ 2 ];
+		labelInfo.color[ 3 ] = color[ 3 ];
 		vkCmdBeginDebugUtilsLabelEXT(commandBuffer, &labelInfo);
 	}
 	else
@@ -1129,7 +1237,7 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 	auto vkCmdBuffer = static_cast<Vulkan::CommandBuffer*>(&commandBuffer);
 
 
-	IFNITY_ASSERT_MSG(vkCmdBuffer,"Not vkcmdbuffer ");
+	IFNITY_ASSERT_MSG(vkCmdBuffer, "Not vkcmdbuffer ");
 	IFNITY_ASSERT_MSG(vkCmdBuffer->ctx_, "Commandbuffer has not Vulkancontext assign.");
 	IFNITY_ASSERT_MSG(vkCmdBuffer->wrapper_, "Commandbuffer has not command buffer wrapper ");
 
@@ -1137,7 +1245,7 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 	if(tex.vkImage_)
 	{
 
-		IFNITY_ASSERT_MSG(tex.isSwapchainImage_,"No SwapChainImage acquire to submit");
+		IFNITY_ASSERT_MSG(tex.isSwapchainImage_, "No SwapChainImage acquire to submit");
 
 		// prepare image for presentation the image might be coming from a compute shader
 		const VkPipelineStageFlagBits srcStage = (tex.vkImageLayout_ == VK_IMAGE_LAYOUT_GENERAL)
@@ -1170,7 +1278,7 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 	return handle;
 
 
-	
+
 }
 
 Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const void* spirv, size_t numBytes, const char* debugName)
@@ -1180,7 +1288,7 @@ Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const v
 
 void DeviceVulkan::EndRenderDocTrace(VkCommandBuffer commandBuffer)
 {
-	if (vkCmdEndDebugUtilsLabelEXT)
+	if(vkCmdEndDebugUtilsLabelEXT)
 	{
 		vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 	}

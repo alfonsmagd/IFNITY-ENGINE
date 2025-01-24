@@ -31,14 +31,17 @@ public:
 	Vulkan::DeviceQueues deviceQueues_;
 	VkPhysicalDeviceProperties2 properties2; //Physical Device Properties 2
 
+	//Using instancing. 
+	VkDescriptorSetLayout vkDSL_ = VK_NULL_HANDLE; // Descriptor Set Layout
+	VkDescriptorPool vkDPool_ = VK_NULL_HANDLE;		// Descriptor Pool	
+	VkDescriptorSet vkDSet_ = VK_NULL_HANDLE;		// Descriptor Set
+	Vulkan::SubmitHandle lastSubmitHandle_ = Vulkan::SubmitHandle();
+
 private:
 	vkb::Instance  m_Instance;  // Vulkan instance 
 	VmaAllocator   m_Allocator; // Vulkan memory allocator
 	VkSurfaceKHR   m_Surface;   // Vulkan surface
-	
-	
 	vkb::PhysicalDevice m_PhysicalDevice; // Vulkan physical device bootstrapper. 
-
 	VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 
 
@@ -93,11 +96,29 @@ private:
 	
 
 	//Vulkan::CommandBuffer m_CommandBuffer;
+	uint32_t currentMaxTextures_ = 0;
+	uint32_t currentMaxSamplers_ = 0;
 
 	float m_Color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 	//DeviceHandle 
 	DeviceHandle m_RenderDevice;
+
+
+
+
+
+	VkPhysicalDeviceDriverProperties vkPhysicalDeviceDriverProperties_ = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES, nullptr };
+	VkPhysicalDeviceVulkan12Properties vkPhysicalDeviceVulkan12Properties_ = {
+		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES,
+		&vkPhysicalDeviceDriverProperties_,
+	};
+	// provided by Vulkan 1.1
+	VkPhysicalDeviceProperties2 vkPhysicalDeviceProperties2_ = {
+		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+		&vkPhysicalDeviceVulkan12Properties_,
+		VkPhysicalDeviceProperties{},
+	};
 
 protected:
 	// Heredado vía GraphicsDeviceManager
@@ -131,6 +152,8 @@ private:
 	bool CreateFrameBuffer();
 	bool CreateCommandBuffers();
 	bool CreateSyncObjects();
+
+	VkResult growDescriptorPool(uint32_t maxTextures, uint32_t maxSamplers);
 	
 	void getPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice);
 	void createWeaknessDeviceReference();
@@ -150,6 +173,7 @@ private:
 	bool PresentImage();
 	bool InitGui();
 	void CheckSpirvVersion(VkPhysicalDevice physicalDevice);
+
 
 	//Imgui private methods
 	bool CreateImGuiDescriptorPool();

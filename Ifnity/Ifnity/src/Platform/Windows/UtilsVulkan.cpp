@@ -605,6 +605,19 @@ glslang_resource_t getGlslangResource(const VkPhysicalDeviceLimits& limits)
 }
 
 
-
+VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
+	VkDescriptorType descriptorType,
+	uint32_t descriptorCount,
+	VkShaderStageFlags stageFlags,
+	const VkSampler* immutableSamplers)
+{
+	return VkDescriptorSetLayoutBinding{
+		.binding = binding,
+		.descriptorType = descriptorType,
+		.descriptorCount = descriptorCount,
+		.stageFlags = stageFlags,
+		.pImmutableSamplers = immutableSamplers,
+	};
+}
 
 IFNITY_END_NAMESPACE
