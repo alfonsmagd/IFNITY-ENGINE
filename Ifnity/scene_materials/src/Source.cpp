@@ -81,10 +81,10 @@ private:
 
 
 
-class ImGuiTestLayer : public IFNITY::Layer
+class ImGuiTestLayer: public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest") {}
+	ImGuiTestLayer(): Layer("ImGuiTest") {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
@@ -95,7 +95,7 @@ public:
 	void OnUpdate() override
 	{
 		ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
+		if(context == nullptr)
 		{
 			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
 			return;
@@ -103,27 +103,30 @@ public:
 		ImGui::SetCurrentContext(context);
 
 		ChooseApi();
+		ShowCheckbox();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
 	// Heredado vía Layer
 	void ConnectToEventBusImpl(void* bus) override
 	{
-		
+
 
 	}
 private:
 	// Una función que se llama al hacer clic en el botón
-	void AccionPorOpcion(int opcionSeleccionada) {
+	void AccionPorOpcion(int opcionSeleccionada)
+	{
 
 		GraphicsAPI api = IFNITY::App::GetApp().GetGraphicsAPI();
-		switch (opcionSeleccionada) {
+		switch(opcionSeleccionada)
+		{
 		case 0:
 			// Acción para la opción 1
 			IFNITY_LOG(LogApp, INFO, "OPENGL");
-			
+
 
 			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::OPENGL,api != GraphicsAPI::OPENGL);
+				.SetGraphicsAPI(GraphicsAPI::OPENGL, api != GraphicsAPI::OPENGL);
 			break;
 		case 1:
 			// Acción para la opción 2
@@ -146,36 +149,68 @@ private:
 				.SetGraphicsAPI(GraphicsAPI::VULKAN, api != GraphicsAPI::VULKAN);
 			break;
 		default:
-		
+
 			break;
 		}
 	}
 
-	void ChooseApi() {
+	void ChooseApi()
+	{
 		static int selectOption = 0;
-		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN"};
+		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN" };
 
 		ImGui::Begin("API WINDOW");  // Comienza la creación de la ventana
 
 		// Combo box con las opciones
-		if (ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options))) {
+		if(ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options)))
+		{
 			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
 		}
 
 		// Botón que ejecuta la función cuando se hace clic
-		if (ImGui::Button("OK")) {
+		if(ImGui::Button("OK"))
+		{
 			AccionPorOpcion(selectOption);
 		}
 
 		ImGui::End();  // Termina la creación de la ventana
 	}
 
+	void ShowCheckbox()
+	{
+		// Crear el checkbox
+		if(ImGui::Checkbox("Activate Option", &showCheckbox))
+		{
+			// Si se cambia el estado del checkbox
+			if(showCheckbox)
+			{
+				// El checkbox fue activado
+				printf("Checkbox activated!\n");
+			}
+			else
+			{
+				// El checkbox fue desactivado
+				printf("Checkbox deactivated!\n");
+			}
+		}
+
+		// Ejemplo de uso adicional basado en el estado
+		if(showCheckbox)
+		{
+			ImGui::Text("The option is ACTIVE!");
+		}
+		else
+		{
+			ImGui::Text("The option is INACTIVE.");
+		}
+	}
 
 
 
+public:
+	bool showCheckbox = false ;
 
 
-	
 };
 
 class Source: public IFNITY::App
@@ -200,12 +235,13 @@ private:
 	GraphicsPipelineHandle m_GraphicsPipeline[ 2 ];
 	std::shared_ptr<IShader> m_vs[ 2 ];
 	std::shared_ptr<IShader> m_ps[ 2 ];
-
+	bool m_showCheckbox = false;
 
 	//Scene Mesh Objects
 	MeshFileHeader header;
 	MeshData m_meshData;
-	
+	ImGuiTestLayer* m_ImGuiLayer;
+
 
 	// Camera objects 
 	IFNITY::EventCameraListener m_CameraListener;
@@ -224,12 +260,13 @@ public:
 		m_camera(vec3(35.f, 0.5f, -10.f), vec3(-1.0f, -90, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener(&m_camera)
 	{
+		m_ImGuiLayer = new ImGuiTestLayer();
 		PushLayer(new   IFNITY::NVML_Monitor());
-		PushLayer(new ImGuiTestLayer());
+		PushLayer(m_ImGuiLayer);
 		PushLayer(new IFNITY::CameraLayer(&m_CameraListener));
 		PushOverlay(new IFNITY::ImguiLayer());
-		
-		
+
+
 
 	}
 
@@ -291,12 +328,12 @@ public:
 		GraphicsPipelineDescription gdesc;
 		BlendState blendstate;
 		blendstate.setBlendEnable(true).
-				   setSrcBlend(BlendFactor::SRC_ALPHA).
-			       setDestBlend(BlendFactor::ONE_MINUS_SRC_ALPHA);
+			setSrcBlend(BlendFactor::SRC_ALPHA).
+			setDestBlend(BlendFactor::ONE_MINUS_SRC_ALPHA);
 
 		gdesc.SetVertexShader(m_vs[ GRID ].get()).
-			  SetPixelShader(m_ps[ GRID ].get()).
-			  SetRenderState(RenderState{ .depthTest = true, .depthWrite = true , .blendState = blendstate });
+			SetPixelShader(m_ps[ GRID ].get()).
+			SetRenderState(RenderState{ .depthTest = true, .depthWrite = true , .blendState = blendstate });
 
 
 		m_GraphicsPipeline[ GRID ] = rdevice->CreateGraphicsPipeline(gdesc);
@@ -329,7 +366,7 @@ public:
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[0].fileName,
+			.filePath = vSceneconfig[ 0 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
@@ -340,12 +377,12 @@ public:
 
 		MeshDataBuilderAssimp<rhi::VertexScene> builder(0.1);
 
-	    //builder.buildSceneData(meshAssimp);
+		//builder.buildSceneData(meshAssimp);
 
 		//Create a SceneObject with the data.
 		m_SceneObject = rdevice->CreateSceneObject(meshAssimp.sceneConfig.outputMesh.c_str(),
-												   meshAssimp.sceneConfig.outputScene.c_str(),
-												   meshAssimp.sceneConfig.outputMaterials.c_str());
+			meshAssimp.sceneConfig.outputScene.c_str(),
+			meshAssimp.sceneConfig.outputMaterials.c_str());
 
 		//Create the m_SceneObject with the device
 		m_MeshObject = rdevice->CreateMeshObjectFromScene(m_SceneObject);
@@ -354,7 +391,7 @@ public:
 
 
 	}
-	
+
 	void Render() override
 	{
 		//Update FPS 
@@ -394,7 +431,15 @@ public:
 
 		//Change the Pipeline to render the Scene
 		m_GraphicsPipeline[ SCENE ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
-		m_MeshObject->DrawInstancedDirect();
+		if(m_ImGuiLayer->showCheckbox)
+		{
+			m_MeshObject->DrawIndirect();
+		}
+		else
+		{
+			m_MeshObject->DrawInstancedDirect();
+			}
+		
 	}
 	void Animate() override
 	{
@@ -403,16 +448,15 @@ public:
 	~Source() override {}
 };
 
-class Source_TestD3D12 : public IFNITY::App
+class Source_TestD3D12: public IFNITY::App
 {
 public:
-	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api)
 	{
 		PushLayer(new ExampleLayer());
 	}
 	~Source_TestD3D12() override
-	{
-	}
+	{}
 };
 
 
