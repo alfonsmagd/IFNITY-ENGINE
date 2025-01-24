@@ -19,8 +19,107 @@ static void check_vk_result(VkResult err)
 		abort();
 }
 
+static void PrintEnabledFeature(VkPhysicalDevice vkpd)
+{
+	
+		VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
+		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+		VkPhysicalDeviceVulkan11Features vulkan11Features = {};
+		vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+		deviceFeatures2.pNext = &vulkan11Features;
+
+		VkPhysicalDeviceVulkan12Features vulkan12Features = {};
+		vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		vulkan11Features.pNext = &vulkan12Features;
+
+		VkPhysicalDeviceVulkan13Features vulkan13Features = {};
+		vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+		vulkan12Features.pNext = &vulkan13Features;
+
+		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures = {};
+		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+		vulkan13Features.pNext = &indexingFeatures;
+
+		VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
+		bufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+		indexingFeatures.pNext = &bufferDeviceAddressFeatures;
+
+		vkGetPhysicalDeviceFeatures2(vkpd, &deviceFeatures2);
+
+		// Imprimir características de VkPhysicalDeviceFeatures
+		IFNITY_LOG(LogCore, INFO, "RobustBufferAccess: {}", deviceFeatures2.features.robustBufferAccess ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "FullDrawIndexUint32: {}", deviceFeatures2.features.fullDrawIndexUint32 ? "Enabled" : "Disabled");
+		// Agrega más características según sea necesario...
+
+		// Imprimir características de VkPhysicalDeviceVulkan11Features
+		IFNITY_LOG(LogCore, INFO, "StorageBuffer16BitAccess: {}", vulkan11Features.storageBuffer16BitAccess ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "UniformAndStorageBuffer16BitAccess: {}", vulkan11Features.uniformAndStorageBuffer16BitAccess ? "Enabled" : "Disabled");
+		// Agrega más características según sea necesario...
+
+		// Imprimir características de VkPhysicalDeviceVulkan12Features
+		IFNITY_LOG(LogCore, INFO, "BufferDeviceAddress: {}", vulkan12Features.bufferDeviceAddress ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "BufferDeviceAddressCaptureReplay: {}", vulkan12Features.bufferDeviceAddressCaptureReplay ? "Enabled" : "Disabled");
+		// Agrega más características según sea necesario...
+
+		// Imprimir características de VkPhysicalDeviceVulkan13Features
+		IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", vulkan13Features.dynamicRendering ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "Synchronization2: {}", vulkan13Features.synchronization2 ? "Enabled" : "Disabled");
+		// Agrega más características según sea necesario...
+
+		// Imprimir características de VkPhysicalDeviceDescriptorIndexingFeatures
+		IFNITY_LOG(LogCore, INFO, "DescriptorBindingSampledImageUpdateAfterBind: {}", indexingFeatures.descriptorBindingSampledImageUpdateAfterBind ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "DescriptorBindingStorageImageUpdateAfterBind: {}", indexingFeatures.descriptorBindingStorageImageUpdateAfterBind ? "Enabled" : "Disabled");
+		// Agrega más características según sea necesario...
+
+		// Imprimir características de VkPhysicalDeviceBufferDeviceAddressFeatures
+		IFNITY_LOG(LogCore, INFO, "BufferDeviceAddress: {}", bufferDeviceAddressFeatures.bufferDeviceAddress ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "BufferDeviceAddressCaptureReplay: {}", bufferDeviceAddressFeatures.bufferDeviceAddressCaptureReplay ? "Enabled" : "Disabled");
+	 
+		IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", vulkan13Features.dynamicRendering ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "Synchronization2: {}", vulkan13Features.synchronization2 ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "Maintenance4: {}", vulkan13Features.maintenance4 ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ShaderIntegerDotProduct: {}", vulkan13Features.shaderIntegerDotProduct ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
+		IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
+
+	
+
+}
 
 
+
+VkFormat DeviceVulkan::GetSwapChainFormat() const
+{
+	if(!hasSwapchain())
+	{
+		return VK_FORMAT_UNDEFINED;
+	}
+
+	return swapchain_->getSurfaceFormat().format;
+}
 
 void DeviceVulkan::OnUpdate()
 {
@@ -366,6 +465,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 
 	m_RenderDevice = Vulkan::CreateDevice(device_, this);
 
+	PrintEnabledFeature(m_PhysicalDevice.physical_device);
 
 
 	return true;
@@ -482,7 +582,15 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	indexingFeatures.descriptorBindingVariableDescriptorCount = VK_TRUE;
 	indexingFeatures.runtimeDescriptorArray = VK_TRUE;
 
-	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface).add_required_extension_features(indexingFeatures).select();
+	// Declarar y configurar VkPhysicalDeviceBufferDeviceAddressFeatures
+	VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
+	bufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+	bufferDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
+	bufferDeviceAddressFeatures.bufferDeviceAddressCaptureReplay = VK_TRUE;
+
+
+	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface).add_required_extension_features(indexingFeatures)
+		.add_required_extension_features(bufferDeviceAddressFeatures).select();
 	if(!physicalDevSelRet)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to select physical device in Vulkan Device");

@@ -242,13 +242,13 @@ public:
 		{
 			DescriptionShader.NoCompile = true;
 			DescriptionShader.FileName = "triangle01.vert";
-			DescriptionShader.FileName = "glm.vert";
+			//DescriptionShader.FileName = "glm.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.NoCompile = true;
 			DescriptionShader.FileName = "triangle01.frag";
-			DescriptionShader.FileName = "glm.frag";
+			//DescriptionShader.FileName = "glm.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
 
@@ -263,7 +263,7 @@ public:
 		//GraphicsPipelineDescription gdesc;
 
 		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
-		//m_GraphicsPipeline->BindPipeline(m_ManagerDevice->GetRenderDevice());
+		m_GraphicsPipeline->BindPipeline(m_ManagerDevice->GetRenderDevice());
 	
 		exit(0);
 

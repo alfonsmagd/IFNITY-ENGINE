@@ -135,6 +135,12 @@ namespace Vulkan
 		return currentImageIndex_;
 	}
 
+	const VkSurfaceFormatKHR& VulkanSwapchain::getSurfaceFormat() const
+	{
+		//GetSurfaceFormat in VulkanSwapchain
+		return surfaceFormat_;
+	}
+
 
 
 

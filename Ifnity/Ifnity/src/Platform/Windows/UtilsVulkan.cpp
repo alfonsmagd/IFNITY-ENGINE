@@ -3,6 +3,7 @@
 
 #include "UtilsVulkan.h"
 #include "Ifnity\Graphics\Utils.hpp"
+#include "../Vulkan/vulkan_classes.hpp"
 #include <glslang\Public\resource_limits_c.h>
 
 
@@ -617,6 +618,29 @@ VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
 		.descriptorCount = descriptorCount,
 		.stageFlags = stageFlags,
 		.pImmutableSamplers = immutableSamplers,
+	};
+}
+
+VkSpecializationInfo getPipelineShaderStageSpecializationInfo(Vulkan::SpecializationConstantDesc desc,
+	VkSpecializationMapEntry* outEntries)
+{
+	const uint32_t numEntries = desc.getNumSpecializationConstants();
+	if(outEntries)
+	{
+		for(uint32_t i = 0; i != numEntries; i++)
+		{
+			outEntries[ i ] = VkSpecializationMapEntry{
+				.constantID = desc.entries[ i ].constantId,
+				.offset = desc.entries[ i ].offset,
+				.size = desc.entries[ i ].size,
+			};
+		}
+	}
+	return VkSpecializationInfo{
+		.mapEntryCount = numEntries,
+		.pMapEntries = outEntries,
+		.dataSize = desc.dataSize,
+		.pData = desc.data,
 	};
 }
 

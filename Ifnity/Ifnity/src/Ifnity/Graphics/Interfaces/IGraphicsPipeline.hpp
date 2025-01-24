@@ -37,15 +37,30 @@ struct IFNITY_API RasterizationState
 
 struct IFNITY_API BlendState
 {
+	//In Opengl you should use srcBlend and dstBlend to set the blend function. 
+	//In Vulkan you should use srcColorBlendFactor and dstColorBlendFactor to set the blend function.
+	//Todo: if the user use vkconfiguration --> pass in opengl configuration based. 
+	//Todo: if the user uses opengl configuration --> pass in vkconfiguration based.
 	bool        blendEnable = false;
 	rhi::BlendFactor srcBlend = rhi::BlendFactor::SRC_ALPHA;
 	rhi::BlendFactor dstBlend = rhi::BlendFactor::ONE_MINUS_SRC_ALPHA;
+	rhi::BlendFactor srcAlphaBlendFactor = rhi::BlendFactor::SRC_ALPHA;
+	rhi::BlendFactor dstAlphaBlendFactor = rhi::BlendFactor::ONE_MINUS_SRC_ALPHA;
+	rhi::BlendFactor alphaBlendOp = rhi::BlendFactor::OPERATION_ADD;
+	rhi::BlendFactor srcColorBlendFactor = rhi::BlendFactor::SRC_ALPHA;
+	rhi::BlendFactor dstColorBlendFactor = rhi::BlendFactor::ZERO;
+	rhi::BlendFactor colorBlendOp = rhi::BlendFactor::OPERATION_ADD;
 
 	constexpr BlendState& setBlendEnable(bool enable) { blendEnable = enable; return *this; }
 	constexpr BlendState& enableBlend() { blendEnable = true; return *this; }
 	constexpr BlendState& disableBlend() { blendEnable = false; return *this; }
 	constexpr BlendState& setSrcBlend( rhi::BlendFactor value) { srcBlend = value; return *this; }
 	constexpr BlendState& setDestBlend(rhi::BlendFactor value) { dstBlend = value; return *this; }
+	constexpr BlendState& setBlendOp(rhi::BlendFactor value) { colorBlendOp = value; return *this; }
+	constexpr BlendState& setSrcAlphaBlendFactor(rhi::BlendFactor value) { srcAlphaBlendFactor = value; return *this; }
+	constexpr BlendState& setDstAlphaBlendFactor(rhi::BlendFactor value) { dstAlphaBlendFactor = value; return *this; }
+	constexpr BlendState& setAlphaBlendOp(rhi::BlendFactor value) { alphaBlendOp = value; return *this; }
+
 
 };
 
@@ -97,6 +112,8 @@ struct IFNITY_API GraphicsPipelineDescription
 		renderState = state;
 		return *this;
 	}
+
+	const char* debugName = "";
 
 };
 

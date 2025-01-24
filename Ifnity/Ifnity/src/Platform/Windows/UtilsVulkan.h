@@ -5,7 +5,7 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 #include <glslang\Include\glslang_c_interface.h>
-
+#include "../Vulkan/vulkan_classes.hpp"
 
 IFNITY_NAMESPACE
 
@@ -81,6 +81,10 @@ VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
     uint32_t descriptorCount,
     VkShaderStageFlags stageFlags,
     const VkSampler * immutableSamplers = nullptr);
+
+
+VkSpecializationInfo getPipelineShaderStageSpecializationInfo( Vulkan::SpecializationConstantDesc desc,
+    VkSpecializationMapEntry* outEntries);
 
 IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);
 

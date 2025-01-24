@@ -47,7 +47,9 @@ namespace OpenGL
         { rhi::Format::R8G8B8_UINT, GL_RGB8UI },
         { rhi::Format::R8G8B8, GL_RGB8 },
         { rhi::Format::R8G8B8A8, GL_RGBA8 },
-        { rhi::Format::R32G32B32_FLOAT, GL_RGB32F }
+		{ rhi::Format::R32G32B32_FLOAT, GL_RGB32F },
+		{ rhi::Format::R8G8B8A8_UNORM, GL_RGBA8 },
+		{ rhi::Format::B8G8R8A8_UNORM, GL_BGRA }
     } };
 
     /**

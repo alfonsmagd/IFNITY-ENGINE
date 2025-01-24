@@ -7,6 +7,9 @@
 #include <VkBootstrap.h>
 #include "Platform\Vulkan\vulkan_classes.hpp"
 #include "vk_backend.hpp"
+#include "vk_constans.hpp"
+
+
 
 IFNITY_NAMESPACE
 
@@ -20,7 +23,7 @@ class DeviceVulkan final : public GraphicsDeviceManager
 
 public:
 	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
-
+	VkFormat GetSwapChainFormat() const;
 
 public:
 	Vulkan::CommandBuffer currentCommandBuffer_;

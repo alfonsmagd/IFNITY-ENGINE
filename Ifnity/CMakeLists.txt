@@ -12,7 +12,7 @@ add_subdirectory(Ifnity)
 # Añade el subdirectorio que contiene el proyecto Sandbox Y EJEMPLOS 
 add_subdirectory(Sandbox)
 #add_subdirectory(GPU_MONITOR)
-add_subdirectory(ShadersPipeLine)
+#add_subdirectory(ShadersPipeLine)
 #add_subdirectory(Simple_Texture)
 #add_subdirectory(Tetahedre)
 #add_subdirectory(Skybox_Camera)

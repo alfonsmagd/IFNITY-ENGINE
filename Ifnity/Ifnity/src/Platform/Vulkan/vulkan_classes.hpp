@@ -399,6 +399,7 @@ namespace Vulkan
 		const VkSurfaceFormatKHR& getSurfaceFormat() const;
 		uint32_t getNumSwapchainImages() const;*/
 		uint32_t getCurrentImageIndex() const;
+		const VkSurfaceFormatKHR& getSurfaceFormat() const;
 	private:
 		DeviceVulkan& ctx_;
 		VkDevice device_ = VK_NULL_HANDLE;

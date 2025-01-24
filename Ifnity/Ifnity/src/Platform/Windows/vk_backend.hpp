@@ -51,13 +51,15 @@ namespace Vulkan
 
 		//Vulkan Specific 
         VkPipeline getVkPipeline(struct GraphicsPipeline* gp) const;
-
+		const DeviceVulkan& getDeviceContextVulkan() const { return *m_DeviceVulkan; }
 		
     
     private:
 		// Add private members here
 		ShaderModuleState createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const;
         ShaderModuleState createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const ;
+        
+		const VkPhysicalDeviceLimits& getPhysicalDeviceLimits() const;
 
 		VkDevice vkDevice_ = VK_NULL_HANDLE;
 		VkPhysicalDevice vkPhysicalDevice_ = VK_NULL_HANDLE;
@@ -86,16 +88,22 @@ namespace Vulkan
 		RenderPipelineState m_rVkPipelineState;
 		VertexInput        m_vertexInput;
         SpecializationConstantDesc specInfo = {};
+
+		rhi::Format colorFormat   = rhi::Format::UNKNOWN;
+        rhi::Format depthFormat   = rhi::Format::UNKNOWN;
+        rhi::Format stencilFormat = rhi::Format::UNKNOWN;
+
 	public:
 		//Destructor 
         ~GraphicsPipeline() {};
         GraphicsPipeline(GraphicsPipelineDescription&& desc):m_Description(std::move(desc)) {};
         const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
         void  BindPipeline(struct IDevice* device) override;
-        ShaderModuleState  getVertexShaderModule()   { return m_vertex; }
-        ShaderModuleState  getFragmentShaderModule() { return m_fragment; }
+        ShaderModuleState&  getVertexShaderModule()   { return m_vertex; }
+        ShaderModuleState&  getFragmentShaderModule() { return m_fragment; }
         void  setSpecializationConstant(const SpecializationConstantDesc& spec);
         void  SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = desc; }
+		void  setColorFormat(rhi::Format format) { colorFormat = format; }
     
     private:
 		void   configureRenderPipelineState();

@@ -182,6 +182,8 @@ namespace rhi {
         R8G8B8,      /**< R8G8B8 format */
 		R8G8B8A8,    /**< R8G8B8A8 format */
 		R32G32B32_FLOAT, /**< R32G32B32 float format */
+        R8G8B8A8_UNORM, /**< R8G8B8A8 unorm format */
+		B8G8R8A8_UNORM, /**< B8G8R8A8 unorm format */
         UNKNOWN,     /**< Unknown format */
         COUNT        /**< Format count */
     };
@@ -229,7 +231,10 @@ namespace rhi {
         SRC_COLOR,          /**< Blend factor source color */
         ONE_MINUS_SRC_ALPHA,/**< Blend factor one minus source alpha */
 		ONE_MINUS_SRC_COLOR,/**< Blend factor one minus source color */
-        SRC_ALPHA           /**< Blend factor source alpha */
+        SRC_ALPHA     ,      /**< Blend factor source alpha */
+		OPERATION_ADD,     /**< Blend factor operation add */
+
+		COUNT			   /**< Blend factor count */
     };
 
    
