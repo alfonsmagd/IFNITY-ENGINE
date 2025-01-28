@@ -7,6 +7,7 @@
 #include <glslang\Include\glslang_c_interface.h>
 #include "../Vulkan/vulkan_classes.hpp"
 
+
 IFNITY_NAMESPACE
 
 

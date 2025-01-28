@@ -4,6 +4,7 @@
 #include "../Windows/UtilsVulkan.h"
 #include "Platform/Windows/DeviceVulkan.h"
 
+
 IFNITY_NAMESPACE
 
 
@@ -15,8 +16,28 @@ namespace Vulkan
 
 	uint32_t VulkanPipelineBuilder::numPipelinesCreated_ = 0;
 
+	//----------------------------------------------------------------------------------------------------//
+	// global file methods 
+	//----------------------------------------------------------------------------------------------------//
+	void transitionToColorAttachment(VkCommandBuffer buffer, VulkanImage* colorTex)
+	{
+		if(!(colorTex))
+		{
+			return;
+		}
 
-
+		if(!(!colorTex->isDepthFormat_ && !colorTex->isStencilFormat_))
+		{
+			IFNITY_LOG(LogCore,ERROR, "Color attachments cannot have depth/stencil formats");
+			return;
+		}
+		IFNITY_ASSERT_MSG(colorTex->vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid color attachment format");
+		colorTex->transitionLayout(buffer,
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,// wait for all subsequent// fragment/compute shaders
+			VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
+	}
 
 	//-----------------------------------------------------------------------------------------------//
 	// VulkanSwapchain METHODS
@@ -163,8 +184,31 @@ namespace Vulkan
 
 	CommandBuffer::~CommandBuffer()
 	{
+	}
 
 
+	void CommandBuffer::cmdBindViewport(const ViewPortState& viewport)
+	{
+		// https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
+		const VkViewport vp = {
+			 .x = (float)viewport.x, // float x;
+			 .y = (float)viewport.height - viewport.y, // float y;
+			 .width = (float)viewport.width, // float width;
+			 .height = -(float)viewport.height, // float height;
+			 .minDepth = (float)viewport.minDepth, // float minDepth;
+			 .maxDepth = (float)viewport.maxDepth, // float maxDepth;
+		};
+		vkCmdSetViewport(wrapper_->cmdBuf_, 0, 1, &vp);
+	}
+
+	void CommandBuffer::cmdBindScissorRect(const ScissorRect& rect)
+	{
+		const VkRect2D scissor = 
+		{
+			 VkOffset2D{(int32_t)rect.x, (int32_t)rect.y},
+			 VkExtent2D{rect.width, rect.height},
+		};
+		vkCmdSetScissor(wrapper_->cmdBuf_, 0, 1, &scissor);
 	}
 
 
@@ -192,7 +236,11 @@ namespace Vulkan
 		return vkView;
 	}
 
-	void VulkanImage::transitionLayout(VkCommandBuffer commandBuffer, VkImageLayout newImageLayout, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, const VkImageSubresourceRange& subresourceRange) const
+	void VulkanImage::transitionLayout(VkCommandBuffer commandBuffer,
+		VkImageLayout newImageLayout,
+		VkPipelineStageFlags srcStageMask, 
+		VkPipelineStageFlags dstStageMask, 
+		const VkImageSubresourceRange& subresourceRange) const
 	{
 
 
@@ -205,78 +253,71 @@ namespace Vulkan
 			srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
 		}
 
+		if(vkImageLayout_ == VK_IMAGE_LAYOUT_UNDEFINED)
+		{
+			// we do not need to wait for any previous operations in this case
+			srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+		}
+
 		const VkPipelineStageFlags doNotRequireAccessMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT | VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT |
 			VK_PIPELINE_STAGE_ALL_GRAPHICS_BIT | VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
 		VkPipelineStageFlags srcRemainingMask = srcStageMask & ~doNotRequireAccessMask;
 		VkPipelineStageFlags dstRemainingMask = dstStageMask & ~doNotRequireAccessMask;
 
-		if(srcStageMask & VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT)
-		{
-			srcAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			srcRemainingMask &= ~VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		}
-		if(srcStageMask & VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
-		{
-			srcAccessMask |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			srcRemainingMask &= ~VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		}
-		if(srcStageMask & VK_PIPELINE_STAGE_TRANSFER_BIT)
-		{
-			srcAccessMask |= VK_ACCESS_TRANSFER_WRITE_BIT;
-			srcRemainingMask &= ~VK_PIPELINE_STAGE_TRANSFER_BIT;
-		}
-		if(srcStageMask & VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT)
-		{
-			srcAccessMask |= VK_ACCESS_SHADER_WRITE_BIT;
-			srcRemainingMask &= ~VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-		}
-		if(srcStageMask & VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT)
-		{
-			srcAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-			srcAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			srcRemainingMask &= ~VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		}
+		// This lambda updates the access mask and remaining stages for a given pipeline stage.
+		// It checks if the stage bit is set in the stage mask, updates the access mask, and removes the stage bit from the remaining mask.
+
+		auto updateAccessMask = [](VkPipelineStageFlags stageMask, 
+			VkAccessFlags& accessMask, 
+			VkPipelineStageFlags& remainingMask,
+			VkPipelineStageFlags stageBit, 
+			VkAccessFlags accessBit)
+			{
+				if(stageMask & stageBit)
+				{
+					accessMask |= accessBit;
+					remainingMask &= ~stageBit;
+				}
+			};
+
+		updateAccessMask(srcStageMask, srcAccessMask, srcRemainingMask,
+			VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+			VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+		updateAccessMask(srcStageMask, srcAccessMask, srcRemainingMask,
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+		updateAccessMask(srcStageMask, srcAccessMask, srcRemainingMask,
+			VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_ACCESS_TRANSFER_WRITE_BIT);
+		updateAccessMask(srcStageMask, srcAccessMask, srcRemainingMask,
+			VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, 
+			VK_ACCESS_SHADER_WRITE_BIT);
+		updateAccessMask(srcStageMask, srcAccessMask, srcRemainingMask,
+			VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, 
+			VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
 
 		IFNITY_ASSERT_MSG(srcRemainingMask == 0, "Automatic access mask deduction is not implemented (yet) for this srcStageMask");
 
-		if(dstStageMask & VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT)
-		{
-			dstAccessMask |= VK_ACCESS_SHADER_READ_BIT;
-			dstAccessMask |= VK_ACCESS_SHADER_WRITE_BIT;
-			dstRemainingMask &= ~VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-		}
-		if(dstStageMask & VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT)
-		{
-			dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			dstRemainingMask &= ~VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-		}
-		if(dstStageMask & VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT)
-		{
-			dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-			dstAccessMask |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			dstRemainingMask &= ~VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		}
-		if(dstStageMask & VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
-		{
-			dstAccessMask |= VK_ACCESS_SHADER_READ_BIT;
-			dstAccessMask |= VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
-			dstRemainingMask &= ~VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-		}
-		if(dstStageMask & VK_PIPELINE_STAGE_TRANSFER_BIT)
-		{
-			dstAccessMask |= VK_ACCESS_TRANSFER_READ_BIT;
-			dstRemainingMask &= ~VK_PIPELINE_STAGE_TRANSFER_BIT;
-		}
-		if(dstStageMask & VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR)
-		{
-			dstAccessMask |= VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
-			dstRemainingMask &= ~VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
-		}
+		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
+		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT);
+		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT);
+		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
 
 		IFNITY_ASSERT_MSG(dstRemainingMask == 0, "Automatic access mask deduction is not implemented (yet) for this dstStageMask");
 
+
 		imageMemoryBarrier(
-			commandBuffer, vkImage_, srcAccessMask, dstAccessMask, vkImageLayout_, newImageLayout, srcStageMask, dstStageMask, subresourceRange);
+			commandBuffer,
+			vkImage_, 
+			srcAccessMask,
+			dstAccessMask,
+			vkImageLayout_,
+			newImageLayout,
+			srcStageMask, 
+			dstStageMask, 
+			subresourceRange);
 
 		vkImageLayout_ = newImageLayout;
 

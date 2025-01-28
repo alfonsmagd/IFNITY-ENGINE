@@ -23,8 +23,19 @@ struct IFNITY_API ViewPortState
 	uint32_t maxDepth = 1;
 
 	//Constructors
-	ViewPortState() = default;
-	ViewPortState(uint32_t x, uint32_t y, uint32_t width, uint32_t height): x(x), y(y), width(width), height(height) {};
+
+};
+
+struct IFNITY_API ScissorRect
+{
+
+	uint32_t x = 0;
+	uint32_t y = 0;
+	uint32_t width = 0;
+	uint32_t height = 0;
+
+	//Constructors
+
 };
 
 struct IFNITY_API RasterizationState
@@ -57,7 +68,7 @@ struct IFNITY_API BlendState
 	constexpr BlendState& setBlendEnable(bool enable) { blendEnable = enable; return *this; }
 	constexpr BlendState& enableBlend() { blendEnable = true; return *this; }
 	constexpr BlendState& disableBlend() { blendEnable = false; return *this; }
-	constexpr BlendState& setSrcBlend( rhi::BlendFactor value) { srcBlend = value; return *this; }
+	constexpr BlendState& setSrcBlend(rhi::BlendFactor value) { srcBlend = value; return *this; }
 	constexpr BlendState& setDestBlend(rhi::BlendFactor value) { dstBlend = value; return *this; }
 	constexpr BlendState& setBlendOp(rhi::BlendFactor value) { colorBlendOp = value; return *this; }
 	constexpr BlendState& setSrcAlphaBlendFactor(rhi::BlendFactor value) { srcAlphaBlendFactor = value; return *this; }
@@ -81,9 +92,9 @@ struct IFNITY_API StencilState
 {
 
 	rhi::StencilOp stencilFailureOp = rhi::StencilOp::StencilOp_Keep;
-	rhi::StencilOp depthFailureOp   = rhi::StencilOp::StencilOp_Keep;
+	rhi::StencilOp depthFailureOp = rhi::StencilOp::StencilOp_Keep;
 	rhi::StencilOp depthStencilPassOp = rhi::StencilOp::StencilOp_Keep;
-	rhi::CompareOp stencilCompareOp =   rhi::CompareOp::CompareOp_AlwaysPass;
+	rhi::CompareOp stencilCompareOp = rhi::CompareOp::CompareOp_AlwaysPass;
 	uint32_t readMask = (uint32_t)~0;
 	uint32_t writeMask = (uint32_t)~0;
 };
@@ -94,13 +105,13 @@ struct IFNITY_API GraphicsPipelineDescription
 	RasterizationState rasterizationState;
 	RenderState renderState;
 
-	
+
 	IShader* vs = nullptr;
 	IShader* ps = nullptr;
 	IShader* gs = nullptr;
 
 
-	
+
 
 	GraphicsPipelineDescription& SetVertexShader(IShader* shader)
 	{

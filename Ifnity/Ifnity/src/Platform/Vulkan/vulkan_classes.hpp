@@ -13,7 +13,8 @@
 IFNITY_NAMESPACE
 
 class DeviceVulkan;
-
+struct ViewPortState;
+struct ScissorRect;
 
 namespace Vulkan
 {
@@ -316,12 +317,13 @@ namespace Vulkan
 
 		CommandBuffer& operator=(CommandBuffer&& other) = default;
 
+		void cmdBindViewport(const ViewPortState& state);
+		void cmdBindScissorRect(const ScissorRect& rect);
 
 
 	private:
 		friend class DeviceVulkan;
-
-		DeviceVulkan* ctx_;
+		DeviceVulkan* ctx_ = nullptr ;
 		const VulkanImmediateCommands::CommandBufferWrapper* wrapper_ = nullptr;
 
 		SubmitHandle lastSubmitHandle_ = {};

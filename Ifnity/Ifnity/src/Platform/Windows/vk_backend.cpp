@@ -175,6 +175,16 @@ namespace Vulkan
 
 	VkPipeline Device::getVkPipeline(GraphicsPipeline* gp) const
 	{
+		// Steps to follow:
+		// 1. Validate the GraphicsPipeline pointer.
+		// 2. Check if the pipeline is already created.
+		// 3. Initialize the necessary variables for pipeline creation.
+		// 4. Create the color blend states.
+		// 5. Create VkPipelineVertexInputStateCreateInfo.
+		// 6. Configure specialization constants and push constant ranges.
+		// 7. Create VkPipelineShaderStageCreateInfo for each shader module.
+		// 8. Create VkPipelineLayout.
+		// 9. Build the pipeline using VulkanPipelineBuilder.
 		#define VSHADER 0
 		#define FSHADER 1
 
@@ -208,10 +218,6 @@ namespace Vulkan
 		StencilState& frontFaceStencil = gp->frontFaceStencil;
 
 		
-		
-
-
-
 		//const uint32_t numColorAttachments = &gp->m_rVkPipelineState.numColorAttachments_; only one color attachment format 
 
 		// Not all attachments are valid. We need to create color blend attachments only for active attachments
@@ -302,7 +308,6 @@ namespace Vulkan
 		}
 
 		//7. Create VkPipelineLayout
-
 		auto& vkDsl = m_DeviceVulkan->vkDSL_;  // get the descriptor set layout from the deviceVulkan context.
 
 		const VkDescriptorSetLayout dsls[] = { vkDsl ,vkDsl };
