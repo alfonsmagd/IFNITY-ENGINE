@@ -93,6 +93,13 @@ namespace Vulkan
         rhi::Format depthFormat   = rhi::Format::UNKNOWN;
         rhi::Format stencilFormat = rhi::Format::UNKNOWN;
 
+
+        StencilState backFaceStencil = {};
+        StencilState frontFaceStencil = {};
+
+        uint32_t samplesCount = 1u;
+        float minSampleShading = 0.0f;
+
 	public:
 		//Destructor 
         ~GraphicsPipeline() {};

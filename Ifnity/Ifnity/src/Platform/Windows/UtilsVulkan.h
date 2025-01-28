@@ -86,6 +86,19 @@ VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
 VkSpecializationInfo getPipelineShaderStageSpecializationInfo( Vulkan::SpecializationConstantDesc desc,
     VkSpecializationMapEntry* outEntries);
 
+VkSampleCountFlagBits getVulkanSampleCountFlags(uint32_t numSamples, VkSampleCountFlags maxSamplesMask);
+
+VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(VkShaderStageFlagBits stage,
+    VkShaderModule shaderModule,
+    const char* entryPoint,
+    const VkSpecializationInfo * specializationInfo);
+
+
+VkSpecializationInfo getSpecializationInfo(uint32_t mapEntryCount,
+                                           const VkSpecializationMapEntry * mapEntries,
+                                           size_t dataSize,
+                                           const void* data);
+
 IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);
 
 

@@ -175,6 +175,9 @@ namespace Vulkan
 
 	VkPipeline Device::getVkPipeline(GraphicsPipeline* gp) const
 	{
+		#define VSHADER 0
+		#define FSHADER 1
+
 		IFNITY_ASSERT_MSG(gp != nullptr, "GraphicsPipeline is null");
 
 		RenderPipelineState* rps = &gp->m_rVkPipelineState;
@@ -198,7 +201,15 @@ namespace Vulkan
 		const ShaderModuleState* vertModule = &gp->getVertexShaderModule();
 		const ShaderModuleState* fragModule = &gp->getFragmentShaderModule();
 
+		const uint32_t samplesCount = gp->samplesCount;
+		const float minSampleShading = gp->minSampleShading;
+
+		StencilState& backFaceStencil = gp->backFaceStencil;
+		StencilState& frontFaceStencil = gp->frontFaceStencil;
+
 		
+		
+
 
 
 		//const uint32_t numColorAttachments = &gp->m_rVkPipelineState.numColorAttachments_; only one color attachment format 
@@ -255,11 +266,16 @@ namespace Vulkan
 			.pVertexAttributeDescriptions = rps->numAttributes_ ? rps->vkAttributes_ : nullptr,
 		};
 
-		//6. PushConstant Vulkan Range 
+		//6. PushConstant Vulkan Range and Specialization Info
 		VkSpecializationMapEntry entries[ SpecializationConstantDesc::SPECIALIZATION_CONSTANTS_MAX ] = {};
-
 		const VkSpecializationInfo si = getPipelineShaderStageSpecializationInfo(specInfo, entries);
 
+
+		//7. Create VkPipelineShaderStageCreateInfo for each shader module
+		
+		VkPipelineShaderStageCreateInfo shaderStages[ 2 ] = {};
+		shaderStages[ VSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT,   vertModule->sm, "main", &si);
+		shaderStages[ FSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragModule->sm, "main", &si);
 
 	#define UPDATE_PUSH_CONSTANT_SIZE(sm, bit)                                  \
 			if (sm) {                                                                 \
@@ -274,15 +290,15 @@ namespace Vulkan
 		#undef UPDATE_PUSH_CONSTANT_SIZE
 
 		//maxPushConstantsSize is guaranteed to be at least 128 bytes, now in Vulkan 1.4 is 256 bytes
-			// https://www.khronos.org/registry/vulkan/specs/1.3/html/vkspec.html#features-limits
-			// Table 32. Required Limits
+		// https://www.khronos.org/registry/vulkan/specs/1.3/html/vkspec.html#features-limits
+		// Table 32. Required Limits
 		const VkPhysicalDeviceLimits& limits = getPhysicalDeviceLimits();
 		if(!(pushConstantsSize <= limits.maxPushConstantsSize))
 		{
 			//Fill and complete with IFNITY_LOG 
 			IFNITY_LOG(LogApp, ERROR,
 				STRMESSAGE("Push constants size exceeded ", std::to_string(pushConstantsSize)) 
-				+ STRMESSAGE(" (max ", std::to_string(limits.maxPushConstantsSize)) + " bytes)");
+			    + STRMESSAGE(" (max ", std::to_string(limits.maxPushConstantsSize)) + " bytes)");
 		}
 
 		//7. Create VkPipelineLayout
@@ -312,9 +328,58 @@ namespace Vulkan
 		}
 		VK_ASSERT(setDebugObjectName(vkDevice_, VK_OBJECT_TYPE_PIPELINE_LAYOUT, (uint64_t)layout, pipelineLayoutName));
 
+		
 
+		//8. Create BuilderPipeline 
+		VulkanPipelineBuilder()
+			// from Vulkan 1.0
+			.dynamicState(VK_DYNAMIC_STATE_VIEWPORT)
+			.dynamicState(VK_DYNAMIC_STATE_SCISSOR)
+			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS)
+			.dynamicState(VK_DYNAMIC_STATE_BLEND_CONSTANTS)
+			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state
+			.dynamicState(VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE)
+			.dynamicState(VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE)
+			.dynamicState(VK_DYNAMIC_STATE_DEPTH_COMPARE_OP)
+			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state2
+			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE)
+			.primitiveTopology(ConvertToVkPrimitiveTopology(desc.rasterizationState.primitiveType))
+			.polygonMode(ConverToVkPolygonMode(desc.rasterizationState.polygonMode))
+			.stencilStateOps(VK_STENCIL_FACE_FRONT_BIT,
+				ConvertstencilOpToVkStencilOp(frontFaceStencil.stencilFailureOp),
+				ConvertstencilOpToVkStencilOp(frontFaceStencil.depthStencilPassOp),
+				ConvertstencilOpToVkStencilOp(frontFaceStencil.depthFailureOp),
+				compareOpToVkCompareOp(frontFaceStencil.stencilCompareOp))
+			.stencilStateOps(VK_STENCIL_FACE_BACK_BIT,
+				ConvertstencilOpToVkStencilOp(backFaceStencil.stencilFailureOp),
+				ConvertstencilOpToVkStencilOp(backFaceStencil.depthStencilPassOp),
+				ConvertstencilOpToVkStencilOp(backFaceStencil.depthFailureOp),
+				compareOpToVkCompareOp(backFaceStencil.stencilCompareOp))
+			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount, 
+				m_DeviceVulkan->getFramebufferMSAABitMask()), 
+				minSampleShading)
+			.stencilMasks(VK_STENCIL_FACE_FRONT_BIT, 0xFF, frontFaceStencil.writeMask, frontFaceStencil.readMask)
+			.stencilMasks(VK_STENCIL_FACE_BACK_BIT, 0xFF, backFaceStencil.writeMask, backFaceStencil.readMask)
+			.shaderStage(shaderStages[ VSHADER ])
+			.shaderStage(shaderStages[ FSHADER ])
+			.cullMode(cullModeToVkCullMode(desc.rasterizationState.cullMode))
+			.frontFace(windingModeToVkFrontFace(desc.rasterizationState.frontFace))
+			.vertexInputState(ciVertexInputState)
+			.colorAttachments(colorBlendAttachmentStates, colorAttachmentFormats, 1)
+			.depthAttachmentFormat(formatToVkFormat(gp->depthFormat))
+			.stencilAttachmentFormat(formatToVkFormat(gp->stencilFormat))
+			.build(vkDevice_, m_DeviceVulkan->pipelineCache_, layout, &pipeline, desc.debugName);
+		
 
-		return VK_NULL_HANDLE;
+		rps->pipeline_ = pipeline;
+		rps->pipelineLayout_ = layout;
+
+		#undef VSHADER
+		#undef FSHADER
+
+		return pipeline;
+
+		
 	}
 
 	ShaderModuleState Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const

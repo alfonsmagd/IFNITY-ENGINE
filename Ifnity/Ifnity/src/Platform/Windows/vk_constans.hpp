@@ -31,7 +31,7 @@ namespace Vulkan
 	* @param vkFormat The Vulkan format.
 	* @return The corresponding RHI format, or rhi::Format::UNKNOWN if not found.
 	*/
-	static rhi::Format GetRHIFormat(VkFormat vkFormat)
+	inline rhi::Format GetRHIFormat(VkFormat vkFormat)
 	{
 		for(const auto& mapping : c_FormatMap)
 		{
@@ -41,6 +41,13 @@ namespace Vulkan
 			}
 		}
 		return rhi::Format::UNKNOWN; // Return UNKNOWN if the format is not found
+	}
+
+	inline VkFormat   formatToVkFormat(rhi::Format format)
+	{
+
+		VkFormat result = format < rhi::Format::COUNT ?  Vulkan::c_FormatMap[ (uint8_t)format ].vkFormat :  VK_FORMAT_UNDEFINED;
+		return result;
 	}
 
 
@@ -70,6 +77,114 @@ namespace Vulkan
 			return VK_BLEND_FACTOR_ONE; // Default value
 		}
 	}
+
+	inline VkPrimitiveTopology ConvertToVkPrimitiveTopology(rhi::PrimitiveType type)
+	{
+		switch(type)
+		{
+		case rhi::PrimitiveType::TriangleList:
+			return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		case rhi::PrimitiveType::TriangleStrip:
+			return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+		case rhi::PrimitiveType::LineList:
+			return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+		case rhi::PrimitiveType::PointList:
+			return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+		default:
+			return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST; // Default value
+		}
+	}
+
+	inline VkPolygonMode ConverToVkPolygonMode(rhi::PolygonModeType mode)
+	{
+		switch(mode)
+		{
+		case rhi::PolygonModeType::Fill:
+			return VK_POLYGON_MODE_FILL;
+		case rhi::PolygonModeType::Line:
+			return VK_POLYGON_MODE_LINE;
+		default:
+			return VK_POLYGON_MODE_FILL; // Default value
+		}
+	}
+
+	inline VkStencilOp ConvertstencilOpToVkStencilOp(rhi::StencilOp op)
+	{
+		switch(op)
+		{
+		case rhi::StencilOp::StencilOp_Keep:
+			return VK_STENCIL_OP_KEEP;
+		case rhi::StencilOp::StencilOp_Zero:
+			return VK_STENCIL_OP_ZERO;
+		case rhi::StencilOp::StencilOp_Replace:
+			return VK_STENCIL_OP_REPLACE;
+		case rhi::StencilOp::StencilOp_IncrementClamp:
+			return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+		case rhi::StencilOp::StencilOp_DecrementClamp:
+			return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+		case rhi::StencilOp::StencilOp_Invert:
+			return VK_STENCIL_OP_INVERT;
+		case rhi::StencilOp::StencilOp_IncrementWrap:
+			return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+		case rhi::StencilOp::StencilOp_DecrementWrap:
+			return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+		}
+		assert(false);
+		return VK_STENCIL_OP_KEEP;
+	}
+
+	inline VkCompareOp compareOpToVkCompareOp(rhi::CompareOp func)
+	{
+		switch(func)
+		{
+		case rhi::CompareOp::CompareOp_Never:
+			return VK_COMPARE_OP_NEVER;
+		case rhi::CompareOp::CompareOp_Less:
+			return VK_COMPARE_OP_LESS;
+		case rhi::CompareOp::CompareOp_Equal:
+			return VK_COMPARE_OP_EQUAL;
+		case rhi::CompareOp::CompareOp_LessEqual:
+			return VK_COMPARE_OP_LESS_OR_EQUAL;
+		case rhi::CompareOp::CompareOp_Greater:
+			return VK_COMPARE_OP_GREATER;
+		case rhi::CompareOp::CompareOp_NotEqual:
+			return VK_COMPARE_OP_NOT_EQUAL;
+		case rhi::CompareOp::CompareOp_GreaterEqual:
+			return VK_COMPARE_OP_GREATER_OR_EQUAL;
+		case rhi::CompareOp::CompareOp_AlwaysPass:
+			return VK_COMPARE_OP_ALWAYS;
+		}
+		
+		return VK_COMPARE_OP_ALWAYS;
+	}
+
+
+	inline VkCullModeFlags cullModeToVkCullMode(rhi::CullModeType mode)
+	{
+		switch(mode)
+		{
+		case rhi::CullModeType::None:
+			return VK_CULL_MODE_NONE;
+		case rhi::CullModeType::Front:
+			return VK_CULL_MODE_FRONT_BIT;
+		case rhi::CullModeType::Back:
+			return VK_CULL_MODE_BACK_BIT;
+		}
+		return VK_CULL_MODE_NONE;
+	}
+
+	inline VkFrontFace windingModeToVkFrontFace(rhi::FrontFaceType mode)
+	{
+		switch(mode)
+		{
+		case rhi::FrontFaceType::Clockwise:
+			return VK_FRONT_FACE_CLOCKWISE;
+		case rhi::FrontFaceType::CounterClockwise:
+			return VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		}
+		return VK_FRONT_FACE_COUNTER_CLOCKWISE;
+	}
+
 
 	/**
 	 * @brief Converts blend operation to Vulkan blend factor.

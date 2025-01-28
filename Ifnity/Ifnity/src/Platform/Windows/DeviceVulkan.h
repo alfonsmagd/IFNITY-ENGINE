@@ -33,12 +33,29 @@ public:
 	std::unique_ptr<Vulkan::VulkanSwapchain> swapchain_;
 	Vulkan::DeviceQueues deviceQueues_;
 	VkPhysicalDeviceProperties2 properties2; //Physical Device Properties 2
+	VkPipelineCache pipelineCache_ = VK_NULL_HANDLE;
 
 	//Using instancing. 
 	VkDescriptorSetLayout vkDSL_ = VK_NULL_HANDLE; // Descriptor Set Layout
 	VkDescriptorPool vkDPool_ = VK_NULL_HANDLE;		// Descriptor Pool	
 	VkDescriptorSet vkDSet_ = VK_NULL_HANDLE;		// Descriptor Set
 	Vulkan::SubmitHandle lastSubmitHandle_ = Vulkan::SubmitHandle();
+
+
+protected:
+	// Heredado vía GraphicsDeviceManager
+	void OnUpdate() override;
+	unsigned int GetWidth() const override;
+	unsigned int GetHeight() const override;
+	bool InitInternalInstance() override;
+	bool InitializeDeviceAndContext() override;
+	bool ConfigureSpecificHintsGLFW() const override;
+	void SetVSync(bool enabled) override;
+	bool IsVSync() const override;
+	void ResizeSwapChain() override;
+	void InitializeGui() override;
+	void InternalPreDestroy() override;
+	void ClearBackBuffer(float* color) override;
 
 private:
 	vkb::Instance  m_Instance;  // Vulkan instance 
@@ -123,24 +140,17 @@ private:
 		VkPhysicalDeviceProperties{},
 	};
 
-protected:
-	// Heredado vía GraphicsDeviceManager
-	void OnUpdate() override;
-	unsigned int GetWidth() const override;
-	unsigned int GetHeight() const override;
-	bool InitInternalInstance() override;
-	bool InitializeDeviceAndContext() override;
-	bool ConfigureSpecificHintsGLFW() const override;
-	void SetVSync(bool enabled) override;
-	bool IsVSync() const override;
-	void ResizeSwapChain() override;
-	void InitializeGui() override;
-	void InternalPreDestroy() override;
-	void ClearBackBuffer(float* color) override;
+	friend class Vulkan::Device;
+
+
 
 private:
 
 	~DeviceVulkan() override;
+
+	//Getter 
+
+	uint32_t getFramebufferMSAABitMask() const;
 	
 	// Initialize private methods
 	bool CreateSurface();
@@ -155,6 +165,7 @@ private:
 	bool CreateFrameBuffer();
 	bool CreateCommandBuffers();
 	bool CreateSyncObjects();
+	bool CreatePipelineCache();
 
 	VkResult growDescriptorPool(uint32_t maxTextures, uint32_t maxSamplers);
 	

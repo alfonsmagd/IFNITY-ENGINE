@@ -45,6 +45,10 @@ static void PrintEnabledFeature(VkPhysicalDevice vkpd)
 		bufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
 		indexingFeatures.pNext = &bufferDeviceAddressFeatures;
 
+		VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures = {};
+		dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+		bufferDeviceAddressFeatures.pNext = &dynamicRenderingFeatures;
+
 		vkGetPhysicalDeviceFeatures2(vkpd, &deviceFeatures2);
 
 		// Imprimir características de VkPhysicalDeviceFeatures
@@ -104,6 +108,8 @@ static void PrintEnabledFeature(VkPhysicalDevice vkpd)
 		IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
 		IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
 		IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
+		// Imprimir características de VkPhysicalDeviceDynamicRenderingFeaturesKHR
+		IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", dynamicRenderingFeatures.dynamicRendering ? "Enabled" : "Disabled");
 
 	
 
@@ -448,9 +454,10 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		!CreateRenderPass() ||
 		!CreateFrameBuffer() ||
 		!CreateCommandBuffers() ||
+		!CreatePipelineCache() ||
 		!CreateSyncObjects()
 
-		)
+		)//endif
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed Initialization Process ");
 		return false;
@@ -553,6 +560,16 @@ DeviceVulkan::~DeviceVulkan()
 
 }
 
+uint32_t DeviceVulkan::getFramebufferMSAABitMask() const
+{
+	//Get properties2 limits 
+	//framebufferColorSampleCounts: Indicates the multisample anti-aliasing (MSAA) capabilities that the physical device supports for color attachments in a framebuffer.
+	//framebufferDepthSampleCounts : Indicates the multisample anti - aliasing(MSAA) capabilities that the physical device supports for depth attachments in a framebuffer.
+
+	const VkPhysicalDeviceLimits& limits = properties2.properties.limits;
+	return limits.framebufferColorSampleCounts & limits.framebufferDepthSampleCounts;
+}
+
 bool DeviceVulkan::CreateSurface()
 {
 	VkResult result = VK_ERROR_UNKNOWN;
@@ -572,6 +589,13 @@ bool DeviceVulkan::CreatePhysicalDevice()
 
 	vkb::PhysicalDeviceSelector physicalDevSel{ m_Instance };
 
+
+
+	//Try to enable dynamic rendering 
+	VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures = {};
+	dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+	dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
+
 	//Try to enable INDEXING FEATURES   
 	VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures {};
 	indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
@@ -589,8 +613,17 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	bufferDeviceAddressFeatures.bufferDeviceAddressCaptureReplay = VK_TRUE;
 
 
-	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface).add_required_extension_features(indexingFeatures)
-		.add_required_extension_features(bufferDeviceAddressFeatures).select();
+	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface)
+		.add_required_extension_features(indexingFeatures)
+		.add_required_extension_features(bufferDeviceAddressFeatures)
+		.add_required_extension_features(dynamicRenderingFeatures)
+		.add_required_extension(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME)
+		.add_required_extension(VK_KHR_MAINTENANCE2_EXTENSION_NAME)
+		.add_required_extension(VK_KHR_MULTIVIEW_EXTENSION_NAME)
+		.add_required_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME)
+		.add_required_extension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME)
+		.select();
+
 	if(!physicalDevSelRet)
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to select physical device in Vulkan Device");
@@ -665,6 +698,7 @@ bool DeviceVulkan::CreateDevice()
 
 	#endif
 
+	PrintEnabledFeature(m_PhysicalDevice.physical_device);
 
 	return true;
 }
@@ -991,6 +1025,19 @@ bool DeviceVulkan::CreateSyncObjects()
 		}
 	}
 
+
+	return true;
+}
+
+bool DeviceVulkan::CreatePipelineCache()
+{
+	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
+	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+	if(vkCreatePipelineCache(device_.device, &pipelineCacheCreateInfo, nullptr, &pipelineCache_) != VK_SUCCESS)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to create pipeline cache");
+		return false;
+	}
 
 	return true;
 }

@@ -33,7 +33,10 @@ struct IFNITY_API RasterizationState
 	rhi::CullModeType cullMode = rhi::CullModeType::FrontAndBack;
 	rhi::FrontFaceType frontFace = rhi::FrontFaceType::CounterClockwise;
 	rhi::FillModeType fillMode = rhi::FillModeType::None;
+	rhi::PolygonModeType polygonMode = rhi::PolygonModeType::Fill;
 };
+
+
 
 struct IFNITY_API BlendState
 {
@@ -62,6 +65,7 @@ struct IFNITY_API BlendState
 	constexpr BlendState& setAlphaBlendOp(rhi::BlendFactor value) { alphaBlendOp = value; return *this; }
 
 
+
 };
 
 
@@ -73,17 +77,30 @@ struct IFNITY_API RenderState
 	BlendState blendState;
 };
 
+struct IFNITY_API StencilState
+{
+
+	rhi::StencilOp stencilFailureOp = rhi::StencilOp::StencilOp_Keep;
+	rhi::StencilOp depthFailureOp   = rhi::StencilOp::StencilOp_Keep;
+	rhi::StencilOp depthStencilPassOp = rhi::StencilOp::StencilOp_Keep;
+	rhi::CompareOp stencilCompareOp =   rhi::CompareOp::CompareOp_AlwaysPass;
+	uint32_t readMask = (uint32_t)~0;
+	uint32_t writeMask = (uint32_t)~0;
+};
+
 
 struct IFNITY_API GraphicsPipelineDescription
 {
 	RasterizationState rasterizationState;
 	RenderState renderState;
 
+	
 	IShader* vs = nullptr;
 	IShader* ps = nullptr;
 	IShader* gs = nullptr;
 
 
+	
 
 	GraphicsPipelineDescription& SetVertexShader(IShader* shader)
 	{

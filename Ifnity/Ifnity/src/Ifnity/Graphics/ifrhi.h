@@ -160,8 +160,14 @@ namespace rhi {
         Solid,      /**< Solid fill */
         Point,      /**< Point fill */
         Wireframe   /**< Wireframe fill */
-    };
 
+    };
+    enum class PolygonModeType: uint8_t
+    {
+       Fill = 0,
+       Line = 1,
+
+    };
     /**
      * @enum FrontFaceType
      * @brief Enum representing the type of front face.
@@ -238,7 +244,31 @@ namespace rhi {
     };
 
    
-    
+    enum class StencilOp: uint8_t
+    {
+        StencilOp_Keep = 0,
+        StencilOp_Zero,
+        StencilOp_Replace,
+        StencilOp_IncrementClamp,
+        StencilOp_DecrementClamp,
+        StencilOp_Invert,
+        StencilOp_IncrementWrap,
+        StencilOp_DecrementWrap
+    };
+
+    enum class CompareOp: uint8_t
+    {
+        CompareOp_Never = 0,
+        CompareOp_Less,
+        CompareOp_Equal,
+        CompareOp_LessEqual,
+        CompareOp_Greater,
+        CompareOp_NotEqual,
+        CompareOp_GreaterEqual,
+        CompareOp_AlwaysPass
+    };
+
+    enum class WindingMode: uint8_t { WindingMode_CCW, WindingMode_CW };
 
 
 

@@ -367,14 +367,14 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 	};
 
 	glslang_shader_t* shader = glslang_shader_create(&input);
-	
+
 
 	if(!glslang_shader_preprocess(shader, &input))
 	{
-		IFNITY_LOG(LogCore,TRACE,"Shader preprocessing failed:\n");
-		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_shader_get_info_log(shader));
-		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_shader_get_info_debug_log(shader));
-		
+		IFNITY_LOG(LogCore, TRACE, "Shader preprocessing failed:\n");
+		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_log(shader));
+		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_debug_log(shader));
+
 		assert(false);
 		IFNITY_LOG(LogCore, ERROR, "glslang_shader_preprocess() failed");
 		return VK_ERROR_INITIALIZATION_FAILED;
@@ -382,9 +382,9 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 
 	if(!glslang_shader_parse(shader, &input))
 	{
-		IFNITY_LOG(LogCore,TRACE,"Shader parsing failed:\n");
-		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_shader_get_info_log(shader));
-		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_shader_get_info_debug_log(shader));
+		IFNITY_LOG(LogCore, TRACE, "Shader parsing failed:\n");
+		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_log(shader));
+		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_debug_log(shader));
 		Utils::printShaderSource(glslang_shader_get_preprocessed_code(shader));
 		IFNITY_LOG(LogCore, ERROR, "glslang_shader_parse() failed");
 		return VK_ERROR_INITIALIZATION_FAILED;
@@ -399,9 +399,9 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 
 	if(!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
 	{
-		IFNITY_LOG(LogCore,TRACE,"Shader linking failed:\n");
-		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_program_get_info_log(program));
-		IFNITY_LOG(LogCore,TRACE,"  %s\n", glslang_program_get_info_debug_log(program));
+		IFNITY_LOG(LogCore, TRACE, "Shader linking failed:\n");
+		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_program_get_info_log(program));
+		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_program_get_info_debug_log(program));
 		IFNITY_LOG(LogCore, ERROR, "glslang program link() failed");
 		return VK_ERROR_INITIALIZATION_FAILED;
 	}
@@ -421,7 +421,7 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 
 	if(glslang_program_SPIRV_get_messages(program))
 	{
-		IFNITY_LOG(LogCore,ERROR,"%s\n", glslang_program_SPIRV_get_messages(program));
+		IFNITY_LOG(LogCore, ERROR, "%s\n", glslang_program_SPIRV_get_messages(program));
 	}
 
 	const uint8_t* spirv = reinterpret_cast<const uint8_t*>(glslang_program_SPIRV_get_ptr(program));
@@ -642,6 +642,70 @@ VkSpecializationInfo getPipelineShaderStageSpecializationInfo(Vulkan::Specializa
 		.dataSize = desc.dataSize,
 		.pData = desc.data,
 	};
+
 }
+
+
+
+VkSampleCountFlagBits getVulkanSampleCountFlags(uint32_t numSamples, VkSampleCountFlags maxSamplesMask)
+{
+	if(numSamples <= 1 || VK_SAMPLE_COUNT_2_BIT > maxSamplesMask)
+	{
+		return VK_SAMPLE_COUNT_1_BIT;
+	}
+	if(numSamples <= 2 || VK_SAMPLE_COUNT_4_BIT > maxSamplesMask)
+	{
+		return VK_SAMPLE_COUNT_2_BIT;
+	}
+	if(numSamples <= 4 || VK_SAMPLE_COUNT_8_BIT > maxSamplesMask)
+	{
+		return VK_SAMPLE_COUNT_4_BIT;
+	}
+	if(numSamples <= 8 || VK_SAMPLE_COUNT_16_BIT > maxSamplesMask)
+	{
+		return VK_SAMPLE_COUNT_8_BIT;
+	}
+	if(numSamples <= 16 || VK_SAMPLE_COUNT_32_BIT > maxSamplesMask)
+	{
+		return VK_SAMPLE_COUNT_16_BIT;
+	}
+	if(numSamples <= 32 || VK_SAMPLE_COUNT_64_BIT > maxSamplesMask)
+	{
+		return VK_SAMPLE_COUNT_32_BIT;
+	}
+	return VK_SAMPLE_COUNT_64_BIT;
+}
+
+
+VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(VkShaderStageFlagBits stage,
+	VkShaderModule shaderModule,
+	const char* entryPoint,
+	const VkSpecializationInfo* specializationInfo)
+{
+	return VkPipelineShaderStageCreateInfo
+	{
+		.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+		.flags = 0,
+		.stage = stage,
+		.module = shaderModule,
+		.pName = entryPoint ? entryPoint : "main",
+		.pSpecializationInfo = specializationInfo,
+	};
+}
+
+VkSpecializationInfo getSpecializationInfo(uint32_t mapEntryCount,
+	const VkSpecializationMapEntry* mapEntries,
+	size_t dataSize,
+	const void* data)
+{
+	VkSpecializationInfo specializationInfo{};
+	specializationInfo.mapEntryCount = mapEntryCount;
+	specializationInfo.pMapEntries = mapEntries;
+	specializationInfo.dataSize = dataSize;
+	specializationInfo.pData = data;
+	return specializationInfo;
+}
+
+
 
 IFNITY_END_NAMESPACE
