@@ -5,7 +5,7 @@
 #include <pch.h>
 #include <VkBootstrap.h>
 #include "vk_mem_alloc.h"
-
+#include "../Windows/vk_constans.hpp"
 
 
 
@@ -18,6 +18,7 @@ struct ScissorRect;
 
 namespace Vulkan
 {
+	class Framebuffer;
 
 	//================================================================================================
 	//ENUMS
@@ -81,6 +82,7 @@ namespace Vulkan
 	};
 
 	enum { MAX_COLOR_ATTACHMENTS = 8 };
+	enum { MAX_MIP_LEVELS = 16 };
 
 	enum ShaderStage: uint8_t
 	{
@@ -109,6 +111,29 @@ namespace Vulkan
 	};
 
 	//-----------------------------------------------//
+	// TO MOVE IN FILE TODO STRUCTS 
+	//-----------------------------------------------//
+
+	enum LoadOp: uint8_t
+	{
+		LoadOp_Invalid = 0,
+		LoadOp_DontCare,
+		LoadOp_Load,
+		LoadOp_Clear,
+		LoadOp_None,
+	};
+
+	enum StoreOp: uint8_t
+	{
+		StoreOp_DontCare = 0,
+		StoreOp_Store,
+		StoreOp_MsaaResolve,
+		StoreOp_None,
+	};
+
+
+	
+	//-----------------------------------------------//
 	// STRUCTS
 	//-----------------------------------------------//
 	struct ShaderModuleState final
@@ -116,6 +141,67 @@ namespace Vulkan
 		VkShaderModule sm = VK_NULL_HANDLE;
 		uint32_t pushConstantsSize = 0;
 	};
+
+	struct DepthState final
+	{
+		rhi::CompareOp compareOp = rhi::CompareOp::CompareOp_AlwaysPass;
+		bool isDepthWriteEnabled = false;
+	};
+
+	struct VulkanImage;
+	struct RenderPass final
+	{
+		struct AttachmentDesc final
+		{
+			LoadOp loadOp = LoadOp_Invalid;
+			StoreOp storeOp = StoreOp_Store;
+			uint8_t layer = 0;
+			uint8_t level = 0;
+			float clearColor[ 4 ] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			float clearDepth = 1.0f;
+			uint32_t clearStencil = 0;
+		};
+
+		AttachmentDesc color[ MAX_COLOR_ATTACHMENTS ] = {};
+		AttachmentDesc depth = { .loadOp = LoadOp_DontCare, .storeOp = StoreOp_DontCare };
+		AttachmentDesc stencil = { .loadOp = LoadOp_Invalid, .storeOp = StoreOp_DontCare };
+
+		uint32_t getNumColorAttachments() const
+		{
+			uint32_t n = 0;
+			while(n < MAX_COLOR_ATTACHMENTS && color[ n ].loadOp != LoadOp_Invalid)
+			{
+				n++;
+			}
+			return n;
+		}
+	};
+
+	struct Framebuffer final
+	{
+
+		struct AttachmentDesc
+		{
+			VulkanImage* texture;
+			VulkanImage* resolveTexture;
+		};
+
+		AttachmentDesc color[ MAX_COLOR_ATTACHMENTS ];
+		AttachmentDesc depthStencil;
+
+		const char* debugName = "";
+
+		uint32_t getNumColorAttachments() const
+		{
+			uint32_t n = 0;
+			while(n < MAX_COLOR_ATTACHMENTS && color[n].texture)
+			{
+				n++;
+			}
+			return n;
+		}
+	};
+
 
 
 	// Structure to hold a single specialization constant entry
@@ -243,11 +329,6 @@ namespace Vulkan
 	// CLASSES--------------------------==============//
 	//-----------------------------------//
 
-
-
-
-
-
 	#pragma region CLASSES 
 
 	//-----------------------------------------------//
@@ -319,14 +400,15 @@ namespace Vulkan
 
 		void cmdBindViewport(const ViewPortState& state);
 		void cmdBindScissorRect(const ScissorRect& rect);
-
-
+		void cmdBeginRendering(const RenderPass& renderPass,  Framebuffer& fb);
+		//void cmdBindDepthState(const DepthStencilState& state);
 	private:
 		friend class DeviceVulkan;
 		DeviceVulkan* ctx_ = nullptr ;
 		const VulkanImmediateCommands::CommandBufferWrapper* wrapper_ = nullptr;
 
 		SubmitHandle lastSubmitHandle_ = {};
+		Framebuffer framebuffer_ = {};
 
 		VkPipeline lastPipelineBound_ = VK_NULL_HANDLE;
 
@@ -373,8 +455,9 @@ namespace Vulkan
 			VkPipelineStageFlags dstStageMask,
 			const VkImageSubresourceRange& subresourceRange) const;
 
-		//[[nodiscard]] VkImageAspectFlags getImageAspectFlags() const;
-
+		[[nodiscard]] VkImageAspectFlags getImageAspectFlags() const;
+		// framebuffers can render only into one level/layer
+		[[nodiscard]] VkImageView getOrCreateVkImageViewForFramebuffer(DeviceVulkan& ctx, uint8_t level, uint16_t layer);
 		// framebuffers can render only into one level/layer
 
 		[[nodiscard]] static bool isDepthFormat(VkFormat format);
@@ -402,6 +485,7 @@ namespace Vulkan
 		// precached image views - owned by this VulkanImage
 		VkImageView imageView_ = VK_NULL_HANDLE; // default view with all mip-levels
 		VkImageView imageViewStorage_ = VK_NULL_HANDLE; // default view with identity swizzle (all mip-levels)
+		VkImageView imageViewForFramebuffer_[ MAX_MIP_LEVELS ][ 6 ] = {}; // max 6 faces for cubemap rendering
 
 	};
 
@@ -514,9 +598,52 @@ namespace Vulkan
 	
 	};
 
-
-
 	#pragma endregion CLASSES
+
+
+	//-----------------------------------------------//
+	// TO MOVE IN FILE TODO STRUCTS 
+	//-----------------------------------------------//
+
+	
+
+	inline VkAttachmentLoadOp loadOpToVkAttachmentLoadOp(LoadOp a)
+	{
+		switch(a)
+		{
+		case LoadOp_Invalid:
+			_ASSERT(false);
+			return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		case LoadOp_DontCare:
+			return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		case LoadOp_Load:
+			return VK_ATTACHMENT_LOAD_OP_LOAD;
+		case LoadOp_Clear:
+			return VK_ATTACHMENT_LOAD_OP_CLEAR;
+		case LoadOp_None:
+			return VK_ATTACHMENT_LOAD_OP_NONE_EXT;
+		}
+		_ASSERT(false);
+		return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	}
+
+	inline VkAttachmentStoreOp storeOpToVkAttachmentStoreOp(StoreOp a)
+	{
+		switch(a)
+		{
+		case StoreOp_DontCare:
+			return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		case StoreOp_Store:
+			return VK_ATTACHMENT_STORE_OP_STORE;
+		case StoreOp_MsaaResolve:
+			// for MSAA resolve, we have to store data into a special "resolve" attachment
+			return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		case StoreOp_None:
+			return VK_ATTACHMENT_STORE_OP_NONE;
+		}
+		_ASSERT(false);
+		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	}
 }
 
 IFNITY_END_NAMESPACE

@@ -5,7 +5,7 @@
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 #include <spirv_cross\spirv_reflect.hpp>
-
+#include  "../Vulkan/vulkan_classes.hpp"
 //#define IMGUI_DEMO 
 
 IFNITY_NAMESPACE
@@ -135,6 +135,11 @@ void DeviceVulkan::OnUpdate()
 
 	Vulkan::VulkanImage currentTexture = getCurrentSwapChainTexture();
 
+	Vulkan::RenderPass renderPass = { .color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+
+	Vulkan::Framebuffer framebuffer = { .color = { {.texture = &currentTexture } } };
+
+	cmdBuffer.cmdBeginRendering(renderPass,framebuffer);
 
 	VkClearValue colorClearValue;
 	colorClearValue.color = { { m_Color[ 0 ], m_Color[ 1 ], m_Color[ 2 ], m_Color[ 3 ] } };
