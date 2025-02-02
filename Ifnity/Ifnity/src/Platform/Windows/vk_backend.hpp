@@ -52,6 +52,7 @@ namespace Vulkan
 		//Vulkan Specific 
         VkPipeline getVkPipeline(struct GraphicsPipeline* gp) const;
 		const DeviceVulkan& getDeviceContextVulkan() const { return *m_DeviceVulkan; }
+        void setActualPipeline(GraphicsPipeline* pipeline);
 		
     
     private:
@@ -111,6 +112,7 @@ namespace Vulkan
         void  setSpecializationConstant(const SpecializationConstantDesc& spec);
         void  SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = desc; }
 		void  setColorFormat(rhi::Format format) { colorFormat = format; }
+        RenderPipelineState& getRenderPipelineState() { return m_rVkPipelineState; }
     
     private:
 		void   configureRenderPipelineState();

@@ -401,7 +401,12 @@ namespace Vulkan
 		void cmdBindViewport(const ViewPortState& state);
 		void cmdBindScissorRect(const ScissorRect& rect);
 		void cmdBeginRendering(const RenderPass& renderPass,  Framebuffer& fb);
-		//void cmdBindDepthState(const DepthStencilState& state);
+		void cmdBindDepthState(const DepthState& state);
+		void cmdBindRenderPipeline(RenderPipelineState& pipeline);
+		void  cmdDraw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t baseInstance = 0);
+	
+		void cmdEndRendering();
+	
 	private:
 		friend class DeviceVulkan;
 		DeviceVulkan* ctx_ = nullptr ;
@@ -411,6 +416,7 @@ namespace Vulkan
 		Framebuffer framebuffer_ = {};
 
 		VkPipeline lastPipelineBound_ = VK_NULL_HANDLE;
+		RenderPipelineState* currentPipelineGraphics_;
 
 		bool isRendering_ = false;
 	};

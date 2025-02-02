@@ -127,84 +127,114 @@ VkFormat DeviceVulkan::GetSwapChainFormat() const
 	return swapchain_->getSurfaceFormat().format;
 }
 
+
+
 void DeviceVulkan::OnUpdate()
 {
 	//First get acquire the command buffer 
 	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
-
+	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
 
 	Vulkan::VulkanImage currentTexture = getCurrentSwapChainTexture();
 
-	Vulkan::RenderPass renderPass = { .color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+	Vulkan::RenderPass renderPass = { 
+		.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
 
 	Vulkan::Framebuffer framebuffer = { .color = { {.texture = &currentTexture } } };
 
+	auto& rpl = actualPipeline_->getRenderPipelineState();
 	cmdBuffer.cmdBeginRendering(renderPass,framebuffer);
-
-	VkClearValue colorClearValue;
-	colorClearValue.color = { { m_Color[ 0 ], m_Color[ 1 ], m_Color[ 2 ], m_Color[ 3 ] } };
-
-	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
-
-	VkClearValue depthValue;
-	depthValue.depthStencil.depth = 1.0f;
-
-	VkClearValue clearValues[] = { colorClearValue, depthValue };
-
-	VkRenderPassBeginInfo rpInfo{};
-	rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	rpInfo.renderPass = m_RenderPass;
-
-	rpInfo.renderArea.offset.x = 0;
-	rpInfo.renderArea.offset.y = 0;
-	rpInfo.renderArea.extent = swapchainBootStraap_.extent;
-	rpInfo.framebuffer = m_Framebuffers[ swapchain_->getCurrentImageIndex() ];
-
-	rpInfo.clearValueCount = 2;
-	rpInfo.pClearValues = clearValues;
-
-	VkViewport viewport{};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = static_cast<float>(swapchainBootStraap_.extent.width);
-	viewport.height = static_cast<float>(swapchainBootStraap_.extent.height);
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-
-	VkRect2D scissor{};
-	scissor.offset = { 0, 0 };
-	scissor.extent = swapchainBootStraap_.extent;
-
 	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-	vkCmdBeginRenderPass(cmdBuffer.wrapper_->cmdBuf_, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-
-	///* the rendering itself happens here */
-	//if (!mUseChangedShader) {
-	//  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
-	//} else {
-	//  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
-	//}
-
-	///* required for dynamic viewport */
-	//vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
-	//vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
-
-	///* the triangle drawing itself */
-	//VkDeviceSize offset = 0;
-	//vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
-
-	//vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
-	//vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
-
-	//vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
-
-	// imgui overlay
-
+	cmdBuffer.cmdBindRenderPipeline(rpl);
+	cmdBuffer.cmdDraw(3);
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-
-	vkCmdEndRenderPass(cmdBuffer.wrapper_->cmdBuf_);
 	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+	cmdBuffer.cmdEndRendering();
+	
+	
+	
+
+
+
+	//buf.cmdBeginRendering(
+	//	{ .color = { {.loadOp = lvk::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } },
+	//	{ .color = { {.texture = ctx->getCurrentSwapchainTexture() } } });
+	//buf.cmdBindRenderPipeline(rpTriangle);
+	//buf.cmdPushDebugGroupLabel("Render Triangle", 0xff0000ff);
+	//buf.cmdDraw(3);
+	//buf.cmdPopDebugGroupLabel();
+	//buf.cmdEndRendering();
+
+
+
+
+
+
+
+	//VkClearValue colorClearValue;
+	//colorClearValue.color = { { m_Color[ 0 ], m_Color[ 1 ], m_Color[ 2 ], m_Color[ 3 ] } };
+
+	//float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
+
+	//VkClearValue depthValue;
+	//depthValue.depthStencil.depth = 1.0f;
+
+	//VkClearValue clearValues[] = { colorClearValue, depthValue };
+
+	//VkRenderPassBeginInfo rpInfo{};
+	//rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	//rpInfo.renderPass = m_RenderPass;
+
+	//rpInfo.renderArea.offset.x = 0;
+	//rpInfo.renderArea.offset.y = 0;
+	//rpInfo.renderArea.extent = swapchainBootStraap_.extent;
+	//rpInfo.framebuffer = m_Framebuffers[ swapchain_->getCurrentImageIndex() ];
+
+	//rpInfo.clearValueCount = 2;
+	//rpInfo.pClearValues = clearValues;
+
+	//VkViewport viewport{};
+	//viewport.x = 0.0f;
+	//viewport.y = 0.0f;
+	//viewport.width = static_cast<float>(swapchainBootStraap_.extent.width);
+	//viewport.height = static_cast<float>(swapchainBootStraap_.extent.height);
+	//viewport.minDepth = 0.0f;
+	//viewport.maxDepth = 1.0f;
+
+	//VkRect2D scissor{};
+	//scissor.offset = { 0, 0 };
+	//scissor.extent = swapchainBootStraap_.extent;
+
+	//BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+	//vkCmdBeginRenderPass(cmdBuffer.wrapper_->cmdBuf_, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+
+	/////* the rendering itself happens here */
+	////if (!mUseChangedShader) {
+	////  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
+	////} else {
+	////  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
+	////}
+
+	/////* required for dynamic viewport */
+	////vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
+	////vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
+
+	/////* the triangle drawing itself */
+	////VkDeviceSize offset = 0;
+	////vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
+
+	////vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
+	////vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
+
+	////vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
+
+	//// imgui overlay
+
+
+
+	//vkCmdEndRenderPass(cmdBuffer.wrapper_->cmdBuf_);
+	//EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
 
 	submit(cmdBuffer, currentTexture);
 
@@ -1210,12 +1240,21 @@ bool DeviceVulkan::InitGui()
 	init_info.Queue = deviceQueues_.graphicsQueue;
 	init_info.PipelineCache = VK_NULL_HANDLE;
 	init_info.DescriptorPool = m_ImGuiDescriptorPool;
-	init_info.RenderPass = m_RenderPass;
+	init_info.RenderPass = VK_NULL_HANDLE;
 	init_info.Subpass = 0;
 	init_info.MinImageCount = 3;
 	init_info.ImageCount = Vulkan::VulkanImmediateCommands::kMaxCommandBuffers;
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init_info.CheckVkResultFn = check_vk_result;
+	init_info.UseDynamicRendering = true;
+	
+	// Asegúrate de que PipelineRenderingCreateInfo esté configurado correctamente
+	VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo = {};
+	pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
+	pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+	pipelineRenderingCreateInfo.pColorAttachmentFormats = &swapchainBootStraap_.image_format;
+
+	init_info.PipelineRenderingCreateInfo = pipelineRenderingCreateInfo;
 	ImGui_ImplVulkan_Init(&init_info);
 
 	//Upload Fonts if this was needed.
@@ -1440,6 +1479,15 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 
 
 }
+
+void DeviceVulkan::bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineBindPoint bindPoint, VkPipelineLayout layout) const
+{
+	
+	const VkDescriptorSet dsets[ 2 ] = { vkDSet_, vkDSet_};
+	vkCmdBindDescriptorSets(cmdBuf, bindPoint, layout, 0, (uint32_t)ARRAY_NUM_ELEMENTS(dsets), dsets, 0, nullptr);
+}
+
+
 
 Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const void* spirv, size_t numBytes, const char* debugName)
 {

@@ -24,6 +24,8 @@ class DeviceVulkan final : public GraphicsDeviceManager
 public:
 	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
 	VkFormat GetSwapChainFormat() const;
+	void bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineBindPoint bindPoint, VkPipelineLayout layout) const;
+
 
 public:
 	Vulkan::CommandBuffer currentCommandBuffer_;
@@ -40,6 +42,9 @@ public:
 	VkDescriptorPool vkDPool_ = VK_NULL_HANDLE;		// Descriptor Pool	
 	VkDescriptorSet vkDSet_ = VK_NULL_HANDLE;		// Descriptor Set
 	Vulkan::SubmitHandle lastSubmitHandle_ = Vulkan::SubmitHandle();
+
+
+	Vulkan::GraphicsPipeline* actualPipeline_ = VK_NULL_HANDLE;
 
 
 protected:
@@ -188,7 +193,7 @@ private:
 	bool InitGui();
 	void CheckSpirvVersion(VkPhysicalDevice physicalDevice);
 
-
+	
 	//Imgui private methods
 	bool CreateImGuiDescriptorPool();
 	void setupCallbacks(VkDevice& i_device);

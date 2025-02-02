@@ -192,9 +192,9 @@ namespace Vulkan
 		// https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
 		const VkViewport vp = {
 			 .x = (float)viewport.x, // float x;
-			 .y = (float)viewport.height - viewport.y, // float y;
+			 .y = (float) viewport.y, // float y;
 			 .width = (float)viewport.width, // float width;
-			 .height = -(float)viewport.height, // float height;
+			 .height = (float)viewport.height, // float height;
 			 .minDepth = (float)viewport.minDepth, // float minDepth;
 			 .maxDepth = (float)viewport.maxDepth, // float maxDepth;
 		};
@@ -405,19 +405,90 @@ namespace Vulkan
 
 		cmdBindViewport(viewport);
 		cmdBindScissorRect(scissor);
-		//cmdBindDepthState({});
+		cmdBindDepthState({});
 
 		//ctx_->checkAndUpdateDescriptorSets();
 
-		//vkCmdSetDepthCompareOp(wrapper_->cmdBuf_, VK_COMPARE_OP_ALWAYS);
+		vkCmdSetDepthCompareOp(wrapper_->cmdBuf_, VK_COMPARE_OP_ALWAYS);
 		vkCmdSetDepthBiasEnable(wrapper_->cmdBuf_, VK_FALSE);
 
 		vkCmdBeginRendering(wrapper_->cmdBuf_, &renderingInfo);
 	
 	}
 
+	void CommandBuffer::cmdBindDepthState(const DepthState& desc)
+	{
+		const VkCompareOp op = compareOpToVkCompareOp(desc.compareOp);
+		vkCmdSetDepthWriteEnable(wrapper_->cmdBuf_, desc.isDepthWriteEnabled ? VK_TRUE : VK_FALSE);
+		vkCmdSetDepthTestEnable(wrapper_->cmdBuf_, op != VK_COMPARE_OP_ALWAYS || desc.isDepthWriteEnabled);
+		vkCmdSetDepthCompareOp(wrapper_->cmdBuf_, op);
+	}
+
+	void CommandBuffer::cmdBindRenderPipeline(RenderPipelineState& pipeline)
+	{
+		
+			
+
+			currentPipelineGraphics_ = &pipeline;
+			
+
+			const RenderPipelineState* rps = currentPipelineGraphics_;
+
+			
+			VkPipeline vkpipeline = rps->pipeline_;
+			
+
+			
+
+			if(lastPipelineBound_ != vkpipeline)
+			{
+				lastPipelineBound_ = vkpipeline;
+				vkCmdBindPipeline(wrapper_->cmdBuf_, VK_PIPELINE_BIND_POINT_GRAPHICS, vkpipeline);
+				ctx_->bindDefaultDescriptorSets(wrapper_->cmdBuf_, VK_PIPELINE_BIND_POINT_GRAPHICS, rps->pipelineLayout_);
+			}
+		
+	}
+
+	void CommandBuffer::cmdDraw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t baseInstance)
+	{
+	
+			if(vertexCount == 0)
+			{
+				return;
+			}
+
+			vkCmdDraw(wrapper_->cmdBuf_, vertexCount, instanceCount, firstVertex, baseInstance);
+		
+	}
 
 
+	void CommandBuffer::cmdEndRendering()
+	{
+		assert(isRendering_);
+
+		isRendering_ = false;
+
+		vkCmdEndRendering(wrapper_->cmdBuf_);
+
+		const uint32_t numFbColorAttachments = framebuffer_.getNumColorAttachments();
+
+		// set image layouts after the render pass
+		for(uint32_t i = 0; i != numFbColorAttachments; i++)
+		{
+			 auto& attachment = framebuffer_.color[ i ];
+			// this must match the final layout of the render pass
+			attachment.texture->vkImageLayout_ = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		}
+
+		if(framebuffer_.depthStencil.texture)
+		{
+			auto& depthStencil = framebuffer_.depthStencil;
+			// this must match the final layout of the render pass
+			depthStencil.texture->vkImageLayout_ = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		}
+
+		framebuffer_ = {};
+	}
 	//-----------------------------------------------//
 	// VulkanImage METHODS
 	//-----------------------------------------------//

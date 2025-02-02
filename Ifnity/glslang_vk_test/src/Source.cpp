@@ -265,7 +265,7 @@ public:
 		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
 		m_GraphicsPipeline->BindPipeline(m_ManagerDevice->GetRenderDevice());
 	
-		exit(0);
+		//exit(0);
 
 	}
 	

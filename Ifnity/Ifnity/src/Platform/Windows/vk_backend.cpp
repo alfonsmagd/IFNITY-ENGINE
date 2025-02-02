@@ -228,7 +228,7 @@ namespace Vulkan
 
 		const auto& attachment = gp->colorFormat;
 		IFNITY_ASSERT_MSG(attachment != rhi::Format::UNKNOWN, "format invalid");
-		colorAttachmentFormats[ 0 ] = Vulkan::c_FormatMap[ (uint8_t)attachment ].vkFormat;
+		colorAttachmentFormats[ 0 ] = VK_FORMAT_B8G8R8A8_UNORM;
 
 
 
@@ -387,6 +387,14 @@ namespace Vulkan
 		
 	}
 
+	void Device::setActualPipeline(GraphicsPipeline* pipeline)
+	{
+	
+		m_DeviceVulkan->actualPipeline_ = pipeline;
+	}
+
+	
+
 	ShaderModuleState Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const
 	{
 		VkShaderModule vkShaderModule = VK_NULL_HANDLE;
@@ -464,9 +472,11 @@ namespace Vulkan
 		Device* vkDevice = dynamic_cast<Device*>(device);
 		IFNITY_ASSERT_MSG(vkDevice != nullptr, "Device is not a Vulkan Device");
 
-
+	
 		auto vkpipeline = vkDevice->getVkPipeline(this);
 
+
+		vkDevice->setActualPipeline(this);
 
 
 	}
