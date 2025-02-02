@@ -7,7 +7,7 @@
 #include <glslang\Public\resource_limits_c.h>
 #include <spirv_cross/spirv_reflect.hpp>
 #include "DeviceVulkan.h"
-
+#include "../Vulkan/vulkan_PipelineBuilder.hpp"
 IFNITY_NAMESPACE
 
 namespace Vulkan
