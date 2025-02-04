@@ -8,6 +8,7 @@
 #include "Platform\Vulkan\vulkan_classes.hpp"
 #include "vk_backend.hpp"
 #include "vk_constans.hpp"
+#include "Ifnity/Utils/SlotMap.hpp"
 
 
 
@@ -45,6 +46,8 @@ public:
 
 
 	Vulkan::GraphicsPipeline* actualPipeline_ = VK_NULL_HANDLE;
+
+	SlotMap<Vulkan::VulkanImage> slootMapTextures_;
 
 
 protected:
