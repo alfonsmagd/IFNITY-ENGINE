@@ -21,97 +21,97 @@ static void check_vk_result(VkResult err)
 
 static void PrintEnabledFeature(VkPhysicalDevice vkpd)
 {
-	
-		VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
-		deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 
-		VkPhysicalDeviceVulkan11Features vulkan11Features = {};
-		vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-		deviceFeatures2.pNext = &vulkan11Features;
+	VkPhysicalDeviceFeatures2 deviceFeatures2 = {};
+	deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
 
-		VkPhysicalDeviceVulkan12Features vulkan12Features = {};
-		vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-		vulkan11Features.pNext = &vulkan12Features;
+	VkPhysicalDeviceVulkan11Features vulkan11Features = {};
+	vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+	deviceFeatures2.pNext = &vulkan11Features;
 
-		VkPhysicalDeviceVulkan13Features vulkan13Features = {};
-		vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-		vulkan12Features.pNext = &vulkan13Features;
+	VkPhysicalDeviceVulkan12Features vulkan12Features = {};
+	vulkan12Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+	vulkan11Features.pNext = &vulkan12Features;
 
-		VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures = {};
-		indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-		vulkan13Features.pNext = &indexingFeatures;
+	VkPhysicalDeviceVulkan13Features vulkan13Features = {};
+	vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+	vulkan12Features.pNext = &vulkan13Features;
 
-		VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
-		bufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
-		indexingFeatures.pNext = &bufferDeviceAddressFeatures;
+	VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures = {};
+	indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+	vulkan13Features.pNext = &indexingFeatures;
 
-		VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures = {};
-		dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
-		bufferDeviceAddressFeatures.pNext = &dynamicRenderingFeatures;
+	VkPhysicalDeviceBufferDeviceAddressFeatures bufferDeviceAddressFeatures = {};
+	bufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+	indexingFeatures.pNext = &bufferDeviceAddressFeatures;
 
-		vkGetPhysicalDeviceFeatures2(vkpd, &deviceFeatures2);
+	VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeatures = {};
+	dynamicRenderingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR;
+	bufferDeviceAddressFeatures.pNext = &dynamicRenderingFeatures;
 
-		// Imprimir características de VkPhysicalDeviceFeatures
-		IFNITY_LOG(LogCore, INFO, "RobustBufferAccess: {}", deviceFeatures2.features.robustBufferAccess ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "FullDrawIndexUint32: {}", deviceFeatures2.features.fullDrawIndexUint32 ? "Enabled" : "Disabled");
-		// Agrega más características según sea necesario...
+	vkGetPhysicalDeviceFeatures2(vkpd, &deviceFeatures2);
 
-		// Imprimir características de VkPhysicalDeviceVulkan11Features
-		IFNITY_LOG(LogCore, INFO, "StorageBuffer16BitAccess: {}", vulkan11Features.storageBuffer16BitAccess ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "UniformAndStorageBuffer16BitAccess: {}", vulkan11Features.uniformAndStorageBuffer16BitAccess ? "Enabled" : "Disabled");
-		// Agrega más características según sea necesario...
+	// Imprimir características de VkPhysicalDeviceFeatures
+	IFNITY_LOG(LogCore, INFO, "RobustBufferAccess: {}", deviceFeatures2.features.robustBufferAccess ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "FullDrawIndexUint32: {}", deviceFeatures2.features.fullDrawIndexUint32 ? "Enabled" : "Disabled");
+	// Agrega más características según sea necesario...
 
-		// Imprimir características de VkPhysicalDeviceVulkan12Features
-		IFNITY_LOG(LogCore, INFO, "BufferDeviceAddress: {}", vulkan12Features.bufferDeviceAddress ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "BufferDeviceAddressCaptureReplay: {}", vulkan12Features.bufferDeviceAddressCaptureReplay ? "Enabled" : "Disabled");
-		// Agrega más características según sea necesario...
+	// Imprimir características de VkPhysicalDeviceVulkan11Features
+	IFNITY_LOG(LogCore, INFO, "StorageBuffer16BitAccess: {}", vulkan11Features.storageBuffer16BitAccess ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "UniformAndStorageBuffer16BitAccess: {}", vulkan11Features.uniformAndStorageBuffer16BitAccess ? "Enabled" : "Disabled");
+	// Agrega más características según sea necesario...
 
-		// Imprimir características de VkPhysicalDeviceVulkan13Features
-		IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", vulkan13Features.dynamicRendering ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "Synchronization2: {}", vulkan13Features.synchronization2 ? "Enabled" : "Disabled");
-		// Agrega más características según sea necesario...
+	// Imprimir características de VkPhysicalDeviceVulkan12Features
+	IFNITY_LOG(LogCore, INFO, "BufferDeviceAddress: {}", vulkan12Features.bufferDeviceAddress ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "BufferDeviceAddressCaptureReplay: {}", vulkan12Features.bufferDeviceAddressCaptureReplay ? "Enabled" : "Disabled");
+	// Agrega más características según sea necesario...
 
-		// Imprimir características de VkPhysicalDeviceDescriptorIndexingFeatures
-		IFNITY_LOG(LogCore, INFO, "DescriptorBindingSampledImageUpdateAfterBind: {}", indexingFeatures.descriptorBindingSampledImageUpdateAfterBind ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "DescriptorBindingStorageImageUpdateAfterBind: {}", indexingFeatures.descriptorBindingStorageImageUpdateAfterBind ? "Enabled" : "Disabled");
-		// Agrega más características según sea necesario...
+	// Imprimir características de VkPhysicalDeviceVulkan13Features
+	IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", vulkan13Features.dynamicRendering ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "Synchronization2: {}", vulkan13Features.synchronization2 ? "Enabled" : "Disabled");
+	// Agrega más características según sea necesario...
 
-		// Imprimir características de VkPhysicalDeviceBufferDeviceAddressFeatures
-		IFNITY_LOG(LogCore, INFO, "BufferDeviceAddress: {}", bufferDeviceAddressFeatures.bufferDeviceAddress ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "BufferDeviceAddressCaptureReplay: {}", bufferDeviceAddressFeatures.bufferDeviceAddressCaptureReplay ? "Enabled" : "Disabled");
-	 
-		IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", vulkan13Features.dynamicRendering ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "Synchronization2: {}", vulkan13Features.synchronization2 ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "Maintenance4: {}", vulkan13Features.maintenance4 ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ShaderIntegerDotProduct: {}", vulkan13Features.shaderIntegerDotProduct ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
-		IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
-		// Imprimir características de VkPhysicalDeviceDynamicRenderingFeaturesKHR
-		IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", dynamicRenderingFeatures.dynamicRendering ? "Enabled" : "Disabled");
+	// Imprimir características de VkPhysicalDeviceDescriptorIndexingFeatures
+	IFNITY_LOG(LogCore, INFO, "DescriptorBindingSampledImageUpdateAfterBind: {}", indexingFeatures.descriptorBindingSampledImageUpdateAfterBind ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "DescriptorBindingStorageImageUpdateAfterBind: {}", indexingFeatures.descriptorBindingStorageImageUpdateAfterBind ? "Enabled" : "Disabled");
+	// Agrega más características según sea necesario...
 
-	
+	// Imprimir características de VkPhysicalDeviceBufferDeviceAddressFeatures
+	IFNITY_LOG(LogCore, INFO, "BufferDeviceAddress: {}", bufferDeviceAddressFeatures.bufferDeviceAddress ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "BufferDeviceAddressCaptureReplay: {}", bufferDeviceAddressFeatures.bufferDeviceAddressCaptureReplay ? "Enabled" : "Disabled");
+
+	IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", vulkan13Features.dynamicRendering ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "Synchronization2: {}", vulkan13Features.synchronization2 ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "Maintenance4: {}", vulkan13Features.maintenance4 ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ShaderIntegerDotProduct: {}", vulkan13Features.shaderIntegerDotProduct ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ShaderDemoteToHelperInvocation: {}", vulkan13Features.shaderDemoteToHelperInvocation ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ShaderTerminateInvocation: {}", vulkan13Features.shaderTerminateInvocation ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "SubgroupSizeControl: {}", vulkan13Features.subgroupSizeControl ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "ComputeFullSubgroups: {}", vulkan13Features.computeFullSubgroups ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "InlineUniformBlock: {}", vulkan13Features.inlineUniformBlock ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
+	IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
+	// Imprimir características de VkPhysicalDeviceDynamicRenderingFeaturesKHR
+	IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", dynamicRenderingFeatures.dynamicRendering ? "Enabled" : "Disabled");
+
+
 
 }
 
@@ -131,112 +131,58 @@ VkFormat DeviceVulkan::GetSwapChainFormat() const
 
 void DeviceVulkan::OnUpdate()
 {
+	static bool hasexecuted = false;
 	//First get acquire the command buffer 
 	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
 	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
 
-	Vulkan::VulkanImage currentTexture = getCurrentSwapChainTexture();
+	Vulkan::VulkanImage* currentTexture = getCurrentSwapChainTexture();
 
-	Vulkan::RenderPass renderPass = { 
+	//// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+	//currentTexture->transitionLayout(
+	//	cmdBuffer.wrapper_->cmdBuf_,
+	//	VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+	//	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
+	//);
+
+	Vulkan::RenderPass renderPass = {
 		.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
 
-	Vulkan::Framebuffer framebuffer = { .color = { {.texture = &currentTexture } } };
+	Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
 
-	auto& rpl = actualPipeline_->getRenderPipelineState();
-	cmdBuffer.cmdBeginRendering(renderPass,framebuffer);
-	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-	cmdBuffer.cmdBindRenderPipeline(rpl);
-	cmdBuffer.cmdDraw(3);
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-	cmdBuffer.cmdEndRendering();
+	if(actualPipeline_ != nullptr)
+	{
+		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+		BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+		cmdBuffer.cmdBindRenderPipeline(actualPipeline_->getRenderPipelineState());
+		//cmdBuffer.cmdDraw(3);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+		EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+		cmdBuffer.cmdEndRendering();
+	}
+	else
+	{
+		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+		BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+		
+		//cmdBuffer.cmdDraw(3);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+		EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+		cmdBuffer.cmdEndRendering();
+	}
+
+	//// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_PRESENT_SRC_KHR para presentar
+	//currentTexture->transitionLayout(
+	//	cmdBuffer.wrapper_->cmdBuf_,
+	//	VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+	//	VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+	//	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
 	
-	
-	
 
-
-
-	//buf.cmdBeginRendering(
-	//	{ .color = { {.loadOp = lvk::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } },
-	//	{ .color = { {.texture = ctx->getCurrentSwapchainTexture() } } });
-	//buf.cmdBindRenderPipeline(rpTriangle);
-	//buf.cmdPushDebugGroupLabel("Render Triangle", 0xff0000ff);
-	//buf.cmdDraw(3);
-	//buf.cmdPopDebugGroupLabel();
-	//buf.cmdEndRendering();
-
-
-
-
-
-
-
-	//VkClearValue colorClearValue;
-	//colorClearValue.color = { { m_Color[ 0 ], m_Color[ 1 ], m_Color[ 2 ], m_Color[ 3 ] } };
-
-	//float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
-
-	//VkClearValue depthValue;
-	//depthValue.depthStencil.depth = 1.0f;
-
-	//VkClearValue clearValues[] = { colorClearValue, depthValue };
-
-	//VkRenderPassBeginInfo rpInfo{};
-	//rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	//rpInfo.renderPass = m_RenderPass;
-
-	//rpInfo.renderArea.offset.x = 0;
-	//rpInfo.renderArea.offset.y = 0;
-	//rpInfo.renderArea.extent = swapchainBootStraap_.extent;
-	//rpInfo.framebuffer = m_Framebuffers[ swapchain_->getCurrentImageIndex() ];
-
-	//rpInfo.clearValueCount = 2;
-	//rpInfo.pClearValues = clearValues;
-
-	//VkViewport viewport{};
-	//viewport.x = 0.0f;
-	//viewport.y = 0.0f;
-	//viewport.width = static_cast<float>(swapchainBootStraap_.extent.width);
-	//viewport.height = static_cast<float>(swapchainBootStraap_.extent.height);
-	//viewport.minDepth = 0.0f;
-	//viewport.maxDepth = 1.0f;
-
-	//VkRect2D scissor{};
-	//scissor.offset = { 0, 0 };
-	//scissor.extent = swapchainBootStraap_.extent;
-
-	//BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-	//vkCmdBeginRenderPass(cmdBuffer.wrapper_->cmdBuf_, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-
-	/////* the rendering itself happens here */
-	////if (!mUseChangedShader) {
-	////  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
-	////} else {
-	////  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
-	////}
-
-	/////* required for dynamic viewport */
-	////vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
-	////vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
-
-	/////* the triangle drawing itself */
-	////VkDeviceSize offset = 0;
-	////vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
-
-	////vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
-	////vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
-
-	////vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
-
-	//// imgui overlay
-
-
-
-	//vkCmdEndRenderPass(cmdBuffer.wrapper_->cmdBuf_);
-	//EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-
-	submit(cmdBuffer, currentTexture);
+	submit(cmdBuffer, *currentTexture);
 
 
 }
@@ -248,192 +194,6 @@ void DeviceVulkan::OnUpdate()
 
 
 
-//void DeviceVulkan::OnUpdate()
-//{
-//	//First get acquire the command buffer 
-//	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
-//
-//	//Get Texture available to use. Remember that getCurrentTexture return a VulkanImage
-//	// and WaitForFences , ResetFences and AcquireNextImageKHR, then immediate set the semaphore to acquireSemaphore_
-//	Vulkan::VulkanImage texture = getCurrentTexture();
-//
-//
-//
-//	if (vkWaitForFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame], VK_TRUE, UINT64_MAX) != VK_SUCCESS)
-//	{
-//		IFNITY_LOG(LogCore, ERROR, "Failed to wait for fences");
-//
-//	}
-//
-//	if (vkResetFences(device_.device, 1, &m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
-//	{
-//		IFNITY_LOG(LogCore, ERROR, "Failed to reset fences");
-//
-//	}
-//
-//	uint32_t imageIndex = 0;
-//	VkResult result = vkAcquireNextImageKHR(device_.device,
-//		swapchainBootStraap_,
-//		UINT64_MAX,
-//		m_ImageAvailableSemaphores[m_CurrentFrame],
-//		VK_NULL_HANDLE,
-//		&imageIndex);
-//
-//	if (result == VK_ERROR_OUT_OF_DATE_KHR)
-//	{
-//		return ResizeSwapChain();
-//	}
-//	else
-//	{
-//		if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
-//		{
-//			IFNITY_LOG(LogCore, ERROR, "Failed to acquire next image");
-//		}
-//	}
-//
-//
-//	if (vkResetCommandBuffer(m_CommandBuffers[m_CurrentFrame], 0) != VK_SUCCESS)
-//	{
-//		IFNITY_LOG(LogCore, ERROR, "Failed to reset command buffer");
-//	}
-//
-//	VkCommandBufferBeginInfo cmdBeginInfo{};
-//	cmdBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-//	cmdBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-//
-//	if (vkBeginCommandBuffer(m_CommandBuffers[m_CurrentFrame], &cmdBeginInfo) != VK_SUCCESS)
-//	{
-//		IFNITY_LOG(LogCore, ERROR, "Failed to begin command buffer");
-//	}
-//
-//	
-//
-//	VkClearValue colorClearValue;
-//    colorClearValue.color = { { m_Color[0], m_Color[1], m_Color[2], m_Color[3] } };
-//
-//	float color[4] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
-//	
-//	VkClearValue depthValue;
-//	depthValue.depthStencil.depth = 1.0f;
-//
-//	VkClearValue clearValues[] = { colorClearValue, depthValue };
-//
-//	VkRenderPassBeginInfo rpInfo{};
-//	rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-//	rpInfo.renderPass = m_RenderPass;
-//
-//	rpInfo.renderArea.offset.x = 0;
-//	rpInfo.renderArea.offset.y = 0;
-//	rpInfo.renderArea.extent = swapchainBootStraap_.extent;
-//	rpInfo.framebuffer = m_Framebuffers[imageIndex];
-//
-//	rpInfo.clearValueCount = 2;
-//	rpInfo.pClearValues = clearValues;
-//
-//	VkViewport viewport{};
-//	viewport.x = 0.0f;
-//	viewport.y = 0.0f;
-//	viewport.width = static_cast<float>(swapchainBootStraap_.extent.width);
-//	viewport.height = static_cast<float>(swapchainBootStraap_.extent.height);
-//	viewport.minDepth = 0.0f;
-//	viewport.maxDepth = 1.0f;
-//
-//	VkRect2D scissor{};
-//	scissor.offset = { 0, 0 };
-//	scissor.extent = swapchainBootStraap_.extent;
-//
-//	BeginRenderDocTrace(m_CommandBuffers[m_CurrentFrame], "Render Pass Begin 11111", color);
-//	vkCmdBeginRenderPass(m_CommandBuffers[m_CurrentFrame], &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
-//
-//	///* the rendering itself happens here */
-//	//if (!mUseChangedShader) {
-//	//  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdBasicPipeline);
-//	//} else {
-//	//  vkCmdBindPipeline(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdChangedPipeline);
-//	//}
-//
-//	///* required for dynamic viewport */
-//	//vkCmdSetViewport(mRenderData.rdCommandBuffer, 0, 1, &viewport);
-//	//vkCmdSetScissor(mRenderData.rdCommandBuffer, 0, 1, &scissor);
-//
-//	///* the triangle drawing itself */
-//	//VkDeviceSize offset = 0;
-//	//vkCmdBindVertexBuffers(mRenderData.rdCommandBuffer, 0, 1, &mVertexBuffer, &offset);
-//
-//	//vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 0, 1, &mRenderData.rdTextureDescriptorSet, 0, nullptr);
-//	//vkCmdBindDescriptorSets(mRenderData.rdCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mRenderData.rdPipelineLayout, 1, 1, &mRenderData.rdUBODescriptorSet, 0, nullptr);
-//
-//	//vkCmdDraw(mRenderData.rdCommandBuffer, mRenderData.rdTriangleCount * 3, 1, 0, 0);
-//
-//	// imgui overlay
-//	
-//	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_CommandBuffers[m_CurrentFrame]);
-//
-//	vkCmdEndRenderPass(m_CommandBuffers[m_CurrentFrame]);
-//	EndRenderDocTrace(m_CommandBuffers[m_CurrentFrame]);
-//
-//	if (vkEndCommandBuffer(m_CommandBuffers[m_CurrentFrame]) != VK_SUCCESS)
-//	{
-//		IFNITY_LOG(LogCore, ERROR, "Failed to end command buffer ");
-//		
-//	}
-//
-//	///* upload UBO data after commands are created */
-//	//void* data;
-//	//vmaMapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc, &data);
-//	//std::memcpy(data, &mMatrices, static_cast<uint32_t>(sizeof(VkUploadMatrices)));
-//	//vmaUnmapMemory(mRenderData.rdAllocator, mRenderData.rdUboBufferAlloc);
-//
-//	/* submit command buffer */
-//	VkSubmitInfo submitInfo{};
-//	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-//
-//	VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-//	submitInfo.pWaitDstStageMask = &waitStage;
-//
-//	submitInfo.waitSemaphoreCount = 1;
-//	submitInfo.pWaitSemaphores = &m_ImageAvailableSemaphores[m_CurrentFrame];
-//
-//	submitInfo.signalSemaphoreCount = 1;
-//	submitInfo.pSignalSemaphores = &m_RenderFinishedSemaphores[m_CurrentFrame];
-//
-//	submitInfo.commandBufferCount = 1;
-//	submitInfo.pCommandBuffers = &m_CommandBuffers[m_CurrentFrame];
-//
-//	if (vkQueueSubmit(deviceQueues_.graphicsQueue, 1, &submitInfo, m_InFlightFences[m_CurrentFrame]) != VK_SUCCESS)
-//	{
-//		IFNITY_LOG(LogCore, ERROR, "Failed to submit command buffer");
-//		
-//	}
-//
-//	VkPresentInfoKHR presentInfo{};
-//	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-//	presentInfo.waitSemaphoreCount = 1;
-//	presentInfo.pWaitSemaphores = &m_RenderFinishedSemaphores[m_CurrentFrame];
-//
-//	presentInfo.swapchainCount = 1;
-//	presentInfo.pSwapchains = &swapchainBootStraap_.swapchain;
-//
-//	presentInfo.pImageIndices = &imageIndex;
-//
-//	result = vkQueuePresentKHR(deviceQueues_.presentQueue, &presentInfo);
-//	if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
-//	{
-//		return ResizeSwapChain();
-//	}
-//	else
-//	{
-//		if (result != VK_SUCCESS)
-//		{
-//			IFNITY_LOG(LogCore, ERROR, "Failed to present image");	
-//		
-//		}
-//	}
-//
-//	m_CurrentFrame = (m_CurrentFrame + 1) % 3;
-//
-//
-//}
 
 unsigned int DeviceVulkan::GetWidth() const
 {
@@ -568,6 +328,11 @@ DeviceVulkan::~DeviceVulkan()
 	CleanFrameBuffers();
 	DestroyRenderPass();
 
+	//Destroy pipelines 
+	DestroyPipelines();
+	DestroyPipelineCache();
+	DestroyShaderStages();
+
 	//Destroy Vma Allocator
 	vmaDestroyAllocator(m_Allocator);
 
@@ -632,7 +397,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	dynamicRenderingFeatures.dynamicRendering = VK_TRUE;
 
 	//Try to enable INDEXING FEATURES   
-	VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures {};
+	VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
 	indexingFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
 	indexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
 	indexingFeatures.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;
@@ -831,6 +596,17 @@ bool DeviceVulkan::DestroyCommandPool()
 	return false;
 }
 
+bool DeviceVulkan::DestroyShaderStages()
+{
+	Vulkan::Device* vkDevice = dynamic_cast<Vulkan::Device*>(GetRenderDevice());
+	if(!vkDevice)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Failed to get Vulkan Device");
+		return false;
+	}
+	vkDevice->destroyShaderModule();
+}
+
 void DeviceVulkan::DestroySyncObjects()
 {
 	for(size_t i = 0; i < 3; i++)
@@ -867,6 +643,33 @@ void DeviceVulkan::DestroyRenderPass()
 void DeviceVulkan::DestroyImmediateCommands()
 {
 	immediate_.reset();
+}
+
+void DeviceVulkan::DestroyPipelines()
+{
+	//Iterate about map destroy all pipelines
+	
+	for( auto& [key, pipeline] : map_renderPipelines)
+	{
+		if(pipeline)
+		{
+			pipeline->DestroyPipeline(device_);
+			
+		}
+		continue;
+	}
+	map_renderPipelines.clear();
+
+
+}
+
+void DeviceVulkan::DestroyPipelineCache()
+{
+	if(pipelineCache_ != VK_NULL_HANDLE)
+	{
+		vkDestroyPipelineCache(device_.device, pipelineCache_, nullptr);
+	}
+
 }
 
 bool DeviceVulkan::CreateDepthBuffer()
@@ -1104,10 +907,10 @@ VkResult DeviceVulkan::growDescriptorPool(uint32_t maxTextures, uint32_t maxSamp
 
 	// create default descriptor set layout which is going to be shared by graphics pipelines
 	VkShaderStageFlags stageFlags = VK_SHADER_STAGE_VERTEX_BIT |
-									VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT |
-									VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT |
-									VK_SHADER_STAGE_FRAGMENT_BIT |
-									VK_SHADER_STAGE_COMPUTE_BIT;
+		VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT |
+		VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT |
+		VK_SHADER_STAGE_FRAGMENT_BIT |
+		VK_SHADER_STAGE_COMPUTE_BIT;
 	//Create Descriptor set layout binding. 
 	const VkDescriptorSetLayoutBinding bindings[ kBinding_NumBindings ] =
 	{
@@ -1117,21 +920,21 @@ VkResult DeviceVulkan::growDescriptorPool(uint32_t maxTextures, uint32_t maxSamp
 	};
 
 	const uint32_t flags = VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT |
-						   VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT |
-						   VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
+		VK_DESCRIPTOR_BINDING_UPDATE_UNUSED_WHILE_PENDING_BIT |
+		VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
 	//Fill bindingflags for each binding
 	VkDescriptorBindingFlags bindingFlags[ kBinding_NumBindings ];
 	for(int i = 0; i < kBinding_NumBindings; ++i)
 	{
 		bindingFlags[ i ] = flags;
 	}
-	const VkDescriptorSetLayoutBindingFlagsCreateInfo setLayoutBindingFlagsCI = 
+	const VkDescriptorSetLayoutBindingFlagsCreateInfo setLayoutBindingFlagsCI =
 	{
 		 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO_EXT,
 		 .bindingCount = uint32_t(true ? kBinding_NumBindings : kBinding_NumBindings - 1), //exclude the last if we use acceleration structure
 		 .pBindingFlags = bindingFlags,
 	};
-	const VkDescriptorSetLayoutCreateInfo dslci = 
+	const VkDescriptorSetLayoutCreateInfo dslci =
 	{
 		 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
 		 .pNext = &setLayoutBindingFlagsCI,
@@ -1153,7 +956,7 @@ VkResult DeviceVulkan::growDescriptorPool(uint32_t maxTextures, uint32_t maxSamp
 			 VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_SAMPLER, maxSamplers},
 			 VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, maxTextures}
 		};
-		const VkDescriptorPoolCreateInfo ci = 
+		const VkDescriptorPoolCreateInfo ci =
 		{
 			 .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
 			 .flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT,
@@ -1247,7 +1050,7 @@ bool DeviceVulkan::InitGui()
 	init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 	init_info.CheckVkResultFn = check_vk_result;
 	init_info.UseDynamicRendering = true;
-	
+
 	// Asegúrate de que PipelineRenderingCreateInfo esté configurado correctamente
 	VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo = {};
 	pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
@@ -1406,7 +1209,7 @@ Vulkan::CommandBuffer& DeviceVulkan::acquireCommandBuffer()
 	return currentCommandBuffer_;
 }
 
-Vulkan::VulkanImage DeviceVulkan::getCurrentSwapChainTexture()
+Vulkan::VulkanImage* DeviceVulkan::getCurrentSwapChainTexture()
 {
 
 	//Verify that have swapchain
@@ -1415,11 +1218,11 @@ Vulkan::VulkanImage DeviceVulkan::getCurrentSwapChainTexture()
 		return {};
 	}
 
-	Vulkan::VulkanImage tex = swapchain_->getCurrentTexture();
+	Vulkan::VulkanImage* tex = swapchain_->getCurrentTexture();
 
 	//TODO: Check VERIFY THAT text is valid image. 
 
-	IFNITY_ASSERT_MSG(tex.vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid image format");
+	IFNITY_ASSERT_MSG(tex->vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid image format");
 
 	return tex;
 
@@ -1431,7 +1234,7 @@ bool DeviceVulkan::hasSwapchain() const noexcept
 	return swapchain_ != nullptr;
 }
 
-Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::VulkanImage tex)
+Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::VulkanImage& tex)
 {
 	auto vkCmdBuffer = static_cast<Vulkan::CommandBuffer*>(&commandBuffer);
 
@@ -1480,10 +1283,16 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 
 }
 
+void DeviceVulkan::addGraphicsPipeline(Vulkan::GraphicsPipeline* pipeline)
+{
+	map_renderPipelines[ nextPipelineId ] = pipeline;
+	nextPipelineId++;
+}
+
 void DeviceVulkan::bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineBindPoint bindPoint, VkPipelineLayout layout) const
 {
-	
-	const VkDescriptorSet dsets[ 2 ] = { vkDSet_, vkDSet_};
+
+	const VkDescriptorSet dsets[ 2 ] = { vkDSet_, vkDSet_ };
 	vkCmdBindDescriptorSets(cmdBuf, bindPoint, layout, 0, (uint32_t)ARRAY_NUM_ELEMENTS(dsets), dsets, 0, nullptr);
 }
 

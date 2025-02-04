@@ -629,7 +629,8 @@ VkSpecializationInfo getPipelineShaderStageSpecializationInfo(Vulkan::Specializa
 	{
 		for(uint32_t i = 0; i != numEntries; i++)
 		{
-			outEntries[ i ] = VkSpecializationMapEntry{
+			outEntries[ i ] = VkSpecializationMapEntry
+			{
 				.constantID = desc.entries[ i ].constantId,
 				.offset = desc.entries[ i ].offset,
 				.size = desc.entries[ i ].size,

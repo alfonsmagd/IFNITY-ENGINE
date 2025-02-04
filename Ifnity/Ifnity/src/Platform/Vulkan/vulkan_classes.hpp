@@ -404,7 +404,12 @@ namespace Vulkan
 		void cmdBindDepthState(const DepthState& state);
 		void cmdBindRenderPipeline(RenderPipelineState& pipeline);
 		void  cmdDraw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t baseInstance = 0);
-	
+		void cmdPushConstants(const void* data, size_t size, size_t offset = 0);
+		template<typename Struct>
+		void cmdPushConstants(const Struct& data, size_t offset = 0)
+		{
+			this->cmdPushConstants(&data, sizeof(Struct), offset);
+		}
 		void cmdEndRendering();
 	
 	private:
@@ -416,7 +421,7 @@ namespace Vulkan
 		Framebuffer framebuffer_ = {};
 
 		VkPipeline lastPipelineBound_ = VK_NULL_HANDLE;
-		RenderPipelineState* currentPipelineGraphics_;
+		RenderPipelineState* currentPipelineGraphics_ = nullptr;
 
 		bool isRendering_ = false;
 	};
@@ -491,7 +496,7 @@ namespace Vulkan
 		// precached image views - owned by this VulkanImage
 		VkImageView imageView_ = VK_NULL_HANDLE; // default view with all mip-levels
 		VkImageView imageViewStorage_ = VK_NULL_HANDLE; // default view with identity swizzle (all mip-levels)
-		VkImageView imageViewForFramebuffer_[ MAX_MIP_LEVELS ][ 6 ] = {}; // max 6 faces for cubemap rendering
+		VkImageView imageViewForFramebuffer_[ 1 ][ 1 ] = {}; // max 6 faces for cubemap rendering
 
 	};
 
@@ -509,7 +514,7 @@ namespace Vulkan
 
 
 		VkResult present(VkSemaphore waitSemaphore);
-		VulkanImage getCurrentTexture();
+		VulkanImage* getCurrentTexture();
 		/*
 		VkImage getCurrentVkImage() const;
 		VkImageView getCurrentVkImageView() const;

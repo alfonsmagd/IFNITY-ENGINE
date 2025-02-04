@@ -8,6 +8,7 @@
 #include <spirv_cross/spirv_reflect.hpp>
 #include "DeviceVulkan.h"
 #include "../Vulkan/vulkan_PipelineBuilder.hpp"
+
 IFNITY_NAMESPACE
 
 namespace Vulkan
@@ -40,7 +41,7 @@ namespace Vulkan
 
 	Device::~Device()
 	{
-		// Destructor implementation
+		destroyShaderModule();
 	}
 
 	void Device::Draw(DrawDescription& desc)
@@ -92,17 +93,19 @@ namespace Vulkan
 		const char* gShaderCode = gs ? geometryCode.c_str() : nullptr;
 
 		// 2. compile shaders
-		GraphicsPipeline* pipeline = new GraphicsPipeline(std::move(desc));
+		GraphicsPipeline* pipeline = new GraphicsPipeline(std::move(desc), m_DeviceVulkan);
 
-		pipeline->m_vertex = createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader");
-		pipeline->m_fragment = createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader");
+		m_vertex = createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader");
+		m_fragment = createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader");
 
 		//3. Create the pipeline and configure colorFormat,
 		const DeviceVulkan& ctx = getDeviceContextVulkan();
 
 		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat()));
+		pipeline->passSpecializationConstantToVkFormat();
 		pipeline->configureRenderPipelineState();
-
+		pipeline->m_pvertex = &m_vertex;
+		pipeline->m_pfragment = &m_fragment;
 
 		return GraphicsPipelineHandle(pipeline);
 
@@ -201,15 +204,15 @@ namespace Vulkan
 
 		VkPipelineLayout layout = VK_NULL_HANDLE;
 		VkPipeline pipeline = VK_NULL_HANDLE;
-		
+
 		//Initialize and get information to build diferent stages of the pipeline
 		const GraphicsPipelineDescription& desc = gp->m_Description;
 		const BlendState& blendstate = desc.renderState.blendState;
 		SpecializationConstantDesc& specInfo = gp->specInfo;
 
 		//Todo: get the shader modules from the pipeline description TESSELATION, MESH, GEOM
-		const ShaderModuleState* vertModule = &gp->getVertexShaderModule();
-		const ShaderModuleState* fragModule = &gp->getFragmentShaderModule();
+		const ShaderModuleState* vertModule = gp->getVertexShaderModule();
+		const ShaderModuleState* fragModule = gp->getFragmentShaderModule();
 
 		const uint32_t samplesCount = gp->samplesCount;
 		const float minSampleShading = gp->minSampleShading;
@@ -217,7 +220,7 @@ namespace Vulkan
 		StencilState& backFaceStencil = gp->backFaceStencil;
 		StencilState& frontFaceStencil = gp->frontFaceStencil;
 
-		
+
 		//const uint32_t numColorAttachments = &gp->m_rVkPipelineState.numColorAttachments_; only one color attachment format 
 
 		// Not all attachments are valid. We need to create color blend attachments only for active attachments
@@ -278,12 +281,12 @@ namespace Vulkan
 
 
 		//7. Create VkPipelineShaderStageCreateInfo for each shader module
-		
+
 		VkPipelineShaderStageCreateInfo shaderStages[ 2 ] = {};
-		shaderStages[ VSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT,   vertModule->sm, "main", &si);
+		shaderStages[ VSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT, vertModule->sm, "main", &si);
 		shaderStages[ FSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragModule->sm, "main", &si);
 
-	#define UPDATE_PUSH_CONSTANT_SIZE(sm, bit)                                  \
+		#define UPDATE_PUSH_CONSTANT_SIZE(sm, bit)                                  \
 			if (sm) {                                                                 \
 				pushConstantsSize = std::max(pushConstantsSize, sm->pushConstantsSize); \
 				rps->shaderStageFlags_ |= bit;                                          \
@@ -292,7 +295,7 @@ namespace Vulkan
 		uint32_t pushConstantsSize = 0;
 		UPDATE_PUSH_CONSTANT_SIZE(vertModule, VK_SHADER_STAGE_VERTEX_BIT);
 		UPDATE_PUSH_CONSTANT_SIZE(fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
-	
+
 		#undef UPDATE_PUSH_CONSTANT_SIZE
 
 		//maxPushConstantsSize is guaranteed to be at least 128 bytes, now in Vulkan 1.4 is 256 bytes
@@ -303,21 +306,21 @@ namespace Vulkan
 		{
 			//Fill and complete with IFNITY_LOG 
 			IFNITY_LOG(LogApp, ERROR,
-				STRMESSAGE("Push constants size exceeded ", std::to_string(pushConstantsSize)) 
-			    + STRMESSAGE(" (max ", std::to_string(limits.maxPushConstantsSize)) + " bytes)");
+				STRMESSAGE("Push constants size exceeded ", std::to_string(pushConstantsSize))
+				+ STRMESSAGE(" (max ", std::to_string(limits.maxPushConstantsSize)) + " bytes)");
 		}
 
 		//7. Create VkPipelineLayout
 		auto& vkDsl = m_DeviceVulkan->vkDSL_;  // get the descriptor set layout from the deviceVulkan context.
 
 		const VkDescriptorSetLayout dsls[] = { vkDsl ,vkDsl };
-		const VkPushConstantRange range = 
+		const VkPushConstantRange range =
 		{
 			 .stageFlags = rps->shaderStageFlags_,
 			 .offset = 0,
 			 .size = pushConstantsSize,
 		};
-		const VkPipelineLayoutCreateInfo ci = 
+		const VkPipelineLayoutCreateInfo ci =
 		{
 			 .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 			 .setLayoutCount = (uint32_t)ARRAY_NUM_ELEMENTS(dsls),
@@ -325,7 +328,7 @@ namespace Vulkan
 			 .pushConstantRangeCount = pushConstantsSize ? 1u : 0u,
 			 .pPushConstantRanges = pushConstantsSize ? &range : nullptr,
 		};
-		VK_ASSERT(vkCreatePipelineLayout(vkDevice_, &ci, nullptr, &layout),"Fail CREATE PIPELINE LAYOUT IN getVkPipeline");
+		VK_ASSERT(vkCreatePipelineLayout(vkDevice_, &ci, nullptr, &layout), "Fail CREATE PIPELINE LAYOUT IN getVkPipeline");
 		char pipelineLayoutName[ 256 ] = { 0 };
 		if(desc.debugName)
 		{
@@ -333,7 +336,7 @@ namespace Vulkan
 		}
 		VK_ASSERT(setDebugObjectName(vkDevice_, VK_OBJECT_TYPE_PIPELINE_LAYOUT, (uint64_t)layout, pipelineLayoutName));
 
-		
+
 
 		//8. Create BuilderPipeline 
 		VulkanPipelineBuilder()
@@ -360,8 +363,8 @@ namespace Vulkan
 				ConvertstencilOpToVkStencilOp(backFaceStencil.depthStencilPassOp),
 				ConvertstencilOpToVkStencilOp(backFaceStencil.depthFailureOp),
 				compareOpToVkCompareOp(backFaceStencil.stencilCompareOp))
-			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount, 
-				m_DeviceVulkan->getFramebufferMSAABitMask()), 
+			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount,
+				m_DeviceVulkan->getFramebufferMSAABitMask()),
 				minSampleShading)
 			.stencilMasks(VK_STENCIL_FACE_FRONT_BIT, 0xFF, frontFaceStencil.writeMask, frontFaceStencil.readMask)
 			.stencilMasks(VK_STENCIL_FACE_BACK_BIT, 0xFF, backFaceStencil.writeMask, backFaceStencil.readMask)
@@ -374,26 +377,46 @@ namespace Vulkan
 			.depthAttachmentFormat(formatToVkFormat(gp->depthFormat))
 			.stencilAttachmentFormat(formatToVkFormat(gp->stencilFormat))
 			.build(vkDevice_, m_DeviceVulkan->pipelineCache_, layout, &pipeline, desc.debugName);
-		
+
 
 		rps->pipeline_ = pipeline;
 		rps->pipelineLayout_ = layout;
 
+		//9. 
+
 		#undef VSHADER
 		#undef FSHADER
 
+		m_DeviceVulkan->addGraphicsPipeline(gp);
+
+
 		return pipeline;
 
-		
+
 	}
 
 	void Device::setActualPipeline(GraphicsPipeline* pipeline)
 	{
-	
+
 		m_DeviceVulkan->actualPipeline_ = pipeline;
 	}
 
-	
+	void Device::destroyShaderModule()
+	{
+
+		if(m_vertex.sm != VK_NULL_HANDLE)
+		{
+			vkDestroyShaderModule(vkDevice_, m_vertex.sm, nullptr);
+		}
+		if(m_fragment.sm != VK_NULL_HANDLE)
+		{
+			vkDestroyShaderModule(vkDevice_, m_fragment.sm, nullptr);
+		}
+
+
+	}
+
+
 
 	ShaderModuleState Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const
 	{
@@ -467,12 +490,19 @@ namespace Vulkan
 	//  GraphicsPipeline METHODS                                                                      //
 	//==================================================================================================//
 
+	GraphicsPipeline::~GraphicsPipeline()
+	{
+		DestroyPipeline(m_DeviceVulkan->device_);
+	}
+	GraphicsPipeline::GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceVulkan* dev): m_Description(std::move(desc)), m_DeviceVulkan(dev)
+	{}
+
 	void GraphicsPipeline::BindPipeline(IDevice* device)
 	{
 		Device* vkDevice = dynamic_cast<Device*>(device);
 		IFNITY_ASSERT_MSG(vkDevice != nullptr, "Device is not a Vulkan Device");
 
-	
+
 		auto vkpipeline = vkDevice->getVkPipeline(this);
 
 
@@ -487,10 +517,33 @@ namespace Vulkan
 		{
 			// copy into a local storage //First Reserve the memory,
 			m_rVkPipelineState.specConstantDataStorage_ = malloc(spec.dataSize);
-			memcpy(m_rVkPipelineState.specConstantDataStorage_, spec.data, spec.dataSize); //Copy the data in the memory VkPipeline 
+			memcpy(m_rVkPipelineState.specConstantDataStorage_, spec.data, spec.dataSize);
+			//Copy the data in the memory VkPipeline 
 			specInfo.data = m_rVkPipelineState.specConstantDataStorage_; // GetInformation from the data
 		}
 
+
+	}
+
+	void GraphicsPipeline::DestroyPipeline(VkDevice device)
+	{
+
+		if(!destroy)
+		{
+
+			if(m_rVkPipelineState.pipeline_ != VK_NULL_HANDLE)
+			{
+				vkDestroyPipeline(device, m_rVkPipelineState.pipeline_, nullptr);
+
+			}
+
+			if(m_rVkPipelineState.pipelineLayout_ != VK_NULL_HANDLE)
+			{
+				vkDestroyPipelineLayout(device, m_rVkPipelineState.pipelineLayout_, nullptr);
+			}
+		}
+
+		destroy = true;
 
 	}
 
@@ -508,16 +561,42 @@ namespace Vulkan
 		{
 			const auto& attr = m_vertexInput.attributes[ i ];
 
-			m_rVkPipelineState.vkAttributes_[ i ] = {
-				 .location = attr.location, .binding = attr.binding,  .offset = (uint32_t)attr.offset };
+			m_rVkPipelineState.vkAttributes_[ i ] =
+			{
+				 .location = attr.location, .binding = attr.binding,  .offset = (uint32_t)attr.offset
+			};
 
 			if(!bufferAlreadyBound[ attr.binding ])
 			{
 				bufferAlreadyBound[ attr.binding ] = true;
-				m_rVkPipelineState.vkBindings_[ m_rVkPipelineState.numBindings_++ ] = {
-					 .binding = attr.binding, .stride = m_vertexInput.inputBindings[ attr.binding ].stride, .inputRate = VK_VERTEX_INPUT_RATE_VERTEX };
+				m_rVkPipelineState.vkBindings_[ m_rVkPipelineState.numBindings_++ ] =
+				{
+					 .binding = attr.binding, .stride = m_vertexInput.inputBindings[ attr.binding ].stride, .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+				};
 			}
+		}//end for
+
+		//Set the specialization constant
+		setSpecializationConstant(specInfo);
+
+
+	}
+
+	void GraphicsPipeline::passSpecializationConstantToVkFormat()
+	{
+
+		for(const auto& spec : m_Description.specInfo)
+		{
+			specInfo.entries[ spec.id ] = {
+			.constantId = spec.id,
+			.offset = spec.offset,
+			.size = spec.size
+			};
+			specInfo.data = spec.data;
+			specInfo.dataSize += spec.dataSize;
 		}
+
+
 	}
 
 }

@@ -182,6 +182,7 @@ private:
 	BufferHandle m_UBO;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_GraphicsPipeline;
+	GraphicsPipelineHandle m_WireFramePipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 public:
@@ -214,7 +215,7 @@ public:
 		vfs.Mount("test", "Shaders/testShader", IFNITY::FolderType::NO_DEFINED);
 
 		auto files = vfs.ListFilesInCurrentDirectory("test");
-	
+		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 		auto getFileName = [ &files ](const std::string& extension) -> const char*
 			{
 				for(const auto& file : files)
@@ -255,15 +256,18 @@ public:
 		ShaderCompiler::CompileShader(m_vs.get());
 		ShaderCompiler::CompileShader(m_ps.get());
 
-
+		const uint32_t wireframe = 1;
 		GraphicsPipelineDescription gdesc;
 		gdesc.SetVertexShader(m_vs.get()).
-			  SetPixelShader(m_ps.get());
+			  SetPixelShader(m_ps.get()).
+			SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Line}).
+			
+			addSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe ,});
 
 		//GraphicsPipelineDescription gdesc;
 
-		m_GraphicsPipeline = m_ManagerDevice->GetRenderDevice()->CreateGraphicsPipeline(gdesc);
-		m_GraphicsPipeline->BindPipeline(m_ManagerDevice->GetRenderDevice());
+		m_WireFramePipeline = rdevice->CreateGraphicsPipeline(gdesc);
+		m_WireFramePipeline->BindPipeline(rdevice);
 	
 		//exit(0);
 

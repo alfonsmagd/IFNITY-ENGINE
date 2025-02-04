@@ -47,6 +47,15 @@ struct IFNITY_API RasterizationState
 	rhi::PolygonModeType polygonMode = rhi::PolygonModeType::Fill;
 };
 
+struct IFNITY_API SpecializationConstantState
+{
+	uint32_t id = 0;
+	uint32_t offset = 0;
+	uint32_t size = 0;
+	uint32_t dataSize = 0;
+	const void* data = nullptr;
+};
+
 
 
 struct IFNITY_API BlendState
@@ -104,7 +113,7 @@ struct IFNITY_API GraphicsPipelineDescription
 {
 	RasterizationState rasterizationState;
 	RenderState renderState;
-
+	std::vector<SpecializationConstantState> specInfo;
 
 	IShader* vs = nullptr;
 	IShader* ps = nullptr;
@@ -138,6 +147,12 @@ struct IFNITY_API GraphicsPipelineDescription
 	constexpr GraphicsPipelineDescription& SetRenderState(const RenderState& state)
 	{
 		renderState = state;
+		return *this;
+	}
+
+	constexpr GraphicsPipelineDescription& addSpecializationConstant(const SpecializationConstantState& state)
+	{
+		specInfo.emplace_back(state);
 		return *this;
 	}
 

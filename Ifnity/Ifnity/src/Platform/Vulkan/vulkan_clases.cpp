@@ -126,7 +126,7 @@ namespace Vulkan
 		return r;
 	}
 
-	VulkanImage VulkanSwapchain::getCurrentTexture()
+	VulkanImage* VulkanSwapchain::getCurrentTexture()
 	{
 		if(getNextImage_)
 		{
@@ -155,7 +155,7 @@ namespace Vulkan
 
 		if(currentImageIndex_ < numSwapchainImages_)
 		{
-			return swapchainTextures_[ currentImageIndex_ ];
+			return &swapchainTextures_[ currentImageIndex_ ];
 		}
 		return {};
 	}
@@ -428,19 +428,15 @@ namespace Vulkan
 	void CommandBuffer::cmdBindRenderPipeline(RenderPipelineState& pipeline)
 	{
 		
-			
-
 			currentPipelineGraphics_ = &pipeline;
 			
-
 			const RenderPipelineState* rps = currentPipelineGraphics_;
-
-			
+			if(!rps->pipeline_)
+			{
+				return;
+			}
 			VkPipeline vkpipeline = rps->pipeline_;
 			
-
-			
-
 			if(lastPipelineBound_ != vkpipeline)
 			{
 				lastPipelineBound_ = vkpipeline;
@@ -460,6 +456,20 @@ namespace Vulkan
 
 			vkCmdDraw(wrapper_->cmdBuf_, vertexCount, instanceCount, firstVertex, baseInstance);
 		
+	}
+
+	void CommandBuffer::cmdPushConstants(const void* data, size_t size, size_t offset)
+	{
+		_ASSERT(isRendering_);
+		_ASSERT(currentPipelineGraphics_);
+		const RenderPipelineState* rps = currentPipelineGraphics_;
+
+		vkCmdPushConstants(wrapper_->cmdBuf_, 
+			rps->pipelineLayout_,
+			rps->shaderStageFlags_, 
+			(uint32_t)offset,
+			(uint32_t)size,
+			data);
 	}
 
 
@@ -573,7 +583,7 @@ namespace Vulkan
 			VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, 
 			VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
 
-		IFNITY_ASSERT_MSG(srcRemainingMask == 0, "Automatic access mask deduction is not implemented (yet) for this srcStageMask");
+		//IFNITY_ASSERT_MSG(srcRemainingMask == 0, "Automatic access mask deduction is not implemented (yet) for this srcStageMask");
 
 		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
 		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT, VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
@@ -582,7 +592,7 @@ namespace Vulkan
 		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT);
 		updateAccessMask(dstStageMask, dstAccessMask, dstRemainingMask, VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR, VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
 
-		IFNITY_ASSERT_MSG(dstRemainingMask == 0, "Automatic access mask deduction is not implemented (yet) for this dstStageMask");
+		//IFNITY_ASSERT_MSG(dstRemainingMask == 0, "Automatic access mask deduction is not implemented (yet) for this dstStageMask");
 
 
 		imageMemoryBarrier(

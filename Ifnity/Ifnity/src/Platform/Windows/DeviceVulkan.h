@@ -129,10 +129,6 @@ private:
 	//DeviceHandle 
 	DeviceHandle m_RenderDevice;
 
-
-
-
-
 	VkPhysicalDeviceDriverProperties vkPhysicalDeviceDriverProperties_ = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRIVER_PROPERTIES, nullptr };
 	VkPhysicalDeviceVulkan12Properties vkPhysicalDeviceVulkan12Properties_ = {
 		VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES,
@@ -145,7 +141,13 @@ private:
 		VkPhysicalDeviceProperties{},
 	};
 
+	
+	std::unordered_map<uint32_t, Vulkan::GraphicsPipeline*> map_renderPipelines;
+	uint32_t nextPipelineId = 0;
+
+
 	friend class Vulkan::Device;
+	friend class Vulkan::GraphicsPipeline;
 
 
 
@@ -179,11 +181,14 @@ private:
 
 	//Destroy private methods
 	bool DestroyCommandPool();
+	bool DestroyShaderStages();
 	void DestroySyncObjects();
 	void DestroyCommandBuffers();
 	void CleanFrameBuffers();
 	void DestroyRenderPass();
 	void DestroyImmediateCommands();
+	void DestroyPipelines();
+	void DestroyPipelineCache();
 	
 	//OnRender private methods
 	bool AcquireNextImage();
@@ -202,9 +207,10 @@ private:
 	//TestMethods to move a Device class 
 	bool createVulkanImmediateCommands();
 	Vulkan::CommandBuffer& acquireCommandBuffer();
-	Vulkan::VulkanImage getCurrentSwapChainTexture();
+	Vulkan::VulkanImage* getCurrentSwapChainTexture();
 	bool hasSwapchain() const noexcept;
-	Vulkan::SubmitHandle submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::VulkanImage present );
+	Vulkan::SubmitHandle submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::VulkanImage& present );
+	void addGraphicsPipeline(Vulkan::GraphicsPipeline* pipeline);
 
 	//This move to device create s
 	Vulkan::ShaderModuleState createShaderModuleFromSpirVconst (const void* spirv,
