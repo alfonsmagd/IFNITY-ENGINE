@@ -157,7 +157,7 @@ void DeviceVulkan::OnUpdate()
 		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
 		BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
 		cmdBuffer.cmdBindRenderPipeline(actualPipeline_->getRenderPipelineState());
-		//cmdBuffer.cmdDraw(3);
+		cmdBuffer.cmdDraw(3);
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
 		EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
 		cmdBuffer.cmdEndRendering();

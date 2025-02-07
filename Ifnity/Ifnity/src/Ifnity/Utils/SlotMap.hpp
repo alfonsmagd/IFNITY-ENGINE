@@ -128,10 +128,11 @@ using SlotMapSharedPtr = std::shared_ptr<T>;
 // Función que devuelve un SlotMapSharedPtr<T> con acceso a ctx
 template<typename ImplObjectType, typename IContext>
 	requires HasDestroy<IContext, Handle<ImplObjectType>>
+
 SlotMapSharedPtr<ImplObjectType> makeHolder(IContext* ctx, Handle<ImplObjectType> handle, SlotMap<ImplObjectType>& slotmap)
 {
 	return SlotMapSharedPtr<ImplObjectType>(
-		slotmap.get(handle),  // Obtener puntero al objeto en el SlotMap
+		new Handle<ImplObjectType>(handle),  // Obtener puntero al objeto en el SlotMap
 		[ ctx, handle ](ImplObjectType*)
 		{   // Custom deleter con acceso a ctx
 			if(ctx)

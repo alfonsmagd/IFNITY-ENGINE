@@ -8,6 +8,10 @@
 #include "Platform\Vulkan\vulkan_classes.hpp"
 #include "vk_backend.hpp"
 #include "vk_constans.hpp"
+
+//Vulkan Classes 
+#include "../Vulkan/vulkan_SwapChain.hpp"
+#include  "../Vulkan/vulkan_CommandBuffer.hpp"
 #include "Ifnity/Utils/SlotMap.hpp"
 
 
@@ -18,6 +22,13 @@ IFNITY_NAMESPACE
 
 //Rembeber that vkb its a namespace that contains the Vulkan Bootstrapper.
 //Vulkan:: its a namespace that contains the Vulkan Classes dessigned by IFNITY.
+
+namespace Vulkan
+{
+	using TextureHandleSM =  Handle<VulkanImage>;
+	using GraphicsPipelineHandleSM = Handle<GraphicsPipeline>;
+	using ShaderModuleHandleSM = Handle<ShaderModuleState>;
+}
 
 class DeviceVulkan final : public GraphicsDeviceManager 
 {
@@ -47,7 +58,11 @@ public:
 
 	Vulkan::GraphicsPipeline* actualPipeline_ = VK_NULL_HANDLE;
 
+	//SlotMap estructures 
 	SlotMap<Vulkan::VulkanImage> slootMapTextures_;
+	SlotMap<Vulkan::GraphicsPipeline> slotMapRenderPipelines_;
+	SlotMap<Vulkan::ShaderModuleState> slotMapShaderModules_;
+
 
 
 protected:

@@ -289,7 +289,7 @@ public:
 		m_ps[ SCENE ] = std::make_shared<IShader>();
 
 
-		auto vSceneconfig = IFNITY::readSceneConfig("data/sceneconverter.json");
+	    auto vSceneconfig = IFNITY::readSceneConfig("data/sceneconverter.json");
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
 

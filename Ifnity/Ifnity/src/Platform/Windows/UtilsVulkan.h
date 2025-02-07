@@ -100,6 +100,10 @@ VkSpecializationInfo getSpecializationInfo(uint32_t mapEntryCount,
                                            size_t dataSize,
                                            const void* data);
 
+
+
+
+
 IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);
 
 
