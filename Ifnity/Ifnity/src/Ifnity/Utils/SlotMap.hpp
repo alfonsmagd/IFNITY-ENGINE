@@ -114,43 +114,7 @@ public:
 	uint32_t size() const { return static_cast<uint32_t>(slots.size() - freeList.size()); }
 };
 
-//Concepts C++20
-template<typename IContext, typename Handle>
-concept HasDestroy = requires(IContext * ctx, Handle handle)
-{
-	destroy(ctx, handle);
-};
-
-// Definir un alias de std::shared_ptr con un custom deleter
-template<typename T>
-using SlotMapSharedPtr = std::shared_ptr<T>;
-
-// Función que devuelve un SlotMapSharedPtr<T> con acceso a ctx
-template<typename ImplObjectType, typename IContext>
-	requires HasDestroy<IContext, Handle<ImplObjectType>>
-
-SlotMapSharedPtr<ImplObjectType> makeHolder(IContext* ctx, Handle<ImplObjectType> handle, SlotMap<ImplObjectType>& slotmap)
-{
-	return SlotMapSharedPtr<ImplObjectType>(
-		new Handle<ImplObjectType>(handle),  // Obtener puntero al objeto en el SlotMap
-		[ ctx, handle ](ImplObjectType*)
-		{   // Custom deleter con acceso a ctx
-			if(ctx)
-			{
-				destroy(ctx, handle);  // Llamar a la función de destrucción
-				std::cout << "Objeto destruido desde el contexto.\n";
-			}
-		}
-	);
-}
-
-
 static_assert(sizeof(Handle<class Foo>) == sizeof(uint64_t));
-
-
-
-
-
 
 
 IFNITY_END_NAMESPACE

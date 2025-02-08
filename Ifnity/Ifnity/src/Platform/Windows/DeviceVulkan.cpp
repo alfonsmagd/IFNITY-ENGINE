@@ -138,6 +138,8 @@ void DeviceVulkan::OnUpdate()
 
 	Vulkan::VulkanImage* currentTexture = getCurrentSwapChainTexture();
 
+	
+
 	//// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
 	//currentTexture->transitionLayout(
 	//	cmdBuffer.wrapper_->cmdBuf_,
@@ -1294,6 +1296,17 @@ void DeviceVulkan::bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineB
 
 	const VkDescriptorSet dsets[ 2 ] = { vkDSet_, vkDSet_ };
 	vkCmdBindDescriptorSets(cmdBuf, bindPoint, layout, 0, (uint32_t)ARRAY_NUM_ELEMENTS(dsets), dsets, 0, nullptr);
+}
+
+void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
+{
+	slootMapTextures_.destroy(handle);
+
+}
+
+void DeviceVulkan::destroy(Vulkan::GraphicsPipelineHandleSM handle)
+{
+	slotMapRenderPipelines_.destroy(handle);
 }
 
 

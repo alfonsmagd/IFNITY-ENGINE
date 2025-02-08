@@ -10,9 +10,10 @@
 #include "vk_constans.hpp"
 
 //Vulkan Classes 
+#include "Ifnity/Utils/SlotMap.hpp"
 #include "../Vulkan/vulkan_SwapChain.hpp"
 #include  "../Vulkan/vulkan_CommandBuffer.hpp"
-#include "Ifnity/Utils/SlotMap.hpp"
+
 
 
 
@@ -22,13 +23,8 @@ IFNITY_NAMESPACE
 
 //Rembeber that vkb its a namespace that contains the Vulkan Bootstrapper.
 //Vulkan:: its a namespace that contains the Vulkan Classes dessigned by IFNITY.
+// no namespace its DeviceContext derived by GraphicsDeviceManager.
 
-namespace Vulkan
-{
-	using TextureHandleSM =  Handle<VulkanImage>;
-	using GraphicsPipelineHandleSM = Handle<GraphicsPipeline>;
-	using ShaderModuleHandleSM = Handle<ShaderModuleState>;
-}
 
 class DeviceVulkan final : public GraphicsDeviceManager 
 {
@@ -37,6 +33,11 @@ public:
 	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
 	VkFormat GetSwapChainFormat() const;
 	void bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineBindPoint bindPoint, VkPipelineLayout layout) const;
+
+
+	//Destroy operations 
+	void destroy(Vulkan::TextureHandleSM handle);
+	void destroy(Vulkan::GraphicsPipelineHandleSM handle);
 
 
 public:

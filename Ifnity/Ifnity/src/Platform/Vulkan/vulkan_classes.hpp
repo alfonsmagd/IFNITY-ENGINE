@@ -6,6 +6,7 @@
 #include <VkBootstrap.h>
 #include "vk_mem_alloc.h"
 #include "../Windows/vk_constans.hpp"
+#include "Ifnity/Utils/SlotMap.hpp"
 
 
 
@@ -19,6 +20,52 @@ struct ScissorRect;
 namespace Vulkan
 {
 	class Framebuffer;
+
+
+	using TextureHandleSM = Handle<struct VulkanImage>;
+	using GraphicsPipelineHandleSM = Handle<struct GraphicsPipeline>;
+	using ShaderModuleHandleSM = Handle< struct ShaderModuleState>;
+
+	// Declaración de la plantilla general para la función destroy
+	
+
+	//Forward declaration to destroy functionHandlers
+	void destroy(DeviceVulkan* ctx, TextureHandleSM handle);
+	void destroy(DeviceVulkan* ctx, GraphicsPipelineHandleSM handle);
+	
+	template<typename Handle>
+	void destroy(DeviceVulkan* ctx, Handle handle)
+	{
+		static_assert(sizeof(Handle) == 0, "No implmentation for this type of destroy function");
+	}
+	template<typename ImplObjectType>
+	using SlotMapSharedPtr = std::shared_ptr<ImplObjectType>;
+
+	template<typename DeviceVulkan, typename Handle>
+	concept HasDestroy = requires(DeviceVulkan * ctx, Handle handle)
+	{
+		{ destroy(ctx, handle) } -> std::same_as<void>;
+	};
+
+	template<typename ImplObjectType, typename DeviceVulkan>
+		requires HasDestroy<DeviceVulkan, Handle<ImplObjectType>>
+	SlotMapSharedPtr<ImplObjectType> makeHolder(DeviceVulkan* ctx, Handle<ImplObjectType> handle, SlotMap<ImplObjectType>& slotmap)
+	{
+		return SlotMapSharedPtr<ImplObjectType>(
+			slotmap.get(handle),  // Obtener puntero al objeto en el SlotMap
+			[ ctx, handle ](ImplObjectType*)
+			{   // Custom deleter con acceso a ctx
+				if(ctx)
+				{
+					destroy(ctx, handle);  // Llamar a la función de destrucción
+					std::cout << "Objeto destruido desde el contexto.\n";
+				}
+			}
+		);
+	}
+
+
+	
 
 	//================================================================================================
 	//ENUMS
@@ -400,6 +447,7 @@ namespace Vulkan
 		_ASSERT(false);
 		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	}
+
 }
 
 IFNITY_END_NAMESPACE

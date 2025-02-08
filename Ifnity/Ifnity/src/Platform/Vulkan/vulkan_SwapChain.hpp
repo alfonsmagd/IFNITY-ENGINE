@@ -3,7 +3,8 @@
 #include <pch.h>
 #include <VkBootstrap.h>
 #include "vulkan_VulkanImage.hpp"
-
+#include "Ifnity/Utils/SlotMap.hpp"
+#include "vulkan_classes.hpp"
 
 
 IFNITY_NAMESPACE
@@ -45,6 +46,7 @@ namespace Vulkan
 		VkSwapchainKHR swapchain_ = VK_NULL_HANDLE;
 		VkSurfaceFormatKHR surfaceFormat_ = { .format = VK_FORMAT_UNDEFINED };
 		VulkanImage swapchainTextures_[ LVK_MAX_SWAPCHAIN_IMAGES ];
+		TextureHandleSM swapchainTextureHandles_[ LVK_MAX_SWAPCHAIN_IMAGES ];
 		VkSemaphore acquireSemaphore_ = VK_NULL_HANDLE;
 		VkFence acquireFence_ = VK_NULL_HANDLE;
 	};

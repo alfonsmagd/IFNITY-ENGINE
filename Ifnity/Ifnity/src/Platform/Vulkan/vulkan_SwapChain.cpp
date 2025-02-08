@@ -56,6 +56,7 @@ namespace Vulkan
 				debugNameImageView);
 
 			swapchainTextures_[ i ] = image;
+			swapchainTextureHandles_[ i ] = ctx.slootMapTextures_.create(std::move(image));
 		}//end for loop
 
 	}
