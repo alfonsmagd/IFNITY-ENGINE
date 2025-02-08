@@ -24,6 +24,11 @@ public:
 	{
 		return !(*this == other);
 	}
+	// allow conditions 'if (handle)'
+	explicit operator bool() const
+	{
+		return gen_ != 0;
+	}
 
 private:
 	Handle(uint32_t index, uint32_t gen): index_(index), gen_(gen) {}
@@ -86,7 +91,10 @@ public:
 
 	const ObjectType* get(Handle<ObjectType> handle) const
 	{
-		return const_cast<SlotMap*>(this)->get(handle);
+		if(!handle.valid()) return nullptr;
+		uint32_t index = handle.index();
+		assert(index < slots.size() && handle.gen() == slots[ index ].gen);
+		return &slots[ index ].obj;
 	}
 
 	//Find Object by ObjectType

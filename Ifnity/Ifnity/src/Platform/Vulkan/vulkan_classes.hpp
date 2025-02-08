@@ -27,19 +27,21 @@ namespace Vulkan
 	using ShaderModuleHandleSM = Handle< struct ShaderModuleState>;
 
 	// Declaración de la plantilla general para la función destroy
-	
-
-	//Forward declaration to destroy functionHandlers
-	void destroy(DeviceVulkan* ctx, TextureHandleSM handle);
-	void destroy(DeviceVulkan* ctx, GraphicsPipelineHandleSM handle);
-	
+	// Declaración de la plantilla general para la función destroy
 	template<typename Handle>
-	void destroy(DeviceVulkan* ctx, Handle handle)
-	{
-		static_assert(sizeof(Handle) == 0, "No implmentation for this type of destroy function");
-	}
+	void destroy(DeviceVulkan* ctx, Handle handle);
+	// Declaración de las especializaciones explícitas (sin implementación)
+	extern template void destroy<TextureHandleSM>(DeviceVulkan* ctx, TextureHandleSM handle);
+	extern template void destroy<GraphicsPipelineHandleSM>(DeviceVulkan* ctx, GraphicsPipelineHandleSM handle);
+	extern template void destroy<ShaderModuleHandleSM>(DeviceVulkan* ctx, ShaderModuleHandleSM handle);
+
+
+
+
+
+
 	template<typename ImplObjectType>
-	using SlotMapSharedPtr = std::shared_ptr<ImplObjectType>;
+	using SlotMapSharedPtr = std::shared_ptr<Handle<ImplObjectType>>;
 
 	template<typename DeviceVulkan, typename Handle>
 	concept HasDestroy = requires(DeviceVulkan * ctx, Handle handle)
@@ -52,8 +54,8 @@ namespace Vulkan
 	SlotMapSharedPtr<ImplObjectType> makeHolder(DeviceVulkan* ctx, Handle<ImplObjectType> handle, SlotMap<ImplObjectType>& slotmap)
 	{
 		return SlotMapSharedPtr<ImplObjectType>(
-			slotmap.get(handle),  // Obtener puntero al objeto en el SlotMap
-			[ ctx, handle ](ImplObjectType*)
+			new Handle<ImplObjectType>(handle),  // Obtener puntero al objeto en el SlotMap
+			[ ctx, handle ](Handle<ImplObjectType>*)
 			{   // Custom deleter con acceso a ctx
 				if(ctx)
 				{
@@ -64,7 +66,10 @@ namespace Vulkan
 		);
 	}
 
-
+	// Declaración de la plantilla general para la función destroy
+	using HolderShaderSM = SlotMapSharedPtr<ShaderModuleState>;
+	using HolderTextureSM = SlotMapSharedPtr<VulkanImage>;
+	using HolderGraphicsPipelineSM = SlotMapSharedPtr<GraphicsPipelineHandleSM>;
 	
 
 	//================================================================================================
@@ -229,24 +234,24 @@ namespace Vulkan
 
 		struct AttachmentDesc
 		{
-			VulkanImage* texture;
-			VulkanImage* resolveTexture;
+			TextureHandleSM texture;
+			TextureHandleSM resolveTexture;
 		};
 
-		AttachmentDesc color[ MAX_COLOR_ATTACHMENTS ];
+		AttachmentDesc color[ MAX_COLOR_ATTACHMENTS ] = {};
 		AttachmentDesc depthStencil;
 
 		const char* debugName = "";
 
-		uint32_t getNumColorAttachments() const
-		{
-			uint32_t n = 0;
-			while(n < MAX_COLOR_ATTACHMENTS && color[n].texture)
-			{
-				n++;
-			}
-			return n;
-		}
+        uint32_t getNumColorAttachments() const
+        {
+            uint32_t n = 0;
+            while(n < MAX_COLOR_ATTACHMENTS && color[n].texture)
+            {
+                n++;
+            }
+            return n;
+        }
 	};
 
 

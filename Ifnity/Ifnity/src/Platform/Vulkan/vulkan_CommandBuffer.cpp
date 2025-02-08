@@ -104,21 +104,27 @@ namespace Vulkan
 		framebuffer_ = fb;
 
 		//2. transition all the color attachments and depth-stencil attachment
+			// transition all the color attachments
 		for(uint32_t i = 0; i != numFbColorAttachments; i++)
 		{
-			// transition color attachment handler
-			transitionToColorAttachment(wrapper_->cmdBuf_, fb.color[ i ].texture);
-
-			//transition color resolve attachment 
-			transitionToColorAttachment(wrapper_->cmdBuf_, fb.color[ i ].resolveTexture);
-
+			if(const auto handle = fb.color[ i ].texture)
+			{
+				VulkanImage* colorTex = ctx_->slootMapTextures_.get(handle);
+				transitionToColorAttachment(wrapper_->cmdBuf_, colorTex);
+			}
+			// handle MSAA
+			if(TextureHandleSM handle = fb.color[ i ].resolveTexture)
+			{
+				VulkanImage* colorResolveTex = ctx_->slootMapTextures_.get(handle);
+				transitionToColorAttachment(wrapper_->cmdBuf_, colorResolveTex);
+			}
 		}
 		// transition depth-stencil attachment
 
-
-		if(fb.depthStencil.texture)
+		TextureHandleSM depthTex = fb.depthStencil.texture;
+		if(depthTex)
 		{
-			auto& depthImg = *fb.depthStencil.texture;
+			const VulkanImage& depthImg = *ctx_->slootMapTextures_.get(depthTex);
 			IFNITY_ASSERT_MSG(depthImg.vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid depth attachment format");
 			const VkImageAspectFlags flags = depthImg.getImageAspectFlags();
 			depthImg.transitionLayout(wrapper_->cmdBuf_,
@@ -143,7 +149,7 @@ namespace Vulkan
 			Framebuffer::AttachmentDesc& attachment = fb.color[ i ];
 			//_ASSERT(!attachment.texture.empty());
 
-			auto& colorTexture = *attachment.texture;
+			auto& colorTexture = *ctx_->slootMapTextures_.get(attachment.texture);
 			auto& descColor = renderPass.color[ i ];
 			if(mipLevel && descColor.level)
 			{
@@ -193,13 +199,14 @@ namespace Vulkan
 
 		if(fb.depthStencil.texture)
 		{
-			auto* depthTexture = fb.depthStencil.texture;
+
+			auto& depthTexture = *ctx_->slootMapTextures_.get(fb.depthStencil.texture);
 			const RenderPass::AttachmentDesc& descDepth = renderPass.depth;
 			IFNITY_ASSERT_MSG(descDepth.level == mipLevel, "Depth attachment should have the same mip-level as color attachments");
 			depthAttachment = {
 				 .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 				 .pNext = nullptr,
-				 .imageView = depthTexture->getOrCreateVkImageViewForFramebuffer(*ctx_, descDepth.level, descDepth.layer),
+				 .imageView = depthTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descDepth.level, descDepth.layer),
 				 .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
 				 .resolveMode = VK_RESOLVE_MODE_NONE,
 				 .resolveImageView = VK_NULL_HANDLE,
@@ -219,7 +226,7 @@ namespace Vulkan
 				depthAttachment.resolveImageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 				depthAttachment.resolveMode = VK_RESOLVE_MODE_AVERAGE_BIT;
 			}*/
-			const VkExtent3D dim = depthTexture->vkExtent_;
+			const VkExtent3D dim = depthTexture.vkExtent_;
 			if(fbWidth)
 			{
 				IFNITY_ASSERT_MSG(dim.width == fbWidth, "All attachments should have the same width");
@@ -339,15 +346,17 @@ namespace Vulkan
 		for(uint32_t i = 0; i != numFbColorAttachments; i++)
 		{
 			auto& attachment = framebuffer_.color[ i ];
-			// this must match the final layout of the render pass
-			attachment.texture->vkImageLayout_ = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			const VulkanImage& tex = *ctx_->slootMapTextures_.get(attachment.texture);
+
+			tex.vkImageLayout_ = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		}
 
 		if(framebuffer_.depthStencil.texture)
 		{
 			auto& depthStencil = framebuffer_.depthStencil;
+			const VulkanImage& tex = *ctx_->slootMapTextures_.get(depthStencil.texture);
 			// this must match the final layout of the render pass
-			depthStencil.texture->vkImageLayout_ = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			tex.vkImageLayout_ = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		}
 
 		framebuffer_ = {};

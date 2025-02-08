@@ -136,7 +136,7 @@ void DeviceVulkan::OnUpdate()
 	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
 	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
 
-	Vulkan::VulkanImage* currentTexture = getCurrentSwapChainTexture();
+	Vulkan::TextureHandleSM currentTexture = getCurrentSwapChainTexture();
 
 	
 
@@ -184,7 +184,7 @@ void DeviceVulkan::OnUpdate()
 	//	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
 	
 
-	submit(cmdBuffer, *currentTexture);
+	submit(cmdBuffer, currentTexture);
 
 
 }
@@ -1211,7 +1211,7 @@ Vulkan::CommandBuffer& DeviceVulkan::acquireCommandBuffer()
 	return currentCommandBuffer_;
 }
 
-Vulkan::VulkanImage* DeviceVulkan::getCurrentSwapChainTexture()
+Vulkan::TextureHandleSM DeviceVulkan::getCurrentSwapChainTexture()
 {
 
 	//Verify that have swapchain
@@ -1220,11 +1220,16 @@ Vulkan::VulkanImage* DeviceVulkan::getCurrentSwapChainTexture()
 		return {};
 	}
 
-	Vulkan::VulkanImage* tex = swapchain_->getCurrentTexture();
+	Vulkan::TextureHandleSM tex = swapchain_->getCurrentTexture();
 
-	//TODO: Check VERIFY THAT text is valid image. 
+	if(!tex.valid())
+	{
+		IFNITY_LOG(LogCore, ERROR, "No swapchain image acquired");
+		return {};
+	}
 
-	IFNITY_ASSERT_MSG(tex->vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid image format");
+	auto* texptr = slootMapTextures_.get(tex);
+	IFNITY_ASSERT_MSG(texptr->vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid image format");
 
 	return tex;
 
@@ -1236,7 +1241,7 @@ bool DeviceVulkan::hasSwapchain() const noexcept
 	return swapchain_ != nullptr;
 }
 
-Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::VulkanImage& tex)
+Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::TextureHandleSM present)
 {
 	auto vkCmdBuffer = static_cast<Vulkan::CommandBuffer*>(&commandBuffer);
 
@@ -1246,9 +1251,9 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 	IFNITY_ASSERT_MSG(vkCmdBuffer->wrapper_, "Commandbuffer has not command buffer wrapper ");
 
 	//Prepare image to be presented
-	if(tex.vkImage_)
+	if(present)
 	{
-
+		const Vulkan::VulkanImage& tex = *slootMapTextures_.get(present);
 		IFNITY_ASSERT_MSG(tex.isSwapchainImage_, "No SwapChainImage acquire to submit");
 
 		// prepare image for presentation the image might be coming from a compute shader
@@ -1263,7 +1268,7 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 			VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
 	}
 
-	const bool shouldPresent = hasSwapchain() && tex.vkImage_ != VK_NULL_HANDLE;
+	const bool shouldPresent = hasSwapchain() && present;
 
 	vkCmdBuffer->lastSubmitHandle_ = immediate_->submit(*vkCmdBuffer->wrapper_);
 
@@ -1307,6 +1312,27 @@ void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 void DeviceVulkan::destroy(Vulkan::GraphicsPipelineHandleSM handle)
 {
 	slotMapRenderPipelines_.destroy(handle);
+}
+
+void DeviceVulkan::destroy(Vulkan::ShaderModuleHandleSM handle)
+{
+  const Vulkan::ShaderModuleState* state = slotMapShaderModules_.get(handle);
+
+		if(!state)
+		{
+			IFNITY_LOG(LogCore, ERROR, "Invalid ShaderModuleHandleSM to destroy fail");
+			return;
+		}
+
+		if(state->sm != VK_NULL_HANDLE)
+		{
+			// a shader module can be destroyed while pipelines created using its shaders are still in use
+			// https://registry.khronos.org/vulkan/specs/1.3/html/chap9.html#vkDestroyShaderModule
+			vkDestroyShaderModule(device_.device, state->sm, nullptr);
+		}
+
+		slotMapShaderModules_.destroy(handle);
+	
 }
 
 

@@ -67,6 +67,39 @@ namespace Vulkan
 		{
 			vkDestroyImageView(device_, image.imageView_, nullptr);
 		}
+
+		for(auto& tex : swapchainTextureHandles_)
+		{
+
+			if(!tex.valid())
+			{
+				continue;
+			}
+			const VulkanImage* texPtr = ctx_.slootMapTextures_.get(tex);
+			
+			
+
+			if(texPtr->isOwningVkImage_)
+			{
+				vkDestroyImage(device_, texPtr->vkImage_, nullptr);
+			}
+			for(size_t i = 0; i != 1; i++)
+			{
+				for(size_t j = 0; j != ARRAY_NUM_ELEMENTS(texPtr->imageViewForFramebuffer_[ 0 ]); j++)
+				{
+					VkImageView v = texPtr->imageViewForFramebuffer_[ i ][ j ];
+					if(v != VK_NULL_HANDLE)
+					{
+						//Destroy
+						vkDestroyImageView(device_, v, nullptr);
+					}
+				}
+			}
+			
+
+
+		}
+		 
 		vkDestroySemaphore(device_, acquireSemaphore_, nullptr);
 		vkDestroyFence(device_, acquireFence_, nullptr);
 	}
@@ -93,7 +126,7 @@ namespace Vulkan
 		return r;
 	}
 
-	VulkanImage* VulkanSwapchain::getCurrentTexture()
+	TextureHandleSM VulkanSwapchain::getCurrentTexture()
 	{
 		if(getNextImage_)
 		{
@@ -122,7 +155,8 @@ namespace Vulkan
 
 		if(currentImageIndex_ < numSwapchainImages_)
 		{
-			return &swapchainTextures_[ currentImageIndex_ ];
+			return swapchainTextureHandles_[ currentImageIndex_ ];
+			//return &swapchainTextures_[ currentImageIndex_ ];
 		}
 		return {};
 	}
@@ -130,6 +164,16 @@ namespace Vulkan
 	uint32_t VulkanSwapchain::getCurrentImageIndex() const
 	{
 		return currentImageIndex_;
+	}
+
+	VkImageView VulkanSwapchain::getCurrentVkImageView() const
+	{
+		if((currentImageIndex_ < numSwapchainImages_))
+		{
+			VulkanImage* tex = ctx_.slootMapTextures_.get(swapchainTextureHandles_[ currentImageIndex_ ]);
+			return tex->imageView_;
+		}
+		return VK_NULL_HANDLE;
 	}
 
 	const VkSurfaceFormatKHR& VulkanSwapchain::getSurfaceFormat() const

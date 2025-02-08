@@ -18,28 +18,20 @@ namespace Vulkan
 
 	uint32_t VulkanPipelineBuilder::numPipelinesCreated_ = 0;
 
-
-
-	//----------------------------------------------------------------------------------------------------//
-	//Destroy operations
-	//----------------------------------------------------------------------------------------------------//
-	void destroy(DeviceVulkan* ctx, TextureHandleSM handle)
+	//Generic Implementation Destroy function 
+	template<typename Handle>
+	void destroy(DeviceVulkan* ctx, Handle handle)
 	{
 		if(ctx)
 		{
 			ctx->destroy(handle);
 		}
-		
 	}
 
-	void destroy(DeviceVulkan* ctx, GraphicsPipelineHandleSM handle)
-	{
-		if(ctx)
-		{
-			ctx->destroy(handle);
-		}
-	
-	}
+	// Instanciación explícita de las especializaciones
+	template void destroy<TextureHandleSM>(DeviceVulkan* ctx, TextureHandleSM handle);
+	template void destroy<GraphicsPipelineHandleSM>(DeviceVulkan* ctx, GraphicsPipelineHandleSM handle);
+	template void destroy<ShaderModuleHandleSM>(DeviceVulkan* ctx, ShaderModuleHandleSM handle);
 
 
 }

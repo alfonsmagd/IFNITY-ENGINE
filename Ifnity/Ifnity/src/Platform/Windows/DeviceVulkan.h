@@ -38,6 +38,8 @@ public:
 	//Destroy operations 
 	void destroy(Vulkan::TextureHandleSM handle);
 	void destroy(Vulkan::GraphicsPipelineHandleSM handle);
+	void destroy(Vulkan::ShaderModuleHandleSM handle);
+
 
 
 public:
@@ -226,9 +228,9 @@ private:
 	//TestMethods to move a Device class 
 	bool createVulkanImmediateCommands();
 	Vulkan::CommandBuffer& acquireCommandBuffer();
-	Vulkan::VulkanImage* getCurrentSwapChainTexture();
+	Vulkan::TextureHandleSM getCurrentSwapChainTexture();
 	bool hasSwapchain() const noexcept;
-	Vulkan::SubmitHandle submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::VulkanImage& present );
+	Vulkan::SubmitHandle submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::TextureHandleSM present );
 	void addGraphicsPipeline(Vulkan::GraphicsPipeline* pipeline);
 
 	//This move to device create s

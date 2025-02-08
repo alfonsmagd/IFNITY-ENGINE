@@ -104,8 +104,9 @@ namespace Vulkan
 		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat()));
 		pipeline->passSpecializationConstantToVkFormat();
 		pipeline->configureRenderPipelineState();
-		pipeline->m_pvertex = &m_vertex;
-		pipeline->m_pfragment = &m_fragment;
+		pipeline->m_pfragment = m_DeviceVulkan->slotMapShaderModules_.get(*m_fragment);
+		pipeline->m_pvertex = m_DeviceVulkan->slotMapShaderModules_.get(*m_vertex);
+	
 
 		return GraphicsPipelineHandle(pipeline);
 
@@ -404,13 +405,17 @@ namespace Vulkan
 	void Device::destroyShaderModule()
 	{
 
-		if(m_vertex.sm != VK_NULL_HANDLE)
+		if(m_vertex)
 		{
-			vkDestroyShaderModule(vkDevice_, m_vertex.sm, nullptr);
+			IFNITY_LOG(LogApp, INFO, "Destroy Vertex Shader Module");
+			m_vertex.reset();
+			//Trace 
+			
 		}
-		if(m_fragment.sm != VK_NULL_HANDLE)
+		if(m_fragment)
 		{
-			vkDestroyShaderModule(vkDevice_, m_fragment.sm, nullptr);
+			IFNITY_LOG(LogApp, INFO, "Destroy Fragment Shader Module");
+			m_fragment.reset();
 		}
 
 
@@ -418,7 +423,7 @@ namespace Vulkan
 
 
 
-	ShaderModuleState Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const
+	HolderShaderSM Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const
 	{
 		VkShaderModule vkShaderModule = VK_NULL_HANDLE;
 
@@ -434,7 +439,7 @@ namespace Vulkan
 
 			if(result != VK_SUCCESS)
 			{
-				return { .sm = VK_NULL_HANDLE };
+				return {};
 			}
 
 			size_t numElements = numBytes / sizeof(uint32_t);
@@ -455,11 +460,19 @@ namespace Vulkan
 				pushConstantSize += compiler.get_declared_struct_size(type);
 			}
 
-			return { .sm = vkShaderModule, .pushConstantsSize = pushConstantSize };
+			
+			ShaderModuleState smstate = { .sm = vkShaderModule, .pushConstantsSize = pushConstantSize };
+
+			//Create the handle 
+			ShaderModuleHandleSM handle = m_DeviceVulkan->slotMapShaderModules_.create(std::move(smstate));
+
+			//Make holder 
+			return  makeHolder(m_DeviceVulkan, handle, m_DeviceVulkan->slotMapShaderModules_);
+
 		}
 	}
 
-	ShaderModuleState Device::createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const
+	HolderShaderSM Device::createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const
 	{
 		std::vector<uint8_t> spirv;
 		if(isBinary)

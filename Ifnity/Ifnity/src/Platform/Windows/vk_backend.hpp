@@ -60,8 +60,8 @@ namespace Vulkan
     
     private:
 		// Add private members here
-		ShaderModuleState createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const;
-        ShaderModuleState createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const ;
+        HolderShaderSM createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const;
+        HolderShaderSM createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const ;
 
         
 		const VkPhysicalDeviceLimits& getPhysicalDeviceLimits() const;
@@ -72,8 +72,8 @@ namespace Vulkan
         DeviceVulkan* m_DeviceVulkan = nullptr;
 
         //Shaders loading by device 
-        ShaderModuleState m_vertex;
-        ShaderModuleState m_fragment;
+        HolderShaderSM m_vertex;
+        HolderShaderSM m_fragment;
 		
     };
 

@@ -25,15 +25,15 @@ namespace Vulkan
 
 
 		VkResult present(VkSemaphore waitSemaphore);
-		VulkanImage* getCurrentTexture();
-		/*
-		VkImage getCurrentVkImage() const;
+		TextureHandleSM getCurrentTexture();
+		
+		//VkImage getCurrentVkImage() const;
 		VkImageView getCurrentVkImageView() const;
 
 		const VkSurfaceFormatKHR& getSurfaceFormat() const;
-		uint32_t getNumSwapchainImages() const;*/
+		//uint32_t getNumSwapchainImages() const;
 		uint32_t getCurrentImageIndex() const;
-		const VkSurfaceFormatKHR& getSurfaceFormat() const;
+	
 	private:
 		DeviceVulkan& ctx_;
 		VkDevice device_ = VK_NULL_HANDLE;
