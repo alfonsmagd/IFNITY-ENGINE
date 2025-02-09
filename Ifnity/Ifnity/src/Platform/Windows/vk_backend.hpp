@@ -3,7 +3,7 @@
 
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
 #include "../Vulkan/vulkan_classes.hpp"
-
+#include "../Vulkan/vulkan_CommandBuffer.hpp"
 IFNITY_NAMESPACE
 
 namespace Vulkan
@@ -13,10 +13,11 @@ namespace Vulkan
 	//  DEVICE VULKAN                                                                      //
 	//-------------------------------------------------------------------------------------//
 
-    
+	
 
     class Device final: public IDevice
     {
+       
     public:
         /**
         * @brief Constructor for the Device class.
@@ -29,6 +30,7 @@ namespace Vulkan
 
         
         void Draw(DrawDescription& desc) override;
+		void StartRecording() override;
 
        
         GraphicsPipelineHandle CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
@@ -68,7 +70,7 @@ namespace Vulkan
 
 		VkDevice vkDevice_ = VK_NULL_HANDLE;
 		VkPhysicalDevice vkPhysicalDevice_ = VK_NULL_HANDLE;
-
+		CommandBuffer cmdBuffer;
         DeviceVulkan* m_DeviceVulkan = nullptr;
 
         #define MAX_SHADER_STAGES 4

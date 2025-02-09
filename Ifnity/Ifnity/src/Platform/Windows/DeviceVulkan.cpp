@@ -131,60 +131,83 @@ VkFormat DeviceVulkan::GetSwapChainFormat() const
 
 void DeviceVulkan::OnUpdate()
 {
-	static bool hasexecuted = false;
-	//First get acquire the command buffer 
+
+	#define SANDBOX_TOOL 
+
+	//using vec3 = glm::vec3;
+	//static bool hasexecuted = false;
+	////First get acquire the command buffer 
 	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
 	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
 
 	Vulkan::TextureHandleSM currentTexture = getCurrentSwapChainTexture();
-
-	
-
-	//// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-	//currentTexture->transitionLayout(
-	//	cmdBuffer.wrapper_->cmdBuf_,
-	//	VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	//	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
-	//);
-
 	Vulkan::RenderPass renderPass = {
-		.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+	.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
 
-	Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
+Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
 
-	if(actualPipeline_ != nullptr)
-	{
 		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-		BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-		cmdBuffer.cmdBindRenderPipeline(*actualPipeline_);
-		cmdBuffer.cmdDraw(3);
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-		EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-		cmdBuffer.cmdEndRendering();
-	}
-	else
-	{
-		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-		BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-		
-		//cmdBuffer.cmdDraw(3);
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-		EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-		cmdBuffer.cmdEndRendering();
-	}
+	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
 
-	//// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_PRESENT_SRC_KHR para presentar
-	//currentTexture->transitionLayout(
-	//	cmdBuffer.wrapper_->cmdBuf_,
-	//	VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-	//	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	//	VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-	//	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
-	
-
+	//cmdBuffer.cmdDraw(3);
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+	cmdBuffer.cmdEndRendering();
 	submit(cmdBuffer, currentTexture);
+
+	//const float ratio = GetWidth() / (float)GetHeight();
+
+	//const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+	//const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
+	////// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+	////currentTexture->transitionLayout(
+	////	cmdBuffer.wrapper_->cmdBuf_,
+	////	VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+	////	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+	////	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+	////	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
+	////);
+
+
+	//if(actualPipeline_ != nullptr)
+	//{
+	//	#ifdef TEST_TRIANGLE
+	//		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+	//		BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+	//		cmdBuffer.cmdBindRenderPipeline(*actualPipeline_);
+	//		cmdBuffer.cmdDraw(3);
+	//		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+	//		EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+	//		cmdBuffer.cmdEndRendering();
+	//	#endif // 
+	//		#ifdef TEST_GLM_CUBE
+	//			cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+	//			BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+	//			cmdBuffer.cmdBindRenderPipeline(*actualPipeline_);
+	//			cmdBuffer.cmdPushConstants(p*m);
+	//			cmdBuffer.cmdDraw(36);
+	//			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+	//			EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+	//			cmdBuffer.cmdEndRendering();
+	//		#endif // TEST_GLM_CUBE
+
+
+	//}
+	//else
+	//{
+
+	//}
+
+	////// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_PRESENT_SRC_KHR para presentar
+	////currentTexture->transitionLayout(
+	////	cmdBuffer.wrapper_->cmdBuf_,
+	////	VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+	////	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+	////	VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+	////	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
+
+
+	//submit(cmdBuffer, currentTexture);
 
 
 }
@@ -650,13 +673,13 @@ void DeviceVulkan::DestroyImmediateCommands()
 void DeviceVulkan::DestroyPipelines()
 {
 	//Iterate about map destroy all pipelines
-	
-	for( auto& [key, pipeline] : map_renderPipelines)
+
+	for(auto& [key, pipeline] : map_renderPipelines)
 	{
 		if(pipeline)
 		{
 			pipeline->DestroyPipeline(device_);
-			
+
 		}
 		continue;
 	}
@@ -1316,23 +1339,23 @@ void DeviceVulkan::destroy(Vulkan::GraphicsPipelineHandleSM handle)
 
 void DeviceVulkan::destroy(Vulkan::ShaderModuleHandleSM handle)
 {
-  const Vulkan::ShaderModuleState* state = slotMapShaderModules_.get(handle);
+	const Vulkan::ShaderModuleState* state = slotMapShaderModules_.get(handle);
 
-		if(!state)
-		{
-			IFNITY_LOG(LogCore, ERROR, "Invalid ShaderModuleHandleSM to destroy fail");
-			return;
-		}
+	if(!state)
+	{
+		IFNITY_LOG(LogCore, ERROR, "Invalid ShaderModuleHandleSM to destroy fail");
+		return;
+	}
 
-		if(state->sm != VK_NULL_HANDLE)
-		{
-			// a shader module can be destroyed while pipelines created using its shaders are still in use
-			// https://registry.khronos.org/vulkan/specs/1.3/html/chap9.html#vkDestroyShaderModule
-			vkDestroyShaderModule(device_.device, state->sm, nullptr);
-		}
+	if(state->sm != VK_NULL_HANDLE)
+	{
+		// a shader module can be destroyed while pipelines created using its shaders are still in use
+		// https://registry.khronos.org/vulkan/specs/1.3/html/chap9.html#vkDestroyShaderModule
+		vkDestroyShaderModule(device_.device, state->sm, nullptr);
+	}
 
-		slotMapShaderModules_.destroy(handle);
-	
+	slotMapShaderModules_.destroy(handle);
+
 }
 
 

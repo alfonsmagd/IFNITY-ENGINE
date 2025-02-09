@@ -26,6 +26,9 @@ struct IFNITY_API DrawDescription
 	const void* indices = nullptr;
     unsigned int size;
 
+	//To vulkan uses 
+	bool startintRecord = false;
+	bool onlyOneRender  = false;
 	constexpr DrawDescription& SetRasterizationState(const RasterizationState& state)
 	{
 		rasterizationState = state;
@@ -36,6 +39,18 @@ struct IFNITY_API DrawDescription
 		viewPortState = state;
 		return *this;
 	}
+
+	constexpr DrawDescription& StartRecording()
+	{
+		startintRecord = true;
+		return *this;
+	}
+	constexpr DrawDescription& StopRecording()
+	{
+		startintRecord = false;
+		return *this;
+	}
+
 
 	//Constructors 
 	DrawDescription() = default;
@@ -81,6 +96,7 @@ public:
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) = 0;
 	virtual SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) = 0;
 	virtual MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) = 0;
+	virtual void StartRecording() {};
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
 };

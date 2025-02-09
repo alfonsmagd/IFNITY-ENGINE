@@ -242,14 +242,14 @@ public:
 		ShaderCreateDescription DescriptionShader;
 		{
 			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "triangle01.vert";
-			//DescriptionShader.FileName = "glm.vert";
+			//DescriptionShader.FileName = "triangle01.vert";
+			DescriptionShader.FileName = "glm.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "triangle01.frag";
-			//DescriptionShader.FileName = "glm.frag";
+			//DescriptionShader.FileName = "triangle01.frag";
+			DescriptionShader.FileName = "glm.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
 
@@ -290,8 +290,25 @@ public:
 	
 	void Render() override
 	{
+		auto* rdevice = m_ManagerDevice->GetRenderDevice();
+
+		rdevice->StartRecording();
+		m_SolidPipeline->BindPipeline(rdevice);
+
+		DrawDescription desc;
+		desc.StartRecording();
+		
+		rdevice->Draw(desc);
+		m_WireFramePipeline->BindPipeline(rdevice);
+		desc.StopRecording();
+		rdevice->Draw(desc);
+		
+		//StopRecording 
+
+
 		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
+	
 	void Animate() override
 	{
 		IFNITY_LOG(LogApp, INFO, "Animate App");

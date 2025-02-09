@@ -46,9 +46,70 @@ namespace Vulkan
 
 	void Device::Draw(DrawDescription& desc)
 	{
-		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		
+		const float ratio = m_DeviceVulkan->GetWidth() / (float)m_DeviceVulkan->GetHeight();
+		using vec3 = glm::vec3;
+      const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+       const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
+		float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
+
+		Vulkan::TextureHandleSM currentTexture = m_DeviceVulkan->getCurrentSwapChainTexture();
+
+
+		Vulkan::RenderPass renderPass = {
+		.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+
+		Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
+
+		if(desc.onlyOneRender)
+		{
+
+			cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+			m_DeviceVulkan->BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+			cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
+			cmdBuffer.cmdDraw(3);
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+			m_DeviceVulkan->EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+			cmdBuffer.cmdEndRendering();
+			m_DeviceVulkan->submit(cmdBuffer, currentTexture);
+		}
+		else
+		{
+
+			if(desc.startintRecord)
+			{
+				cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+			}
+			m_DeviceVulkan->BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+			cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
+			cmdBuffer.cmdPushConstants(p * m);
+			cmdBuffer.cmdDraw(36);
+			
+			m_DeviceVulkan->EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+
+			if(!desc.startintRecord)
+			{
+				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+				cmdBuffer.cmdEndRendering();
+				m_DeviceVulkan->submit(cmdBuffer, currentTexture);
+			}
+		}
+
+	
+
+
+		
+
+
+
 	}
+
+	void Device::StartRecording()
+	{
+		Vulkan::CommandBuffer& cmdb = m_DeviceVulkan->acquireCommandBuffer();
+		cmdBuffer = std::move(cmdb);
+	}
+	
 
 	GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc)
 	{
@@ -96,8 +157,8 @@ namespace Vulkan
 		GraphicsPipeline* pipeline = new GraphicsPipeline(std::move(desc), m_DeviceVulkan);
 
 
-		auto& vert = m_vertex.emplace_back( createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
-		auto& frag = m_fragment.emplace_back( createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
+		auto& vert = m_vertex.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
+		auto& frag = m_fragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
 
 		//3. Create the pipeline and configure colorFormat,
 		const DeviceVulkan& ctx = getDeviceContextVulkan();
@@ -106,9 +167,9 @@ namespace Vulkan
 		pipeline->passSpecializationConstantToVkFormat();
 		pipeline->configureRenderPipelineState();
 		pipeline->m_fragment = *frag.get();
-		pipeline->m_vertex =   *vert.get();
-		
-		
+		pipeline->m_vertex = *vert.get();
+
+
 		pipeline->ownerHandle_ = m_DeviceVulkan->slotMapRenderPipelines_.create(std::move(*pipeline));
 
 		return GraphicsPipelineHandle(pipeline);
@@ -421,7 +482,7 @@ namespace Vulkan
 				//Trace 
 			}
 		}
-		
+
 		for(auto& fragment : m_fragment)
 		{
 			if(fragment)
@@ -473,7 +534,7 @@ namespace Vulkan
 				pushConstantSize += compiler.get_declared_struct_size(type);
 			}
 
-			
+
 			ShaderModuleState smstate = { .sm = vkShaderModule, .pushConstantsSize = pushConstantSize };
 
 			//Create the handle 
@@ -533,7 +594,7 @@ namespace Vulkan
 		{
 			auto vkpipeline = vkDevice->getVkPipeline(ownerHandle_);
 		}
-		
+
 
 
 		vkDevice->setActualPipeline(this);
@@ -545,8 +606,8 @@ namespace Vulkan
 	{
 		if(m_vertex.valid())
 		{
-			   ShaderModuleState* mvert = m_DeviceVulkan->slotMapShaderModules_.get(m_vertex);
-			   return mvert;
+			ShaderModuleState* mvert = m_DeviceVulkan->slotMapShaderModules_.get(m_vertex);
+			return mvert;
 		}
 		IFNITY_LOG(LogApp, ERROR, "Vertex Shader Module State getHandle   its not valid");
 		return nullptr;
@@ -560,7 +621,7 @@ namespace Vulkan
 			return frag;
 		}
 		IFNITY_LOG(LogApp, ERROR, "Vertex frag Module State getHandle   its not valid");
-		
+
 		return nullptr;
 	}
 

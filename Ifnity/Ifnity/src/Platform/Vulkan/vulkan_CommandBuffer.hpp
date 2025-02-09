@@ -39,6 +39,7 @@ namespace Vulkan
 
 	private:
 		friend class DeviceVulkan;
+		friend class Device;
 		DeviceVulkan* ctx_ = nullptr;
 		const VulkanImmediateCommands::CommandBufferWrapper* wrapper_ = nullptr;
 
