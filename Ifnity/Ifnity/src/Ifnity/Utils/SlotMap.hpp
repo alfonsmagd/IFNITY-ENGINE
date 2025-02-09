@@ -15,6 +15,10 @@ public:
 	bool valid() const { return gen_ != 0; }
 	uint32_t index() const { return index_; }
 	uint32_t gen() const { return gen_; }
+	bool empty() const
+	{
+		return gen_ == 0;
+	}
 
 	bool operator==(const Handle& other) const
 	{

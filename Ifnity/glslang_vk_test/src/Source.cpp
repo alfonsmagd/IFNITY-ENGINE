@@ -181,7 +181,7 @@ class Source: public IFNITY::App
 private:
 	BufferHandle m_UBO;
 	GraphicsDeviceManager* m_ManagerDevice;
-	GraphicsPipelineHandle m_GraphicsPipeline;
+	GraphicsPipelineHandle m_SolidPipeline;
 	GraphicsPipelineHandle m_WireFramePipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
@@ -257,17 +257,32 @@ public:
 		ShaderCompiler::CompileShader(m_ps.get());
 
 		const uint32_t wireframe = 1;
-		GraphicsPipelineDescription gdesc;
-		gdesc.SetVertexShader(m_vs.get()).
-			  SetPixelShader(m_ps.get()).
-			SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Line}).
-			
-			addSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe ,});
+		GraphicsPipelineDescription gdesc1;
+		GraphicsPipelineDescription gdesc2;
+		{
+			gdesc1.SetVertexShader(m_vs.get()).
+				  SetPixelShader(m_ps.get()).
+				  addDebugName("Wireframe Pipeline").
+				  SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Line }).
+				  addSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , });
 
-		//GraphicsPipelineDescription gdesc;
+			//GraphicsPipelineDescription gdesc
+			m_WireFramePipeline = rdevice->CreateGraphicsPipeline(gdesc1);
 
-		m_WireFramePipeline = rdevice->CreateGraphicsPipeline(gdesc);
-		m_WireFramePipeline->BindPipeline(rdevice);
+
+		}
+
+		{
+			gdesc2.SetVertexShader(m_vs.get()).
+				  SetPixelShader(m_ps.get()).
+				  addDebugName("Solid Pipeline").
+				  SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Fill });
+
+			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc2);
+		}
+
+		m_SolidPipeline->BindPipeline(rdevice);
+		
 	
 		//exit(0);
 

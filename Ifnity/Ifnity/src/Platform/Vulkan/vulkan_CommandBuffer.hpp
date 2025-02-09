@@ -27,7 +27,7 @@ namespace Vulkan
 		void cmdBindScissorRect(const ScissorRect& rect);
 		void cmdBeginRendering(const RenderPass& renderPass, Framebuffer& fb);
 		void cmdBindDepthState(const DepthState& state);
-		void cmdBindRenderPipeline(RenderPipelineState& pipeline);
+		void cmdBindRenderPipeline(GraphicsPipelineHandleSM pipeline);
 		void  cmdDraw(uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t baseInstance = 0);
 		void cmdPushConstants(const void* data, size_t size, size_t offset = 0);
 		template<typename Struct>
@@ -46,7 +46,7 @@ namespace Vulkan
 		Framebuffer framebuffer_ = {};
 
 		VkPipeline lastPipelineBound_ = VK_NULL_HANDLE;
-		RenderPipelineState* currentPipelineGraphics_ = nullptr;
+		GraphicsPipelineHandleSM currentPipelineGraphics_;
 
 		bool isRendering_ = false;
 	};

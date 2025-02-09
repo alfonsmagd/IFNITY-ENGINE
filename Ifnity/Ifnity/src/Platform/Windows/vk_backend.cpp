@@ -95,18 +95,21 @@ namespace Vulkan
 		// 2. compile shaders
 		GraphicsPipeline* pipeline = new GraphicsPipeline(std::move(desc), m_DeviceVulkan);
 
-		m_vertex = createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader");
-		m_fragment = createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader");
+
+		auto& vert = m_vertex.emplace_back( createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
+		auto& frag = m_fragment.emplace_back( createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
 
 		//3. Create the pipeline and configure colorFormat,
 		const DeviceVulkan& ctx = getDeviceContextVulkan();
 
-		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat()));
+		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat())); //Get the SwapChain Color Format 
 		pipeline->passSpecializationConstantToVkFormat();
 		pipeline->configureRenderPipelineState();
-		pipeline->m_pfragment = m_DeviceVulkan->slotMapShaderModules_.get(*m_fragment);
-		pipeline->m_pvertex = m_DeviceVulkan->slotMapShaderModules_.get(*m_vertex);
-	
+		pipeline->m_fragment = *frag.get();
+		pipeline->m_vertex =   *vert.get();
+		
+		
+		pipeline->ownerHandle_ = m_DeviceVulkan->slotMapRenderPipelines_.create(std::move(*pipeline));
 
 		return GraphicsPipelineHandle(pipeline);
 
@@ -177,7 +180,7 @@ namespace Vulkan
 	//                  Device Specific Methods                                                         //
 	//--------------------------------------------------------------------------------------------------//
 
-	VkPipeline Device::getVkPipeline(GraphicsPipeline* gp) const
+	VkPipeline Device::getVkPipeline(GraphicsPipelineHandleSM handle) const
 	{
 		// Steps to follow:
 		// 1. Validate the GraphicsPipeline pointer.
@@ -192,9 +195,13 @@ namespace Vulkan
 		#define VSHADER 0
 		#define FSHADER 1
 
-		IFNITY_ASSERT_MSG(gp != nullptr, "GraphicsPipeline is null");
+		IFNITY_ASSERT_MSG(handle.valid(), "GraphicsPipeline is null");
 
-		RenderPipelineState* rps = &gp->m_rVkPipelineState;
+		GraphicsPipeline* gp = m_DeviceVulkan->slotMapRenderPipelines_.get(handle);
+
+
+
+		RenderPipelineState* rps = gp->getRenderPipelineStatePtr();
 
 		if(rps->pipeline_ != VK_NULL_HANDLE)
 		{
@@ -405,19 +412,25 @@ namespace Vulkan
 	void Device::destroyShaderModule()
 	{
 
-		if(m_vertex)
+		for(auto& vertex : m_vertex)
 		{
-			IFNITY_LOG(LogApp, INFO, "Destroy Vertex Shader Module");
-			m_vertex.reset();
-			//Trace 
-			
+			if(vertex)
+			{
+				IFNITY_LOG(LogApp, INFO, "Destroy Vertex Shader Module");
+				vertex.reset();
+				//Trace 
+			}
 		}
-		if(m_fragment)
+		
+		for(auto& fragment : m_fragment)
 		{
-			IFNITY_LOG(LogApp, INFO, "Destroy Fragment Shader Module");
-			m_fragment.reset();
+			if(fragment)
+			{
+				IFNITY_LOG(LogApp, INFO, "Destroy Fragment Shader Module");
+				fragment.reset();
+				//Trace 
+			}
 		}
-
 
 	}
 
@@ -516,12 +529,39 @@ namespace Vulkan
 		IFNITY_ASSERT_MSG(vkDevice != nullptr, "Device is not a Vulkan Device");
 
 
-		auto vkpipeline = vkDevice->getVkPipeline(this);
+		if(ownerHandle_.valid())
+		{
+			auto vkpipeline = vkDevice->getVkPipeline(ownerHandle_);
+		}
+		
 
 
 		vkDevice->setActualPipeline(this);
 
 
+	}
+
+	ShaderModuleState* GraphicsPipeline::getVertexShaderModule()
+	{
+		if(m_vertex.valid())
+		{
+			   ShaderModuleState* mvert = m_DeviceVulkan->slotMapShaderModules_.get(m_vertex);
+			   return mvert;
+		}
+		IFNITY_LOG(LogApp, ERROR, "Vertex Shader Module State getHandle   its not valid");
+		return nullptr;
+	}
+
+	ShaderModuleState* GraphicsPipeline::getFragmentShaderModule()
+	{
+		if(m_vertex.valid())
+		{
+			ShaderModuleState* frag = m_DeviceVulkan->slotMapShaderModules_.get(m_fragment);
+			return frag;
+		}
+		IFNITY_LOG(LogApp, ERROR, "Vertex frag Module State getHandle   its not valid");
+		
+		return nullptr;
 	}
 
 	void GraphicsPipeline::setSpecializationConstant(const SpecializationConstantDesc& spec)

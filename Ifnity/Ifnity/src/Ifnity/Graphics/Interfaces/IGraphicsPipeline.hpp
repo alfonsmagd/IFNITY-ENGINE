@@ -111,6 +111,8 @@ struct IFNITY_API StencilState
 
 struct IFNITY_API GraphicsPipelineDescription
 {
+	const char* debugName = "";
+
 	RasterizationState rasterizationState;
 	RenderState renderState;
 	std::vector<SpecializationConstantState> specInfo;
@@ -156,7 +158,19 @@ struct IFNITY_API GraphicsPipelineDescription
 		return *this;
 	}
 
-	const char* debugName = "";
+	constexpr GraphicsPipelineDescription& noSpecializationConstants()
+	{
+		specInfo.clear();
+		return *this;
+	}
+
+	GraphicsPipelineDescription& addDebugName(const char* name)
+	{
+		debugName = name;
+		return *this;
+	}
+
+	
 
 };
 

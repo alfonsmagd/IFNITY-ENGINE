@@ -41,7 +41,7 @@ namespace Vulkan
 
 
 	template<typename ImplObjectType>
-	using SlotMapSharedPtr = std::shared_ptr<Handle<ImplObjectType>>;
+	using Holder = std::unique_ptr<Handle<ImplObjectType>, std::function<void(Handle<ImplObjectType>*)>>;
 
 	template<typename DeviceVulkan, typename Handle>
 	concept HasDestroy = requires(DeviceVulkan * ctx, Handle handle)
@@ -51,25 +51,26 @@ namespace Vulkan
 
 	template<typename ImplObjectType, typename DeviceVulkan>
 		requires HasDestroy<DeviceVulkan, Handle<ImplObjectType>>
-	SlotMapSharedPtr<ImplObjectType> makeHolder(DeviceVulkan* ctx, Handle<ImplObjectType> handle, SlotMap<ImplObjectType>& slotmap)
+	Holder<ImplObjectType> makeHolder(DeviceVulkan* ctx, Handle<ImplObjectType> handle, SlotMap<ImplObjectType>& slotmap)
 	{
-		return SlotMapSharedPtr<ImplObjectType>(
-			new Handle<ImplObjectType>(handle),  // Obtener puntero al objeto en el SlotMap
-			[ ctx, handle ](Handle<ImplObjectType>*)
+		return Holder<ImplObjectType>(
+			std::make_unique<Handle<ImplObjectType>>(handle).release(),  // Obtener puntero al objeto en el SlotMap
+			[ ctx, handle ](Handle<ImplObjectType>* ptr)
 			{   // Custom deleter con acceso a ctx
 				if(ctx)
 				{
 					destroy(ctx, handle);  // Llamar a la función de destrucción
 					std::cout << "Objeto destruido desde el contexto.\n";
 				}
+				delete ptr;
 			}
 		);
 	}
 
 	// Declaración de la plantilla general para la función destroy
-	using HolderShaderSM = SlotMapSharedPtr<ShaderModuleState>;
-	using HolderTextureSM = SlotMapSharedPtr<VulkanImage>;
-	using HolderGraphicsPipelineSM = SlotMapSharedPtr<GraphicsPipelineHandleSM>;
+	using HolderShaderSM = Holder<ShaderModuleState>;
+	using HolderTextureSM = Holder<VulkanImage>;
+	using HolderGraphicsPipelineSM = Holder<GraphicsPipelineHandleSM>;
 	
 
 	//================================================================================================

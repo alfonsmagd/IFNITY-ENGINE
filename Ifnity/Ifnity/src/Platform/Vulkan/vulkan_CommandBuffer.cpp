@@ -284,23 +284,29 @@ namespace Vulkan
 		vkCmdSetDepthCompareOp(wrapper_->cmdBuf_, op);
 	}
 
-	void CommandBuffer::cmdBindRenderPipeline(RenderPipelineState& pipeline)
+	void CommandBuffer::cmdBindRenderPipeline(GraphicsPipelineHandleSM pipeline)
 	{
-
-		currentPipelineGraphics_ = &pipeline;
-
-		const RenderPipelineState* rps = currentPipelineGraphics_;
-		if(!rps->pipeline_)
+		if(pipeline.empty())
 		{
 			return;
 		}
-		VkPipeline vkpipeline = rps->pipeline_;
+
+		currentPipelineGraphics_ = pipeline;
+
+		 GraphicsPipeline* gp = ctx_->slotMapRenderPipelines_.get(pipeline);
+
+		 RenderPipelineState& rps = gp->getRenderPipelineState();
+		if(!rps.pipeline_)
+		{
+			return;
+		}
+		VkPipeline vkpipeline = rps.pipeline_;
 
 		if(lastPipelineBound_ != vkpipeline)
 		{
 			lastPipelineBound_ = vkpipeline;
 			vkCmdBindPipeline(wrapper_->cmdBuf_, VK_PIPELINE_BIND_POINT_GRAPHICS, vkpipeline);
-			ctx_->bindDefaultDescriptorSets(wrapper_->cmdBuf_, VK_PIPELINE_BIND_POINT_GRAPHICS, rps->pipelineLayout_);
+			ctx_->bindDefaultDescriptorSets(wrapper_->cmdBuf_, VK_PIPELINE_BIND_POINT_GRAPHICS, rps.pipelineLayout_);
 		}
 
 	}
@@ -321,7 +327,9 @@ namespace Vulkan
 	{
 		_ASSERT(isRendering_);
 		_ASSERT(currentPipelineGraphics_);
-		const RenderPipelineState* rps = currentPipelineGraphics_;
+		GraphicsPipeline* gp = ctx_->slotMapRenderPipelines_.get(currentPipelineGraphics_);
+
+		RenderPipelineState* rps = &gp->getRenderPipelineState();
 
 		vkCmdPushConstants(wrapper_->cmdBuf_,
 			rps->pipelineLayout_,

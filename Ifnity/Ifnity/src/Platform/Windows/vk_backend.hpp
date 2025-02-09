@@ -50,7 +50,7 @@ namespace Vulkan
         
 
 		//Vulkan Specific 
-        VkPipeline getVkPipeline(struct GraphicsPipeline* gp) const;
+        VkPipeline getVkPipeline(GraphicsPipelineHandleSM gp) const;
 		const DeviceVulkan& getDeviceContextVulkan() const { return *m_DeviceVulkan; }
         void setActualPipeline(GraphicsPipeline* pipeline);
 
@@ -71,9 +71,10 @@ namespace Vulkan
 
         DeviceVulkan* m_DeviceVulkan = nullptr;
 
+        #define MAX_SHADER_STAGES 4
         //Shaders loading by device 
-        HolderShaderSM m_vertex;
-        HolderShaderSM m_fragment;
+        std::vector<HolderShaderSM> m_vertex;
+        std::vector<HolderShaderSM> m_fragment;
 		
     };
 
@@ -108,10 +109,12 @@ namespace Vulkan
         uint32_t samplesCount = 1u;
         float minSampleShading = 0.0f;
 
-        ShaderModuleState* m_pvertex;
-        ShaderModuleState* m_pfragment;
+        ShaderModuleHandleSM m_vertex;
+        ShaderModuleHandleSM m_fragment;
         bool destroy = false;
 
+
+        GraphicsPipelineHandleSM ownerHandle_;
 	public:
 		//Destructor 
         ~GraphicsPipeline();
@@ -120,13 +123,16 @@ namespace Vulkan
         GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceVulkan* dev);
         const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
         void  BindPipeline(struct IDevice* device) override;
-        ShaderModuleState* getVertexShaderModule() { if(m_pvertex) return m_pvertex;        else { return VK_NULL_HANDLE; } }
-        ShaderModuleState*  getFragmentShaderModule() { if(m_pfragment) return m_pfragment; else { return VK_NULL_HANDLE; } }
+        ShaderModuleState* getVertexShaderModule();
+        ShaderModuleState* getFragmentShaderModule();
         void  setSpecializationConstant(const SpecializationConstantDesc& spec);
         void  SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = desc; }
 		void  setColorFormat(rhi::Format format) { colorFormat = format; }
-        RenderPipelineState& getRenderPipelineState() { return m_rVkPipelineState; }
+        const RenderPipelineState& getRenderPipelineState() const { return m_rVkPipelineState; }
+		RenderPipelineState& getRenderPipelineState() { return m_rVkPipelineState; }
+		RenderPipelineState* getRenderPipelineStatePtr() { return &m_rVkPipelineState; }
         void DestroyPipeline(VkDevice device);
+		operator GraphicsPipelineHandleSM() const { return ownerHandle_; }
     
     private:
         DeviceVulkan* m_DeviceVulkan = nullptr;
