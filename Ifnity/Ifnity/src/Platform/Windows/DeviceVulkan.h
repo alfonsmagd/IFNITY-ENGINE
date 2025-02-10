@@ -1,5 +1,3 @@
-#pragma once 
-
 
 #include "Ifnity/GraphicsDeviceManager.hpp"
 #include  "Platform/ImguiRender/ImguiVulkanRender.h"
@@ -26,7 +24,7 @@ IFNITY_NAMESPACE
 // no namespace its DeviceContext derived by GraphicsDeviceManager.
 
 
-class DeviceVulkan final : public GraphicsDeviceManager 
+class DeviceVulkan final: public GraphicsDeviceManager
 {
 
 public:
@@ -94,9 +92,9 @@ private:
 
 	// Depth buffer
 	//ImageBlock m_DepthBuffer;
-	
+
 	// Render pass
-	VkRenderPass m_RenderPass = VK_NULL_HANDLE ;
+	VkRenderPass m_RenderPass = VK_NULL_HANDLE;
 
 	// Frame buffer and Image, ImageViews
 	std::vector<VkImage>  m_SwapchainImages;
@@ -139,13 +137,13 @@ private:
 	PFN_vkSetDebugUtilsObjectNameEXT vkSetDebugUtilsObjectNameEXT{ nullptr };
 
 	//TEST Members to get functionality to move a Device class. 
-	
+
 
 	//Vulkan::CommandBuffer m_CommandBuffer;
 	uint32_t currentMaxTextures_ = 0;
 	uint32_t currentMaxSamplers_ = 0;
 
-	float m_Color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+	float m_Color[ 4 ] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 	//DeviceHandle 
 	DeviceHandle m_RenderDevice;
@@ -162,7 +160,7 @@ private:
 		VkPhysicalDeviceProperties{},
 	};
 
-	
+
 	std::unordered_map<uint32_t, Vulkan::GraphicsPipeline*> map_renderPipelines;
 	uint32_t nextPipelineId = 0;
 
@@ -179,7 +177,7 @@ private:
 	//Getter 
 
 	uint32_t getFramebufferMSAABitMask() const;
-	
+
 	// Initialize private methods
 	bool CreateSurface();
 	bool CreatePhysicalDevice();
@@ -196,7 +194,7 @@ private:
 	bool CreatePipelineCache();
 
 	VkResult growDescriptorPool(uint32_t maxTextures, uint32_t maxSamplers);
-	
+
 	void getPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice);
 	void createWeaknessDeviceReference();
 
@@ -210,7 +208,7 @@ private:
 	void DestroyImmediateCommands();
 	void DestroyPipelines();
 	void DestroyPipelineCache();
-	
+
 	//OnRender private methods
 	bool AcquireNextImage();
 	bool PopulateCommandBuffer();
@@ -219,29 +217,29 @@ private:
 	bool InitGui();
 	void CheckSpirvVersion(VkPhysicalDevice physicalDevice);
 
-	
+
 	//Imgui private methods
 	bool CreateImGuiDescriptorPool();
 	void setupCallbacks(VkDevice& i_device);
-	void BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[4]);
+	void BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[ 4 ]);
 
 	//TestMethods to move a Device class 
 	bool createVulkanImmediateCommands();
 	Vulkan::CommandBuffer& acquireCommandBuffer();
 	Vulkan::TextureHandleSM getCurrentSwapChainTexture();
 	bool hasSwapchain() const noexcept;
-	Vulkan::SubmitHandle submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::TextureHandleSM present );
+	Vulkan::SubmitHandle submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::TextureHandleSM present);
 	void addGraphicsPipeline(Vulkan::GraphicsPipeline* pipeline);
 
 	//This move to device create s
-	Vulkan::ShaderModuleState createShaderModuleFromSpirVconst (const void* spirv,
+	Vulkan::ShaderModuleState createShaderModuleFromSpirVconst(const void* spirv,
 		size_t numBytes,
 		const char* debugName);
-	
+
 	void EndRenderDocTrace(VkCommandBuffer commandBuffer);
 
 
-	
+
 };
 
 

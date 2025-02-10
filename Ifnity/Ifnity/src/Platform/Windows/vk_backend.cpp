@@ -47,67 +47,51 @@ namespace Vulkan
 	void Device::Draw(DrawDescription& desc)
 	{
 		
-		const float ratio = m_DeviceVulkan->GetWidth() / (float)m_DeviceVulkan->GetHeight();
-		using vec3 = glm::vec3;
-      const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
-       const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
-		float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
-
-		Vulkan::TextureHandleSM currentTexture = m_DeviceVulkan->getCurrentSwapChainTexture();
-
-
-		Vulkan::RenderPass renderPass = {
-		.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
-
-		Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
-
-		if(desc.onlyOneRender)
-		{
-
-			cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-			m_DeviceVulkan->BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-			cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
-			cmdBuffer.cmdDraw(3);
-			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-			m_DeviceVulkan->EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-			cmdBuffer.cmdEndRendering();
-			m_DeviceVulkan->submit(cmdBuffer, currentTexture);
-		}
-		else
-		{
-
-			if(desc.startintRecord)
-			{
-				cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-			}
-			m_DeviceVulkan->BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-			cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
-			cmdBuffer.cmdPushConstants(p * m);
-			cmdBuffer.cmdDraw(36);
-			
-			m_DeviceVulkan->EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-
-			if(!desc.startintRecord)
-			{
-				ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-				cmdBuffer.cmdEndRendering();
-				m_DeviceVulkan->submit(cmdBuffer, currentTexture);
-			}
-		}
-
 	
 
 
 		
 
+	}
 
-
+	//TODO: Implement this function desc information
+	void Device::DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)
+	{
+		pipeline->BindPipeline(this);//This set pipeline like actualpilenine in VK.
+		
+		cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
+		cmdBuffer.cmdPushConstants(pushConstants.data, 
+								   pushConstants.size, 
+								   pushConstants.offset);
+		cmdBuffer.cmdDraw(36);
+	
 	}
 
 	void Device::StartRecording()
 	{
 		Vulkan::CommandBuffer& cmdb = m_DeviceVulkan->acquireCommandBuffer();
+	
 		cmdBuffer = std::move(cmdb);
+
+		//Get handler current texture 
+		currentTexture_ = m_DeviceVulkan->getCurrentSwapChainTexture();
+
+		//Default RenderPass and FrameBuffer by default, this will be move 
+		Vulkan::RenderPass renderPass = {
+		.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+
+		Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture_ } } };
+
+		//Start Rendering
+		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+	}
+
+	void Device::StopRecording()
+	{
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+		cmdBuffer.cmdEndRendering();
+		m_DeviceVulkan->submit(cmdBuffer, currentTexture_);
+	
 	}
 	
 
@@ -179,14 +163,23 @@ namespace Vulkan
 
 	BufferHandle Device::CreateBuffer(const BufferDescription& desc)
 	{
-		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		if(desc.type == BufferType::CONSTANT_BUFFER)
+		{
+			Buffer* buffer = new Buffer(desc);
+			return BufferHandle(buffer);
+		}
 	}
 
 	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)
 	{
-		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		if(buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER)
+		{
+			//Internal cache buffer 
+			pushConstants.data = data;
+			pushConstants.size = size;
+			pushConstants.offset = offset;
+		}
+		
 	}
 
 	void Device::BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)

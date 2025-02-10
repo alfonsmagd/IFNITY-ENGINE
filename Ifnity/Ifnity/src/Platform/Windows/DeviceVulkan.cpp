@@ -132,28 +132,28 @@ VkFormat DeviceVulkan::GetSwapChainFormat() const
 void DeviceVulkan::OnUpdate()
 {
 
-	#define SANDBOX_TOOL 
-
-	//using vec3 = glm::vec3;
-	//static bool hasexecuted = false;
-	////First get acquire the command buffer 
-	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
-	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
-
-	Vulkan::TextureHandleSM currentTexture = getCurrentSwapChainTexture();
-	Vulkan::RenderPass renderPass = {
-	.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
-
-Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
-
-		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-
-	//cmdBuffer.cmdDraw(3);
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-	cmdBuffer.cmdEndRendering();
-	submit(cmdBuffer, currentTexture);
+//	#define SANDBOX_TOOL 
+//
+//	//using vec3 = glm::vec3;
+//	//static bool hasexecuted = false;
+//	////First get acquire the command buffer 
+//	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
+//	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
+//
+//	Vulkan::TextureHandleSM currentTexture = getCurrentSwapChainTexture();
+//	Vulkan::RenderPass renderPass = {
+//	.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+//
+//Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
+//
+//		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+//	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+//
+//	//cmdBuffer.cmdDraw(3);
+//	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+//	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+//	cmdBuffer.cmdEndRendering();
+//	submit(cmdBuffer, currentTexture);
 
 	//const float ratio = GetWidth() / (float)GetHeight();
 
@@ -1323,7 +1323,15 @@ void DeviceVulkan::bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineB
 {
 
 	const VkDescriptorSet dsets[ 2 ] = { vkDSet_, vkDSet_ };
-	vkCmdBindDescriptorSets(cmdBuf, bindPoint, layout, 0, (uint32_t)ARRAY_NUM_ELEMENTS(dsets), dsets, 0, nullptr);
+	vkCmdBindDescriptorSets(
+		cmdBuf, 
+		bindPoint,
+		layout,
+		0, 
+		(uint32_t)ARRAY_NUM_ELEMENTS(dsets),
+		dsets,
+		0, 
+		nullptr);
 }
 
 void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)

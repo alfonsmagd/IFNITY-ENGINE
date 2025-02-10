@@ -8,13 +8,31 @@ IFNITY_NAMESPACE
 
 namespace Vulkan
 {
+    //------------------------------------------------------------------------------------//
+    // BUFFER VULKAN                                                                       //
+    //-------------------------------------------------------------------------------------//
+    
+    class Buffer final: public IBuffer
+    {
+    public:
+		Buffer(const BufferDescription& desc): m_Description(desc) {}
+        BufferDescription& GetBufferDescription() override { return m_Description; }
+        const uint32_t GetBufferID()  const override { return m_BufferID; }
+        void SetData(const void* data) {}
+		const void* GetData() const { return nullptr; }
+
+    private:
+        uint32_t m_BufferID = 0; ///< The buffer ID.
+		BufferDescription m_Description; ///< The buffer description.
+        
+    };
+
+
+
 
 	//------------------------------------------------------------------------------------//
 	//  DEVICE VULKAN                                                                      //
 	//-------------------------------------------------------------------------------------//
-
-	
-
     class Device final: public IDevice
     {
        
@@ -30,7 +48,9 @@ namespace Vulkan
 
         
         void Draw(DrawDescription& desc) override;
+        void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc) override;
 		void StartRecording() override;
+		void StopRecording() override;
 
        
         GraphicsPipelineHandle CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
@@ -72,11 +92,20 @@ namespace Vulkan
 		VkPhysicalDevice vkPhysicalDevice_ = VK_NULL_HANDLE;
 		CommandBuffer cmdBuffer;
         DeviceVulkan* m_DeviceVulkan = nullptr;
+        TextureHandleSM currentTexture_;
 
         #define MAX_SHADER_STAGES 4
         //Shaders loading by device 
         std::vector<HolderShaderSM> m_vertex;
         std::vector<HolderShaderSM> m_fragment;
+
+
+        struct
+        {
+            const void* data;
+			size_t size;
+			size_t offset;
+        }pushConstants;
 		
     };
 

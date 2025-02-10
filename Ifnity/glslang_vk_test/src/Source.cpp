@@ -6,7 +6,7 @@
 
 using namespace IFNITY;
 using namespace IFNITY::rhi;
-
+using vec3 = glm::vec3;
 
 
 
@@ -259,6 +259,15 @@ public:
 		const uint32_t wireframe = 1;
 		GraphicsPipelineDescription gdesc1;
 		GraphicsPipelineDescription gdesc2;
+
+		BufferDescription desc;
+		desc.byteSize = sizeof(glm::mat4);
+		desc.type = BufferType::CONSTANT_BUFFER;
+		desc.binding = 0;
+		desc.data = nullptr;
+
+		m_UBO = rdevice->CreateBuffer(desc);
+
 		{
 			gdesc1.SetVertexShader(m_vs.get()).
 				  SetPixelShader(m_ps.get()).
@@ -292,17 +301,23 @@ public:
 	{
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
+
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+
+		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
+		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+
+
+		//StartRecording
 		rdevice->StartRecording();
-		m_SolidPipeline->BindPipeline(rdevice);
+		
+		rdevice->WriteBuffer(m_UBO, glm::value_ptr(p*m), sizeof(glm::mat4));
 
 		DrawDescription desc;
-		desc.StartRecording();
+		rdevice->DrawObject(m_SolidPipeline, desc);
+		rdevice->DrawObject(m_WireFramePipeline, desc);
 		
-		rdevice->Draw(desc);
-		m_WireFramePipeline->BindPipeline(rdevice);
-		desc.StopRecording();
-		rdevice->Draw(desc);
-		
+		rdevice->StopRecording();
 		//StopRecording 
 
 
