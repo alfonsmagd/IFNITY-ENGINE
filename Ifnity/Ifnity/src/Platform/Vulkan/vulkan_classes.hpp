@@ -7,6 +7,7 @@
 #include "vk_mem_alloc.h"
 #include "../Windows/vk_constans.hpp"
 #include "Ifnity/Utils/SlotMap.hpp"
+#include "Ifnity\Graphics\Interfaces\IBuffer.hpp"
 
 
 
@@ -25,6 +26,7 @@ namespace Vulkan
 	using TextureHandleSM = Handle<struct VulkanImage>;
 	using GraphicsPipelineHandleSM = Handle<struct GraphicsPipeline>;
 	using ShaderModuleHandleSM = Handle< struct ShaderModuleState>;
+	using BufferHandleSM = Handle<struct VulkanBuffer>;
 
 	// Declaración de la plantilla general para la función destroy
 	// Declaración de la plantilla general para la función destroy
@@ -70,7 +72,8 @@ namespace Vulkan
 	// Declaración de la plantilla general para la función destroy
 	using HolderShaderSM = Holder<ShaderModuleState>;
 	using HolderTextureSM = Holder<VulkanImage>;
-	using HolderGraphicsPipelineSM = Holder<GraphicsPipelineHandleSM>;
+	using HolderGraphicsPipelineSM = Holder<GraphicsPipeline>;
+	using HolderBufferSM = Holder<VulkanBuffer>;
 	
 
 	//================================================================================================
@@ -189,6 +192,22 @@ namespace Vulkan
 	//-----------------------------------------------//
 	// STRUCTS
 	//-----------------------------------------------//
+
+	struct UsageMapping { BufferType usageBit; VkBufferUsageFlags vkFlag; };
+
+	constexpr UsageMapping usageMappings[] = {
+		{ BufferType::INDEX_BUFFER, VK_BUFFER_USAGE_INDEX_BUFFER_BIT },
+		{ BufferType::VERTEX_BUFFER, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT },
+		{ BufferType::DEFAULT_BUFFER, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
+		{ BufferType::STORAGE_BUFFER, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
+		{ BufferType::INDIRECT_BUFFER, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
+		
+	};
+
+
+
+
+
 	struct ShaderModuleState final
 	{
 		VkShaderModule sm = VK_NULL_HANDLE;
@@ -378,36 +397,7 @@ namespace Vulkan
 		}
 	};
 
-	//-----------------------------------=============//
-	// CLASSES--------------------------==============//
-	//-----------------------------------//
 
-	#pragma region CLASSES 
-
-	//-----------------------------------------------//
-	// VulkanImmediateCommands 
-	//-----------------------------------------------//
-	
-
-	//-----------------------------------------------//
-	// CommandBuffer
-	//-----------------------------------------------//
-	
-
-
-	//-----------------------------------------------//
-	// VulkanImage class.
-	//-----------------------------------------------//
-	
-
-	//-------------------------------------------------------------------------------------------------------//
-	// SwapChain class.  
-	//-------------------------------------------------------------------------------------------------------//
-
-	
-
-
-	#pragma endregion CLASSES
 
 
 	//-----------------------------------------------//

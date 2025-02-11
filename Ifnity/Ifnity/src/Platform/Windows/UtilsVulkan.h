@@ -8,6 +8,7 @@
 #include "../Vulkan/vulkan_classes.hpp"
 
 
+
 IFNITY_NAMESPACE
 
 
@@ -100,7 +101,7 @@ VkSpecializationInfo getSpecializationInfo(uint32_t mapEntryCount,
                                            size_t dataSize,
                                            const void* data);
 
-
+VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage);
 
 
 

@@ -42,6 +42,7 @@ enum class IFNITY_API BufferType: unsigned char
     DEFAULT_BUFFER = 0x00,    ///< Default buffer type
     VERTEX_BUFFER  = 0x01 ,    ///< Buffer for vertex data
     INDEX_BUFFER   = 0x02,     ///< Buffer for index data
+	INDIRECT_BUFFER = 0x04,    ///< Buffer for indirect data
 	VERTEX_INDEX_BUFFER = VERTEX_BUFFER | INDEX_BUFFER, ///< Buffer for vertex and index data
     CONSTANT_BUFFER = 0xF0,    ///< Buffer for constant data
 	VERTEX_PULLING_BUFFER_INDEX = 0x10,///< Buffer for vertex pulling data this implies that the buffer is used for vertex pulling and configure the index buffer 
@@ -51,7 +52,15 @@ enum class IFNITY_API BufferType: unsigned char
     NO_DEFINE_BUFFER = 0xFF ///< Undefined buffer type
 };
 
-
+/**
+ * @brief Enum class representing different types of storage USING IN VK/D3D12 Opengl discard it.
+ */
+enum class IFNITY_API StorageType: unsigned char
+{
+    Device,
+    HostVisible,
+    Memoryless
+};
 
 
 
@@ -68,6 +77,7 @@ struct IFNITY_API BufferDescription
     std::string debugName;          ///< Debug name for the buffer
     BufferType type = BufferType::NO_DEFINE_BUFFER; ///< Type of the buffer
 	uint8_t binding = 0;            ///< Binding point of the buffer
+
 	const void* data ;     ///< Data to be written to the buffer
 
 

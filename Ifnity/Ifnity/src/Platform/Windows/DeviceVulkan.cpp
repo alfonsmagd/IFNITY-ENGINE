@@ -684,8 +684,6 @@ void DeviceVulkan::DestroyPipelines()
 		continue;
 	}
 	map_renderPipelines.clear();
-
-
 }
 
 void DeviceVulkan::DestroyPipelineCache()

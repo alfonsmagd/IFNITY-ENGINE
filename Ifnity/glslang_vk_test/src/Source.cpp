@@ -277,8 +277,6 @@ public:
 
 			//GraphicsPipelineDescription gdesc
 			m_WireFramePipeline = rdevice->CreateGraphicsPipeline(gdesc1);
-
-
 		}
 
 		{
