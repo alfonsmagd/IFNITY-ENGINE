@@ -57,6 +57,10 @@ namespace Vulkan
 
 
         BufferHandle CreateBuffer(const BufferDescription& desc) override;
+        BufferHandleSM CreateInternalVkBuffer(VkDeviceSize bufferSize,
+                                              VkBufferUsageFlags usageFlags,
+                                              VkMemoryPropertyFlags memFlags,
+                                              const char* debugName);
 
         void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) override;
 

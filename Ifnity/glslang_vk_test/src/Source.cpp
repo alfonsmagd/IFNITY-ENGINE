@@ -261,7 +261,7 @@ public:
 		GraphicsPipelineDescription gdesc2;
 
 		BufferDescription desc;
-		desc.byteSize = sizeof(glm::mat4);
+		desc.size = sizeof(glm::mat4);
 		desc.type = BufferType::CONSTANT_BUFFER;
 		desc.binding = 0;
 		desc.data = nullptr;

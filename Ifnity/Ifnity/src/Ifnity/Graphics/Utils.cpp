@@ -10,10 +10,10 @@ IFNITY_NAMESPACE
 namespace Utils
 {
 
-	BufferDescription CreateConstantBufferDescription(uint64_t byteSize, const std::string& debugName)
+	BufferDescription CreateConstantBufferDescription(uint64_t size, const std::string& debugName)
 	{
 
-		return BufferDescription{}.SetByteSize(byteSize)
+		return BufferDescription{}.SetByteSize(size)
 			.SetDebugName(debugName)
 			.SetBufferType(BufferType::CONSTANT_BUFFER);
 	}

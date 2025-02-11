@@ -71,7 +71,7 @@ enum class IFNITY_API StorageType: unsigned char
  */
 struct IFNITY_API BufferDescription 
 {
-    uint64_t byteSize = 0;          ///< Size of the buffer in bytes
+    uint64_t size = 0;          ///< Size of the buffer in bytes
     uint32_t strideSize = 0;        ///< Stride size of the buffer
 	uint32_t offset = 0;            ///< Offset of the buffer
     std::string debugName;          ///< Debug name for the buffer
@@ -88,7 +88,7 @@ struct IFNITY_API BufferDescription
      */
     constexpr BufferDescription& SetByteSize(uint64_t size) noexcept
     {
-        byteSize = size;
+        size = size;
         return *this;
     }
 

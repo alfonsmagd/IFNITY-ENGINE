@@ -15,7 +15,7 @@ namespace Utils
 {
 
 
-	IFNITY_API BufferDescription CreateConstantBufferDescription(uint64_t byteSize, const std::string& debugName);
+	IFNITY_API BufferDescription CreateConstantBufferDescription(uint64_t size, const std::string& debugName);
 
 	//Util function to save HDR images 
 	IFNITY_API void saveHDR(const Bitmap& bitmap, const char* filename);

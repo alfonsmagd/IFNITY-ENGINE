@@ -143,7 +143,7 @@ namespace OpenGL
 		if(desc.type == BufferType::CONSTANT_BUFFER)
 		{
 
-			const GLsizeiptr kBufferSize = desc.byteSize;
+			const GLsizeiptr kBufferSize = desc.size;
 
 
 			GLuint perFrameDataBuffer;
@@ -161,7 +161,7 @@ namespace OpenGL
 		}
 		else if(desc.type == BufferType::VERTEX_PULLING_BUFFER_INDEX)
 		{
-			const GLsizeiptr kBufferSize = desc.byteSize;
+			const GLsizeiptr kBufferSize = desc.size;
 			// indices
 			GLuint dataIndices;
 			glCreateBuffers(1, &dataIndices);
@@ -174,7 +174,7 @@ namespace OpenGL
 		}
 		else if(desc.type == BufferType::VERTEX_PULLING_BUFFER)
 		{
-			const GLsizeiptr kBufferSize = desc.byteSize;
+			const GLsizeiptr kBufferSize = desc.size;
 			// indices
 			GLuint dataVertices;
 			glCreateBuffers(1, &dataVertices);
@@ -187,7 +187,7 @@ namespace OpenGL
 		}
 		else if(desc.type == BufferType::STORAGE_BUFFER)
 		{
-			return CreateDefaultBoundBuffer(desc.byteSize, desc.data , desc.binding, GL_DYNAMIC_STORAGE_BIT);
+			return CreateDefaultBoundBuffer(desc.size, desc.data , desc.binding, GL_DYNAMIC_STORAGE_BIT);
 
 		}
 		else
@@ -657,7 +657,7 @@ namespace OpenGL
 	*/
 	BufferHandle Device::CreateVertexAttAndIndexBuffer(const BufferDescription& desc)
 	{
-		const GLsizeiptr kBufferSize = desc.byteSize;
+		const GLsizeiptr kBufferSize = desc.size;
 
 		//Create the buffer id 
 		GLuint meshData;
@@ -680,7 +680,7 @@ namespace OpenGL
 		glNamedBufferStorage(handle, size, data, flags);
 
 		BufferDescription desc;
-		desc.byteSize = size;
+		desc.size = size;
 		desc.type = BufferType::DEFAULT_BUFFER;
 		desc.binding = 0;
 
@@ -698,7 +698,7 @@ namespace OpenGL
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, handle);
 
 		BufferDescription desc;
-		desc.byteSize = size;
+		desc.size = size;
 		desc.type = BufferType::DEFAULT_BUFFER;
 		desc.binding = binding;
 
@@ -998,7 +998,7 @@ namespace OpenGL
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferIndex->GetBufferID());
 
 		//Draw the mesh 
-		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_BufferIndex->GetBufferDescription().byteSize / sizeof(GLuint)), GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_BufferIndex->GetBufferDescription().size / sizeof(GLuint)), GL_UNSIGNED_INT, nullptr);
 
 
 
@@ -1034,7 +1034,7 @@ namespace OpenGL
 		//Get the size of the draw commands 
 
 		//
-		GLsizei maxDrawCount = (GLsizei)((m_BufferIndirect->GetBufferDescription().byteSize - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand));
+		GLsizei maxDrawCount = (GLsizei)((m_BufferIndirect->GetBufferDescription().size - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand));
 
 
 		GL_CHECK(glBindVertexArray(m_VAO));
@@ -1061,7 +1061,7 @@ namespace OpenGL
 		//Get the size of the draw commands 
 
 		//
-		GLsizei maxDrawCount = (GLsizei)((m_BufferIndirect->GetBufferDescription().byteSize - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand));
+		GLsizei maxDrawCount = (GLsizei)((m_BufferIndirect->GetBufferDescription().size - sizeof(GLsizei)) / sizeof(DrawElementsIndirectCommand));
 
 
 		GL_CHECK(glBindVertexArray(m_VAO));
@@ -1076,9 +1076,9 @@ namespace OpenGL
 				mesh.getLODIndicesCount(0),                        // Cantidad de índices
 				GL_UNSIGNED_INT,                                   // Tipo de índice
 				(void*)(mesh.indexOffset * sizeof(uint32_t)),      // Puntero a los índices
-				1,                                                 // Una instancia (puedes poner 1 si solo dibujas una instancia)
+				1,                                                 // Una instancia ( poner 1 si solo dibujas una instancia)
 				mesh.vertexOffset,                                 // Desplazamiento de vértices
-				m_baseMaterialInstances[ i ]                                                // baseInstance (puedes poner 0 si solo tienes una instancia)
+				m_baseMaterialInstances[ i ]                       // baseInstance ( poner 0 si solo tienes una instancia)
 			);
 		}
 	

@@ -165,9 +165,50 @@ namespace Vulkan
 	{
 		if(desc.type == BufferType::CONSTANT_BUFFER)
 		{
+			auto handle = CreateInternalVkBuffer(desc.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, desc.debugName.c_str());
+
+
 			Buffer* buffer = new Buffer(desc);
 			return BufferHandle(buffer);
 		}
+
+
+
+	}
+
+	BufferHandleSM Device::CreateInternalVkBuffer(VkDeviceSize bufferSize, 
+												  VkBufferUsageFlags usageFlags,
+												  VkMemoryPropertyFlags memFlags,
+												  const char* debugName)
+	{
+		//Check the buffersize has valid value
+		IFNITY_ASSERT_MSG(bufferSize > 0, "Buffer size is invalid");
+
+		//Get limits to verify the buffer size its 
+		const VkPhysicalDeviceLimits& limits = m_DeviceVulkan->GetPhysicalDeviceLimits();
+
+		if(usageFlags & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT)
+		{
+			if(!(bufferSize <= limits.maxUniformBufferRange))
+			{
+				IFNITY_LOG(LogCore, ERROR, "Buffer size exceeded VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT");
+				return {};
+			}
+		}
+
+		if(usageFlags & VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM)
+		{
+			if(!(bufferSize <= limits.maxStorageBufferRange))
+			{
+				IFNITY_LOG(LogCore, ERROR, "Buffer size exceeded VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM");
+				return {};
+			}
+		}
+
+		return{};
+
+
+
 	}
 
 	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)
