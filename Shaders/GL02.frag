@@ -18,4 +18,4 @@ void main()
 {
 	vec4 color = texture(texture0, uvs);
 	out_FragColor = mix( color * vec4(0.8), color, edgeFactor(1.0) );
-};
+};sss

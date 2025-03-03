@@ -211,6 +211,12 @@ namespace Vulkan
 
 	}
 
+	void Device::upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset)
+	{
+		// Not implemented yet
+		throw std::runtime_error("The function or operation is not implemented.");
+	}
+
 	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)
 	{
 		if(buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER)

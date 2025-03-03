@@ -61,6 +61,7 @@ namespace Vulkan
                                               VkBufferUsageFlags usageFlags,
                                               VkMemoryPropertyFlags memFlags,
                                               const char* debugName);
+		void upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0);
 
         void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) override;
 
