@@ -103,7 +103,10 @@ VkSpecializationInfo getSpecializationInfo(uint32_t mapEntryCount,
 
 VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage);
 
-
+VmaAllocator createVmaAllocator(VkPhysicalDevice physDev,
+    VkDevice device,
+    VkInstance instance,
+    uint32_t apiVersion);
 
 IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);
 

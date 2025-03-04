@@ -727,6 +727,57 @@ VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage)
 	return memFlags;
 }
 
+VmaAllocator createVmaAllocator(VkPhysicalDevice physDev,
+	VkDevice device,
+	VkInstance instance,
+	uint32_t apiVersion)
+{
+	const VmaVulkanFunctions funcs = {
+		 .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
+		 .vkGetDeviceProcAddr = vkGetDeviceProcAddr,
+		 .vkGetPhysicalDeviceProperties = vkGetPhysicalDeviceProperties,
+		 .vkGetPhysicalDeviceMemoryProperties = vkGetPhysicalDeviceMemoryProperties,
+		 .vkAllocateMemory = vkAllocateMemory,
+		 .vkFreeMemory = vkFreeMemory,
+		 .vkMapMemory = vkMapMemory,
+		 .vkUnmapMemory = vkUnmapMemory,
+		 .vkFlushMappedMemoryRanges = vkFlushMappedMemoryRanges,
+		 .vkInvalidateMappedMemoryRanges = vkInvalidateMappedMemoryRanges,
+		 .vkBindBufferMemory = vkBindBufferMemory,
+		 .vkBindImageMemory = vkBindImageMemory,
+		 .vkGetBufferMemoryRequirements = vkGetBufferMemoryRequirements,
+		 .vkGetImageMemoryRequirements = vkGetImageMemoryRequirements,
+		 .vkCreateBuffer = vkCreateBuffer,
+		 .vkDestroyBuffer = vkDestroyBuffer,
+		 .vkCreateImage = vkCreateImage,
+		 .vkDestroyImage = vkDestroyImage,
+		 .vkCmdCopyBuffer = vkCmdCopyBuffer,
+		 .vkGetBufferMemoryRequirements2KHR = vkGetBufferMemoryRequirements2,
+		 .vkGetImageMemoryRequirements2KHR = vkGetImageMemoryRequirements2,
+		 .vkBindBufferMemory2KHR = vkBindBufferMemory2,
+		 .vkBindImageMemory2KHR = vkBindImageMemory2,
+		 .vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2,
+		 .vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements,
+		 .vkGetDeviceImageMemoryRequirements = vkGetDeviceImageMemoryRequirements,
+	};
+
+	const VmaAllocatorCreateInfo ci = {
+		 .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+		 .physicalDevice = physDev,
+		 .device = device,
+		 .preferredLargeHeapBlockSize = 0,
+		 .pAllocationCallbacks = nullptr,
+		 .pDeviceMemoryCallbacks = nullptr,
+		 .pHeapSizeLimit = nullptr,
+		 .pVulkanFunctions = &funcs,
+		 .instance = instance,
+		 .vulkanApiVersion = apiVersion,
+	};
+	VmaAllocator vma = VK_NULL_HANDLE;
+	VK_ASSERT(vmaCreateAllocator(&ci, &vma));
+	return vma;
+}
+
 
 
 IFNITY_END_NAMESPACE

@@ -32,6 +32,7 @@ public:
 	VkFormat GetSwapChainFormat() const;
 	void bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineBindPoint bindPoint, VkPipelineLayout layout) const;
 	const VkPhysicalDeviceLimits& GetPhysicalDeviceLimits() const { return vkPhysicalDeviceProperties2_.properties.limits; }
+	const uint32_t getApiVersion() const { return vkPhysicalDeviceProperties2_.properties.apiVersion; }
 
 	//Destroy operations 
 	void destroy(Vulkan::TextureHandleSM handle);

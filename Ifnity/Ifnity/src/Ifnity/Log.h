@@ -63,3 +63,10 @@ namespace IFNITY
             IFNITY::Assert(false, __FILE__, __LINE__, (fmt), ##__VA_ARGS__); \
         } \
     } while (0)
+
+#define IFNITY_ASSERT(cond) \
+    do { \
+        if (!(cond)) { \
+            IFNITY::Assert(false, __FILE__, __LINE__, "Assertion failed: " #cond); \
+        } \
+    } while (0)

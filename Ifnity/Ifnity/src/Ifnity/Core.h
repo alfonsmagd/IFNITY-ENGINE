@@ -5,7 +5,7 @@
 
 
 
-
+#define SANDBOX_TOOL 
 
 #if defined(_WIN32) || defined(_WIN64)
 #if defined(BUILD_SHARED_IFNITY)

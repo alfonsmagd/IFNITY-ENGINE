@@ -25,6 +25,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <Ifnity/Graphics/ifrhi.h>
 #include "Ifnity\Utils\Utils.hpp"
+#include "Ifnity\Utils\ScopeExit.h"
 
 #ifdef _WIN64
 	#include  <Windows.h>

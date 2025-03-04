@@ -132,83 +132,32 @@ VkFormat DeviceVulkan::GetSwapChainFormat() const
 void DeviceVulkan::OnUpdate()
 {
 
-//	#define SANDBOX_TOOL 
-//
-//	//using vec3 = glm::vec3;
-//	//static bool hasexecuted = false;
-//	////First get acquire the command buffer 
-//	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
-//	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
-//
-//	Vulkan::TextureHandleSM currentTexture = getCurrentSwapChainTexture();
-//	Vulkan::RenderPass renderPass = {
-//	.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
-//
-//Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
-//
-//		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-//	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-//
-//	//cmdBuffer.cmdDraw(3);
-//	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-//	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-//	cmdBuffer.cmdEndRendering();
-//	submit(cmdBuffer, currentTexture);
-
-	//const float ratio = GetWidth() / (float)GetHeight();
-
-	//const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
-	//const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
-	////// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-	////currentTexture->transitionLayout(
-	////	cmdBuffer.wrapper_->cmdBuf_,
-	////	VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-	////	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	////	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	////	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
-	////);
 
 
-	//if(actualPipeline_ != nullptr)
-	//{
-	//	#ifdef TEST_TRIANGLE
-	//		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-	//		BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-	//		cmdBuffer.cmdBindRenderPipeline(*actualPipeline_);
-	//		cmdBuffer.cmdDraw(3);
-	//		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-	//		EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-	//		cmdBuffer.cmdEndRendering();
-	//	#endif // 
-	//		#ifdef TEST_GLM_CUBE
-	//			cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-	//			BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
-	//			cmdBuffer.cmdBindRenderPipeline(*actualPipeline_);
-	//			cmdBuffer.cmdPushConstants(p*m);
-	//			cmdBuffer.cmdDraw(36);
-	//			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-	//			EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-	//			cmdBuffer.cmdEndRendering();
-	//		#endif // TEST_GLM_CUBE
+	#ifdef SANDBOX_TOOL
+	
+	//using vec3 = glm::vec3;
+	//static bool hasexecuted = false;
+	////First get acquire the command buffer 
+	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
+	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
 
+	Vulkan::TextureHandleSM currentTexture = getCurrentSwapChainTexture();
+	Vulkan::RenderPass renderPass = {
+	.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
 
-	//}
-	//else
-	//{
+	Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
 
-	//}
+	cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
 
-	////// Transición de diseño de la imagen de la cadena de intercambio a VK_IMAGE_LAYOUT_PRESENT_SRC_KHR para presentar
-	////currentTexture->transitionLayout(
-	////	cmdBuffer.wrapper_->cmdBuf_,
-	////	VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-	////	VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-	////	VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-	////	VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS }
-
-
-	//submit(cmdBuffer, currentTexture);
-
+	//cmdBuffer.cmdDraw(3);
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+	cmdBuffer.cmdEndRendering();
+	submit(cmdBuffer, currentTexture);
+	
+	#endif
 
 }
 
@@ -530,16 +479,16 @@ bool DeviceVulkan::CreateDevice()
 
 bool DeviceVulkan::CreateVmaAllocator()
 {
-	VmaAllocatorCreateInfo allocatorInfo{};
-	allocatorInfo.physicalDevice = m_PhysicalDevice.physical_device;
-	allocatorInfo.device = device_.device;
-	allocatorInfo.instance = m_Instance.instance;
-	if(vmaCreateAllocator(&allocatorInfo, &m_Allocator) != VK_SUCCESS)
+	
+
+	m_Allocator = createVmaAllocator(m_PhysicalDevice, device_, m_Instance,getApiVersion());
+
+
+	if(m_Allocator == VK_NULL_HANDLE)
 	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to create VMA allocator in Vulkan Device");
+		IFNITY_LOG(LogCore, ERROR, "Failed to create Vma Allocator in Vulkan Device");
 		return false;
 	}
-
 	return true;
 }
 
