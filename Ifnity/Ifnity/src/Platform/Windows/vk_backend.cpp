@@ -19,15 +19,9 @@ namespace Vulkan
 	//-----------------------------------------------//
 
 
-	Device::Device(): vkDevice_(VK_NULL_HANDLE)
-	{
-		// Constructor implementation
-	}
 
-	Device::Device(VkDevice vkDevice): vkDevice_(vkDevice)
-	{
-		// Constructor implementation
-	}
+
+
 
 	Device::Device(VkDevice vkDevice, DeviceVulkan* ptr): vkDevice_(vkDevice), m_DeviceVulkan(ptr)
 	{
@@ -46,11 +40,11 @@ namespace Vulkan
 
 	void Device::Draw(DrawDescription& desc)
 	{
-		
-	
 
 
-		
+
+
+
 
 	}
 
@@ -58,19 +52,19 @@ namespace Vulkan
 	void Device::DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)
 	{
 		pipeline->BindPipeline(this);//This set pipeline like actualpilenine in VK.
-		
+
 		cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
-		cmdBuffer.cmdPushConstants(pushConstants.data, 
-								   pushConstants.size, 
-								   pushConstants.offset);
+		cmdBuffer.cmdPushConstants(pushConstants.data,
+			pushConstants.size,
+			pushConstants.offset);
 		cmdBuffer.cmdDraw(36);
-	
+
 	}
 
 	void Device::StartRecording()
 	{
 		Vulkan::CommandBuffer& cmdb = m_DeviceVulkan->acquireCommandBuffer();
-	
+
 		cmdBuffer = std::move(cmdb);
 
 		//Get handler current texture 
@@ -91,9 +85,9 @@ namespace Vulkan
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
 		cmdBuffer.cmdEndRendering();
 		m_DeviceVulkan->submit(cmdBuffer, currentTexture_);
-	
+
 	}
-	
+
 
 	GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc)
 	{
@@ -163,23 +157,24 @@ namespace Vulkan
 
 	BufferHandle Device::CreateBuffer(const BufferDescription& desc)
 	{
+		//This is a constant buffer and Vulkan Constant Buffer is inside like a PushConstant and manage	internal 
 		if(desc.type == BufferType::CONSTANT_BUFFER)
 		{
-			auto handle = CreateInternalVkBuffer(desc.size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, desc.debugName.c_str());
-
-
-			Buffer* buffer = new Buffer(desc);
+			auto flags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+			auto memFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			HolderBufferSM buff = CreateInternalVkBuffer(desc.size, flags,memFlags, "desc.debugName");
+			// Obtén el Handle<VulkanBuffer> del HolderBufferSM
+			Buffer* buffer = new Buffer(desc, std::move(buff)); //Now BufferHandle have the ownership of the buffer and can destroy it
 			return BufferHandle(buffer);
 		}
-
-
-
+		
+		
 	}
 
-	BufferHandleSM Device::CreateInternalVkBuffer(VkDeviceSize bufferSize, 
-												  VkBufferUsageFlags usageFlags,
-												  VkMemoryPropertyFlags memFlags,
-												  const char* debugName)
+	HolderBufferSM Device::CreateInternalVkBuffer(VkDeviceSize bufferSize,
+		VkBufferUsageFlags usageFlags,
+		VkMemoryPropertyFlags memFlags,
+		const char* debugName)
 	{
 		//Check the buffersize has valid value
 		IFNITY_ASSERT_MSG(bufferSize > 0, "Buffer size is invalid");
@@ -205,11 +200,124 @@ namespace Vulkan
 			}
 		}
 
-		return{};
+		VulkanBuffer buf = 
+		{
+		 .bufferSize_ = bufferSize,
+		 .vkUsageFlags_ = usageFlags,
+		 .vkMemFlags_ = memFlags,
+		};
 
+		const VkBufferCreateInfo ci = 
+		{
+			 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			 .pNext = nullptr,
+			 .flags = 0,
+			 .size = bufferSize,
+			 .usage = usageFlags,
+			 .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+			 .queueFamilyIndexCount = 0,
+			 .pQueueFamilyIndices = nullptr,
+		};
 
+		if(VMA_ALLOCATOR_VK)
+		{
+			VmaAllocationCreateInfo vmaAllocInfo = {};
+
+			// Initialize VmaAllocation Info
+			if(memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+			{
+				vmaAllocInfo = {
+					 .flags = VMA_ALLOCATION_CREATE_MAPPED_BIT | VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
+					 .requiredFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+					 .preferredFlags = VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT,
+				};
+			}
+
+			if(memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+			{
+				// Check if coherent buffer is available.
+				VK_ASSERT(vkCreateBuffer(vkDevice_, &ci, nullptr, &buf.vkBuffer_));
+				VkMemoryRequirements requirements = {};
+				vkGetBufferMemoryRequirements(vkDevice_, buf.vkBuffer_, &requirements);
+				vkDestroyBuffer(vkDevice_, buf.vkBuffer_, nullptr);
+				buf.vkBuffer_ = VK_NULL_HANDLE;
+
+				if(requirements.memoryTypeBits & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+				{
+					vmaAllocInfo.requiredFlags |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+					buf.isCoherentMemory_ = true;
+				}
+			}
+
+			vmaAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+			vmaCreateBuffer((VmaAllocator)m_DeviceVulkan->getVmaAllocator(),
+				&ci,
+				&vmaAllocInfo,
+				&buf.vkBuffer_, 
+				&buf.vmaAllocation_, 
+				nullptr);
+
+			// handle memory-mapped buffers
+			if(memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+			{
+				vmaMapMemory((VmaAllocator)m_DeviceVulkan->getVmaAllocator(),
+					buf.vmaAllocation_,
+					&buf.mappedPtr_);
+			}
+		}
+		//Not using VMA Allocator
+		else
+		{
+			// create buffer
+			IFNITY_ASSERT(vkCreateBuffer(vkDevice_, &ci, nullptr, &buf.vkBuffer_));
+
+			// back the buffer with some memory
+			{
+				VkMemoryRequirements requirements = {};
+				vkGetBufferMemoryRequirements(vkDevice_, buf.vkBuffer_, &requirements);
+				if(requirements.memoryTypeBits & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+				{
+					buf.isCoherentMemory_ = true;
+				}
+
+				IFNITY_ASSERT(allocateMemory(vkPhysicalDevice_, vkDevice_, &requirements, memFlags, &buf.vkMemory_));
+				IFNITY_ASSERT(vkBindBufferMemory(vkDevice_, buf.vkBuffer_, buf.vkMemory_, 0));
+			}
+
+			// handle memory-mapped buffers
+			if(memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+			{
+				IFNITY_ASSERT(vkMapMemory(vkDevice_, buf.vkMemory_, 0, buf.bufferSize_, 0, &buf.mappedPtr_));
+			}
+
+		}//end of else createbuffer. 
+
+		IFNITY_ASSERT(buf.vkBuffer_ != VK_NULL_HANDLE);
+
+		// set debug name
+		VK_ASSERT(setDebugObjectName(vkDevice_, VK_OBJECT_TYPE_BUFFER, (uint64_t)buf.vkBuffer_, debugName));
+
+		// handle shader access
+		if(usageFlags & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT)
+		{
+			const VkBufferDeviceAddressInfo ai = {
+				 .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+				 .buffer = buf.vkBuffer_,
+			};
+			buf.vkDeviceAddress_ = vkGetBufferDeviceAddress(vkDevice_, &ai);
+			IFNITY_ASSERT(buf.vkDeviceAddress_);
+		}
+		
+		BufferHandleSM buffhandle =  m_DeviceVulkan->slotMapBuffers_.create(std::move(buf));
+
+		return makeHolder(m_DeviceVulkan, buffhandle);
 
 	}
+
+
+
+	
 
 	void Device::upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset)
 	{
@@ -226,7 +334,7 @@ namespace Vulkan
 			pushConstants.size = size;
 			pushConstants.offset = offset;
 		}
-		
+
 	}
 
 	void Device::BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)
@@ -560,18 +668,18 @@ namespace Vulkan
 
 			//todo: move to heap compilerRefelction to stack 
 
-			spirv_cross::CompilerReflection compiler((const uint32_t*)spirv, numElements);
+			spirv_cross::CompilerReflection* compiler = new  spirv_cross::CompilerReflection((const uint32_t*)spirv, numElements);
 
 			// Refleja los recursos del shader
-			spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+			spirv_cross::ShaderResources resources = compiler->get_shader_resources();
 
 			uint32_t pushConstantSize = 0;
 
 			// Itera sobre las push constants y calcula el tamaño total
 			for(const auto& pushConstant : resources.push_constant_buffers)
 			{
-				const spirv_cross::SPIRType& type = compiler.get_type(pushConstant.base_type_id);
-				pushConstantSize += compiler.get_declared_struct_size(type);
+				const spirv_cross::SPIRType& type = compiler->get_type(pushConstant.base_type_id);
+				pushConstantSize += compiler->get_declared_struct_size(type);
 			}
 
 
@@ -581,7 +689,7 @@ namespace Vulkan
 			ShaderModuleHandleSM handle = m_DeviceVulkan->slotMapShaderModules_.create(std::move(smstate));
 
 			//Make holder 
-			return  makeHolder(m_DeviceVulkan, handle, m_DeviceVulkan->slotMapShaderModules_);
+			return  makeHolder(m_DeviceVulkan, handle);
 
 		}
 	}

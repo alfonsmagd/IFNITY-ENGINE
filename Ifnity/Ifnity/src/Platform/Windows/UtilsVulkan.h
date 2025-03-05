@@ -108,6 +108,22 @@ VmaAllocator createVmaAllocator(VkPhysicalDevice physDev,
     VkInstance instance,
     uint32_t apiVersion);
 
+
+VkResult allocateMemory(VkPhysicalDevice physDev,
+    VkDevice device,
+    const VkMemoryRequirements * memRequirements,
+    VkMemoryPropertyFlags props,
+    VkDeviceMemory * outMemory);
+
+
+VkResult allocateMemory2(VkPhysicalDevice physDev,
+    VkDevice device,
+    const VkMemoryRequirements2 * memRequirements,
+    VkMemoryPropertyFlags props,
+    VkDeviceMemory * outMemory);
+
+
+
 IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);
 
 

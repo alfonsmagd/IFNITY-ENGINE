@@ -16,14 +16,17 @@ namespace Vulkan
     {
     public:
 		Buffer(const BufferDescription& desc): m_Description(desc) {}
+		Buffer(uint32_t bufferID, const BufferDescription& desc): m_BufferID(bufferID), m_Description(desc) {}
+		Buffer(const BufferDescription& desc, HolderBufferSM&& buffer): m_Description(desc), m_holdBuffer(std::move(buffer)) {}
         BufferDescription& GetBufferDescription() override { return m_Description; }
-        const uint32_t GetBufferID()  const override { return m_BufferID; }
+        const uint32_t GetBufferID()  const override { return m_holdBuffer.get()->index(); }
         void SetData(const void* data) {}
 		const void* GetData() const { return nullptr; }
 
     private:
         uint32_t m_BufferID = 0; ///< The buffer ID.
 		BufferDescription m_Description; ///< The buffer description.
+		HolderBufferSM  m_holdBuffer; ///< The buffer handle.
         
     };
 
@@ -40,8 +43,7 @@ namespace Vulkan
         /**
         * @brief Constructor for the Device class.
         */
-        Device();
-		Device(VkDevice vkDevice);
+        
         Device(VkDevice vkDevice, DeviceVulkan* ptr);
        
         virtual ~Device();
@@ -57,10 +59,7 @@ namespace Vulkan
 
 
         BufferHandle CreateBuffer(const BufferDescription& desc) override;
-        BufferHandleSM CreateInternalVkBuffer(VkDeviceSize bufferSize,
-                                              VkBufferUsageFlags usageFlags,
-                                              VkMemoryPropertyFlags memFlags,
-                                              const char* debugName);
+        
 		void upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0);
 
         void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) override;
@@ -87,6 +86,10 @@ namespace Vulkan
     
     private:
 		// Add private members here
+        HolderBufferSM CreateInternalVkBuffer(VkDeviceSize bufferSize,
+            VkBufferUsageFlags usageFlags,
+            VkMemoryPropertyFlags memFlags,
+            const char* debugName);
         HolderShaderSM createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const;
         HolderShaderSM createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const ;
 

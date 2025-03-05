@@ -1313,6 +1313,41 @@ void DeviceVulkan::destroy(Vulkan::ShaderModuleHandleSM handle)
 
 }
 
+void DeviceVulkan::destroy(Vulkan::BufferHandleSM handle)
+{
+	SCOPE_EXIT{
+	  slotMapBuffers_.destroy(handle);
+	};
+
+	Vulkan::VulkanBuffer* buf = slotMapBuffers_.get(handle);
+
+	if(!buf)
+	{
+		return;
+	}
+
+	if(VMA_ALLOCATOR_VK)
+	{
+		if(buf->mappedPtr_)
+		{
+			vmaUnmapMemory((VmaAllocator)getVmaAllocator(), buf->vmaAllocation_);
+		}
+	
+		vmaDestroyBuffer((VmaAllocator)getVmaAllocator(), buf->vkBuffer_, buf->vmaAllocation_);
+	}
+	else
+	{
+		if(buf->mappedPtr_)
+		{
+			vkUnmapMemory(device_, buf->vkMemory_);
+		}
+		
+		vkDestroyBuffer(device_, buf->vkBuffer_, nullptr);
+		vkFreeMemory(device_, buf->vkMemory_, nullptr);
+	}
+}
+
+
 
 
 Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const void* spirv, size_t numBytes, const char* debugName)

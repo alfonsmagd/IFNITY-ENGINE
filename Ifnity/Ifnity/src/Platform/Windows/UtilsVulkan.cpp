@@ -148,7 +148,24 @@ const char* getVulkanResultString(VkResult result)
 
 PFN_vkSetDebugUtilsObjectNameEXT gvkSetDebugUtilsObjectNameEXT = nullptr;
 
+static uint32_t findMemoryType(VkPhysicalDevice physDev, uint32_t memoryTypeBits, VkMemoryPropertyFlags flags)
+{
+	VkPhysicalDeviceMemoryProperties memProperties;
+	vkGetPhysicalDeviceMemoryProperties(physDev, &memProperties);
 
+	for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	{
+		const bool hasProperties = (memProperties.memoryTypes[ i ].propertyFlags & flags) == flags;
+		if((memoryTypeBits & (1 << i)) && hasProperties)
+		{
+			return i;
+		}
+	}
+
+	assert(false);
+
+	return 0;
+}
 
 IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
@@ -778,6 +795,48 @@ VmaAllocator createVmaAllocator(VkPhysicalDevice physDev,
 	return vma;
 }
 
+VkResult allocateMemory(VkPhysicalDevice physDev,
+	VkDevice device,
+	const VkMemoryRequirements* memRequirements,
+	VkMemoryPropertyFlags props,
+	VkDeviceMemory* outMemory)
+{
+	assert(memRequirements);
+
+	const VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo = {
+		 .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO,
+		 .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR,
+	};
+	const VkMemoryAllocateInfo ai = {
+		 .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+		 .pNext = &memoryAllocateFlagsInfo,
+		 .allocationSize = memRequirements->size,
+		 .memoryTypeIndex = findMemoryType(physDev, memRequirements->memoryTypeBits, props),
+	};
+	return vkAllocateMemory(device, &ai, nullptr, outMemory);
+}
+
+VkResult allocateMemory2(VkPhysicalDevice physDev,
+	VkDevice device,
+	const VkMemoryRequirements2* memRequirements,
+	VkMemoryPropertyFlags props,
+	VkDeviceMemory* outMemory)
+{
+	assert(memRequirements);
+
+	const VkMemoryAllocateFlagsInfo memoryAllocateFlagsInfo = {
+		 .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO,
+		 .flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT_KHR,
+	};
+	const VkMemoryAllocateInfo ai = {
+		 .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+		 .pNext = &memoryAllocateFlagsInfo,
+		 .allocationSize = memRequirements->memoryRequirements.size,
+		 .memoryTypeIndex = findMemoryType(physDev, memRequirements->memoryRequirements.memoryTypeBits, props),
+	};
+
+	return vkAllocateMemory(device, &ai, NULL, outMemory);
+}
 
 
 IFNITY_END_NAMESPACE

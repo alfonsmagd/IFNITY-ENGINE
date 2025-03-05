@@ -32,15 +32,7 @@ namespace Vulkan
 	// Declaración de la plantilla general para la función destroy
 	template<typename Handle>
 	void destroy(DeviceVulkan* ctx, Handle handle);
-	// Declaración de las especializaciones explícitas (sin implementación)
-	extern template void destroy<TextureHandleSM>(DeviceVulkan* ctx, TextureHandleSM handle);
-	extern template void destroy<GraphicsPipelineHandleSM>(DeviceVulkan* ctx, GraphicsPipelineHandleSM handle);
-	extern template void destroy<ShaderModuleHandleSM>(DeviceVulkan* ctx, ShaderModuleHandleSM handle);
-
-
-
-
-
+	
 
 	template<typename ImplObjectType>
 	using Holder = std::unique_ptr<Handle<ImplObjectType>, std::function<void(Handle<ImplObjectType>*)>>;
@@ -53,16 +45,16 @@ namespace Vulkan
 
 	template<typename ImplObjectType, typename DeviceVulkan>
 		requires HasDestroy<DeviceVulkan, Handle<ImplObjectType>>
-	Holder<ImplObjectType> makeHolder(DeviceVulkan* ctx, Handle<ImplObjectType> handle, SlotMap<ImplObjectType>& slotmap)
+	Holder<ImplObjectType> makeHolder(DeviceVulkan* ctx, Handle<ImplObjectType> handle)
 	{
 		return Holder<ImplObjectType>(
-			std::make_unique<Handle<ImplObjectType>>(handle).release(),  // Obtener puntero al objeto en el SlotMap
+			std::make_unique<Handle<ImplObjectType>>(handle).release(), 
 			[ ctx, handle ](Handle<ImplObjectType>* ptr)
 			{   // Custom deleter con acceso a ctx
 				if(ctx)
 				{
-					destroy(ctx, handle);  // Llamar a la función de destrucción
-					std::cout << "Objeto destruido desde el contexto.\n";
+					destroy(ctx, handle);  
+					std::cout << "Destroy object make holder ... \n";
 				}
 				delete ptr;
 			}

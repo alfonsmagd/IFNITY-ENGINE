@@ -11,6 +11,7 @@
 #include "Ifnity/Utils/SlotMap.hpp"
 #include "../Vulkan/vulkan_SwapChain.hpp"
 #include  "../Vulkan/vulkan_CommandBuffer.hpp"
+#include "../Vulkan/vulkan_Buffer.hpp"
 
 
 
@@ -33,11 +34,13 @@ public:
 	void bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineBindPoint bindPoint, VkPipelineLayout layout) const;
 	const VkPhysicalDeviceLimits& GetPhysicalDeviceLimits() const { return vkPhysicalDeviceProperties2_.properties.limits; }
 	const uint32_t getApiVersion() const { return vkPhysicalDeviceProperties2_.properties.apiVersion; }
+	void* getVmaAllocator() const { return m_Allocator; }
 
 	//Destroy operations 
 	void destroy(Vulkan::TextureHandleSM handle);
 	void destroy(Vulkan::GraphicsPipelineHandleSM handle);
 	void destroy(Vulkan::ShaderModuleHandleSM handle);
+	void destroy(Vulkan::BufferHandleSM handle);
 
 
 
@@ -64,6 +67,7 @@ public:
 	SlotMap<Vulkan::VulkanImage> slootMapTextures_;
 	SlotMap<Vulkan::GraphicsPipeline> slotMapRenderPipelines_;
 	SlotMap<Vulkan::ShaderModuleState> slotMapShaderModules_;
+	SlotMap<Vulkan::VulkanBuffer> slotMapBuffers_;
 
 
 

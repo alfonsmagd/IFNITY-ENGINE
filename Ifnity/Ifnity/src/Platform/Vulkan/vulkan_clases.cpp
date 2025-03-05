@@ -32,6 +32,7 @@ namespace Vulkan
 	template void destroy<TextureHandleSM>(DeviceVulkan* ctx, TextureHandleSM handle);
 	template void destroy<GraphicsPipelineHandleSM>(DeviceVulkan* ctx, GraphicsPipelineHandleSM handle);
 	template void destroy<ShaderModuleHandleSM>(DeviceVulkan* ctx, ShaderModuleHandleSM handle);
+	template void destroy<BufferHandleSM>(DeviceVulkan* ctx, BufferHandleSM handle);
 
 
 }
