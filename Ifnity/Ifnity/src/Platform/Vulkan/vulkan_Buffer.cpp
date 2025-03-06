@@ -20,6 +20,7 @@ namespace Vulkan
 
 		if(!mappedPtr_)
 		{
+			IFNITY_LOG(LogCore, ERROR, "Buffer is not mapped");
 			return;
 		}
 

@@ -201,6 +201,9 @@ namespace Vulkan
 			upload(*buffer, desc.data, desc.size, desc.offset);
 		}
 		
+		Buffer* handle = new Buffer(desc, std::move(buffer));
+
+		return BufferHandle(handle);
 		
 	}
 
@@ -873,14 +876,16 @@ namespace Vulkan
 
 
 		//Not implemented yet BUT UPDATE THE RENDER PIPELINE STATE and configure inside 
-		m_rVkPipelineState.numBindings_ = m_vertexInput.getNumInputBindings();
-		m_rVkPipelineState.numAttributes_ = m_vertexInput.getNumAttributes();
+		m_rVkPipelineState.numBindings_ =   m_Description.vertexInput.getNumInputBindings();
+		m_rVkPipelineState.numAttributes_ = m_Description.vertexInput.getNumAttributes();
+
+		const auto& vertexInput = m_Description.vertexInput;
 
 		bool bufferAlreadyBound[ VertexInput::VERTEX_BUFFER_MAX ] = {};
 
 		for(uint32_t i = 0; i != m_rVkPipelineState.numAttributes_; i++)
 		{
-			const auto& attr = m_vertexInput.attributes[ i ];
+			const auto& attr = vertexInput.attributes[ i ];
 
 			m_rVkPipelineState.vkAttributes_[ i ] =
 			{
@@ -892,7 +897,7 @@ namespace Vulkan
 				bufferAlreadyBound[ attr.binding ] = true;
 				m_rVkPipelineState.vkBindings_[ m_rVkPipelineState.numBindings_++ ] =
 				{
-					 .binding = attr.binding, .stride = m_vertexInput.inputBindings[ attr.binding ].stride, .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+					 .binding = attr.binding, .stride = vertexInput.inputBindings[ attr.binding ].stride, .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 				};
 			}
 		}//end for

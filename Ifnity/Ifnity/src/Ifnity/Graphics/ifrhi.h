@@ -52,14 +52,69 @@ struct Color
 
 
 
-
-
-
-
-
 namespace rhi {
 
+	//-------------------------------------------------------------------------------------//
+	//  VERTEX TYPES AND FORMTAS                                                           //
+    //-------------------------------------------------------------------------------------//
+    enum class VertexFormat: uint8_t
+    {
+        Invalid = 0,
+        Float1,
+        Float2,
+        Float3,
+        Float4,
 
+        Byte1,
+        Byte2,
+        Byte3,
+        Byte4,
+        UByte1,
+        UByte2,
+        UByte3,
+        UByte4,
+
+        Short1,
+        Short2,
+        Short3,
+        Short4,
+
+        UShort1,
+        UShort2,
+        UShort3,
+        UShort4,
+
+        Byte2Norm,
+        Byte4Norm,
+
+        UByte2Norm,
+        UByte4Norm,
+
+        Short2Norm,
+        Short4Norm,
+
+        UShort2Norm,
+        UShort4Norm,
+
+        Int1,
+        Int2,
+        Int3,
+        Int4,
+
+        UInt1,
+        UInt2,
+        UInt3,
+        UInt4,
+
+        HalfFloat1,
+        HalfFloat2,
+        HalfFloat3,
+        HalfFloat4,
+
+        Int_2_10_10_10_REV,
+    };
+
+    
 
     struct IFNITY_API VertexScene
     {
@@ -83,6 +138,61 @@ namespace rhi {
     struct VertexTraits<VertexBasic>
     {
         static constexpr uint16_t numElements = 3;
+    };
+
+    /**
+    *
+    * @brief Stuct use by the user in create pipeline, uses to VK, OR d3d12, now opengl not needit 
+    * because the Vertexinput its hardcoded inside. In the future probably unify this 
+    */
+    struct IFNITY_API VertexInput final
+    {
+
+        static constexpr uint32_t VERTEX_ATTRIBUTES_MAX = 16;
+        static constexpr uint32_t VERTEX_BUFFER_MAX = 16;
+
+        struct VertexAttribute final
+        {
+            uint32_t location = 0; // a buffer which contains this attribute stream
+            uint32_t binding = 0;
+            VertexFormat format = VertexFormat::Invalid; // per-element format
+            uintptr_t offset = 0; // an offset where the first element of this attribute stream starts
+        };
+
+        struct VertexInputBinding final
+        {
+            uint32_t stride = 0;
+        };
+
+        std::array<VertexAttribute, VERTEX_ATTRIBUTES_MAX> attributes;
+        std::array<VertexInputBinding, VERTEX_BUFFER_MAX> inputBindings;
+
+        VertexInput()
+        {
+            attributes.fill(VertexAttribute{});
+            inputBindings.fill(VertexInputBinding{});
+        }
+
+        uint32_t getNumAttributes() const
+        {
+            return std::count_if(attributes.begin(), attributes.end(), [](const VertexAttribute& attr)
+                {
+                    return attr.format != VertexFormat::Invalid;
+                });
+        }
+
+        uint32_t getNumInputBindings() const
+        {
+            return std::count_if(inputBindings.begin(), inputBindings.end(), [](const VertexInputBinding& binding)
+                {
+                    return binding.stride != 0;
+                });
+        }
+
+        bool operator==(const VertexInput& other) const
+        {
+            return memcmp(this, &other, sizeof(VertexInput)) == 0;
+        }
     };
 
 

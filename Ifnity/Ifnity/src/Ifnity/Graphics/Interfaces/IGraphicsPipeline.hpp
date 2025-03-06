@@ -116,13 +116,11 @@ struct IFNITY_API GraphicsPipelineDescription
 	RasterizationState rasterizationState;
 	RenderState renderState;
 	std::vector<SpecializationConstantState> specInfo;
+	rhi::VertexInput         vertexInput;
 
 	IShader* vs = nullptr;
 	IShader* ps = nullptr;
 	IShader* gs = nullptr;
-
-
-
 
 	GraphicsPipelineDescription& SetVertexShader(IShader* shader)
 	{
@@ -137,6 +135,12 @@ struct IFNITY_API GraphicsPipelineDescription
 	GraphicsPipelineDescription& SetGeometryShader(IShader* shader)
 	{
 		gs = shader;
+		return *this;
+	}
+
+	constexpr GraphicsPipelineDescription& SetVertexInput(const rhi::VertexInput& input)
+	{
+		vertexInput = input;
 		return *this;
 	}
 

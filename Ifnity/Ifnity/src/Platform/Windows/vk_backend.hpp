@@ -136,7 +136,6 @@ namespace Vulkan
         GraphicsPipelineDescription m_Description;
 		
 		RenderPipelineState m_rVkPipelineState;
-		VertexInput        m_vertexInput;
         SpecializationConstantDesc specInfo = {};
 
 		rhi::Format colorFormat   = rhi::Format::UNKNOWN;

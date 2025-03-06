@@ -8,6 +8,7 @@
 #include "../Windows/vk_constans.hpp"
 #include "Ifnity/Utils/SlotMap.hpp"
 #include "Ifnity\Graphics\Interfaces\IBuffer.hpp"
+#include "Ifnity\Graphics\ifrhi.h"
 
 
 
@@ -70,62 +71,7 @@ namespace Vulkan
 	//ENUMS
 	//================================================================================================
 
-	enum class VertexFormat: uint8_t
-	{
-		Invalid = 0,
-		Float1,
-		Float2,
-		Float3,
-		Float4,
 
-		Byte1,
-		Byte2,
-		Byte3,
-		Byte4,
-		UByte1,
-		UByte2,
-		UByte3,
-		UByte4,
-
-		Short1,
-		Short2,
-		Short3,
-		Short4,
-
-		UShort1,
-		UShort2,
-		UShort3,
-		UShort4,
-
-		Byte2Norm,
-		Byte4Norm,
-
-		UByte2Norm,
-		UByte4Norm,
-
-		Short2Norm,
-		Short4Norm,
-
-		UShort2Norm,
-		UShort4Norm,
-
-		Int1,
-		Int2,
-		Int3,
-		Int4,
-
-		UInt1,
-		UInt2,
-		UInt3,
-		UInt4,
-
-		HalfFloat1,
-		HalfFloat2,
-		HalfFloat3,
-		HalfFloat4,
-
-		Int_2_10_10_10_REV,
-	};
 
 	enum { MAX_COLOR_ATTACHMENTS = 8 };
 	enum { MAX_MIP_LEVELS = 16 };
@@ -294,53 +240,53 @@ namespace Vulkan
 		}
 	};
 
-	struct VertexInput final
-	{
-		enum { VERTEX_ATTRIBUTES_MAX = 16 };
-		enum { VERTEX_BUFFER_MAX = 16 };
-		struct VertexAttribute final
-		{
-			uint32_t location = 0; // a buffer which contains this attribute stream
-			uint32_t binding = 0;
-			VertexFormat format = VertexFormat::Invalid; // per-element format
-			uintptr_t offset = 0; // an offset where the first element of this attribute stream starts
-		} attributes[ VERTEX_ATTRIBUTES_MAX ];
-		struct VertexInputBinding final
-		{
-			uint32_t stride = 0;
-		} inputBindings[ VERTEX_BUFFER_MAX ];
+	//struct VertexInput final
+	//{
+	//	enum { VERTEX_ATTRIBUTES_MAX = 16 };
+	//	enum { VERTEX_BUFFER_MAX = 16 };
+	//	struct VertexAttribute final
+	//	{
+	//		uint32_t location = 0; // a buffer which contains this attribute stream
+	//		uint32_t binding = 0;
+	//		VertexFormat format = VertexFormat::Invalid; // per-element format
+	//		uintptr_t offset = 0; // an offset where the first element of this attribute stream starts
+	//	} attributes[ VERTEX_ATTRIBUTES_MAX ];
+	//	struct VertexInputBinding final
+	//	{
+	//		uint32_t stride = 0;
+	//	} inputBindings[ VERTEX_BUFFER_MAX ];
 
-		uint32_t getNumAttributes() const
-		{
-			uint32_t n = 0;
-			while(n < VERTEX_ATTRIBUTES_MAX && attributes[ n ].format != VertexFormat::Invalid)
-			{
-				n++;
-			}
-			return n;
-		}
-		uint32_t getNumInputBindings() const
-		{
-			uint32_t n = 0;
-			while(n < VERTEX_BUFFER_MAX && inputBindings[ n ].stride)
-			{
-				n++;
-			}
-			return n;
-		}
+	//	uint32_t getNumAttributes() const
+	//	{
+	//		uint32_t n = 0;
+	//		while(n < VERTEX_ATTRIBUTES_MAX && attributes[ n ].format != VertexFormat::Invalid)
+	//		{
+	//			n++;
+	//		}
+	//		return n;
+	//	}
+	//	uint32_t getNumInputBindings() const
+	//	{
+	//		uint32_t n = 0;
+	//		while(n < VERTEX_BUFFER_MAX && inputBindings[ n ].stride)
+	//		{
+	//			n++;
+	//		}
+	//		return n;
+	//	}
 
-		bool operator==(const VertexInput& other) const
-		{
-			return memcmp(this, &other, sizeof(VertexInput)) == 0;
-		}
-	};
+	//	bool operator==(const VertexInput& other) const
+	//	{
+	//		return memcmp(this, &other, sizeof(VertexInput)) == 0;
+	//	}
+	//};
 
 	struct RenderPipelineState final
 	{
 		uint32_t numBindings_ = 0;
 		uint32_t numAttributes_ = 0;
-		VkVertexInputBindingDescription vkBindings_[ VertexInput::VERTEX_BUFFER_MAX ] = {};
-		VkVertexInputAttributeDescription vkAttributes_[ VertexInput::VERTEX_ATTRIBUTES_MAX ] = {};
+		VkVertexInputBindingDescription vkBindings_[ rhi::VertexInput::VERTEX_BUFFER_MAX ] = {};
+		VkVertexInputAttributeDescription vkAttributes_[rhi::VertexInput::VERTEX_ATTRIBUTES_MAX ] = {};
 
 		// non-owning, the last seen VkDescriptorSetLayout from VulkanContext::vkDSL_ (if the context has a new layout, invalidate all VkPipeline objects)
 		VkDescriptorSetLayout lastVkDescriptorSetLayout_ = VK_NULL_HANDLE;
