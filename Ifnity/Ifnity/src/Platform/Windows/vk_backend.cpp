@@ -146,7 +146,7 @@ namespace Vulkan
 
 		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat())); //Get the SwapChain Color Format 
 		pipeline->passSpecializationConstantToVkFormat();
-		pipeline->configureRenderPipelineState();
+		pipeline->configureVertexAttributes();
 		pipeline->m_fragment = *frag.get();
 		pipeline->m_vertex = *vert.get();
 
@@ -548,10 +548,10 @@ namespace Vulkan
 		const VkPipelineVertexInputStateCreateInfo ciVertexInputState =
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-			.vertexBindingDescriptionCount = rps->numBindings_,
-			.pVertexBindingDescriptions = rps->numBindings_ ? rps->vkBindings_ : nullptr,
-			.vertexAttributeDescriptionCount = rps->numAttributes_,
-			.pVertexAttributeDescriptions = rps->numAttributes_ ? rps->vkAttributes_ : nullptr,
+			.vertexBindingDescriptionCount =   rps->numBindings_,
+			.pVertexBindingDescriptions =      rps->numBindings_ ? rps->vkBindings_ : nullptr,
+			.vertexAttributeDescriptionCount =  rps->numAttributes_,
+			.pVertexAttributeDescriptions =     rps->numAttributes_ ? rps->vkAttributes_ : nullptr,
 		};
 
 		//6. PushConstant Vulkan Range and Specialization Info
@@ -871,7 +871,7 @@ namespace Vulkan
 
 	}
 
-	void GraphicsPipeline::configureRenderPipelineState()
+	void GraphicsPipeline::configureVertexAttributes()
 	{
 
 
@@ -889,7 +889,10 @@ namespace Vulkan
 
 			m_rVkPipelineState.vkAttributes_[ i ] =
 			{
-				 .location = attr.location, .binding = attr.binding,  .offset = (uint32_t)attr.offset
+				 .location = attr.location, 
+				 .binding = attr.binding, 
+				 .format = formatToVkFormat(attr.format),
+				 .offset = (uint32_t)attr.offset
 			};
 
 			if(!bufferAlreadyBound[ attr.binding ])
@@ -897,7 +900,9 @@ namespace Vulkan
 				bufferAlreadyBound[ attr.binding ] = true;
 				m_rVkPipelineState.vkBindings_[ m_rVkPipelineState.numBindings_++ ] =
 				{
-					 .binding = attr.binding, .stride = vertexInput.inputBindings[ attr.binding ].stride, .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+					 .binding = attr.binding, 
+					 .stride = vertexInput.inputBindings[ attr.binding ].stride, 
+					 .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 				};
 			}
 		}//end for

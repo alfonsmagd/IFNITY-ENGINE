@@ -223,8 +223,8 @@ namespace Vulkan
 	// Structure to hold a description of specialization constants
 	struct SpecializationConstantDesc
 	{
-		enum { SPECIALIZATION_CONSTANTS_MAX = 16 }; // Maximum number of specialization constants
-		SpecializationConstantEntry entries[ SPECIALIZATION_CONSTANTS_MAX ] = {}; // Array of specialization constant entries
+		static constexpr size_t SPECIALIZATION_CONSTANTS_MAX = 16; // Maximum number of specialization constants
+		std::array<SpecializationConstantEntry, SPECIALIZATION_CONSTANTS_MAX> entries = {}; // Array of specialization constant entries
 		const void* data = nullptr; // Pointer to the data of specialization constants
 		size_t dataSize = 0; // Size of the data
 
@@ -240,46 +240,7 @@ namespace Vulkan
 		}
 	};
 
-	//struct VertexInput final
-	//{
-	//	enum { VERTEX_ATTRIBUTES_MAX = 16 };
-	//	enum { VERTEX_BUFFER_MAX = 16 };
-	//	struct VertexAttribute final
-	//	{
-	//		uint32_t location = 0; // a buffer which contains this attribute stream
-	//		uint32_t binding = 0;
-	//		VertexFormat format = VertexFormat::Invalid; // per-element format
-	//		uintptr_t offset = 0; // an offset where the first element of this attribute stream starts
-	//	} attributes[ VERTEX_ATTRIBUTES_MAX ];
-	//	struct VertexInputBinding final
-	//	{
-	//		uint32_t stride = 0;
-	//	} inputBindings[ VERTEX_BUFFER_MAX ];
-
-	//	uint32_t getNumAttributes() const
-	//	{
-	//		uint32_t n = 0;
-	//		while(n < VERTEX_ATTRIBUTES_MAX && attributes[ n ].format != VertexFormat::Invalid)
-	//		{
-	//			n++;
-	//		}
-	//		return n;
-	//	}
-	//	uint32_t getNumInputBindings() const
-	//	{
-	//		uint32_t n = 0;
-	//		while(n < VERTEX_BUFFER_MAX && inputBindings[ n ].stride)
-	//		{
-	//			n++;
-	//		}
-	//		return n;
-	//	}
-
-	//	bool operator==(const VertexInput& other) const
-	//	{
-	//		return memcmp(this, &other, sizeof(VertexInput)) == 0;
-	//	}
-	//};
+	
 
 	struct RenderPipelineState final
 	{

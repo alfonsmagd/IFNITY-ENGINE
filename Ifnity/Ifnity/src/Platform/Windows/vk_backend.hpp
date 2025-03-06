@@ -176,7 +176,7 @@ namespace Vulkan
     
     private:
         DeviceVulkan* m_DeviceVulkan = nullptr;
-		void   configureRenderPipelineState();
+		void   configureVertexAttributes();
         void   passSpecializationConstantToVkFormat();
 		friend class Device;
         friend GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc);
