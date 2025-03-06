@@ -35,8 +35,14 @@ namespace Vulkan
 
 	void VulkanStagingDevice::bufferSubData(VulkanBuffer& buffer, size_t dstOffset, size_t size, const void* data)
 	{
-		// Implementation of bufferSubData
+		//Now we only do to test the not uses staging buffer, host visible buffer TODO: Implement staginbuffer and copy data to buffer
+		if(buffer.isMapped())
+		{
+			buffer.bufferSubData(ctx_, dstOffset, size, data);
+			return;
+		}
 
+		//If the buffer is not mapped, we need to map it and copy the data in staginbuffer
 	}
 
 	void VulkanStagingDevice::imageData2D(VulkanImage& image, const VkRect2D& imageRegion, uint32_t baseMipLevel, uint32_t numMipLevels, uint32_t layer, uint32_t numLayers, VkFormat format, const void* data)

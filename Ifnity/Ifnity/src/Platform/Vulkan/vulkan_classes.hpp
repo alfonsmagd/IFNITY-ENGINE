@@ -28,11 +28,9 @@ namespace Vulkan
 	using ShaderModuleHandleSM = Handle< struct ShaderModuleState>;
 	using BufferHandleSM = Handle<struct VulkanBuffer>;
 
-	// Declaración de la plantilla general para la función destroy
-	// Declaración de la plantilla general para la función destroy
 	template<typename Handle>
 	void destroy(DeviceVulkan* ctx, Handle handle);
-	
+
 
 	template<typename ImplObjectType>
 	using Holder = std::unique_ptr<Handle<ImplObjectType>, std::function<void(Handle<ImplObjectType>*)>>;
@@ -48,12 +46,12 @@ namespace Vulkan
 	Holder<ImplObjectType> makeHolder(DeviceVulkan* ctx, Handle<ImplObjectType> handle)
 	{
 		return Holder<ImplObjectType>(
-			std::make_unique<Handle<ImplObjectType>>(handle).release(), 
+			std::make_unique<Handle<ImplObjectType>>(handle).release(),
 			[ ctx, handle ](Handle<ImplObjectType>* ptr)
 			{   // Custom deleter con acceso a ctx
 				if(ctx)
 				{
-					destroy(ctx, handle);  
+					destroy(ctx, handle);
 					std::cout << "Destroy object make holder ... \n";
 				}
 				delete ptr;
@@ -61,12 +59,12 @@ namespace Vulkan
 		);
 	}
 
-	// Declaración de la plantilla general para la función destroy
+	//Holder its a unique pointer that contains a handle and a custom deleter that Vulkan will be destroy , this way we can ensure that the object will be destroyed when the holder is destroyed.
 	using HolderShaderSM = Holder<ShaderModuleState>;
 	using HolderTextureSM = Holder<VulkanImage>;
 	using HolderGraphicsPipelineSM = Holder<GraphicsPipeline>;
 	using HolderBufferSM = Holder<VulkanBuffer>;
-	
+
 
 	//================================================================================================
 	//ENUMS
@@ -180,7 +178,7 @@ namespace Vulkan
 	};
 
 
-	
+
 	//-----------------------------------------------//
 	// STRUCTS
 	//-----------------------------------------------//
@@ -193,7 +191,7 @@ namespace Vulkan
 		{ BufferType::DEFAULT_BUFFER, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
 		{ BufferType::STORAGE_BUFFER, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
 		{ BufferType::INDIRECT_BUFFER, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
-		
+
 	};
 
 
@@ -255,15 +253,15 @@ namespace Vulkan
 
 		const char* debugName = "";
 
-        uint32_t getNumColorAttachments() const
-        {
-            uint32_t n = 0;
-            while(n < MAX_COLOR_ATTACHMENTS && color[n].texture)
-            {
-                n++;
-            }
-            return n;
-        }
+		uint32_t getNumColorAttachments() const
+		{
+			uint32_t n = 0;
+			while(n < MAX_COLOR_ATTACHMENTS && color[ n ].texture)
+			{
+				n++;
+			}
+			return n;
+		}
 	};
 
 
@@ -396,7 +394,7 @@ namespace Vulkan
 	// TO MOVE IN FILE TODO STRUCTS 
 	//-----------------------------------------------//
 
-	
+
 
 	inline VkAttachmentLoadOp loadOpToVkAttachmentLoadOp(LoadOp a)
 	{
@@ -434,6 +432,37 @@ namespace Vulkan
 		}
 		_ASSERT(false);
 		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	}
+
+	constexpr inline VkBufferUsageFlags getVkBufferUsageFlags(BufferType type)
+	{
+		for(const auto& mapping : usageMappings)
+		{
+			if(mapping.usageBit == type)
+			{
+				return mapping.vkFlag;
+			}
+		}
+		return 0;
+	}
+
+	inline VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage)
+	{
+		VkMemoryPropertyFlags memFlags{ 0 };
+
+		switch(storage)
+		{
+		case StorageType::Device:
+			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+			break;
+		case StorageType::HostVisible:
+			memFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			break;
+		case StorageType::Memoryless:
+			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+			break;
+		}
+		return memFlags;
 	}
 
 }

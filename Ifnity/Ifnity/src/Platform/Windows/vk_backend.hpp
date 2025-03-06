@@ -4,6 +4,7 @@
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
 #include "../Vulkan/vulkan_classes.hpp"
 #include "../Vulkan/vulkan_CommandBuffer.hpp"
+#include "../Vulkan/vulkan_StaginDevice.hpp"
 IFNITY_NAMESPACE
 
 namespace Vulkan
@@ -100,6 +101,7 @@ namespace Vulkan
 		VkPhysicalDevice vkPhysicalDevice_ = VK_NULL_HANDLE;
 		CommandBuffer cmdBuffer;
         DeviceVulkan* m_DeviceVulkan = nullptr;
+		std::unique_ptr<VulkanStagingDevice> m_StagingDevice;
         TextureHandleSM currentTexture_;
 
         #define MAX_SHADER_STAGES 4

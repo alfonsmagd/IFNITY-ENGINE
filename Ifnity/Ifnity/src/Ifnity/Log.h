@@ -70,3 +70,6 @@ namespace IFNITY
             IFNITY::Assert(false, __FILE__, __LINE__, "Assertion failed: " #cond); \
         } \
     } while (0)
+
+#define IFNITY_VERIFY(cond) ((cond) ? true : (IFNITY::Assert(false, __FILE__, __LINE__, #cond), false))
+

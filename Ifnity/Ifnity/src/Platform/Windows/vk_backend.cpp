@@ -29,6 +29,9 @@ namespace Vulkan
 		IFNITY_ASSERT_MSG(vkDevice_ != VK_NULL_HANDLE, "VkDevice is null");
 		IFNITY_ASSERT_MSG(m_DeviceVulkan != nullptr, "DeviceVulkan is null");
 
+		//set the stagindevice
+		m_StagingDevice = std::make_unique<VulkanStagingDevice>(*m_DeviceVulkan);
+
 	}
 
 
@@ -157,15 +160,45 @@ namespace Vulkan
 
 	BufferHandle Device::CreateBuffer(const BufferDescription& desc)
 	{
+		//auxiliar storagetype config 
+		StorageType storageType = desc.storageType;
+		
 		//This is a constant buffer and Vulkan Constant Buffer is inside like a PushConstant and manage	internal 
 		if(desc.type == BufferType::CONSTANT_BUFFER)
 		{
-			auto flags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-			auto memFlags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-			HolderBufferSM buff = CreateInternalVkBuffer(desc.size, flags,memFlags, "desc.debugName");
-			// Obtén el Handle<VulkanBuffer> del HolderBufferSM
-			Buffer* buffer = new Buffer(desc, std::move(buff)); //Now BufferHandle have the ownership of the buffer and can destroy it
-			return BufferHandle(buffer);
+			IFNITY_LOG(LogCore, INFO, "Constant Buffer its managed in vulkan like push constants inside ");
+			Buffer* buff = new Buffer(desc);
+			return BufferHandle(buff);
+		
+		}
+
+		if(desc.type == BufferType::NO_DEFINE_BUFFER) { IFNITY_LOG(LogCore, WARNING, "No define buffer "); return{}; }
+
+
+		if(!m_DeviceVulkan->useStaging_ && (desc.storageType == StorageType::Device))
+		{
+			storageType = StorageType::HostVisible;
+		}
+
+		// Use staging device to transfer data into the buffer when the storage is private to the device
+		VkBufferUsageFlags usageFlags = (desc.storageType == StorageType::Device) ? 
+			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT : 0;
+
+
+		//Generate Flags and MemFlags using BufferDescription 
+		usageFlags |= Vulkan::getVkBufferUsageFlags(desc.type);
+		VkMemoryPropertyFlags memFlags = Vulkan::storageTypeToVkMemoryPropertyFlags(storageType);
+
+		//Create the buffer holder 
+		HolderBufferSM buffer = CreateInternalVkBuffer(desc.size, usageFlags, memFlags, desc.debugName.c_str());
+
+		//Check if the buffer its created
+		IFNITY_ASSERT_MSG(buffer, "Buffer its not created internal ");
+
+		//Upload data if the bufferdesc have it; 
+		if(desc.data)
+		{
+			upload(*buffer, desc.data, desc.size, desc.offset);
 		}
 		
 		
@@ -321,8 +354,34 @@ namespace Vulkan
 
 	void Device::upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset)
 	{
-		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+	
+		//Previos check if the buffer is null and check it 
+		if(!data)
+		{
+			IFNITY_LOG(LogCore, ERROR, "Data is null to upload ");
+			return;
+		}
+
+		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
+
+		VulkanBuffer* buf = m_DeviceVulkan->slotMapBuffers_.get(buffer);
+
+		if(!buf)
+		{
+			IFNITY_LOG(LogCore, ERROR, "Buffer is null to upload ");
+			return;
+		}
+
+		if(!IFNITY_VERIFY(offset + size <= buf->bufferSize_))
+		{
+			return;
+		}
+		
+		//Lets to staginDevice to upload data 
+		m_StagingDevice->bufferSubData(*buf, offset, size, data);
+
+		
+		
 	}
 
 	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)

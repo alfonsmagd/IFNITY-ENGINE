@@ -59,8 +59,6 @@ public:
 	VkDescriptorPool vkDPool_ = VK_NULL_HANDLE;		// Descriptor Pool	
 	VkDescriptorSet vkDSet_ = VK_NULL_HANDLE;		// Descriptor Set
 	Vulkan::SubmitHandle lastSubmitHandle_ = Vulkan::SubmitHandle();
-
-
 	Vulkan::GraphicsPipeline* actualPipeline_ = VK_NULL_HANDLE;
 
 	//SlotMap estructures 
@@ -69,7 +67,8 @@ public:
 	SlotMap<Vulkan::ShaderModuleState> slotMapShaderModules_;
 	SlotMap<Vulkan::VulkanBuffer> slotMapBuffers_;
 
-
+	//flags
+	bool useStaging_ = false;
 
 protected:
 	// Heredado vía GraphicsDeviceManager

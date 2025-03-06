@@ -137,7 +137,7 @@ int findNodeByName(const Scene& scene, const std::string& name)
 int getNodeLevel(const Scene& scene, int n)
 {
 	int level = -1;
-	for(int p = 0; p != -1; p = scene.hierarchy_[ p ].parent_, level++);
+	for(int p = n; p != -1; p = scene.hierarchy_[ p ].parent_, level++);
 	return level;
 }
 
