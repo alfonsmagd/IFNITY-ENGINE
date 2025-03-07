@@ -244,6 +244,14 @@ namespace rhi {
 
     enum class WindingMode: uint8_t { WindingMode_CCW, WindingMode_CW };
 
+
+	enum class IndexFormat: uint8_t
+	{
+		IndexFormat_UINT8 = 0,
+		IndexFormat_UINT16,
+		IndexFormat_UINT32
+	};
+
 	//-------------------------------------------------------------------------------------//
 	//VERTEX TYPES ATTRIBUTES
 	//-------------------------------------------------------------------------------------//
@@ -303,6 +311,17 @@ namespace rhi {
         {
             attributes.fill(VertexAttribute{});
             inputBindings.fill(VertexInputBinding{});
+        }
+
+
+		void addVertexAttribute(const VertexAttribute& attribute, uint8_t index)
+		{
+			attributes[ index ] = attribute;
+		}
+
+        void addVertexInputBinding(const VertexInputBinding& binding, uint8_t index)
+        {
+			inputBindings[ index ] = binding;
         }
 
         uint32_t getNumAttributes() const

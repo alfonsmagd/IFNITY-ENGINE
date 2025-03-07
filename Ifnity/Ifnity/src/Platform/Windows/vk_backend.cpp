@@ -138,8 +138,8 @@ namespace Vulkan
 		GraphicsPipeline* pipeline = new GraphicsPipeline(std::move(desc), m_DeviceVulkan);
 
 
-		auto& vert = m_vertex.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
-		auto& frag = m_fragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
+		auto& vert = m_shaderVert.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
+		auto& frag = m_shaderFragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
 
 		//3. Create the pipeline and configure colorFormat,
 		const DeviceVulkan& ctx = getDeviceContextVulkan();
@@ -147,8 +147,8 @@ namespace Vulkan
 		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat())); //Get the SwapChain Color Format 
 		pipeline->passSpecializationConstantToVkFormat();
 		pipeline->configureVertexAttributes();
-		pipeline->m_fragment = *frag.get();
-		pipeline->m_vertex = *vert.get();
+		pipeline->m_shaderFragment = *frag.get();
+		pipeline->m_shaderVert = *vert.get();
 
 
 		pipeline->ownerHandle_ = m_DeviceVulkan->slotMapRenderPipelines_.create(std::move(*pipeline));
@@ -409,6 +409,17 @@ namespace Vulkan
 	{
 		// Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
+	}
+
+	void Device::BindingVertexAttributesBuffer(BufferHandle& bf)
+	{
+
+	}
+
+	void Device::BindingIndexBuffer(BufferHandle& bf)
+	{
+	
+	
 	}
 
 	TextureHandle Device::CreateTexture(TextureDescription& desc)
@@ -683,7 +694,7 @@ namespace Vulkan
 	void Device::destroyShaderModule()
 	{
 
-		for(auto& vertex : m_vertex)
+		for(auto& vertex : m_shaderVert)
 		{
 			if(vertex)
 			{
@@ -693,7 +704,7 @@ namespace Vulkan
 			}
 		}
 
-		for(auto& fragment : m_fragment)
+		for(auto& fragment : m_shaderFragment)
 		{
 			if(fragment)
 			{
@@ -814,9 +825,9 @@ namespace Vulkan
 
 	ShaderModuleState* GraphicsPipeline::getVertexShaderModule()
 	{
-		if(m_vertex.valid())
+		if(m_shaderVert.valid())
 		{
-			ShaderModuleState* mvert = m_DeviceVulkan->slotMapShaderModules_.get(m_vertex);
+			ShaderModuleState* mvert = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderVert);
 			return mvert;
 		}
 		IFNITY_LOG(LogApp, ERROR, "Vertex Shader Module State getHandle   its not valid");
@@ -825,9 +836,9 @@ namespace Vulkan
 
 	ShaderModuleState* GraphicsPipeline::getFragmentShaderModule()
 	{
-		if(m_vertex.valid())
+		if(m_shaderVert.valid())
 		{
-			ShaderModuleState* frag = m_DeviceVulkan->slotMapShaderModules_.get(m_fragment);
+			ShaderModuleState* frag = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderFragment);
 			return frag;
 		}
 		IFNITY_LOG(LogApp, ERROR, "Vertex frag Module State getHandle   its not valid");
@@ -876,7 +887,7 @@ namespace Vulkan
 
 
 		//Not implemented yet BUT UPDATE THE RENDER PIPELINE STATE and configure inside 
-		m_rVkPipelineState.numBindings_ =   m_Description.vertexInput.getNumInputBindings();
+		
 		m_rVkPipelineState.numAttributes_ = m_Description.vertexInput.getNumAttributes();
 
 		const auto& vertexInput = m_Description.vertexInput;

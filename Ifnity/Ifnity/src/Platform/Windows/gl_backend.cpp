@@ -280,6 +280,17 @@ namespace OpenGL
 		}//endfor
 	}
 
+	void Device::BindingVertexAttributesBuffer(BufferHandle& bf)
+	{
+		IFNITY_LOG(LogApp, ERROR, "BindingVertexAttributesBuffer its not implemented");
+	}
+
+	void Device::BindingIndexBuffer(BufferHandle& bf)
+	{
+
+		IFNITY_LOG(LogApp, ERROR, "BindingVertexAttributesBuffer its not implemented");
+	}
+
 	/**
 	 * @brief Creates a texture in OpenGL from the given description.
 	 *

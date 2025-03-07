@@ -67,6 +67,8 @@ namespace Vulkan
 
         void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)   override;
         void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
+        void BindingVertexAttributesBuffer(BufferHandle& bf) override;
+		void BindingIndexBuffer(BufferHandle& bf) override;
 
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
         MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
@@ -106,9 +108,15 @@ namespace Vulkan
 
         #define MAX_SHADER_STAGES 4
         //Shaders loading by device 
-        std::vector<HolderShaderSM> m_vertex;
-        std::vector<HolderShaderSM> m_fragment;
+        std::vector<HolderShaderSM> m_shaderVert;
+        std::vector<HolderShaderSM> m_shaderFragment;
 
+        //TODO:Remove in the future its owner the mesh or something, now its for test 
+        #define MAX_VERTEX_BUFFERS 1
+		#define MAX_INDEX_BUFFERS 1
+        //Now i only uses one 
+		BufferHandleSM m_vertexBuffer[ MAX_VERTEX_BUFFERS ];
+		BufferHandleSM m_indexBuffer[ MAX_VERTEX_BUFFERS ];
 
         struct
         {
@@ -149,8 +157,8 @@ namespace Vulkan
         uint32_t samplesCount = 1u;
         float minSampleShading = 0.0f;
 
-        ShaderModuleHandleSM m_vertex;
-        ShaderModuleHandleSM m_fragment;
+        ShaderModuleHandleSM m_shaderVert;
+        ShaderModuleHandleSM m_shaderFragment;
         bool destroy = false;
 
 

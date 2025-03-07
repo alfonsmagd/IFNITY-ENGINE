@@ -185,6 +185,8 @@ class Source: public IFNITY::App
 {
 private:
 	BufferHandle m_UBO;
+	BufferHandle m_vertexBuffer;
+	BufferHandle m_indexBuffer;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_SolidPipeline;
 	GraphicsPipelineHandle m_WireFramePipeline;
@@ -273,12 +275,68 @@ public:
 
 		m_UBO = rdevice->CreateBuffer(desc);
 
+		//Triangle Generation position only
+		std::vector<vec3> triangleVertices = { 
+			vec3(-0.5f, -0.5f, 0.0f), 
+			vec3(0.5f, -0.5f, 0.0f),
+			vec3(0.0f, 0.5f, 0.0f)
+		};
+		uint32_t vertexBufferSize = static_cast<uint32_t>(triangleVertices.size()) * sizeof(vec3);
+
+		// Setup indices
+		std::vector<uint32_t> indexBuffer{ 0, 1, 2 };
+		uint32_t indexBufferSize = static_cast<uint32_t>(indexBuffer.size()) * sizeof(uint32_t);
+		
+		//Vertex Attributes Configure Buffer 
+		{
+			desc.storageType = StorageType::HostVisible;
+			desc.type = BufferType::VERTEX_BUFFER;
+			desc.binding = 0;
+			desc.size = vertexBufferSize;
+			desc.data = triangleVertices.data();
+			desc.debugName = "Buffer: vertex";
+
+			m_vertexBuffer = rdevice->CreateBuffer(desc);
+		}
+
+		//Indexbuffer
+		{
+			uint32_t indices[] = { 0, 1, 2 };
+			desc.type = BufferType::INDEX_BUFFER;
+			desc.size = indexBufferSize;
+			desc.data = indices;
+			desc.debugName = "Buffer: index";
+
+
+			m_indexBuffer = rdevice->CreateBuffer(desc);
+
+		}
+
+		
+		
+
+		//Vertex Attributes Configure 
+
+		rhi::VertexInput vertexInput;
+		uint8_t position = 0;
+		vertexInput.addVertexAttribute({ .location = position,
+										  .binding = 0, 
+										  .format = rhi::Format::R32G32B32_FLOAT,
+										  .offset = 0 }, position);
+
+		vertexInput.addVertexInputBinding({ .stride = sizeof(vec3) }, position);
+
+
+		
+
+
 		{
 			gdesc1.SetVertexShader(m_vs.get()).
 				SetPixelShader(m_ps.get()).
-				addDebugName("Wireframe Pipeline").
+				AddDebugName("Wireframe Pipeline").
+				//SetVertexInput(vertexInput).
 				SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Line }).
-				addSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , });
+				AddSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , });
 
 			//GraphicsPipelineDescription gdesc
 			m_WireFramePipeline = rdevice->CreateGraphicsPipeline(gdesc1);
@@ -287,7 +345,8 @@ public:
 		{
 			gdesc2.SetVertexShader(m_vs.get()).
 				SetPixelShader(m_ps.get()).
-				addDebugName("Solid Pipeline").
+				AddDebugName("Solid Pipeline").
+				//SetVertexInput(vertexInput).
 				SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Fill });
 
 			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc2);

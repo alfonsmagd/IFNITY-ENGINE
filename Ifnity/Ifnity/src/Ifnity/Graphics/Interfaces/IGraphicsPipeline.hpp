@@ -156,7 +156,7 @@ struct IFNITY_API GraphicsPipelineDescription
 		return *this;
 	}
 
-	constexpr GraphicsPipelineDescription& addSpecializationConstant(const SpecializationConstantState& state)
+	constexpr GraphicsPipelineDescription& AddSpecializationConstant(const SpecializationConstantState& state)
 	{
 		specInfo.emplace_back(state);
 		return *this;
@@ -168,7 +168,7 @@ struct IFNITY_API GraphicsPipelineDescription
 		return *this;
 	}
 
-	GraphicsPipelineDescription& addDebugName(const char* name)
+	GraphicsPipelineDescription& AddDebugName(const char* name)
 	{
 		debugName = name;
 		return *this;

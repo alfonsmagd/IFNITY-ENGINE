@@ -339,6 +339,32 @@ namespace Vulkan
 			data);
 	}
 
+	void CommandBuffer::cmdBindVertexBuffer(uint32_t index, BufferHandleSM buffer, uint64_t bufferOffset)
+	{
+	
+		if(!IFNITY_VERIFY(!buffer.empty()))
+		{
+			return;
+		}
+
+		VulkanBuffer* buf = ctx_->slotMapBuffers_.get(buffer);
+
+		IFNITY_ASSERT(buf->vkUsageFlags_ & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+
+		vkCmdBindVertexBuffers(wrapper_->cmdBuf_, index, 1, &buf->vkBuffer_, &bufferOffset);
+	
+	}
+
+	void CommandBuffer::cmdBindIndexBuffer(BufferHandleSM indexBuffer, rhi::IndexFormat indexFormat, uint64_t indexBufferOffset)
+	{
+		VulkanBuffer* buf = ctx_->slotMapBuffers_.get(indexBuffer);
+
+		IFNITY_ASSERT(buf->vkUsageFlags_ & VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+
+		const VkIndexType type = indexFormatToVkIndexType(indexFormat);
+		vkCmdBindIndexBuffer(wrapper_->cmdBuf_, buf->vkBuffer_, indexBufferOffset, type);
+	}
+
 
 	void CommandBuffer::cmdEndRendering()
 	{

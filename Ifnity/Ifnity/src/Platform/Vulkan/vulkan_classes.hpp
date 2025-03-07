@@ -323,6 +323,22 @@ namespace Vulkan
 		return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	}
 
+	inline VkIndexType indexFormatToVkIndexType(rhi::IndexFormat format)
+	{
+		switch(format)
+		{
+		case rhi::IndexFormat::IndexFormat_UINT8:
+			return VK_INDEX_TYPE_UINT8_EXT;
+		case rhi::IndexFormat::IndexFormat_UINT16:
+			return VK_INDEX_TYPE_UINT16;
+		case rhi::IndexFormat::IndexFormat_UINT32:
+			return VK_INDEX_TYPE_UINT32;
+		}
+		
+		return VK_INDEX_TYPE_UINT16;
+		
+	}
+
 	inline VkAttachmentStoreOp storeOpToVkAttachmentStoreOp(StoreOp a)
 	{
 		switch(a)

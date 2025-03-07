@@ -90,6 +90,8 @@ public:
 	virtual void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) = 0;
     virtual void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size) = 0;
 	virtual void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) {}; //todo abstract
+	virtual void BindingVertexAttributesBuffer(BufferHandle& bf) = 0;
+	virtual void BindingIndexBuffer(BufferHandle& bf) = 0 ;
 	virtual BufferHandle CreateBuffer(const BufferDescription& desc) = 0;
 	virtual TextureHandle CreateTexture(TextureDescription& desc) = 0;
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) = 0;

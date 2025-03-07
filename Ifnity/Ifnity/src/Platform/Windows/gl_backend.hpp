@@ -57,6 +57,9 @@ namespace OpenGL
 
         void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)   override;
         void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
+		void BindingVertexAttributesBuffer(BufferHandle& bf) override;
+		void BindingIndexBuffer(BufferHandle& bf) override;
+      
 
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
