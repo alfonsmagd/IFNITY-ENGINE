@@ -56,11 +56,27 @@ namespace Vulkan
 	{
 		pipeline->BindPipeline(this);//This set pipeline like actualpilenine in VK.
 
+
+
 		cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
+
+		//for each vertex buffer bind 
+		for(auto& vb : m_vertexBuffer)
+		{
+			
+			cmdBuffer.cmdBindVertexBuffer(0,vb);
+		}
+		for(auto& ib : m_indexBuffer)
+		{
+			if(!ib.valid()) continue;
+			cmdBuffer.cmdBindIndexBuffer(ib,rhi::IndexFormat::IndexFormat_UINT32);
+		}
+
 		cmdBuffer.cmdPushConstants(pushConstants.data,
 			pushConstants.size,
 			pushConstants.offset);
-		cmdBuffer.cmdDraw(36);
+
+		cmdBuffer.cmdDraw(desc.size);
 
 	}
 
@@ -201,8 +217,12 @@ namespace Vulkan
 			upload(*buffer, desc.data, desc.size, desc.offset);
 		}
 		
-		Buffer* handle = new Buffer(desc, std::move(buffer));
+		
+		//Check if is a vertex buffer or index buffer 
+		
 
+
+		Buffer* handle = new Buffer(desc, std::move(buffer));
 		return BufferHandle(handle);
 		
 	}
@@ -413,13 +433,35 @@ namespace Vulkan
 
 	void Device::BindingVertexAttributesBuffer(BufferHandle& bf)
 	{
+		//Dynamic cast to VkDevice 
+		// 
+		Buffer* vkBuffer = dynamic_cast<Buffer*>(bf.get());
+		if(!vkBuffer)
+		{
+			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanBuffar dynamic cast");
+			return;
+		}
 
+		//Get the holderbuffer and push back 
+		m_vertexBuffer.push_back(vkBuffer->getBufferHandleSM());
+
+		//m_indexBuffer.push_back(bf);
 	}
 
 	void Device::BindingIndexBuffer(BufferHandle& bf)
 	{
 	
-	
+		//Dynamic cast to VkDevice 
+		// 
+		Buffer* vkBuffer = dynamic_cast<Buffer*>(bf.get());
+		if(!vkBuffer)
+		{
+			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanBuffar dynamic cast");
+			return;
+		}
+
+		//Get the holderbuffer and push back 
+		m_indexBuffer.push_back(vkBuffer->getBufferHandleSM());
 	}
 
 	TextureHandle Device::CreateTexture(TextureDescription& desc)

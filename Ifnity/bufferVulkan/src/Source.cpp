@@ -251,12 +251,14 @@ public:
 			DescriptionShader.NoCompile = true;
 			//DescriptionShader.FileName = "triangle01.vert";
 			DescriptionShader.FileName = "glm.vert";
+			DescriptionShader.FileName = "position_wireframe.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.NoCompile = true;
 			//DescriptionShader.FileName = "triangle01.frag";
 			DescriptionShader.FileName = "glm.frag";
+			DescriptionShader.FileName = "position_wireframe.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
 
@@ -278,8 +280,8 @@ public:
 		//Triangle Generation position only
 		std::vector<vec3> triangleVertices = { 
 			vec3(-0.5f, -0.5f, 0.0f), 
-			vec3(0.5f, -0.5f, 0.0f),
-			vec3(0.0f, 0.5f, 0.0f)
+			vec3(0.6f, -0.5f, 0.5f),
+			vec3(0.1f, 0.8f, 0.0f)
 		};
 		uint32_t vertexBufferSize = static_cast<uint32_t>(triangleVertices.size()) * sizeof(vec3);
 
@@ -316,7 +318,6 @@ public:
 		
 
 		//Vertex Attributes Configure 
-
 		rhi::VertexInput vertexInput;
 		uint8_t position = 0;
 		vertexInput.addVertexAttribute({ .location = position,
@@ -334,7 +335,7 @@ public:
 			gdesc1.SetVertexShader(m_vs.get()).
 				SetPixelShader(m_ps.get()).
 				AddDebugName("Wireframe Pipeline").
-				//SetVertexInput(vertexInput).
+				SetVertexInput(vertexInput).
 				SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Line }).
 				AddSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , });
 
@@ -346,11 +347,16 @@ public:
 			gdesc2.SetVertexShader(m_vs.get()).
 				SetPixelShader(m_ps.get()).
 				AddDebugName("Solid Pipeline").
-				//SetVertexInput(vertexInput).
+				SetVertexInput(vertexInput).
 				SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Fill });
 
 			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc2);
 		}
+
+		rdevice->BindingIndexBuffer(m_indexBuffer);
+		rdevice->BindingVertexAttributesBuffer(m_vertexBuffer);
+
+
 
 		m_SolidPipeline->BindPipeline(rdevice);
 
@@ -366,8 +372,8 @@ public:
 
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -3.5f)), (float)glfwGetTime(), vec3(1.0f, 1.0f, 1.0f));
-		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -1.5)), (float)glfwGetTime(), vec3(0.0f, 0.0f, 1.0f));
+		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 100.0f);
 
 
 		//StartRecording
@@ -376,6 +382,8 @@ public:
 		rdevice->WriteBuffer(m_UBO, glm::value_ptr(p * m), sizeof(glm::mat4));
 
 		DrawDescription desc;
+		desc.size = 3;
+
 		rdevice->DrawObject(m_SolidPipeline, desc);
 		rdevice->DrawObject(m_WireFramePipeline, desc);
 

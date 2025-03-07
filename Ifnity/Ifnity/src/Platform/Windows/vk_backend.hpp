@@ -23,6 +23,7 @@ namespace Vulkan
         const uint32_t GetBufferID()  const override { return m_holdBuffer.get()->index(); }
         void SetData(const void* data) {}
 		const void* GetData() const { return nullptr; }
+        BufferHandleSM getBufferHandleSM() const { return *m_holdBuffer; }
 
     private:
         uint32_t m_BufferID = 0; ///< The buffer ID.
@@ -115,8 +116,8 @@ namespace Vulkan
         #define MAX_VERTEX_BUFFERS 1
 		#define MAX_INDEX_BUFFERS 1
         //Now i only uses one 
-		BufferHandleSM m_vertexBuffer[ MAX_VERTEX_BUFFERS ];
-		BufferHandleSM m_indexBuffer[ MAX_VERTEX_BUFFERS ];
+        std::vector<BufferHandleSM> m_vertexBuffer;
+        std::vector<BufferHandleSM> m_indexBuffer;
 
         struct
         {
