@@ -309,7 +309,7 @@ namespace rhi {
         {
             return std::count_if(attributes.begin(), attributes.end(), [](const VertexAttribute& attr)
                 {
-                    return attr.format != rhi::Format::COUNT;
+                    return attr.format < rhi::Format::UNKNOWN;
                 });
         }
 
