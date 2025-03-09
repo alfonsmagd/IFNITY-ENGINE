@@ -3,7 +3,7 @@
 #include "vulkan_CommandBuffer.hpp"
 #include "../Windows/UtilsVulkan.h"
 #include "../Windows/DeviceVulkan.h"
-#include "vulkan_classes.hpp"
+#include "../Windows/vk_constans.hpp"
 
 IFNITY_NAMESPACE
 

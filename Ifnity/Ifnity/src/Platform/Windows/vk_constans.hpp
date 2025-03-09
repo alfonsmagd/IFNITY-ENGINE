@@ -2,11 +2,88 @@
 
 #include "Ifnity/Graphics/ifrhi.h"
 #include <vulkan/vulkan.h>
+#include "Ifnity\Graphics\Interfaces\IBuffer.hpp"
+#include "Ifnity\Graphics\Interfaces\IGraphicsPipeline.hpp"
 
 IFNITY_NAMESPACE
 
 namespace Vulkan
 {
+
+
+	//================================================================================================
+	//ENUMS
+	//================================================================================================
+
+
+
+	enum { MAX_COLOR_ATTACHMENTS = 8 };
+	enum { MAX_MIP_LEVELS = 16 };
+
+	enum ShaderStage: uint8_t
+	{
+		Stage_Vert,
+		Stage_Tesc,
+		Stage_Tese,
+		Stage_Geom,
+		Stage_Frag,
+		Stage_Comp,
+		Stage_Task,
+		Stage_Mesh,
+		// ray tracing
+		Stage_RayGen,
+		Stage_AnyHit,
+		Stage_ClosestHit,
+		Stage_Miss,
+		Stage_Intersection,
+		Stage_Callable,
+	};
+
+	union ClearColorValue
+	{
+		float float32[ 4 ];
+		int32_t int32[ 4 ];
+		uint32_t uint32[ 4 ];
+	};
+
+	//-----------------------------------------------//
+	// TO MOVE IN FILE TODO STRUCTS 
+	//-----------------------------------------------//
+
+	enum LoadOp: uint8_t
+	{
+		LoadOp_Invalid = 0,
+		LoadOp_DontCare,
+		LoadOp_Load,
+		LoadOp_Clear,
+		LoadOp_None,
+	};
+
+	enum StoreOp: uint8_t
+	{
+		StoreOp_DontCare = 0,
+		StoreOp_Store,
+		StoreOp_MsaaResolve,
+		StoreOp_None,
+	};
+
+
+
+	//-----------------------------------------------//
+	// STRUCTS
+	//-----------------------------------------------//
+
+	struct UsageMapping { BufferType usageBit; VkBufferUsageFlags vkFlag; };
+
+	constexpr UsageMapping usageMappings[] = {
+		{ BufferType::INDEX_BUFFER, VK_BUFFER_USAGE_INDEX_BUFFER_BIT },
+		{ BufferType::VERTEX_BUFFER, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT },
+		{ BufferType::DEFAULT_BUFFER, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
+		{ BufferType::STORAGE_BUFFER, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
+		{ BufferType::INDIRECT_BUFFER, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT_KHR },
+
+	};
+
 
 	/**
 	* @brief Structure mapping RHI format to VK format.
@@ -205,7 +282,90 @@ namespace Vulkan
 
 
 
-	
+	inline VkAttachmentLoadOp loadOpToVkAttachmentLoadOp(LoadOp a)
+	{
+		switch(a)
+		{
+		case LoadOp_Invalid:
+			_ASSERT(false);
+			return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		case LoadOp_DontCare:
+			return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		case LoadOp_Load:
+			return VK_ATTACHMENT_LOAD_OP_LOAD;
+		case LoadOp_Clear:
+			return VK_ATTACHMENT_LOAD_OP_CLEAR;
+		case LoadOp_None:
+			return VK_ATTACHMENT_LOAD_OP_NONE_EXT;
+		}
+		_ASSERT(false);
+		return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	}
+
+	inline VkIndexType indexFormatToVkIndexType(rhi::IndexFormat format)
+	{
+		switch(format)
+		{
+		case rhi::IndexFormat::IndexFormat_UINT8:
+			return VK_INDEX_TYPE_UINT8_EXT;
+		case rhi::IndexFormat::IndexFormat_UINT16:
+			return VK_INDEX_TYPE_UINT16;
+		case rhi::IndexFormat::IndexFormat_UINT32:
+			return VK_INDEX_TYPE_UINT32;
+		}
+
+		return VK_INDEX_TYPE_UINT16;
+
+	}
+
+	inline VkAttachmentStoreOp storeOpToVkAttachmentStoreOp(StoreOp a)
+	{
+		switch(a)
+		{
+		case StoreOp_DontCare:
+			return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		case StoreOp_Store:
+			return VK_ATTACHMENT_STORE_OP_STORE;
+		case StoreOp_MsaaResolve:
+			// for MSAA resolve, we have to store data into a special "resolve" attachment
+			return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		case StoreOp_None:
+			return VK_ATTACHMENT_STORE_OP_NONE;
+		}
+		_ASSERT(false);
+		return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	}
+
+	constexpr inline VkBufferUsageFlags getVkBufferUsageFlags(BufferType type)
+	{
+		for(const auto& mapping : usageMappings)
+		{
+			if(mapping.usageBit == type)
+			{
+				return mapping.vkFlag;
+			}
+		}
+		return 0;
+	}
+
+	inline VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage)
+	{
+		VkMemoryPropertyFlags memFlags{ 0 };
+
+		switch(storage)
+		{
+		case StorageType::Device:
+			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+			break;
+		case StorageType::HostVisible:
+			memFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			break;
+		case StorageType::Memoryless:
+			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+			break;
+		}
+		return memFlags;
+	}
 
 
 
