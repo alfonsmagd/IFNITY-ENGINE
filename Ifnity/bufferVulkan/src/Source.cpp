@@ -192,6 +192,8 @@ private:
 	GraphicsPipelineHandle m_WireFramePipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
+
+	uint32_t msizeIndex = 0;	
 public:
 	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
@@ -288,6 +290,42 @@ public:
 		// Setup indices
 		std::vector<uint32_t> indexBuffer{ 0, 1, 2 };
 		uint32_t indexBufferSize = static_cast<uint32_t>(indexBuffer.size()) * sizeof(uint32_t);
+
+
+		//assimp 
+		const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+
+		if(!scene || !scene->HasMeshes())
+		{
+			printf("Unable to load data/rubber_duck/scene.gltf\n");
+			exit(255);
+		}
+
+		const aiMesh* mesh = scene->mMeshes[ 0 ];
+		std::vector<vec3> positions;
+		std::vector<uint32_t> indices;
+		for(unsigned int i = 0; i != mesh->mNumVertices; i++)
+		{
+			const aiVector3D v = mesh->mVertices[ i ];
+			positions.push_back(vec3(v.x, v.y, v.z));
+		}
+
+		for(unsigned int i = 0; i != mesh->mNumFaces; i++)
+		{
+			for(int j = 0; j != 3; j++)
+			{
+				indices.push_back(mesh->mFaces[ i ].mIndices[ j ]);
+			}
+		}
+
+
+
+		aiReleaseImport(scene);
+
+
+
+
+
 		
 		//Vertex Attributes Configure Buffer 
 		{
@@ -295,7 +333,8 @@ public:
 			desc.type = BufferType::VERTEX_BUFFER;
 			desc.binding = 0;
 			desc.size = vertexBufferSize;
-			desc.data = triangleVertices.data();
+			desc.size = sizeof(vec3) * positions.size();
+			desc.data = positions.data();
 			desc.debugName = "Buffer: vertex";
 
 			m_vertexBuffer = rdevice->CreateBuffer(desc);
@@ -303,17 +342,19 @@ public:
 
 		//Indexbuffer
 		{
-			uint32_t indices[] = { 0, 1, 2 };
+			//uint32_t indices[] = { 0, 1, 2 };
 			desc.type = BufferType::INDEX_BUFFER;
-			desc.size = indexBufferSize;
-			desc.data = indices;
+			desc.size =  sizeof(uint32_t) * indices.size();
+			desc.data = indices.data();
 			desc.debugName = "Buffer: index";
 
+			msizeIndex = indices.size();
 
 			m_indexBuffer = rdevice->CreateBuffer(desc);
 
 		}
-
+		
+		
 		
 		
 
@@ -357,7 +398,7 @@ public:
 		rdevice->BindingVertexAttributesBuffer(m_vertexBuffer);
 
 
-
+		
 		m_SolidPipeline->BindPipeline(rdevice);
 
 
@@ -370,19 +411,20 @@ public:
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
 
-		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, 0.0f, -1.5)), (float)glfwGetTime(), vec3(0.0f, 0.0f, 1.0f));
-		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 100.0f);
+		const mat4 m = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
+		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
 
 		//StartRecording
 		rdevice->StartRecording();
 
-		rdevice->WriteBuffer(m_UBO, glm::value_ptr(p * m), sizeof(glm::mat4));
+		rdevice->WriteBuffer(m_UBO, glm::value_ptr(p * v*  m), sizeof(glm::mat4));
 
 		DrawDescription desc;
-		desc.size = 3;
+		desc.size = msizeIndex;
 
 		rdevice->DrawObject(m_SolidPipeline, desc);
 		rdevice->DrawObject(m_WireFramePipeline, desc);

@@ -319,7 +319,8 @@ namespace Vulkan
 			return;
 		}
 
-		vkCmdDraw(wrapper_->cmdBuf_, vertexCount, instanceCount, firstVertex, baseInstance);
+		//vkCmdDraw(wrapper_->cmdBuf_, vertexCount, instanceCount, firstVertex, baseInstance);
+		vkCmdDrawIndexed(wrapper_->cmdBuf_, vertexCount, 1, 0, 0, 0);
 
 	}
 
