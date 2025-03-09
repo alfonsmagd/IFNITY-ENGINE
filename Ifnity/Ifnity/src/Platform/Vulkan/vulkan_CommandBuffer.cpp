@@ -44,12 +44,12 @@ namespace Vulkan
 	{
 		// https://www.saschawillems.de/blog/2019/03/29/flipping-the-vulkan-viewport/
 		const VkViewport vp = {
-			 .x = (float)viewport.x, // float x;
-			 .y = (float)viewport.y, // float y;
-			 .width = (float)viewport.width, // float width;
-			 .height = (float)viewport.height, // float height;
-			 .minDepth = (float)viewport.minDepth, // float minDepth;
-			 .maxDepth = (float)viewport.maxDepth, // float maxDepth;
+		.x = (float)viewport.x, // float x;
+		.y = (float)viewport.y + (float)viewport.height, // float y;
+		.width = (float)viewport.width, // float width;
+		.height = -(float)viewport.height, // float height;
+		.minDepth = (float)viewport.minDepth, // float minDepth;
+		.maxDepth = (float)viewport.maxDepth, // float maxDepth;
 		};
 		vkCmdSetViewport(wrapper_->cmdBuf_, 0, 1, &vp);
 	}
@@ -319,7 +319,8 @@ namespace Vulkan
 			return;
 		}
 
-		vkCmdDraw(wrapper_->cmdBuf_, vertexCount, instanceCount, firstVertex, baseInstance);
+		//vkCmdDraw(wrapper_->cmdBuf_, vertexCount, instanceCount, firstVertex, baseInstance);
+		vkCmdDrawIndexed(wrapper_->cmdBuf_, vertexCount, 1, 0, 0, 0);
 
 	}
 

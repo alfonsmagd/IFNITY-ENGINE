@@ -272,7 +272,7 @@ public:
 			gdesc1.SetVertexShader(m_vs.get()).
 				  SetPixelShader(m_ps.get()).
 				  AddDebugName("Wireframe Pipeline").
-				  SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Line }).
+				  SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Line }).
 				  AddSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , });
 
 			//GraphicsPipelineDescription gdesc
@@ -283,7 +283,7 @@ public:
 			gdesc2.SetVertexShader(m_vs.get()).
 				  SetPixelShader(m_ps.get()).
 				  AddDebugName("Solid Pipeline").
-				  SetRasterizationState({ .cullMode = rhi::CullModeType::Front ,.polygonMode = rhi::PolygonModeType::Fill });
+				  SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Fill });
 
 			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc2);
 		}
@@ -312,6 +312,7 @@ public:
 		rdevice->WriteBuffer(m_UBO, glm::value_ptr(p*m), sizeof(glm::mat4));
 
 		DrawDescription desc;
+		desc.size = 36;
 		rdevice->DrawObject(m_SolidPipeline, desc);
 		rdevice->DrawObject(m_WireFramePipeline, desc);
 		
