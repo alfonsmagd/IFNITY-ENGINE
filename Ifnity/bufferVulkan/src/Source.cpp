@@ -322,6 +322,10 @@ public:
 
 		aiReleaseImport(scene);
 
+
+
+
+
 		
 		//Vertex Attributes Configure Buffer 
 		{
@@ -411,9 +415,8 @@ public:
 
 		const mat4 m = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
 		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
-		 mat4 p = glm::perspective(45.0f, ratio, 0.1f, 100.0f);
-		const mat4 flipY = glm::scale(mat4(1.0f), vec3(1.0f, -1.0f, 1.0f));
-	
+		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
+
 
 		//StartRecording
 		rdevice->StartRecording();
