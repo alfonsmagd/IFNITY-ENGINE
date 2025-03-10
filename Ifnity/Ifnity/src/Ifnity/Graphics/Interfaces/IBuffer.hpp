@@ -54,6 +54,7 @@ enum class IFNITY_API BufferType: unsigned char
 
 /**
  * @brief Enum class representing different types of storage USING IN VK/D3D12 Opengl discard it.
+ *
  */
 enum class IFNITY_API StorageType: unsigned char
 {

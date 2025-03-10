@@ -93,7 +93,7 @@ public:
 	virtual void BindingVertexAttributesBuffer(BufferHandle& bf) = 0;
 	virtual void BindingIndexBuffer(BufferHandle& bf) = 0 ;
 	virtual BufferHandle CreateBuffer(const BufferDescription& desc) = 0;
-	virtual TextureHandle CreateTexture(TextureDescription& desc) = 0;
+	virtual TextureHandle CreateTexture(TextureDescription& desc) = 0; //TODO add TextureDescripton const
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) = 0;
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) = 0;
 	virtual SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) = 0;

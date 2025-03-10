@@ -232,11 +232,16 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 		return false;
 	}
 
+	if(!GetDepthAvailableFormat())
+	{
+		IFNITY_LOG(LogCore, WARNING, "Failed to get depth available format");
+		
+	}
+
 	IFNITY_LOG(LogCore, INFO, "Vulkan Device and Context Initialized");
 	//Get properties2 
 	IFNITY_ASSERT_MSG(m_PhysicalDevice.physical_device != VK_NULL_HANDLE, "No physical device create");
 	getPhysicalDeviceProperties2(m_PhysicalDevice.physical_device);
-
 	growDescriptorPool(16, 16);
 
 	m_RenderDevice = Vulkan::CreateDevice(device_, this);
@@ -851,6 +856,27 @@ bool DeviceVulkan::CreatePipelineCache()
 
 	return true;
 }
+
+bool DeviceVulkan::GetDepthAvailableFormat()
+{
+	const VkFormat depthFormats[] = {
+		VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM
+	};
+
+	for(const auto& depthFormat : depthFormats)
+	{
+		VkFormatProperties formatProps;
+		vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice.physical_device, depthFormat, &formatProps);
+
+		if(formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+		{
+			depthFormats_.push_back(depthFormat);
+		}
+	}
+
+	return !depthFormats_.empty();
+}
+
 
 VkResult DeviceVulkan::growDescriptorPool(uint32_t maxTextures, uint32_t maxSamplers)
 {

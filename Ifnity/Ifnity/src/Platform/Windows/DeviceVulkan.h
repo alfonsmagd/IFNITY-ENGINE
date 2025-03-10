@@ -54,6 +54,9 @@ public:
 	VkPhysicalDeviceProperties2 properties2; //Physical Device Properties 2
 	VkPipelineCache pipelineCache_ = VK_NULL_HANDLE;
 
+	//Formats depth 
+	std::vector<VkFormat> depthFormats_;
+
 	//Using instancing. 
 	VkDescriptorSetLayout vkDSL_ = VK_NULL_HANDLE; // Descriptor Set Layout
 	VkDescriptorPool vkDPool_ = VK_NULL_HANDLE;		// Descriptor Pool	
@@ -196,6 +199,7 @@ private:
 	bool CreateCommandBuffers();
 	bool CreateSyncObjects();
 	bool CreatePipelineCache();
+	bool GetDepthAvailableFormat();
 
 	VkResult growDescriptorPool(uint32_t maxTextures, uint32_t maxSamplers);
 

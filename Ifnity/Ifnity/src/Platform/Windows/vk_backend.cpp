@@ -14,6 +14,7 @@ IFNITY_NAMESPACE
 namespace Vulkan
 {
 
+
 	//-----------------------------------------------//
 	// Device METHODS                                //
 	//-----------------------------------------------//
@@ -466,8 +467,101 @@ namespace Vulkan
 
 	TextureHandle Device::CreateTexture(TextureDescription& desc)
 	{
-		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		//TextureDescription desc(desc);
+
+		//Get the format correctly 
+		
+		/*const VkFormat vkFormat = isDepthFormat(desc.format) ? getClosestDepthStencilFormat(desc.format)
+			: formatToVkFormat(desc.format);*/
+
+		//LVK_ASSERT_MSG(vkFormat != VK_FORMAT_UNDEFINED, "Invalid VkFormat value");
+
+		//const lvk::TextureType type = desc.type;
+		//if(!LVK_VERIFY(type == TextureType_2D || type == TextureType_Cube || type == TextureType_3D))
+		//{
+		//	LVK_ASSERT_MSG(false, "Only 2D, 3D and Cube textures are supported");
+		//	Result::setResult(outResult, Result::Code::RuntimeError);
+		//	return {};
+		//}
+
+		//if(desc.numMipLevels == 0)
+		//{
+		//	LVK_ASSERT_MSG(false, "The number of mip levels specified must be greater than 0");
+		//	desc.numMipLevels = 1;
+		//}
+
+		//if(desc.numSamples > 1 && desc.numMipLevels != 1)
+		//{
+		//	LVK_ASSERT_MSG(false, "The number of mip levels for multisampled images should be 1");
+		//	Result::setResult(outResult, Result::Code::ArgumentOutOfRange, "The number of mip-levels for multisampled images should be 1");
+		//	return {};
+		//}
+
+		//if(desc.numSamples > 1 && type == TextureType_3D)
+		//{
+		//	LVK_ASSERT_MSG(false, "Multisampled 3D images are not supported");
+		//	Result::setResult(outResult, Result::Code::ArgumentOutOfRange, "Multisampled 3D images are not supported");
+		//	return {};
+		//}
+
+		//if(!LVK_VERIFY(desc.numMipLevels <= lvk::calcNumMipLevels(desc.dimensions.width, desc.dimensions.height)))
+		//{
+		//	Result::setResult(outResult,
+		//		Result::Code::ArgumentOutOfRange,
+		//		"The number of specified mip-levels is greater than the maximum possible "
+		//		"number of mip-levels.");
+		//	return {};
+		//}
+
+		//if(desc.usage == 0)
+		//{
+		//	LVK_ASSERT_MSG(false, "Texture usage flags are not set");
+		//	desc.usage = lvk::TextureUsageBits_Sampled;
+		//}
+
+		///* Use staging device to transfer data into the image when the storage is private to the device */
+		//VkImageUsageFlags usageFlags = (desc.storage == StorageType_Device) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
+
+		//if(desc.usage & lvk::TextureUsageBits_Sampled)
+		//{
+		//	usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+		//}
+		//if(desc.usage & lvk::TextureUsageBits_Storage)
+		//{
+		//	LVK_ASSERT_MSG(desc.numSamples <= 1, "Storage images cannot be multisampled");
+		//	usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
+		//}
+		//if(desc.usage & lvk::TextureUsageBits_Attachment)
+		//{
+		//	usageFlags |= lvk::isDepthOrStencilFormat(desc.format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+		//		: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		//	if(desc.storage == lvk::StorageType_Memoryless)
+		//	{
+		//		usageFlags |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+		//	}
+		//}
+
+		//if(desc.storage != lvk::StorageType_Memoryless)
+		//{
+		//	// For now, always set this flag so we can read it back
+		//	usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		//}
+
+		//LVK_ASSERT_MSG(usageFlags != 0, "Invalid usage flags");
+
+		//const VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags(desc.storage);
+
+		//const bool hasDebugName = desc.debugName && *desc.debugName;
+
+		//char debugNameImage[ 256 ] = { 0 };
+		//char debugNameImageView[ 256 ] = { 0 };
+
+		//if(hasDebugName)
+		//{
+		//	snprintf(debugNameImage, sizeof(debugNameImage) - 1, "Image: %s", desc.debugName);
+		//	snprintf(debugNameImageView, sizeof(debugNameImageView) - 1, "Image View: %s", desc.debugName);
+		//}
+		return {};
 	}
 
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)

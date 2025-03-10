@@ -65,6 +65,13 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
 
 }
 
+
+ bool isDepthFormat(rhi::Format format)
+ {
+	 return properties[ static_cast<uint8_t>(format) ].depth 
+            || properties[static_cast<uint8_t>(format)].stencil;
+ }
+
 IFNITY_END_NAMESPACE
 
 
