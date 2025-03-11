@@ -180,27 +180,27 @@ namespace OpenGL
      * @param dimension The RHI texture dimension.
      * @return The corresponding OpenGL texture target.
      */
-    inline GLenum ConvertToOpenGLTextureTarget(rhi::TextureDimension dimension)
+    inline GLenum ConvertToOpenGLTextureTarget(rhi::TextureType dimension)
     {
         switch(dimension)
         {
-        case rhi::TextureDimension::TEXTURE1D:
+        case rhi::TextureType::TEXTURE1D:
             return GL_TEXTURE_1D;
-        case rhi::TextureDimension::TEXTURE1DARRAY:
+        case rhi::TextureType::TEXTURE1DARRAY:
             return GL_TEXTURE_1D_ARRAY;
-        case rhi::TextureDimension::TEXTURE2D:
+        case rhi::TextureType::TEXTURE2D:
             return GL_TEXTURE_2D;
-        case rhi::TextureDimension::TEXTURE2DARRAY:
+        case rhi::TextureType::TEXTURE2DARRAY:
             return GL_TEXTURE_2D_ARRAY;
-        case rhi::TextureDimension::TEXTURECUBE:
+        case rhi::TextureType::TEXTURECUBE:
             return GL_TEXTURE_CUBE_MAP;
-        case rhi::TextureDimension::TEXTURECUBEARRAY:
+        case rhi::TextureType::TEXTURECUBEARRAY:
             return GL_TEXTURE_CUBE_MAP_ARRAY;
-        case rhi::TextureDimension::TEXTURE2DMS:
+        case rhi::TextureType::TEXTURE2DMS:
             return GL_TEXTURE_2D_MULTISAMPLE;
-        case rhi::TextureDimension::TEXTURE2DMSARRAY:
+        case rhi::TextureType::TEXTURE2DMSARRAY:
             return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
-        case rhi::TextureDimension::TEXTURE3D:
+        case rhi::TextureType::TEXTURE3D:
             return GL_TEXTURE_3D;
         default:
             return GL_TEXTURE_2D; // Default value

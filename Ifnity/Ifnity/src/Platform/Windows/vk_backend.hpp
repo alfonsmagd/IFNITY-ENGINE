@@ -96,6 +96,8 @@ namespace Vulkan
             const char* debugName);
         HolderShaderSM createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const;
         HolderShaderSM createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const ;
+        VkFormat getClosestDepthStencilFormat(rhi::Format desiredFormat) const;
+       
 
         
 		const VkPhysicalDeviceLimits& getPhysicalDeviceLimits() const;

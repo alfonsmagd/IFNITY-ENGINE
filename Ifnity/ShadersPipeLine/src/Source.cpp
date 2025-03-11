@@ -1717,7 +1717,7 @@ public:
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
 		TextureDescription descCubeTexture;
-		descCubeTexture.setDimension(TextureDimension::TEXTURECUBE)
+		descCubeTexture.setDimension(TextureType::TEXTURECUBE)
 			.setFilePath("data/cube_boloni.hdr")
 			.setWrapping(TextureWrapping::CLAMP_TO_EDGE);
 
@@ -1873,7 +1873,7 @@ public:
 		m_UBO = m_ManagerDevice->GetRenderDevice()->CreateBuffer(DescriptionBuffer);
 
 		TextureDescription descCubeTexture;
-		descCubeTexture.setDimension(TextureDimension::TEXTURECUBE)
+		descCubeTexture.setDimension(TextureType::TEXTURECUBE)
 			.setFilePath("data/cube_boloni.hdr")
 			.setWrapping(TextureWrapping::CLAMP_TO_EDGE); 
 

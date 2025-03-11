@@ -52,7 +52,7 @@ namespace Vulkan
 
 	}
 
-	//TODO: Implement this function desc information
+	//TODO: Implement this function texdesc information
 	void Device::DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)
 	{
 		pipeline->BindPipeline(this);//This set pipeline like actualpilenine in VK.
@@ -467,81 +467,79 @@ namespace Vulkan
 
 	TextureHandle Device::CreateTexture(TextureDescription& desc)
 	{
-		//TextureDescription desc(desc);
+		using namespace rhi;
 
-		//Get the format correctly 
-		
-		/*const VkFormat vkFormat = isDepthFormat(desc.format) ? getClosestDepthStencilFormat(desc.format)
-			: formatToVkFormat(desc.format);*/
+		TextureDescription texdesc(desc);
 
-		//LVK_ASSERT_MSG(vkFormat != VK_FORMAT_UNDEFINED, "Invalid VkFormat value");
+		//Get the format correctly , if is a depth format get the closest format ,if not pass the format as-is. 
+		const VkFormat vkFormat = isDepthFormat(desc.format) ? getClosestDepthStencilFormat(desc.format)
+			: formatToVkFormat(desc.format);
 
-		//const lvk::TextureType type = desc.type;
-		//if(!LVK_VERIFY(type == TextureType_2D || type == TextureType_Cube || type == TextureType_3D))
-		//{
-		//	LVK_ASSERT_MSG(false, "Only 2D, 3D and Cube textures are supported");
-		//	Result::setResult(outResult, Result::Code::RuntimeError);
-		//	return {};
-		//}
+		IFNITY_ASSERT_MSG(vkFormat != VK_FORMAT_UNDEFINED, "Invalid VkFormat value");
 
-		//if(desc.numMipLevels == 0)
-		//{
-		//	LVK_ASSERT_MSG(false, "The number of mip levels specified must be greater than 0");
-		//	desc.numMipLevels = 1;
-		//}
+		const rhi::TextureType type = texdesc.dimension;
+        if(!(type == TextureType::TEXTURE2D || type == TextureType::TEXTURECUBE || type == TextureType::TEXTURE3D))
+        {
+			IFNITY_ASSERT(false, "Only 2D, 3D and Cube textures are supported");
 
-		//if(desc.numSamples > 1 && desc.numMipLevels != 1)
-		//{
-		//	LVK_ASSERT_MSG(false, "The number of mip levels for multisampled images should be 1");
-		//	Result::setResult(outResult, Result::Code::ArgumentOutOfRange, "The number of mip-levels for multisampled images should be 1");
-		//	return {};
-		//}
+        return {};
+        }
 
-		//if(desc.numSamples > 1 && type == TextureType_3D)
-		//{
-		//	LVK_ASSERT_MSG(false, "Multisampled 3D images are not supported");
-		//	Result::setResult(outResult, Result::Code::ArgumentOutOfRange, "Multisampled 3D images are not supported");
-		//	return {};
-		//}
+		if(texdesc.mipLevels == 0)
+		{
+			IFNITY_LOG(LogCore, WARNING, "The number of mip-levels is 0. Setting it to 1.");
+			texdesc.mipLevels = 1;
+		}
 
-		//if(!LVK_VERIFY(desc.numMipLevels <= lvk::calcNumMipLevels(desc.dimensions.width, desc.dimensions.height)))
-		//{
-		//	Result::setResult(outResult,
-		//		Result::Code::ArgumentOutOfRange,
-		//		"The number of specified mip-levels is greater than the maximum possible "
-		//		"number of mip-levels.");
-		//	return {};
-		//}
+		if(texdesc.sampleCount > 1 && texdesc.mipLevels != 1)
+		{
+			IFNITY_LOG(LogCore, WARNING, "Multisampled textures must have only one mip-level. Setting it to 1.");
+			return {};
+		}
 
-		//if(desc.usage == 0)
-		//{
-		//	LVK_ASSERT_MSG(false, "Texture usage flags are not set");
-		//	desc.usage = lvk::TextureUsageBits_Sampled;
-		//}
+		if(texdesc.sampleCount > 1 && type == rhi::TextureType::TEXTURE3D)
+		{
+			IFNITY_LOG(LogCore, WARNING, "Multisampled 3D textures are not supported. Setting it to 1.");
+			texdesc.sampleCount = 1;
+			return {};
+		}
+
+		if(!(texdesc.mipLevels <= Utils::getNumMipMapLevels2D(texdesc.dimensions.width, texdesc.dimensions.height)))
+		{
+			IFNITY_LOG(LogCore, WARNING, "The number of mip-levels is too high. Setting it to the maximum possible value.");
+			texdesc.mipLevels = Utils::getNumMipMapLevels2D(texdesc.dimensions.width, texdesc.dimensions.height);
+			
+		}
+
+		if(texdesc.usage == rhi::TextureUsageBits::UNKNOW )
+		{
+			IFNITY_LOG(LogCore, WARNING, "Texture usage is not set. Setting it to sampled.");
+			texdesc.usage = rhi::TextureUsageBits::SAMPLED;
+		}
 
 		///* Use staging device to transfer data into the image when the storage is private to the device */
-		//VkImageUsageFlags usageFlags = (desc.storage == StorageType_Device) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
+		//VkImageUsageFlags usageFlags = (texdesc.storage == StorageType_Device) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 
-		//if(desc.usage & lvk::TextureUsageBits_Sampled)
+		//if(texdesc.usage & lvk::TextureUsageBits_Sampled)
 		//{
 		//	usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 		//}
-		//if(desc.usage & lvk::TextureUsageBits_Storage)
+		//if(texdesc.usage & lvk::TextureUsageBits_Storage)
 		//{
-		//	LVK_ASSERT_MSG(desc.numSamples <= 1, "Storage images cannot be multisampled");
+		//	LVK_ASSERT_MSG(texdesc.numSamples <= 1, "Storage images cannot be multisampled");
 		//	usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
 		//}
-		//if(desc.usage & lvk::TextureUsageBits_Attachment)
+		//if(texdesc.usage & lvk::TextureUsageBits_Attachment)
 		//{
-		//	usageFlags |= lvk::isDepthOrStencilFormat(desc.format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+		//	usageFlags |= lvk::isDepthOrStencilFormat(texdesc.format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
 		//		: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		//	if(desc.storage == lvk::StorageType_Memoryless)
+		//	if(texdesc.storage == lvk::StorageType_Memoryless)
 		//	{
 		//		usageFlags |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
 		//	}
 		//}
 
-		//if(desc.storage != lvk::StorageType_Memoryless)
+		//if(texdesc.storage != lvk::StorageType_Memoryless)
 		//{
 		//	// For now, always set this flag so we can read it back
 		//	usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -549,17 +547,17 @@ namespace Vulkan
 
 		//LVK_ASSERT_MSG(usageFlags != 0, "Invalid usage flags");
 
-		//const VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags(desc.storage);
+		//const VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags(texdesc.storage);
 
-		//const bool hasDebugName = desc.debugName && *desc.debugName;
+		//const bool hasDebugName = texdesc.debugName && *texdesc.debugName;
 
 		//char debugNameImage[ 256 ] = { 0 };
 		//char debugNameImageView[ 256 ] = { 0 };
 
 		//if(hasDebugName)
 		//{
-		//	snprintf(debugNameImage, sizeof(debugNameImage) - 1, "Image: %s", desc.debugName);
-		//	snprintf(debugNameImageView, sizeof(debugNameImageView) - 1, "Image View: %s", desc.debugName);
+		//	snprintf(debugNameImage, sizeof(debugNameImage) - 1, "Image: %s", texdesc.debugName);
+		//	snprintf(debugNameImageView, sizeof(debugNameImageView) - 1, "Image View: %s", texdesc.debugName);
 		//}
 		return {};
 	}
@@ -918,6 +916,35 @@ namespace Vulkan
 			compileShaderVK(stage, shaderCode, &spirv, &resource);
 			return createShaderModuleFromSpirV(spirv.data(), spirv.size(), debugName);
 		}
+	}
+
+	VkFormat Device::getClosestDepthStencilFormat(rhi::Format desiredFormat) const
+	{
+		
+			// get a list of compatible depth formats for a given desired format
+			// The list will contain depth format that are ordered from most to least closest
+			const std::vector<VkFormat> compatibleDepthStencilFormatList = getCompatibleDepthStencilFormats(desiredFormat);
+
+			const auto deviceDepthFormats_ = m_DeviceVulkan->depthFormats_;
+
+			// Generate a set of device supported formats
+			std::set<VkFormat> availableFormats;
+			for(auto format : deviceDepthFormats_)
+			{
+				availableFormats.insert(format);
+			}
+
+			// check if any of the format in compatible list is supported
+			for(auto depthStencilFormat : compatibleDepthStencilFormatList)
+			{
+				if(availableFormats.count(depthStencilFormat) != 0)
+				{
+					return depthStencilFormat;
+				}
+			}
+
+			// no matching found, choose the first supported format
+			return !deviceDepthFormats_.empty() ? deviceDepthFormats_[ 0 ] : VK_FORMAT_D24_UNORM_S8_UINT;
 	}
 
 	const VkPhysicalDeviceLimits& Device::getPhysicalDeviceLimits() const

@@ -121,15 +121,16 @@ struct IFNITY_API TextureDescription
     uint32_t sampleQuality = 0;
     uint8_t  comp = 0;
     rhi::Format format = rhi::Format::R8G8B8;
-    rhi::TextureDimension dimension = rhi::TextureDimension::TEXTURE2D;
+    rhi::TextureType dimension = rhi::TextureType::TEXTURE2D;
 	rhi::TextureWrapping  wrapping  = rhi::TextureWrapping::REPEAT;
+	rhi::TextureUsageBits usage = rhi::TextureUsageBits::UNKNOW;
 	StorageType storageType = StorageType::HostVisible;
     std::string debugName;
     std::string filepath;
 	bool generateMipMaps = false;
 	const void* data = nullptr;
 	
-
+   
     enum TextureFlags: uint32_t
     {
         IS_SHADER_RESOURCE = 1 << 0,
@@ -153,13 +154,14 @@ struct IFNITY_API TextureDescription
     constexpr TextureDescription& setSampleCount(uint32_t value) { sampleCount = value; return *this; }
     constexpr TextureDescription& setSampleQuality(uint32_t value) { sampleQuality = value; return *this; }
     constexpr TextureDescription& setFormat(rhi::Format value) { format = value; return *this; }
-    constexpr TextureDescription& setDimension(rhi::TextureDimension value) { dimension = value; return *this; }
+    constexpr TextureDescription& setDimension(rhi::TextureType value) { dimension = value; return *this; }
     TextureDescription&           setDebugName(const std::string& value) { debugName = value; return *this; }
     TextureDescription& setFilePath(std::string filepath) { this->filepath = filepath;  return *this; }
 	constexpr TextureDescription& setWrapping(rhi::TextureWrapping value) { wrapping = value; return *this; }
 	constexpr TextureDescription& setData(const void* data) { this->data = data; return *this; }
 	constexpr TextureDescription& setStorageType(StorageType value) { storageType = value; return *this; }
 	constexpr TextureDescription& setGenerateMipMaps(bool value) { generateMipMaps = value; return *this; }
+	constexpr TextureDescription& setUsage(rhi::TextureUsageBits value) { usage = value; return *this; }
 	
 	//Set the flags
     constexpr TextureDescription& setFlag(TextureFlags flag, bool enabled)

@@ -215,11 +215,19 @@ namespace rhi {
         COUNT              /**< Wrapping count */
     };
 
+    enum class TextureUsageBits: uint8_t
+    {
+        SAMPLED = 1 << 0,
+        STORAGE = 1 << 1,
+        ATTACHMENT = 1 << 2,
+        UNKNOW = 0
+    };
+
     /**
-     * @enum TextureDimension
+     * @enum TextureType
      * @brief Enum representing the dimension of texture.
      */
-    enum class TextureDimension : uint8_t
+    enum class TextureType : uint8_t
     {
         UNKNOWN,            /**< Unknown dimension */
         TEXTURE1D,          /**< 1D texture */

@@ -36,6 +36,7 @@ public:
 	const uint32_t getApiVersion() const { return vkPhysicalDeviceProperties2_.properties.apiVersion; }
 	void* getVmaAllocator() const { return m_Allocator; }
 
+
 	//Destroy operations 
 	void destroy(Vulkan::TextureHandleSM handle);
 	void destroy(Vulkan::GraphicsPipelineHandleSM handle);

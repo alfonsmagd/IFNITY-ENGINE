@@ -25,7 +25,14 @@ namespace Utils
 
 	std::tuple<std::string, std::string, std::string> readShaderFilesByAPI(const rhi::GraphicsAPI& api, const  IShader* vs, const IShader* fs, const IShader* gs);
    
-
+	template<typename T>
+	IFNITY_API T getNumMipMapLevels2D(T w, T h)
+	{
+		T levels = 1;
+		while((w | h) >> levels)
+			levels += 1;
+		return levels;
+	}
 }
 
 IFNITY_END_NAMESPACE

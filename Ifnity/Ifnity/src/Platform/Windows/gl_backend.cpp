@@ -13,13 +13,13 @@ using vec2 = glm::vec2;
 
 namespace OpenGL
 {
-	int getNumMipMapLevels2D(int w, int h)
+	/*int getNumMipMapLevels2D(int w, int h)
 	{
 		int levels = 1;
 		while((w | h) >> levels)
 			levels += 1;
 		return levels;
-	}
+	}*/
 
 	void CheckOpenGLError(const char* stmt, const char* fname, int line)
 	{
@@ -305,7 +305,7 @@ namespace OpenGL
 		//Create Switch for the type of texture
 		switch(desc.dimension)
 		{
-		case rhi::TextureDimension::TEXTURE2D:
+		case rhi::TextureType::TEXTURE2D:
 			if(desc.hasFlag(TextureDescription::TextureFlags::IS_ARB_BINDLESS_TEXTURE))
 			{
 				//Create a bindless texture
@@ -314,7 +314,7 @@ namespace OpenGL
 			return CreateTexture2DImpl(desc);
 			break;
 
-		case rhi::TextureDimension::TEXTURECUBE:
+		case rhi::TextureType::TEXTURECUBE:
 			return CreateTextureCubeMapImpl(desc);
 			break;
 		default:
@@ -1153,7 +1153,7 @@ namespace OpenGL
 		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, wrapping);
 
 		// Generar mipmaps y almacenar la textura
-		GLsizei numMipmaps = getNumMipMapLevels2D(width, height);
+		GLsizei numMipmaps = Utils::getNumMipMapLevels2D(width, height);
 		glTextureStorage2D(m_TextureID, numMipmaps, GL_RGBA8, width, height);
 		GLenum error = glGetError();
 		if(error != GL_NO_ERROR)
@@ -1202,7 +1202,7 @@ namespace OpenGL
 	{
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
-		int numMipmaps = getNumMipMapLevels2D(w, h);
+		int numMipmaps = Utils::getNumMipMapLevels2D(w, h);
 		glTextureStorage2D(m_TextureID, numMipmaps, GL_RGBA8, w, h);
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, img);
 		glGenerateTextureMipmap(m_TextureID);
@@ -1252,7 +1252,7 @@ namespace OpenGL
 			assert(allMaterialTextures_.capacity() >= textureFiles.size());
 		#endif // BUILD_SHARED_IFNITY
 		TextureDescription desc;
-		desc.setDimension(rhi::TextureDimension::TEXTURE2D);
+		desc.setDimension(rhi::TextureType::TEXTURE2D);
 		desc.setFlag(TextureDescription::TextureFlags::IS_ARB_BINDLESS_TEXTURE,true);
 		desc.setFormat(rhi::Format::R8G8B8A8);
 
