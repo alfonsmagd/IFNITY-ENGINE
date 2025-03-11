@@ -64,13 +64,13 @@ namespace Vulkan
 		//for each vertex buffer bind 
 		for(auto& vb : m_vertexBuffer)
 		{
-			
-			cmdBuffer.cmdBindVertexBuffer(0,vb);
+
+			cmdBuffer.cmdBindVertexBuffer(0, vb);
 		}
 		for(auto& ib : m_indexBuffer)
 		{
 			if(!ib.valid()) continue;
-			cmdBuffer.cmdBindIndexBuffer(ib,rhi::IndexFormat::IndexFormat_UINT32);
+			cmdBuffer.cmdBindIndexBuffer(ib, rhi::IndexFormat::IndexFormat_UINT32);
 		}
 
 		cmdBuffer.cmdPushConstants(pushConstants.data,
@@ -178,33 +178,33 @@ namespace Vulkan
 	BufferHandle Device::CreateBuffer(const BufferDescription& desc)
 	{
 		//auxiliar storagetype config 
-		StorageType storageType = desc.storageType;
-		
+		StorageType storage = desc.storage;
+
 		//This is a constant buffer and Vulkan Constant Buffer is inside like a PushConstant and manage	internal 
 		if(desc.type == BufferType::CONSTANT_BUFFER)
 		{
 			IFNITY_LOG(LogCore, INFO, "Constant Buffer its managed in vulkan like push constants inside ");
 			Buffer* buff = new Buffer(desc);
 			return BufferHandle(buff);
-		
+
 		}
 
 		if(desc.type == BufferType::NO_DEFINE_BUFFER) { IFNITY_LOG(LogCore, WARNING, "No define buffer "); return{}; }
 
 
-		if(!m_DeviceVulkan->useStaging_ && (desc.storageType == StorageType::Device))
+		if(!m_DeviceVulkan->useStaging_ && (desc.storage == StorageType::DEVICE))
 		{
-			storageType = StorageType::HostVisible;
+			storage = StorageType::HOSTVISIBLE;
 		}
 
 		// Use staging device to transfer data into the buffer when the storage is private to the device
-		VkBufferUsageFlags usageFlags = (desc.storageType == StorageType::Device) ? 
+		VkBufferUsageFlags usageFlags = (desc.storage == StorageType::DEVICE) ?
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT : 0;
 
 
 		//Generate Flags and MemFlags using BufferDescription 
 		usageFlags |= Vulkan::getVkBufferUsageFlags(desc.type);
-		VkMemoryPropertyFlags memFlags = Vulkan::storageTypeToVkMemoryPropertyFlags(storageType);
+		VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags(storage);
 
 		//Create the buffer holder 
 		HolderBufferSM buffer = CreateInternalVkBuffer(desc.size, usageFlags, memFlags, desc.debugName.c_str());
@@ -217,15 +217,15 @@ namespace Vulkan
 		{
 			upload(*buffer, desc.data, desc.size, desc.offset);
 		}
-		
-		
+
+
 		//Check if is a vertex buffer or index buffer 
-		
+
 
 
 		Buffer* handle = new Buffer(desc, std::move(buffer));
 		return BufferHandle(handle);
-		
+
 	}
 
 	HolderBufferSM Device::CreateInternalVkBuffer(VkDeviceSize bufferSize,
@@ -257,14 +257,14 @@ namespace Vulkan
 			}
 		}
 
-		VulkanBuffer buf = 
+		VulkanBuffer buf =
 		{
 		 .bufferSize_ = bufferSize,
 		 .vkUsageFlags_ = usageFlags,
 		 .vkMemFlags_ = memFlags,
 		};
 
-		const VkBufferCreateInfo ci = 
+		const VkBufferCreateInfo ci =
 		{
 			 .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
 			 .pNext = nullptr,
@@ -311,8 +311,8 @@ namespace Vulkan
 			vmaCreateBuffer((VmaAllocator)m_DeviceVulkan->getVmaAllocator(),
 				&ci,
 				&vmaAllocInfo,
-				&buf.vkBuffer_, 
-				&buf.vmaAllocation_, 
+				&buf.vkBuffer_,
+				&buf.vmaAllocation_,
 				nullptr);
 
 			// handle memory-mapped buffers
@@ -365,8 +365,8 @@ namespace Vulkan
 			buf.vkDeviceAddress_ = vkGetBufferDeviceAddress(vkDevice_, &ai);
 			IFNITY_ASSERT(buf.vkDeviceAddress_);
 		}
-		
-		BufferHandleSM buffhandle =  m_DeviceVulkan->slotMapBuffers_.create(std::move(buf));
+
+		BufferHandleSM buffhandle = m_DeviceVulkan->slotMapBuffers_.create(std::move(buf));
 
 		return makeHolder(m_DeviceVulkan, buffhandle);
 
@@ -374,11 +374,11 @@ namespace Vulkan
 
 
 
-	
+
 
 	void Device::upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset)
 	{
-	
+
 		//Previos check if the buffer is null and check it 
 		if(!data)
 		{
@@ -400,12 +400,12 @@ namespace Vulkan
 		{
 			return;
 		}
-		
+
 		//Lets to staginDevice to upload data 
 		m_StagingDevice->bufferSubData(*buf, offset, size, data);
 
-		
-		
+
+
 	}
 
 	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)
@@ -418,6 +418,81 @@ namespace Vulkan
 			pushConstants.offset = offset;
 		}
 
+	}
+
+
+	bool Device::validateTextureDescription(TextureDescription& texdesc)
+	{
+		const rhi::TextureType type = texdesc.dimension;
+		if(!(type == TextureType::TEXTURE2D || type == TextureType::TEXTURECUBE || type == TextureType::TEXTURE3D))
+		{
+			IFNITY_ASSERT(false, "Only 2D, 3D and Cube textures are supported");
+			return false;
+		}
+
+		if(texdesc.mipLevels == 0)
+		{
+			IFNITY_LOG(LogCore, WARNING, "The number of mip-levels is 0. Setting it to 1.");
+			texdesc.mipLevels = 1;
+		}
+
+		if(texdesc.sampleCount > 1 && texdesc.mipLevels != 1)
+		{
+			IFNITY_LOG(LogCore, WARNING, "Multisampled textures must have only one mip-level. Setting it to 1.");
+			return false;
+		}
+
+		if(texdesc.sampleCount > 1 && type == rhi::TextureType::TEXTURE3D)
+		{
+			IFNITY_LOG(LogCore, WARNING, "Multisampled 3D textures are not supported. Setting it to 1.");
+			texdesc.sampleCount = 1;
+			return false;
+		}
+
+		if(!(texdesc.mipLevels <= Utils::getNumMipMapLevels2D(texdesc.dimensions.width, texdesc.dimensions.height)))
+		{
+			IFNITY_LOG(LogCore, WARNING, "The number of mip-levels is too high. Setting it to the maximum possible value.");
+			texdesc.mipLevels = Utils::getNumMipMapLevels2D(texdesc.dimensions.width, texdesc.dimensions.height);
+		}
+
+		if(texdesc.usage == rhi::TextureUsageBits::UNKNOW)
+		{
+			IFNITY_LOG(LogCore, WARNING, "Texture usage is not set. Setting it to sampled.");
+			texdesc.usage = rhi::TextureUsageBits::SAMPLED;
+		}
+
+		return true;
+	}
+
+	VkImageUsageFlags Device::getImageUsageFlags(const TextureDescription& texdesc)
+	{
+		VkImageUsageFlags usageFlags = (texdesc.storage == StorageType::DEVICE) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
+
+		if(static_cast<uint8_t>(texdesc.usage) & static_cast<uint8_t>(rhi::TextureUsageBits::SAMPLED))
+		{
+			usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+		}
+		if(static_cast<uint8_t>(texdesc.usage) & static_cast<uint8_t>(rhi::TextureUsageBits::STORAGE))
+		{
+			IFNITY_ASSERT_MSG(texdesc.sampleCount <= 1, "Storage images cannot be multisampled");
+			usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
+		}
+		if(static_cast<uint8_t>(texdesc.usage) & static_cast<uint8_t>(rhi::TextureUsageBits::ATTACHMENT))
+		{
+			usageFlags |= isDepthFormat(texdesc.format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+				: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			if(texdesc.storage == StorageType::MEMORYLESS)
+			{
+				usageFlags |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
+			}
+		}
+
+		if(texdesc.storage != StorageType::MEMORYLESS)
+		{
+			usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		}
+
+		return usageFlags;
 	}
 
 	void Device::BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)
@@ -451,7 +526,7 @@ namespace Vulkan
 
 	void Device::BindingIndexBuffer(BufferHandle& bf)
 	{
-	
+
 		//Dynamic cast to VkDevice 
 		// 
 		Buffer* vkBuffer = dynamic_cast<Buffer*>(bf.get());
@@ -471,94 +546,56 @@ namespace Vulkan
 
 		TextureDescription texdesc(desc);
 
-		//Get the format correctly , if is a depth format get the closest format ,if not pass the format as-is. 
+		//Validate and asure the texture description is valid , if some values are invalid, the function force
+		//by default some values but not all. 
+		if(!validateTextureDescription(texdesc))
+		{
+			return {};
+		}
+
+		//Get the format value. 
 		const VkFormat vkFormat = isDepthFormat(desc.format) ? getClosestDepthStencilFormat(desc.format)
 			: formatToVkFormat(desc.format);
 
 		IFNITY_ASSERT_MSG(vkFormat != VK_FORMAT_UNDEFINED, "Invalid VkFormat value");
 
-		const rhi::TextureType type = texdesc.dimension;
-        if(!(type == TextureType::TEXTURE2D || type == TextureType::TEXTURECUBE || type == TextureType::TEXTURE3D))
-        {
-			IFNITY_ASSERT(false, "Only 2D, 3D and Cube textures are supported");
+		VkImageUsageFlags usageFlags = getImageUsageFlags(texdesc);
 
-        return {};
-        }
 
-		if(texdesc.mipLevels == 0)
+		VkImageCreateFlags vkCreateFlags = 0;
+		VkImageViewType vkImageViewType;
+		VkImageType vkImageType;
+		VkSampleCountFlagBits vkSamples = VK_SAMPLE_COUNT_1_BIT;
+
+		switch(texdesc.dimension)
 		{
-			IFNITY_LOG(LogCore, WARNING, "The number of mip-levels is 0. Setting it to 1.");
-			texdesc.mipLevels = 1;
-		}
+		case TextureType::TEXTURE2D:
+			vkImageViewType = VK_IMAGE_VIEW_TYPE_2D;
+			vkImageType = VK_IMAGE_TYPE_2D;
+			vkSamples = getVulkanSampleCountFlags(texdesc.sampleCount, m_DeviceVulkan->getFramebufferMSAABitMask());
+			break;
+		case TextureType::TEXTURECUBE:
 
-		if(texdesc.sampleCount > 1 && texdesc.mipLevels != 1)
-		{
-			IFNITY_LOG(LogCore, WARNING, "Multisampled textures must have only one mip-level. Setting it to 1.");
+		case TextureType::TEXTURE3D:
+
+
+		
+
+		default:
+			IFNITY_LOG(LogCore, ERROR, "Unsupported texture type");
+
 			return {};
 		}
 
-		if(texdesc.sampleCount > 1 && type == rhi::TextureType::TEXTURE3D)
-		{
-			IFNITY_LOG(LogCore, WARNING, "Multisampled 3D textures are not supported. Setting it to 1.");
-			texdesc.sampleCount = 1;
-			return {};
-		}
 
-		if(!(texdesc.mipLevels <= Utils::getNumMipMapLevels2D(texdesc.dimensions.width, texdesc.dimensions.height)))
-		{
-			IFNITY_LOG(LogCore, WARNING, "The number of mip-levels is too high. Setting it to the maximum possible value.");
-			texdesc.mipLevels = Utils::getNumMipMapLevels2D(texdesc.dimensions.width, texdesc.dimensions.height);
-			
-		}
 
-		if(texdesc.usage == rhi::TextureUsageBits::UNKNOW )
-		{
-			IFNITY_LOG(LogCore, WARNING, "Texture usage is not set. Setting it to sampled.");
-			texdesc.usage = rhi::TextureUsageBits::SAMPLED;
-		}
 
-		///* Use staging device to transfer data into the image when the storage is private to the device */
-		//VkImageUsageFlags usageFlags = (texdesc.storage == StorageType_Device) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 
-		//if(texdesc.usage & lvk::TextureUsageBits_Sampled)
-		//{
-		//	usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
-		//}
-		//if(texdesc.usage & lvk::TextureUsageBits_Storage)
-		//{
-		//	LVK_ASSERT_MSG(texdesc.numSamples <= 1, "Storage images cannot be multisampled");
-		//	usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
-		//}
-		//if(texdesc.usage & lvk::TextureUsageBits_Attachment)
-		//{
-		//	usageFlags |= lvk::isDepthOrStencilFormat(texdesc.format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
-		//		: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		//	if(texdesc.storage == lvk::StorageType_Memoryless)
-		//	{
-		//		usageFlags |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
-		//	}
-		//}
 
-		//if(texdesc.storage != lvk::StorageType_Memoryless)
-		//{
-		//	// For now, always set this flag so we can read it back
-		//	usageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-		//}
 
-		//LVK_ASSERT_MSG(usageFlags != 0, "Invalid usage flags");
 
-		//const VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags(texdesc.storage);
 
-		//const bool hasDebugName = texdesc.debugName && *texdesc.debugName;
 
-		//char debugNameImage[ 256 ] = { 0 };
-		//char debugNameImageView[ 256 ] = { 0 };
-
-		//if(hasDebugName)
-		//{
-		//	snprintf(debugNameImage, sizeof(debugNameImage) - 1, "Image: %s", texdesc.debugName);
-		//	snprintf(debugNameImageView, sizeof(debugNameImageView) - 1, "Image View: %s", texdesc.debugName);
-		//}
 		return {};
 	}
 
@@ -693,10 +730,10 @@ namespace Vulkan
 		const VkPipelineVertexInputStateCreateInfo ciVertexInputState =
 		{
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-			.vertexBindingDescriptionCount =   rps->numBindings_,
-			.pVertexBindingDescriptions =      rps->numBindings_ ? rps->vkBindings_ : nullptr,
-			.vertexAttributeDescriptionCount =  rps->numAttributes_,
-			.pVertexAttributeDescriptions =     rps->numAttributes_ ? rps->vkAttributes_ : nullptr,
+			.vertexBindingDescriptionCount = rps->numBindings_,
+			.pVertexBindingDescriptions = rps->numBindings_ ? rps->vkBindings_ : nullptr,
+			.vertexAttributeDescriptionCount = rps->numAttributes_,
+			.pVertexAttributeDescriptions = rps->numAttributes_ ? rps->vkAttributes_ : nullptr,
 		};
 
 		//6. PushConstant Vulkan Range and Specialization Info
@@ -920,31 +957,31 @@ namespace Vulkan
 
 	VkFormat Device::getClosestDepthStencilFormat(rhi::Format desiredFormat) const
 	{
-		
-			// get a list of compatible depth formats for a given desired format
-			// The list will contain depth format that are ordered from most to least closest
-			const std::vector<VkFormat> compatibleDepthStencilFormatList = getCompatibleDepthStencilFormats(desiredFormat);
 
-			const auto deviceDepthFormats_ = m_DeviceVulkan->depthFormats_;
+		// get a list of compatible depth formats for a given desired format
+		// The list will contain depth format that are ordered from most to least closest
+		const std::vector<VkFormat> compatibleDepthStencilFormatList = getCompatibleDepthStencilFormats(desiredFormat);
 
-			// Generate a set of device supported formats
-			std::set<VkFormat> availableFormats;
-			for(auto format : deviceDepthFormats_)
+		const auto deviceDepthFormats_ = m_DeviceVulkan->depthFormats_;
+
+		// Generate a set of device supported formats
+		std::set<VkFormat> availableFormats;
+		for(auto format : deviceDepthFormats_)
+		{
+			availableFormats.insert(format);
+		}
+
+		// check if any of the format in compatible list is supported
+		for(auto depthStencilFormat : compatibleDepthStencilFormatList)
+		{
+			if(availableFormats.count(depthStencilFormat) != 0)
 			{
-				availableFormats.insert(format);
+				return depthStencilFormat;
 			}
+		}
 
-			// check if any of the format in compatible list is supported
-			for(auto depthStencilFormat : compatibleDepthStencilFormatList)
-			{
-				if(availableFormats.count(depthStencilFormat) != 0)
-				{
-					return depthStencilFormat;
-				}
-			}
-
-			// no matching found, choose the first supported format
-			return !deviceDepthFormats_.empty() ? deviceDepthFormats_[ 0 ] : VK_FORMAT_D24_UNORM_S8_UINT;
+		// no matching found, choose the first supported format
+		return !deviceDepthFormats_.empty() ? deviceDepthFormats_[ 0 ] : VK_FORMAT_D24_UNORM_S8_UINT;
 	}
 
 	const VkPhysicalDeviceLimits& Device::getPhysicalDeviceLimits() const
@@ -1050,7 +1087,7 @@ namespace Vulkan
 
 
 		//Not implemented yet BUT UPDATE THE RENDER PIPELINE STATE and configure inside 
-		
+
 		m_rVkPipelineState.numAttributes_ = m_Description.vertexInput.getNumAttributes();
 
 		const auto& vertexInput = m_Description.vertexInput;
@@ -1063,8 +1100,8 @@ namespace Vulkan
 
 			m_rVkPipelineState.vkAttributes_[ i ] =
 			{
-				 .location = attr.location, 
-				 .binding = attr.binding, 
+				 .location = attr.location,
+				 .binding = attr.binding,
 				 .format = formatToVkFormat(attr.format),
 				 .offset = (uint32_t)attr.offset
 			};
@@ -1074,8 +1111,8 @@ namespace Vulkan
 				bufferAlreadyBound[ attr.binding ] = true;
 				m_rVkPipelineState.vkBindings_[ m_rVkPipelineState.numBindings_++ ] =
 				{
-					 .binding = attr.binding, 
-					 .stride = vertexInput.inputBindings[ attr.binding ].stride, 
+					 .binding = attr.binding,
+					 .stride = vertexInput.inputBindings[ attr.binding ].stride,
 					 .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
 				};
 			}

@@ -66,6 +66,8 @@ namespace Vulkan
 
         void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) override;
 
+        
+
         void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)   override;
         void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
         void BindingVertexAttributesBuffer(BufferHandle& bf) override;
@@ -97,7 +99,8 @@ namespace Vulkan
         HolderShaderSM createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const;
         HolderShaderSM createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const ;
         VkFormat getClosestDepthStencilFormat(rhi::Format desiredFormat) const;
-       
+        bool validateTextureDescription(TextureDescription& texdesc);
+        VkImageUsageFlags getImageUsageFlags(const TextureDescription& texdesc);
 
         
 		const VkPhysicalDeviceLimits& getPhysicalDeviceLimits() const;

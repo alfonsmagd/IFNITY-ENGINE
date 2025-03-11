@@ -378,24 +378,6 @@ namespace Vulkan
 		return 0;
 	}
 
-	inline VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage)
-	{
-		VkMemoryPropertyFlags memFlags{ 0 };
-
-		switch(storage)
-		{
-		case StorageType::Device:
-			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-			break;
-		case StorageType::HostVisible:
-			memFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-			break;
-		case StorageType::Memoryless:
-			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
-			break;
-		}
-		return memFlags;
-	}
 
     inline std::vector<VkFormat> getCompatibleDepthStencilFormats(rhi::Format format)  
     {  

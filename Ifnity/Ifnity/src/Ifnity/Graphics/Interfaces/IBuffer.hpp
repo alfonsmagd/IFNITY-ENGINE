@@ -58,9 +58,9 @@ enum class IFNITY_API BufferType: unsigned char
  */
 enum class IFNITY_API StorageType: unsigned char
 {
-    Device,
-    HostVisible,
-    Memoryless
+    DEVICE,
+    HOSTVISIBLE,
+    MEMORYLESS
 };
 
 
@@ -77,7 +77,7 @@ struct IFNITY_API BufferDescription
 	uint32_t offset = 0;            ///< Offset of the buffer
     std::string debugName;          ///< Debug name for the buffer
     BufferType type         = BufferType::NO_DEFINE_BUFFER; ///< Type of the buffer
-	StorageType storageType = StorageType::Device; ///< Storage type of the buffer
+	StorageType storage = StorageType::DEVICE; ///< Storage type of the buffer
 	uint8_t binding = 0;            ///< Binding point of the buffer
 
 	const void* data ;     ///< Data to be written to the buffer

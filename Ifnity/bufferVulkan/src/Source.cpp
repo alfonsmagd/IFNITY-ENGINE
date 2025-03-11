@@ -323,13 +323,21 @@ public:
 		aiReleaseImport(scene);
 
 
+		//DepthText texture
+		TextureDescription descTexture;
+		descTexture.dimensions = { 1280, 720 ,1 };
+		descTexture.format = Format::Z_FLOAT32;
+		descTexture.usage = TextureUsageBits::ATTACHMENT;
+		descTexture.debugName = "Depth buffer";
 
-
+		
+		//DepthStencil texture
+		auto texture = rdevice->CreateTexture(descTexture);
 
 		
 		//Vertex Attributes Configure Buffer 
 		{
-			desc.storageType = StorageType::HostVisible;
+			desc.storage = StorageType::HOSTVISIBLE;
 			desc.type = BufferType::VERTEX_BUFFER;
 			desc.binding = 0;
 			desc.size = vertexBufferSize;
@@ -367,10 +375,6 @@ public:
 										  .offset = 0 }, position);
 
 		vertexInput.addVertexInputBinding({ .stride = sizeof(vec3) }, position);
-
-
-		
-
 
 		{
 			gdesc1.SetVertexShader(m_vs.get()).

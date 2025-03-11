@@ -124,7 +124,7 @@ struct IFNITY_API TextureDescription
     rhi::TextureType dimension = rhi::TextureType::TEXTURE2D;
 	rhi::TextureWrapping  wrapping  = rhi::TextureWrapping::REPEAT;
 	rhi::TextureUsageBits usage = rhi::TextureUsageBits::UNKNOW;
-	StorageType storageType = StorageType::HostVisible;
+	StorageType storage = StorageType::HOSTVISIBLE; //for now , not implementint stagin buffer;
     std::string debugName;
     std::string filepath;
 	bool generateMipMaps = false;
@@ -159,7 +159,7 @@ struct IFNITY_API TextureDescription
     TextureDescription& setFilePath(std::string filepath) { this->filepath = filepath;  return *this; }
 	constexpr TextureDescription& setWrapping(rhi::TextureWrapping value) { wrapping = value; return *this; }
 	constexpr TextureDescription& setData(const void* data) { this->data = data; return *this; }
-	constexpr TextureDescription& setStorageType(StorageType value) { storageType = value; return *this; }
+	constexpr TextureDescription& setStorageType(StorageType value) { storage = value; return *this; }
 	constexpr TextureDescription& setGenerateMipMaps(bool value) { generateMipMaps = value; return *this; }
 	constexpr TextureDescription& setUsage(rhi::TextureUsageBits value) { usage = value; return *this; }
 	

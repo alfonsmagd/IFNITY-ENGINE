@@ -731,13 +731,13 @@ VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage)
 
 	switch(storage)
 	{
-	case StorageType::Device:
+	case StorageType::DEVICE:
 		memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 		break;
-	case StorageType::HostVisible:
+	case StorageType::HOSTVISIBLE:
 		memFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 		break;
-	case StorageType::Memoryless:
+	case StorageType::MEMORYLESS:
 		memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
 		break;
 	}
