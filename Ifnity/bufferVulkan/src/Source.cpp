@@ -328,7 +328,9 @@ public:
 		descTexture.dimensions = { 1280, 720 ,1 };
 		descTexture.format = Format::Z_FLOAT32;
 		descTexture.usage = TextureUsageBits::ATTACHMENT;
+		descTexture.isDepth = true;
 		descTexture.debugName = "Depth buffer";
+
 
 		
 		//DepthStencil texture
@@ -362,10 +364,6 @@ public:
 
 		}
 		
-		
-		
-		
-
 		//Vertex Attributes Configure 
 		rhi::VertexInput vertexInput;
 		uint8_t position = 0;
@@ -429,6 +427,8 @@ public:
 
 		DrawDescription desc;
 		desc.size = msizeIndex;
+
+		// desc.size = 3;
 
 		rdevice->DrawObject(m_SolidPipeline, desc);
 		rdevice->DrawObject(m_WireFramePipeline, desc);

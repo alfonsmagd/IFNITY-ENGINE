@@ -68,8 +68,13 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
 
  bool isDepthFormat(rhi::Format format)
  {
-	 return properties[ static_cast<uint8_t>(format) ].depth 
-            || properties[static_cast<uint8_t>(format)].stencil;
+	 return properties   [SCAST_U8(format) ].depth 
+            || properties[SCAST_U8(format)].stencil;
+ }
+
+ bool getNumImagePlanes(rhi::Format format)
+ {
+	 return properties[ SCAST_U8(format) ].numPlanes;
  }
 
  

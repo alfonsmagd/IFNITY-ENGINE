@@ -12,10 +12,10 @@ IFNITY_NAMESPACE
 
 static void check_vk_result(VkResult err)
 {
-	if(err == 0)
+	if( err == 0 )
 		return;
 	fprintf(stderr, "[vulkan] Error: VkResult = %d\n", err);
-	if(err < 0)
+	if( err < 0 )
 		abort();
 }
 
@@ -119,7 +119,7 @@ static void PrintEnabledFeature(VkPhysicalDevice vkpd)
 
 VkFormat DeviceVulkan::GetSwapChainFormat() const
 {
-	if(!hasSwapchain())
+	if( !hasSwapchain() )
 	{
 		return VK_FORMAT_UNDEFINED;
 	}
@@ -156,7 +156,7 @@ void DeviceVulkan::OnUpdate()
 	//EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
 	//cmdBuffer.cmdEndRendering();
 	//submit(cmdBuffer, currentTexture);
-	
+
 	#endif
 
 }
@@ -192,7 +192,7 @@ bool DeviceVulkan::InitInternalInstance()
 		.require_api_version(1, 3, 0)
 		.build();
 
-	if(!inst_ret)
+	if( !inst_ret )
 	{
 		//Report Error Log
 		IFNITY_LOG(LogCore, ERROR, "Failed to create Vulkan instance");
@@ -212,30 +212,30 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 
 
 
-	if(!CreateSurface() ||
-		!CreatePhysicalDevice() ||
-		!CreateDevice() ||
-		!CreateVmaAllocator() ||
-		!GetQueue() ||
-		!createVulkanImmediateCommands() ||
-		!CreateSwapChain() ||
-		!CreateCommandPool() ||
-		!CreateRenderPass() ||
-		!CreateFrameBuffer() ||
-		!CreateCommandBuffers() ||
-		!CreatePipelineCache() ||
-		!CreateSyncObjects()
+	if( !CreateSurface() ||
+	   !CreatePhysicalDevice() ||
+	   !CreateDevice() ||
+	   !CreateVmaAllocator() ||
+	   !GetQueue() ||
+	   !createVulkanImmediateCommands() ||
+	   !CreateSwapChain() ||
+	   !CreateCommandPool() ||
+	   !CreateRenderPass() ||
+	   !CreateFrameBuffer() ||
+	   !CreateCommandBuffers() ||
+	   !CreatePipelineCache() ||
+	   !CreateSyncObjects()
 
-		)//endif
+	   )//endif
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed Initialization Process ");
 		return false;
 	}
 
-	if(!GetDepthAvailableFormat())
+	if( !GetDepthAvailableFormat() )
 	{
 		IFNITY_LOG(LogCore, WARNING, "Failed to get depth available format");
-		
+
 	}
 
 	IFNITY_LOG(LogCore, INFO, "Vulkan Device and Context Initialized");
@@ -255,7 +255,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 bool DeviceVulkan::ConfigureSpecificHintsGLFW() const
 {
 	//Verify that Vulkan is supported
-	if(!glfwVulkanSupported())
+	if( !glfwVulkanSupported() )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Vulkan is not supported");
 		return false;
@@ -286,7 +286,7 @@ void DeviceVulkan::InternalPreDestroy()
 	vkDeviceWaitIdle(device_.device);
 }
 
-void DeviceVulkan::ClearBackBuffer(float* color)
+void DeviceVulkan::ClearBackBuffer(float * color)
 {
 	std::copy(color, color + 4, m_Color);
 }
@@ -316,7 +316,7 @@ DeviceVulkan::~DeviceVulkan()
 	vmaDestroyAllocator(m_Allocator);
 
 	// Destroy Debug Utils Messenger
-	if(debugUtilsMessenger != VK_NULL_HANDLE)
+	if( debugUtilsMessenger != VK_NULL_HANDLE )
 	{
 		DestroyDebugUtilsMessengerEXT(m_Instance, debugUtilsMessenger, nullptr);
 	}
@@ -345,7 +345,7 @@ uint32_t DeviceVulkan::getFramebufferMSAABitMask() const
 	//framebufferColorSampleCounts: Indicates the multisample anti-aliasing (MSAA) capabilities that the physical device supports for color attachments in a framebuffer.
 	//framebufferDepthSampleCounts : Indicates the multisample anti - aliasing(MSAA) capabilities that the physical device supports for depth attachments in a framebuffer.
 
-	const VkPhysicalDeviceLimits& limits = properties2.properties.limits;
+	const VkPhysicalDeviceLimits & limits = properties2.properties.limits;
 	return limits.framebufferColorSampleCounts & limits.framebufferDepthSampleCounts;
 }
 
@@ -354,7 +354,7 @@ bool DeviceVulkan::CreateSurface()
 	VkResult result = VK_ERROR_UNKNOWN;
 	result = glfwCreateWindowSurface(m_Instance, m_Window, nullptr, &m_Surface);
 
-	if(result != VK_SUCCESS)
+	if( result != VK_SUCCESS )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create window surface in Vulkan");
 		return false;
@@ -403,7 +403,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 		.add_required_extension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME)
 		.select();
 
-	if(!physicalDevSelRet)
+	if( !physicalDevSelRet )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to select physical device in Vulkan Device");
 		return false;
@@ -421,23 +421,23 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	std::vector<VkExtensionProperties> extensions(extensionCount);
 	vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extensionCount, extensions.data());
 
-	for(const auto& ext : extensions)
+	for( const auto & ext : extensions )
 	{
 		IFNITY_LOG(LogCore, INFO, "Supported extension: {}", ext.extensionName);
 	}
 
 	// Verificar si VK_EXT_debug_marker está en la lista de extensiones soportadas
 	bool debugMarkerSupported = false;
-	for(const auto& ext : extensions)
+	for( const auto & ext : extensions )
 	{
-		if(strcmp(ext.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
+		if( strcmp(ext.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0 )
 		{
 			debugMarkerSupported = true;
 			break;
 		}
 	}
 
-	if(debugMarkerSupported)
+	if( debugMarkerSupported )
 	{
 		IFNITY_LOG(LogCore, INFO, "VK_EXT_debug_marker is supported");
 	}
@@ -462,7 +462,7 @@ bool DeviceVulkan::CreateDevice()
 
 
 	auto deviceRet = deviceBuilder.build();
-	if(!deviceRet)
+	if( !deviceRet )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create device in Vulkan Device");
 		return false;
@@ -484,12 +484,12 @@ bool DeviceVulkan::CreateDevice()
 
 bool DeviceVulkan::CreateVmaAllocator()
 {
-	
-
-	m_Allocator = createVmaAllocator(m_PhysicalDevice, device_, m_Instance,getApiVersion());
 
 
-	if(m_Allocator == VK_NULL_HANDLE)
+	m_Allocator = createVmaAllocator(m_PhysicalDevice, device_, m_Instance, getApiVersion());
+
+
+	if( m_Allocator == VK_NULL_HANDLE )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create Vma Allocator in Vulkan Device");
 		return false;
@@ -500,7 +500,7 @@ bool DeviceVulkan::CreateVmaAllocator()
 bool DeviceVulkan::GetQueue()
 {
 	auto graphQueueRet = device_.get_queue(vkb::QueueType::graphics);
-	if(!graphQueueRet.has_value())
+	if( !graphQueueRet.has_value() )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get graphics queue in Vulkan Device");
 		return false;
@@ -509,7 +509,7 @@ bool DeviceVulkan::GetQueue()
 	deviceQueues_.graphicsQueueFamilyIndex = device_.get_queue_index(vkb::QueueType::graphics).value();
 
 	auto presentQueueRet = device_.get_queue(vkb::QueueType::present);
-	if(!presentQueueRet.has_value())
+	if( !presentQueueRet.has_value() )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get present  queue in Vulkan Device");
 		return false;
@@ -532,7 +532,7 @@ bool DeviceVulkan::CreateSwapChain()
 		set_desired_format({ VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }).
 		add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT).
 		build();
-	if(!swapChainBuildRet)
+	if( !swapChainBuildRet )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create swapchain in Vulkan Device");
 		return false;
@@ -547,8 +547,8 @@ bool DeviceVulkan::CreateSwapChain()
 	m_commandBufferCount = swapchainBootStraap_.image_count;
 
 	swapchain_ = std::make_unique<Vulkan::VulkanSwapchain>(*this,
-		swapchainBootStraap_.extent.width,
-		swapchainBootStraap_.extent.height);
+														   swapchainBootStraap_.extent.width,
+														   swapchainBootStraap_.extent.height);
 
 	return true;
 }
@@ -560,7 +560,7 @@ bool DeviceVulkan::CreateCommandPool()
 	pool_info.queueFamilyIndex = deviceQueues_.graphicsQueueFamilyIndex;
 	pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-	if(vkCreateCommandPool(device_, &pool_info, nullptr, &m_CommandPool) != VK_SUCCESS)
+	if( vkCreateCommandPool(device_, &pool_info, nullptr, &m_CommandPool) != VK_SUCCESS )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create command pool in Vulkan Device");
 		return false;
@@ -577,8 +577,8 @@ bool DeviceVulkan::DestroyCommandPool()
 
 bool DeviceVulkan::DestroyShaderStages()
 {
-	Vulkan::Device* vkDevice = dynamic_cast<Vulkan::Device*>(GetRenderDevice());
-	if(!vkDevice)
+	Vulkan::Device * vkDevice = dynamic_cast<Vulkan::Device *>(GetRenderDevice());
+	if( !vkDevice )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get Vulkan Device");
 		return false;
@@ -588,7 +588,7 @@ bool DeviceVulkan::DestroyShaderStages()
 
 void DeviceVulkan::DestroySyncObjects()
 {
-	for(size_t i = 0; i < 3; i++)
+	for( size_t i = 0; i < 3; i++ )
 	{
 		vkDestroySemaphore(device_.device, m_ImageAvailableSemaphores[ i ], nullptr);
 		vkDestroySemaphore(device_.device, m_RenderFinishedSemaphores[ i ], nullptr);
@@ -600,15 +600,15 @@ void DeviceVulkan::DestroySyncObjects()
 void DeviceVulkan::DestroyCommandBuffers()
 {
 	vkFreeCommandBuffers(device_.device,
-		m_CommandPool,
-		static_cast<uint32_t>(m_CommandBuffers.size()),
-		m_CommandBuffers.data());
+						 m_CommandPool,
+						 static_cast<uint32_t>(m_CommandBuffers.size()),
+						 m_CommandBuffers.data());
 
 }
 
 void DeviceVulkan::CleanFrameBuffers()
 {
-	for(auto& framebuffer : m_Framebuffers)
+	for( auto & framebuffer : m_Framebuffers )
 	{
 		vkDestroyFramebuffer(device_.device, framebuffer, nullptr);
 	}
@@ -628,9 +628,9 @@ void DeviceVulkan::DestroyPipelines()
 {
 	//Iterate about map destroy all pipelines
 
-	for(auto& [key, pipeline] : map_renderPipelines)
+	for( auto & [key, pipeline] : map_renderPipelines )
 	{
-		if(pipeline)
+		if( pipeline )
 		{
 			pipeline->DestroyPipeline(device_);
 
@@ -642,7 +642,7 @@ void DeviceVulkan::DestroyPipelines()
 
 void DeviceVulkan::DestroyPipelineCache()
 {
-	if(pipelineCache_ != VK_NULL_HANDLE)
+	if( pipelineCache_ != VK_NULL_HANDLE )
 	{
 		vkDestroyPipelineCache(device_.device, pipelineCache_, nullptr);
 	}
@@ -787,7 +787,7 @@ bool DeviceVulkan::CreateFrameBuffer()
 	//Create Framebuffers for each swapchain image view
 	m_Framebuffers.resize(m_SwapchainImageViews.size());
 
-	for(size_t i = 0; i < m_Framebuffers.size(); i++)
+	for( size_t i = 0; i < m_Framebuffers.size(); i++ )
 	{
 		attachments[ 0 ] = m_SwapchainImageViews.at(i);
 		VK_CHECK(vkCreateFramebuffer(device_.device, &frameBufferCreateInfo, nullptr, &m_Framebuffers[ i ]), "Failed to create framebuffer");
@@ -807,7 +807,7 @@ bool DeviceVulkan::CreateCommandBuffers()
 	bufferAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 	bufferAllocInfo.commandBufferCount = static_cast<uint32_t>(m_CommandBuffers.size());
 
-	if(vkAllocateCommandBuffers(device_.device, &bufferAllocInfo, m_CommandBuffers.data()) != VK_SUCCESS)
+	if( vkAllocateCommandBuffers(device_.device, &bufferAllocInfo, m_CommandBuffers.data()) != VK_SUCCESS )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to allocate command buffers");
 		return false;
@@ -829,11 +829,11 @@ bool DeviceVulkan::CreateSyncObjects()
 	VkSemaphoreCreateInfo semaphoreInfo{};
 	semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-	for(size_t i = 0; i < 3; i++)
+	for( size_t i = 0; i < 3; i++ )
 	{
-		if(vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[ i ]) != VK_SUCCESS ||
-			vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[ i ]) != VK_SUCCESS ||
-			vkCreateFence(device_.device, &fenceInfo, nullptr, &m_InFlightFences[ i ]) != VK_SUCCESS)
+		if( vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_ImageAvailableSemaphores[ i ]) != VK_SUCCESS ||
+		   vkCreateSemaphore(device_.device, &semaphoreInfo, nullptr, &m_RenderFinishedSemaphores[ i ]) != VK_SUCCESS ||
+		   vkCreateFence(device_.device, &fenceInfo, nullptr, &m_InFlightFences[ i ]) != VK_SUCCESS )
 		{
 			IFNITY_LOG(LogCore, ERROR, "Failed to create synchronization objects for a frame");
 			return false;
@@ -848,7 +848,7 @@ bool DeviceVulkan::CreatePipelineCache()
 {
 	VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
 	pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-	if(vkCreatePipelineCache(device_.device, &pipelineCacheCreateInfo, nullptr, &pipelineCache_) != VK_SUCCESS)
+	if( vkCreatePipelineCache(device_.device, &pipelineCacheCreateInfo, nullptr, &pipelineCache_) != VK_SUCCESS )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create pipeline cache");
 		return false;
@@ -863,12 +863,12 @@ bool DeviceVulkan::GetDepthAvailableFormat()
 		VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM
 	};
 
-	for(const auto& depthFormat : depthFormats)
+	for( const auto & depthFormat : depthFormats )
 	{
 		VkFormatProperties formatProps;
 		vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice.physical_device, depthFormat, &formatProps);
 
-		if(formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)
+		if( formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT )
 		{
 			depthFormats_.push_back(depthFormat);
 		}
@@ -888,12 +888,12 @@ VkResult DeviceVulkan::growDescriptorPool(uint32_t maxTextures, uint32_t maxSamp
 
 
 
-	if(!(maxTextures <= vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSampledImages))
+	if( !(maxTextures <= vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSampledImages) )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Max Textures exceeded %u (max %u)", maxTextures, vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSampledImages);
 	}
 
-	if(!(maxSamplers <= vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSamplers))
+	if( !(maxSamplers <= vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSamplers) )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Max Sampler exceeded %u (max %u)", maxSamplers, vkPhysicalDeviceVulkan12Properties_.maxDescriptorSetUpdateAfterBindSampledImages);
 	}
@@ -924,7 +924,7 @@ VkResult DeviceVulkan::growDescriptorPool(uint32_t maxTextures, uint32_t maxSamp
 		VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT;
 	//Fill bindingflags for each binding
 	VkDescriptorBindingFlags bindingFlags[ kBinding_NumBindings ];
-	for(int i = 0; i < kBinding_NumBindings; ++i)
+	for( int i = 0; i < kBinding_NumBindings; ++i )
 	{
 		bindingFlags[ i ] = flags;
 	}
@@ -996,14 +996,14 @@ bool DeviceVulkan::AcquireNextImage()
 	//Get the index of the next available swapchain image
 	VkResult result = vkAcquireNextImageKHR(device_.device, swapchainBootStraap_.swapchain, UINT64_MAX, m_PresentSemaphore, (VkFence)nullptr, &m_imageIndex);
 
-	if(result == VK_ERROR_OUT_OF_DATE_KHR)
+	if( result == VK_ERROR_OUT_OF_DATE_KHR )
 	{
 		//Swapchain is out of date (e.g. the window was resized) and
 		//must be recreated:
 		ResizeSwapChain();
 		return false;
 	}
-	else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+	else if( result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to acquire next swapchain image");
 		return false;
@@ -1030,7 +1030,7 @@ bool DeviceVulkan::PresentImage()
 bool DeviceVulkan::InitGui()
 {
 	// Create descriptor pool
-	if(!CreateImGuiDescriptorPool())
+	if( !CreateImGuiDescriptorPool() )
 	{
 		return false;
 	}
@@ -1078,19 +1078,19 @@ void DeviceVulkan::CheckSpirvVersion(VkPhysicalDevice physicalDevice)
 
 	std::cout << "Vulkan API Version: " << major << "." << minor << "." << patch << std::endl;
 
-	if(major == 1 && minor == 0)
+	if( major == 1 && minor == 0 )
 	{
 		std::cout << "Supported SPIR-V Version: 1.0" << std::endl;
 	}
-	else if(major == 1 && minor == 1)
+	else if( major == 1 && minor == 1 )
 	{
 		std::cout << "Supported SPIR-V Version: 1.3" << std::endl;
 	}
-	else if(major == 1 && minor == 2)
+	else if( major == 1 && minor == 2 )
 	{
 		std::cout << "Supported SPIR-V Version: 1.5" << std::endl;
 	}
-	else if(major == 1 && minor == 3)
+	else if( major == 1 && minor == 3 )
 	{
 		std::cout << "Supported SPIR-V Version: 1.6" << std::endl;
 	}
@@ -1113,7 +1113,7 @@ bool DeviceVulkan::CreateImGuiDescriptorPool()
 	pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 	pool_info.pPoolSizes = pool_sizes;
 
-	if(vkCreateDescriptorPool(device_, &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS)
+	if( vkCreateDescriptorPool(device_, &pool_info, nullptr, &m_ImGuiDescriptorPool) != VK_SUCCESS )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create descriptor pool for ImGui");
 		return false;
@@ -1124,7 +1124,7 @@ bool DeviceVulkan::CreateImGuiDescriptorPool()
 
 
 
-void DeviceVulkan::setupCallbacks(VkDevice& i_device)
+void DeviceVulkan::setupCallbacks(VkDevice & i_device)
 {
 
 	// Check if the debug utils extension is present (which is the case if run from a graphics debugger)
@@ -1133,16 +1133,16 @@ void DeviceVulkan::setupCallbacks(VkDevice& i_device)
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 	std::vector<VkExtensionProperties> extensions(extensionCount);
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-	for(auto& extension : extensions)
+	for( auto & extension : extensions )
 	{
-		if(strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0)
+		if( strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0 )
 		{
 			extensionPresent = true;
 			break;
 		}
 	}
 
-	if(extensionPresent)
+	if( extensionPresent )
 	{
 		// As with an other extension, function pointers need to be manually loaded
 		vkCreateDebugUtilsMessengerEXT = reinterpret_cast<PFN_vkCreateDebugUtilsMessengerEXT>(vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT"));
@@ -1171,9 +1171,9 @@ void DeviceVulkan::setupCallbacks(VkDevice& i_device)
 
 }
 
-void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[ 4 ])
+void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char * markerName, float color[ 4 ])
 {
-	if(vkCmdBeginDebugUtilsLabelEXT)
+	if( vkCmdBeginDebugUtilsLabelEXT )
 	{
 		VkDebugUtilsLabelEXT labelInfo{};
 		labelInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT;
@@ -1195,12 +1195,12 @@ bool DeviceVulkan::createVulkanImmediateCommands()
 {
 	IFNITY_ASSERT_MSG(deviceQueues_.graphicsQueueFamilyIndex != deviceQueues_.INVALID, "call CreateQueue First to get graphicsQueueFamilyIndex valid  ");
 	immediate_ = std::make_unique<Vulkan::VulkanImmediateCommands>(device_.device, deviceQueues_.graphicsQueueFamilyIndex,
-		"Creating Immediate Commands");
+																   "Creating Immediate Commands");
 
 	return true;
 }
 
-Vulkan::CommandBuffer& DeviceVulkan::acquireCommandBuffer()
+Vulkan::CommandBuffer & DeviceVulkan::acquireCommandBuffer()
 {
 	IFNITY_ASSERT_MSG(!currentCommandBuffer_.ctx_, "Cannot acquire more than 1 command buffer simultaneously");
 
@@ -1213,20 +1213,20 @@ Vulkan::TextureHandleSM DeviceVulkan::getCurrentSwapChainTexture()
 {
 
 	//Verify that have swapchain
-	if(!hasSwapchain())
+	if( !hasSwapchain() )
 	{
 		return {};
 	}
 
 	Vulkan::TextureHandleSM tex = swapchain_->getCurrentTexture();
 
-	if(!tex.valid())
+	if( !tex.valid() )
 	{
 		IFNITY_LOG(LogCore, ERROR, "No swapchain image acquired");
 		return {};
 	}
 
-	auto* texptr = slootMapTextures_.get(tex);
+	auto * texptr = slootMapTextures_.get(tex);
 	IFNITY_ASSERT_MSG(texptr->vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid image format");
 
 	return tex;
@@ -1239,9 +1239,9 @@ bool DeviceVulkan::hasSwapchain() const noexcept
 	return swapchain_ != nullptr;
 }
 
-Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::TextureHandleSM present)
+Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer & commandBuffer, Vulkan::TextureHandleSM present)
 {
-	auto vkCmdBuffer = static_cast<Vulkan::CommandBuffer*>(&commandBuffer);
+	auto vkCmdBuffer = static_cast<Vulkan::CommandBuffer *>(&commandBuffer);
 
 
 	IFNITY_ASSERT_MSG(vkCmdBuffer, "Not vkcmdbuffer ");
@@ -1249,9 +1249,9 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 	IFNITY_ASSERT_MSG(vkCmdBuffer->wrapper_, "Commandbuffer has not command buffer wrapper ");
 
 	//Prepare image to be presented
-	if(present)
+	if( present )
 	{
-		const Vulkan::VulkanImage& tex = *slootMapTextures_.get(present);
+		const Vulkan::VulkanImage & tex = *slootMapTextures_.get(present);
 		IFNITY_ASSERT_MSG(tex.isSwapchainImage_, "No SwapChainImage acquire to submit");
 
 		// prepare image for presentation the image might be coming from a compute shader
@@ -1260,17 +1260,17 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 			: VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		tex.transitionLayout(vkCmdBuffer->wrapper_->cmdBuf_,
-			VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			srcStage,
-			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, // wait for all subsequent operations
-			VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
+							 VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+							 srcStage,
+							 VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, // wait for all subsequent operations
+							 VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
 	}
 
 	const bool shouldPresent = hasSwapchain() && present;
 
 	vkCmdBuffer->lastSubmitHandle_ = immediate_->submit(*vkCmdBuffer->wrapper_);
 
-	if(shouldPresent)
+	if( shouldPresent )
 	{
 		swapchain_->present(immediate_->acquireLastSubmitSemaphore());
 	}
@@ -1288,7 +1288,7 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 
 }
 
-void DeviceVulkan::addGraphicsPipeline(Vulkan::GraphicsPipeline* pipeline)
+void DeviceVulkan::addGraphicsPipeline(Vulkan::GraphicsPipeline * pipeline)
 {
 	map_renderPipelines[ nextPipelineId ] = pipeline;
 	nextPipelineId++;
@@ -1299,21 +1299,17 @@ void DeviceVulkan::bindDefaultDescriptorSets(VkCommandBuffer cmdBuf, VkPipelineB
 
 	const VkDescriptorSet dsets[ 2 ] = { vkDSet_, vkDSet_ };
 	vkCmdBindDescriptorSets(
-		cmdBuf, 
+		cmdBuf,
 		bindPoint,
 		layout,
-		0, 
+		0,
 		(uint32_t)ARRAY_NUM_ELEMENTS(dsets),
 		dsets,
-		0, 
+		0,
 		nullptr);
 }
 
-void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
-{
-	slootMapTextures_.destroy(handle);
 
-}
 
 void DeviceVulkan::destroy(Vulkan::GraphicsPipelineHandleSM handle)
 {
@@ -1322,15 +1318,15 @@ void DeviceVulkan::destroy(Vulkan::GraphicsPipelineHandleSM handle)
 
 void DeviceVulkan::destroy(Vulkan::ShaderModuleHandleSM handle)
 {
-	const Vulkan::ShaderModuleState* state = slotMapShaderModules_.get(handle);
+	const Vulkan::ShaderModuleState * state = slotMapShaderModules_.get(handle);
 
-	if(!state)
+	if( !state )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Invalid ShaderModuleHandleSM to destroy fail");
 		return;
 	}
 
-	if(state->sm != VK_NULL_HANDLE)
+	if( state->sm != VK_NULL_HANDLE )
 	{
 		// a shader module can be destroyed while pipelines created using its shaders are still in use
 		// https://registry.khronos.org/vulkan/specs/1.3/html/chap9.html#vkDestroyShaderModule
@@ -1347,45 +1343,84 @@ void DeviceVulkan::destroy(Vulkan::BufferHandleSM handle)
 	  slotMapBuffers_.destroy(handle);
 	};
 
-	Vulkan::VulkanBuffer* buf = slotMapBuffers_.get(handle);
+	Vulkan::VulkanBuffer * buf = slotMapBuffers_.get(handle);
 
-	if(!buf)
+	if( !buf )
 	{
 		return;
 	}
 
-	if(VMA_ALLOCATOR_VK)
+	if( VMA_ALLOCATOR_VK )
 	{
-		if(buf->mappedPtr_)
+		if( buf->mappedPtr_ )
 		{
 			vmaUnmapMemory((VmaAllocator)getVmaAllocator(), buf->vmaAllocation_);
 		}
-	
+
 		vmaDestroyBuffer((VmaAllocator)getVmaAllocator(), buf->vkBuffer_, buf->vmaAllocation_);
 	}
 	else
 	{
-		if(buf->mappedPtr_)
+		if( buf->mappedPtr_ )
 		{
 			vkUnmapMemory(device_, buf->vkMemory_);
 		}
-		
+
 		vkDestroyBuffer(device_, buf->vkBuffer_, nullptr);
 		vkFreeMemory(device_, buf->vkMemory_, nullptr);
+	}
+}
+
+void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
+{
+	SCOPE_EXIT{
+	  slootMapTextures_.destroy(handle);
+	};
+
+	Vulkan::VulkanImage * tex = slootMapTextures_.get(handle);
+
+	if( !tex )
+	{
+		return;
+	}
+
+	if( !tex->isOwningVkImage_ )
+	{
+		return;
+	}
+
+	if( VMA_ALLOCATOR_VK )
+	{
+		if( tex->mappedPtr_ )
+		{
+			vmaUnmapMemory((VmaAllocator)getVmaAllocator(), tex->vmaAllocation_);
+		}
+
+		vmaDestroyImage((VmaAllocator)getVmaAllocator(), tex->vkImage_, tex->vmaAllocation_);
+	}
+	else
+	{
+		if( tex->mappedPtr_ )
+		{
+			vkUnmapMemory(device_, tex->vkMemory_[ 0 ]);
+		}
+
+
+		vkFreeMemory(device_, tex->vkMemory_[ 0 ], nullptr);
 	}
 }
 
 
 
 
-Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const void* spirv, size_t numBytes, const char* debugName)
+Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const void * spirv, size_t numBytes, const char * debugName)
 {
 	return Vulkan::ShaderModuleState();
 }
 
 void DeviceVulkan::EndRenderDocTrace(VkCommandBuffer commandBuffer)
 {
-	if(vkCmdEndDebugUtilsLabelEXT)
+	if( vkCmdEndDebugUtilsLabelEXT )
 	{
 		vkCmdEndDebugUtilsLabelEXT(commandBuffer);
 	}

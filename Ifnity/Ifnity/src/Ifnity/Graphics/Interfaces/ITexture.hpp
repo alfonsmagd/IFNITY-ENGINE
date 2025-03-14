@@ -11,18 +11,21 @@ IFNITY_NAMESPACE
 //Forward declaration 
 
 using TextureHandle = std::shared_ptr<struct ITexture>;
-
-
 struct TextureDescription;
 
+//------------------------------------------------------------------------------------//
+//  TEXTURE INTERFACE  AUXILIAR FUNCTIONS                                             //
+//-------------------------------------------------------------------------------------//
  const void* LoadTextureFromFile(const std::string& filePath);
  const void* LoadTextureFromFileDescription(TextureDescription& desc);
  bool isDepthFormat(rhi::Format format);
-
+ bool getNumImagePlanes(rhi::Format format);
  void FreeTexture(const void* img);
 
 
-
+ //------------------------------------------------------------------------------------//
+//  TEXTURE ISTRUCTS AND PROPERTIES                                             //
+//-------------------------------------------------------------------------------------//
  struct TextureFormatProperties
  {
      const rhi::Format format = rhi::Format::UNKNOWN;
@@ -124,10 +127,12 @@ struct IFNITY_API TextureDescription
     rhi::TextureType dimension = rhi::TextureType::TEXTURE2D;
 	rhi::TextureWrapping  wrapping  = rhi::TextureWrapping::REPEAT;
 	rhi::TextureUsageBits usage = rhi::TextureUsageBits::UNKNOW;
-	StorageType storage = StorageType::HOSTVISIBLE; //for now , not implementint stagin buffer;
+	StorageType storage = StorageType::DEVICE; //for now , not implementint stagin buffer;
     std::string debugName;
     std::string filepath;
 	bool generateMipMaps = false;
+	bool isDepth = false;
+	bool isStencil = false;
 	const void* data = nullptr;
 	
    

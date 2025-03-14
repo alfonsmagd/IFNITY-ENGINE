@@ -13,7 +13,7 @@ namespace Vulkan
     // BUFFER VULKAN                                                                       //
     //-------------------------------------------------------------------------------------//
     
-    class Buffer final: public IBuffer
+    class IFNITY_API Buffer final: public IBuffer
     {
     public:
 		Buffer(const BufferDescription& desc): m_Description(desc) {}
@@ -32,13 +32,37 @@ namespace Vulkan
         
     };
 
+    //------------------------------------------------------------------------------------//
+    // TEXTURE VULKAN                                                                       //
+    //-------------------------------------------------------------------------------------//
 
+    class IFNITY_API Texture final: public ITexture
+    {
+    public:
+        virtual TextureDescription GetTextureDescription() override { return m_TextureDescription; }
+        virtual uint32_t           GetTextureID() override { return m_TextureID; }
 
+        //Constructor 
+		Texture() = default;
+		Texture(const TextureDescription & desc, uint32_t uid): m_TextureDescription(desc), m_TextureID(uid)
+		{}
+        Texture(const TextureDescription & desc, HolderTextureSM && texture): m_TextureDescription(desc), m_holdTexture(std::move(texture)){}
+        Texture(TextureDescription& desc);
+        Texture(int w, int h, const void* img);
+
+        TextureHandleSM getTextureHandleSM() const { return *m_holdTexture; }
+
+    private:
+		UINT32 m_TextureID = 0;
+        TextureDescription m_TextureDescription;
+		HolderTextureSM m_holdTexture;
+
+	};
 
 	//------------------------------------------------------------------------------------//
 	//  DEVICE VULKAN                                                                      //
 	//-------------------------------------------------------------------------------------//
-    class Device final: public IDevice
+    class IFNITY_API Device final: public IDevice
     {
        
     public:
@@ -144,7 +168,7 @@ namespace Vulkan
 //------------------------------------------------------------------------------------//
 //  G PIPELINE  VULKAN                                                                 //
 //-------------------------------------------------------------------------------------//
-    class GraphicsPipeline final: public IGraphicsPipeline
+    class IFNITY_API GraphicsPipeline final: public IGraphicsPipeline
     {
     private:
         GraphicsPipelineDescription m_Description;

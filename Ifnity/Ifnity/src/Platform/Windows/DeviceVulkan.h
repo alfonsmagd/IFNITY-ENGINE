@@ -35,6 +35,8 @@ public:
 	const VkPhysicalDeviceLimits& GetPhysicalDeviceLimits() const { return vkPhysicalDeviceProperties2_.properties.limits; }
 	const uint32_t getApiVersion() const { return vkPhysicalDeviceProperties2_.properties.apiVersion; }
 	void* getVmaAllocator() const { return m_Allocator; }
+	
+	VkPhysicalDevice getPhysicalDevice() const { return m_PhysicalDevice.physical_device; }
 
 
 	//Destroy operations 
