@@ -294,6 +294,15 @@ namespace rhi {
 		IndexFormat_UINT32
 	};
 
+	enum class DepthStencilTextureFlags: uint8_t
+	{
+
+		DEPTH = 1 << 1,
+		STENCIL = 1 << 2,
+		DEPTH_STENCIL = DEPTH | STENCIL,
+		DEPTH_FORCE_INTERNAL_API = 1 << 3 /* Force the internal API to use depth and create internal depth buffer inside render device get the handler depth buffer in APIs like Vulkan - D3D12, Opengl not need it.*/
+	};
+
 	//-------------------------------------------------------------------------------------//
 	//VERTEX TYPES ATTRIBUTES
 	//-------------------------------------------------------------------------------------//

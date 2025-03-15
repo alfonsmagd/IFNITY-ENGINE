@@ -330,12 +330,11 @@ public:
 		descTexture.usage = TextureUsageBits::ATTACHMENT;
 		descTexture.isDepth = true;
 		descTexture.debugName = "Depth buffer";
+		descTexture.depthStencil = DepthStencilTextureFlags::DEPTH;
 
-
-		
 		//DepthStencil texture
 		auto texture = rdevice->CreateTexture(descTexture);
-
+		//rdevice->SetDepthTexture(texture);
 		
 		//Vertex Attributes Configure Buffer 
 		{

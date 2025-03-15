@@ -764,6 +764,11 @@ namespace OpenGL
 	
 	}
 
+	void Device::SetDepthTexture(TextureHandle texture)
+	{
+		IFNITY_LOG(LogCore, INFO, "DepthTexture its only implented in VK and D3D12");
+	}
+
 
 
 	/**

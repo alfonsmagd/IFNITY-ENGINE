@@ -33,6 +33,15 @@ public:
 	{
 		return gen_ != 0;
 	}
+	// Operator uint32_t
+	operator uint32_t() const
+	{
+		if( gen_ != 0 )
+		{
+			return index_;
+		}
+		return 0xFFFFF; // Devuelve un valor predeterminado cuando gen_ es 0
+	}
 
 private:
 	Handle(uint32_t index, uint32_t gen): index_(index), gen_(gen) {}
@@ -61,7 +70,7 @@ public:
 	Handle<ObjectType> create(ObjectType&& obj)
 	{
 		uint32_t index;
-		if(!freeList.empty())
+		if( !freeList.empty() )
 		{
 			index = freeList.back(); // Reutiliza índice
 			freeList.pop_back();
@@ -77,7 +86,7 @@ public:
 
 	void destroy(Handle<ObjectType> handle)
 	{
-		if(!handle.valid()) return;
+		if( !handle.valid() ) return;
 		uint32_t index = handle.index();
 		assert(index < slots.size() && handle.gen() == slots[ index ].gen);
 
@@ -87,7 +96,7 @@ public:
 
 	ObjectType* get(Handle<ObjectType> handle)
 	{
-		if(!handle.valid()) return nullptr;
+		if( !handle.valid() ) return nullptr;
 		uint32_t index = handle.index();
 		assert(index < slots.size() && handle.gen() == slots[ index ].gen);
 		return &slots[ index ].obj;
@@ -95,19 +104,35 @@ public:
 
 	const ObjectType* get(Handle<ObjectType> handle) const
 	{
-		if(!handle.valid()) return nullptr;
+		if( !handle.valid() ) return nullptr;
 		uint32_t index = handle.index();
 		assert(index < slots.size() && handle.gen() == slots[ index ].gen);
 		return &slots[ index ].obj;
 	}
+	ObjectType* getByIndex(uint32_t index)
+	{
+		if( index >= slots.size() ) return nullptr;  // Verifica si el índice está fuera de rango
+		const auto& slot = slots[ index ];
+		if( slot.gen == 0 ) return nullptr;  // Verifica que la generación no sea 0, lo que indica un objeto inválido
+		return &slot.obj;
+	}
+
+	const ObjectType* getByIndex(uint32_t index) const
+	{
+		if( index >= slots.size() ) return nullptr;  // Verifica si el índice está fuera de rango
+		const auto& slot = slots[ index ];
+		if( slot.gen == 0 ) return nullptr;  // Verifica que la generación no sea 0
+		return &slot.obj;
+	}
+
 
 	//Find Object by ObjectType
 	Handle<ObjectType> find(const ObjectType* obj)
 	{
-		if(!obj) return {};
-		for(uint32_t i = 0; i < slots.size(); i++)
+		if( !obj ) return {};
+		for( uint32_t i = 0; i < slots.size(); i++ )
 		{
-			if(&slots[ i ].obj == obj)
+			if( &slots[ i ].obj == obj )
 			{
 				return Handle<ObjectType>(i, slots[ i ].gen);
 			}

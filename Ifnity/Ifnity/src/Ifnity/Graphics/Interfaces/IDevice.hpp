@@ -101,6 +101,7 @@ public:
 	virtual void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc) {}; //todo abstract 
 	virtual void StartRecording() {};
 	virtual void StopRecording() {};
+	virtual void SetDepthTexture(TextureHandle texture) = 0;
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
 };

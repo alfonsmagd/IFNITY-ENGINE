@@ -19,8 +19,8 @@ namespace Vulkan
 
 	bool validateImageLimits(VkImageType imageType,
 							 VkSampleCountFlagBits samples,
-							 const VkExtent3D & extent,
-							 const VkPhysicalDeviceLimits & limits
+							 const VkExtent3D& extent,
+							 const VkPhysicalDeviceLimits& limits
 	)
 	{
 
@@ -54,7 +54,7 @@ namespace Vulkan
 	//-----------------------------------------------//
 	// Device METHODS                                //
 	//-----------------------------------------------//
-	Device::Device(VkDevice vkDevice, DeviceVulkan * ptr): vkDevice_(vkDevice), m_DeviceVulkan(ptr)
+	Device::Device(VkDevice vkDevice, DeviceVulkan* ptr): vkDevice_(vkDevice), m_DeviceVulkan(ptr)
 	{
 
 		IFNITY_ASSERT_MSG(vkDevice_ != VK_NULL_HANDLE, "VkDevice is null");
@@ -63,8 +63,8 @@ namespace Vulkan
 		//set the stagindevice
 		m_StagingDevice = std::make_unique<VulkanStagingDevice>(*m_DeviceVulkan);
 		vkPhysicalDevice_ = m_DeviceVulkan->getPhysicalDevice();
-	
-			IFNITY_ASSERT_MSG(vkPhysicalDevice_ != VK_NULL_HANDLE, "VkPhysicalDevice is null, creatin device");
+
+		IFNITY_ASSERT_MSG(vkPhysicalDevice_ != VK_NULL_HANDLE, "VkPhysicalDevice is null, creatin device");
 
 
 	}
@@ -76,7 +76,7 @@ namespace Vulkan
 		destroyShaderModule();
 	}
 
-	void Device::Draw(DrawDescription & desc)
+	void Device::Draw(DrawDescription& desc)
 	{
 
 
@@ -87,7 +87,7 @@ namespace Vulkan
 	}
 
 	//TODO: Implement this function texdesc information
-	void Device::DrawObject(GraphicsPipelineHandle & pipeline, DrawDescription & desc)
+	void Device::DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)
 	{
 		pipeline->BindPipeline(this);//This set pipeline like actualpilenine in VK.
 
@@ -96,12 +96,12 @@ namespace Vulkan
 		cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
 
 		//for each vertex buffer bind 
-		for( auto & vb : m_vertexBuffer )
+		for( auto& vb : m_vertexBuffer )
 		{
 
 			cmdBuffer.cmdBindVertexBuffer(0, vb);
 		}
-		for( auto & ib : m_indexBuffer )
+		for( auto& ib : m_indexBuffer )
 		{
 			if( !ib.valid() ) continue;
 			cmdBuffer.cmdBindIndexBuffer(ib, rhi::IndexFormat::IndexFormat_UINT32);
@@ -117,7 +117,7 @@ namespace Vulkan
 
 	void Device::StartRecording()
 	{
-		Vulkan::CommandBuffer & cmdb = m_DeviceVulkan->acquireCommandBuffer();
+		Vulkan::CommandBuffer& cmdb = m_DeviceVulkan->acquireCommandBuffer();
 
 		cmdBuffer = std::move(cmdb);
 
@@ -128,6 +128,14 @@ namespace Vulkan
 		Vulkan::RenderPass renderPass = {
 		.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
 
+		//Get if we have internal depth texture
+		if( depthTexture_ )
+		{
+			
+		}
+
+
+		//Framebuffer with the current texture by default
 		Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture_ } } };
 
 		//Start Rendering
@@ -143,11 +151,11 @@ namespace Vulkan
 	}
 
 
-	GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription & desc)
+	GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc)
 	{
-		auto * vs = desc.vs;
-		auto * fs = desc.ps;
-		auto * gs = desc.gs;
+		auto* vs = desc.vs;
+		auto* fs = desc.ps;
+		auto* gs = desc.gs;
 
 		//Get if files are binary, other solution its get the extension. 
 		bool vsbinary = desc.vs->GetShaderDescription().APIflag & ShaderAPIflag::SPIRV_BIN;
@@ -175,25 +183,25 @@ namespace Vulkan
 		{
 			std::tie(vertexCode, fragmentCode, geometryCode) = Utils::readShaderFilesByAPI(rhi::GraphicsAPI::VULKAN, vs, fs, gs);
 		}
-		catch( const std::runtime_error & e )
+		catch( const std::runtime_error& e )
 		{
 			IFNITY_LOG(LogApp, ERROR, e.what());
 			return GraphicsPipelineHandle{};
 		}
 
-		const char * vShaderCode = vertexCode.c_str();
-		const char * fShaderCode = fragmentCode.c_str();
-		const char * gShaderCode = gs ? geometryCode.c_str() : nullptr;
+		const char* vShaderCode = vertexCode.c_str();
+		const char* fShaderCode = fragmentCode.c_str();
+		const char* gShaderCode = gs ? geometryCode.c_str() : nullptr;
 
 		// 2. compile shaders
-		GraphicsPipeline * pipeline = new GraphicsPipeline(std::move(desc), m_DeviceVulkan);
+		GraphicsPipeline* pipeline = new GraphicsPipeline(std::move(desc), m_DeviceVulkan);
 
 
-		auto & vert = m_shaderVert.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
-		auto & frag = m_shaderFragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
+		auto& vert = m_shaderVert.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
+		auto& frag = m_shaderFragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
 
 		//3. Create the pipeline and configure colorFormat,
-		const DeviceVulkan & ctx = getDeviceContextVulkan();
+		const DeviceVulkan& ctx = getDeviceContextVulkan();
 
 		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat())); //Get the SwapChain Color Format 
 		pipeline->passSpecializationConstantToVkFormat();
@@ -209,7 +217,7 @@ namespace Vulkan
 
 	}
 
-	BufferHandle Device::CreateBuffer(const BufferDescription & desc)
+	BufferHandle Device::CreateBuffer(const BufferDescription& desc)
 	{
 		//auxiliar storagetype config 
 		StorageType storage = desc.storage;
@@ -218,7 +226,7 @@ namespace Vulkan
 		if( desc.type == BufferType::CONSTANT_BUFFER )
 		{
 			IFNITY_LOG(LogCore, INFO, "Constant Buffer its managed in vulkan like push constants inside ");
-			Buffer * buff = new Buffer(desc);
+			Buffer* buff = new Buffer(desc);
 			return BufferHandle(buff);
 
 		}
@@ -260,7 +268,7 @@ namespace Vulkan
 
 
 
-		Buffer * handle = new Buffer(desc, std::move(buffer));
+		Buffer* handle = new Buffer(desc, std::move(buffer));
 		return BufferHandle(handle);
 
 	}
@@ -268,13 +276,13 @@ namespace Vulkan
 	HolderBufferSM Device::CreateInternalVkBuffer(VkDeviceSize bufferSize,
 												  VkBufferUsageFlags usageFlags,
 												  VkMemoryPropertyFlags memFlags,
-												  const char * debugName)
+												  const char* debugName)
 	{
 		//Check the buffersize has valid value
 		IFNITY_ASSERT_MSG(bufferSize > 0, "Buffer size is invalid");
 
 		//Get limits to verify the buffer size its 
-		const VkPhysicalDeviceLimits & limits = m_DeviceVulkan->GetPhysicalDeviceLimits();
+		const VkPhysicalDeviceLimits& limits = m_DeviceVulkan->GetPhysicalDeviceLimits();
 
 		if( usageFlags & VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT )
 		{
@@ -413,7 +421,7 @@ namespace Vulkan
 
 
 
-	void Device::upload(BufferHandleSM & buffer, const void * data, size_t size, uint32_t offset)
+	void Device::upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset)
 	{
 
 		//Previos check if the buffer is null and check it 
@@ -425,7 +433,7 @@ namespace Vulkan
 
 		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
 
-		VulkanBuffer * buf = m_DeviceVulkan->slotMapBuffers_.get(buffer);
+		VulkanBuffer* buf = m_DeviceVulkan->slotMapBuffers_.get(buffer);
 
 		if( !buf )
 		{
@@ -445,7 +453,7 @@ namespace Vulkan
 
 	}
 
-	void Device::WriteBuffer(BufferHandle & buffer, const void * data, size_t size, uint32_t offset)
+	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)
 	{
 		if( buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER )
 		{
@@ -458,7 +466,7 @@ namespace Vulkan
 	}
 
 
-	bool Device::validateTextureDescription(TextureDescription & texdesc)
+	bool Device::validateTextureDescription(TextureDescription& texdesc)
 	{
 		const rhi::TextureType type = texdesc.dimension;
 		if( !(type == TextureType::TEXTURE2D || type == TextureType::TEXTURECUBE || type == TextureType::TEXTURE3D) )
@@ -501,7 +509,7 @@ namespace Vulkan
 		return true;
 	}
 
-	VkImageUsageFlags Device::getImageUsageFlags(const TextureDescription & texdesc)
+	VkImageUsageFlags Device::getImageUsageFlags(const TextureDescription& texdesc)
 	{
 		VkImageUsageFlags usageFlags = (texdesc.storage == StorageType::DEVICE) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 
@@ -532,23 +540,23 @@ namespace Vulkan
 		return usageFlags;
 	}
 
-	void Device::BindingVertexAttributes(const VertexAttributeDescription * desc, int sizedesc, const void * data, size_t size)
+	void Device::BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)
 	{
 		// Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
 
-	void Device::BindingVertexIndexAttributes(const VertexAttributeDescription * desc, int sizedesc, BufferHandle & bf)
+	void Device::BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf)
 	{
 		// Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
 
-	void Device::BindingVertexAttributesBuffer(BufferHandle & bf)
+	void Device::BindingVertexAttributesBuffer(BufferHandle& bf)
 	{
 		//Dynamic cast to VkDevice 
 		// 
-		Buffer * vkBuffer = dynamic_cast<Buffer *>(bf.get());
+		Buffer* vkBuffer = dynamic_cast<Buffer*>(bf.get());
 		if( !vkBuffer )
 		{
 			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanBuffar dynamic cast");
@@ -561,12 +569,12 @@ namespace Vulkan
 		//m_indexBuffer.push_back(bf);
 	}
 
-	void Device::BindingIndexBuffer(BufferHandle & bf)
+	void Device::BindingIndexBuffer(BufferHandle& bf)
 	{
 
 		//Dynamic cast to VkDevice 
 		// 
-		Buffer * vkBuffer = dynamic_cast<Buffer *>(bf.get());
+		Buffer* vkBuffer = dynamic_cast<Buffer*>(bf.get());
 		if( !vkBuffer )
 		{
 			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanBuffar dynamic cast");
@@ -577,12 +585,12 @@ namespace Vulkan
 		m_indexBuffer.push_back(vkBuffer->getBufferHandleSM());
 	}
 
-	TextureHandle Device::CreateTexture(TextureDescription & desc)
+	TextureHandle Device::CreateTexture(TextureDescription& desc)
 	{
 		using namespace rhi;
 
 		TextureDescription texdesc(desc);
-		const auto & dvk = *m_DeviceVulkan;
+		const auto& dvk = *m_DeviceVulkan;
 
 		//Validate and asure the texture description is valid , if some values are invalid, the function force
 		//by default some values but not all. 
@@ -768,7 +776,7 @@ namespace Vulkan
 
 		if( holder.get()->valid() )
 		{
-			Texture * tex = new Texture(texdesc, std::move(holder));
+			Texture* tex = new Texture(texdesc, std::move(holder));
 			return TextureHandle(tex);
 		}
 
@@ -785,34 +793,52 @@ namespace Vulkan
 
 
 
-	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription & desc)
+	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
 	{
 		// Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
 
-	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription & desc, IMeshDataBuilder * meshbuilder)
+	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
 	{
 		// Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
 
-	SceneObjectHandler Device::CreateSceneObject(const char * meshes, const char * scene, const char * materials)
+	SceneObjectHandler Device::CreateSceneObject(const char* meshes, const char* scene, const char* materials)
 	{
 		// Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
 
-	MeshObjectHandle Device::CreateMeshObjectFromScene(const SceneObjectHandler & scene)
+	MeshObjectHandle Device::CreateMeshObjectFromScene(const SceneObjectHandler& scene)
 	{
 		// Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
 
-	void Device::SetRenderState(const RenderState & state)
+	void Device::SetRenderState(const RenderState& state)
 	{
 		// Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
+	}
+
+	void Device::SetDepthTexture(TextureHandle texture)
+	{
+		Texture* vkdepth = dynamic_cast<Texture*>(texture.get());
+		if( !vkdepth )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanTexture depht dynamic cast");
+			return;
+		}
+
+		depthTexture_ = vkdepth->getTextureHandleSM();
+		if( !depthTexture_.valid() )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanTexture depht dynamic cast");
+		    depthTexture_ = {}; //invalid texture
+		}
+
 	}
 
 	//--------------------------------------------------------------------------------------------------//
@@ -836,11 +862,11 @@ namespace Vulkan
 
 		IFNITY_ASSERT_MSG(handle.valid(), "GraphicsPipeline is null");
 
-		GraphicsPipeline * gp = m_DeviceVulkan->slotMapRenderPipelines_.get(handle);
+		GraphicsPipeline* gp = m_DeviceVulkan->slotMapRenderPipelines_.get(handle);
 
 
 
-		RenderPipelineState * rps = gp->getRenderPipelineStatePtr();
+		RenderPipelineState* rps = gp->getRenderPipelineStatePtr();
 
 		if( rps->pipeline_ != VK_NULL_HANDLE )
 		{
@@ -853,19 +879,19 @@ namespace Vulkan
 		VkPipeline pipeline = VK_NULL_HANDLE;
 
 		//Initialize and get information to build diferent stages of the pipeline
-		const GraphicsPipelineDescription & desc = gp->m_Description;
-		const BlendState & blendstate = desc.renderState.blendState;
-		SpecializationConstantDesc & specInfo = gp->specInfo;
+		const GraphicsPipelineDescription& desc = gp->m_Description;
+		const BlendState& blendstate = desc.renderState.blendState;
+		SpecializationConstantDesc& specInfo = gp->specInfo;
 
 		//Todo: get the shader modules from the pipeline description TESSELATION, MESH, GEOM
-		const ShaderModuleState * vertModule = gp->getVertexShaderModule();
-		const ShaderModuleState * fragModule = gp->getFragmentShaderModule();
+		const ShaderModuleState* vertModule = gp->getVertexShaderModule();
+		const ShaderModuleState* fragModule = gp->getFragmentShaderModule();
 
 		const uint32_t samplesCount = gp->samplesCount;
 		const float minSampleShading = gp->minSampleShading;
 
-		StencilState & backFaceStencil = gp->backFaceStencil;
-		StencilState & frontFaceStencil = gp->frontFaceStencil;
+		StencilState& backFaceStencil = gp->backFaceStencil;
+		StencilState& frontFaceStencil = gp->frontFaceStencil;
 
 
 		//const uint32_t numColorAttachments = &gp->m_rVkPipelineState.numColorAttachments_; only one color attachment format 
@@ -876,7 +902,7 @@ namespace Vulkan
 
 		// 4. Create the Color Blend Attachment States
 
-		const auto & attachment = gp->colorFormat;
+		const auto& attachment = gp->colorFormat;
 		IFNITY_ASSERT_MSG(attachment != rhi::Format::UNKNOWN, "format invalid");
 		colorAttachmentFormats[ 0 ] = VK_FORMAT_B8G8R8A8_UNORM;
 
@@ -948,7 +974,7 @@ namespace Vulkan
 		//maxPushConstantsSize is guaranteed to be at least 128 bytes, now in Vulkan 1.4 is 256 bytes
 		// https://www.khronos.org/registry/vulkan/specs/1.3/html/vkspec.html#features-limits
 		// Table 32. Required Limits
-		const VkPhysicalDeviceLimits & limits = getPhysicalDeviceLimits();
+		const VkPhysicalDeviceLimits& limits = getPhysicalDeviceLimits();
 		if( !(pushConstantsSize <= limits.maxPushConstantsSize) )
 		{
 			//Fill and complete with IFNITY_LOG 
@@ -958,7 +984,7 @@ namespace Vulkan
 		}
 
 		//7. Create VkPipelineLayout
-		auto & vkDsl = m_DeviceVulkan->vkDSL_;  // get the descriptor set layout from the deviceVulkan context.
+		auto& vkDsl = m_DeviceVulkan->vkDSL_;  // get the descriptor set layout from the deviceVulkan context.
 
 		const VkDescriptorSetLayout dsls[] = { vkDsl ,vkDsl };
 		const VkPushConstantRange range =
@@ -1042,7 +1068,7 @@ namespace Vulkan
 
 	}
 
-	void Device::setActualPipeline(GraphicsPipeline * pipeline)
+	void Device::setActualPipeline(GraphicsPipeline* pipeline)
 	{
 
 		m_DeviceVulkan->actualPipeline_ = pipeline;
@@ -1051,7 +1077,7 @@ namespace Vulkan
 	void Device::destroyShaderModule()
 	{
 
-		for( auto & vertex : m_shaderVert )
+		for( auto& vertex : m_shaderVert )
 		{
 			if( vertex )
 			{
@@ -1061,7 +1087,7 @@ namespace Vulkan
 			}
 		}
 
-		for( auto & fragment : m_shaderFragment )
+		for( auto& fragment : m_shaderFragment )
 		{
 			if( fragment )
 			{
@@ -1075,14 +1101,14 @@ namespace Vulkan
 
 
 
-	HolderShaderSM Device::createShaderModuleFromSpirV(const void * spirv, size_t numBytes, const char * debugName) const
+	HolderShaderSM Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const
 	{
 		VkShaderModule vkShaderModule = VK_NULL_HANDLE;
 
 		const VkShaderModuleCreateInfo ci = {
 			 .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 			 .codeSize = numBytes,
-			 .pCode = (const uint32_t *)spirv
+			 .pCode = (const uint32_t*)spirv
 		};
 
 		{
@@ -1098,7 +1124,7 @@ namespace Vulkan
 
 			//todo: move to heap compilerRefelction to stack 
 
-			spirv_cross::CompilerReflection * compiler = new  spirv_cross::CompilerReflection((const uint32_t *)spirv, numElements);
+			spirv_cross::CompilerReflection* compiler = new  spirv_cross::CompilerReflection((const uint32_t*)spirv, numElements);
 
 			// Refleja los recursos del shader
 			spirv_cross::ShaderResources resources = compiler->get_shader_resources();
@@ -1106,9 +1132,9 @@ namespace Vulkan
 			uint32_t pushConstantSize = 0;
 
 			// Itera sobre las push constants y calcula el tamaño total
-			for( const auto & pushConstant : resources.push_constant_buffers )
+			for( const auto& pushConstant : resources.push_constant_buffers )
 			{
-				const spirv_cross::SPIRType & type = compiler->get_type(pushConstant.base_type_id);
+				const spirv_cross::SPIRType& type = compiler->get_type(pushConstant.base_type_id);
 				pushConstantSize += compiler->get_declared_struct_size(type);
 			}
 
@@ -1124,7 +1150,7 @@ namespace Vulkan
 		}
 	}
 
-	HolderShaderSM Device::createShaderModule(const char * shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char * debugName) const
+	HolderShaderSM Device::createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const
 	{
 		std::vector<uint8_t> spirv;
 		if( isBinary )
@@ -1170,7 +1196,7 @@ namespace Vulkan
 		return !deviceDepthFormats_.empty() ? deviceDepthFormats_[ 0 ] : VK_FORMAT_D24_UNORM_S8_UINT;
 	}
 
-	const VkPhysicalDeviceLimits & Device::getPhysicalDeviceLimits() const
+	const VkPhysicalDeviceLimits& Device::getPhysicalDeviceLimits() const
 	{
 		// TODO: Insertar una instrucción "return" aquí
 		IFNITY_ASSERT_MSG(m_DeviceVulkan != VK_NULL_HANDLE, "VkPhysicalDevice is null");
@@ -1188,12 +1214,12 @@ namespace Vulkan
 	{
 		DestroyPipeline(m_DeviceVulkan->device_);
 	}
-	GraphicsPipeline::GraphicsPipeline(GraphicsPipelineDescription && desc, DeviceVulkan * dev): m_Description(std::move(desc)), m_DeviceVulkan(dev)
+	GraphicsPipeline::GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceVulkan* dev): m_Description(std::move(desc)), m_DeviceVulkan(dev)
 	{}
 
-	void GraphicsPipeline::BindPipeline(IDevice * device)
+	void GraphicsPipeline::BindPipeline(IDevice* device)
 	{
-		Device * vkDevice = dynamic_cast<Device *>(device);
+		Device* vkDevice = dynamic_cast<Device*>(device);
 		IFNITY_ASSERT_MSG(vkDevice != nullptr, "Device is not a Vulkan Device");
 
 
@@ -1209,22 +1235,22 @@ namespace Vulkan
 
 	}
 
-	ShaderModuleState * GraphicsPipeline::getVertexShaderModule()
+	ShaderModuleState* GraphicsPipeline::getVertexShaderModule()
 	{
 		if( m_shaderVert.valid() )
 		{
-			ShaderModuleState * mvert = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderVert);
+			ShaderModuleState* mvert = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderVert);
 			return mvert;
 		}
 		IFNITY_LOG(LogApp, ERROR, "Vertex Shader Module State getHandle   its not valid");
 		return nullptr;
 	}
 
-	ShaderModuleState * GraphicsPipeline::getFragmentShaderModule()
+	ShaderModuleState* GraphicsPipeline::getFragmentShaderModule()
 	{
 		if( m_shaderVert.valid() )
 		{
-			ShaderModuleState * frag = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderFragment);
+			ShaderModuleState* frag = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderFragment);
 			return frag;
 		}
 		IFNITY_LOG(LogApp, ERROR, "Vertex frag Module State getHandle   its not valid");
@@ -1232,7 +1258,7 @@ namespace Vulkan
 		return nullptr;
 	}
 
-	void GraphicsPipeline::setSpecializationConstant(const SpecializationConstantDesc & spec)
+	void GraphicsPipeline::setSpecializationConstant(const SpecializationConstantDesc& spec)
 	{
 		if( spec.data && spec.dataSize )
 		{
@@ -1276,13 +1302,13 @@ namespace Vulkan
 
 		m_rVkPipelineState.numAttributes_ = m_Description.vertexInput.getNumAttributes();
 
-		const auto & vertexInput = m_Description.vertexInput;
+		const auto& vertexInput = m_Description.vertexInput;
 
 		bool bufferAlreadyBound[ VertexInput::VERTEX_BUFFER_MAX ] = {};
 
 		for( uint32_t i = 0; i != m_rVkPipelineState.numAttributes_; i++ )
 		{
-			const auto & attr = vertexInput.attributes[ i ];
+			const auto& attr = vertexInput.attributes[ i ];
 
 			m_rVkPipelineState.vkAttributes_[ i ] =
 			{
@@ -1313,7 +1339,7 @@ namespace Vulkan
 	void GraphicsPipeline::passSpecializationConstantToVkFormat()
 	{
 
-		for( const auto & spec : m_Description.specInfo )
+		for( const auto& spec : m_Description.specInfo )
 		{
 			specInfo.entries[ spec.id ] = {
 			.constantId = spec.id,

@@ -135,27 +135,27 @@ void DeviceVulkan::OnUpdate()
 
 
 	#ifdef SANDBOX_TOOL
-	//
-	////using vec3 = glm::vec3;
-	////static bool hasexecuted = false;
-	//////First get acquire the command buffer 
-	//Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
-	//float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
+	
+	//using vec3 = glm::vec3;
+	//static bool hasexecuted = false;
+	////First get acquire the command buffer 
+	Vulkan::CommandBuffer& cmdBuffer = acquireCommandBuffer();
+	float color[ 4 ] = { 1.0f, 0.0f, 0.0f, 1.0f }; // Rojo
 
-	//Vulkan::TextureHandleSM currentTexture = getCurrentSwapChainTexture();
-	//Vulkan::RenderPass renderPass = {
-	//.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+	Vulkan::TextureHandleSM currentTexture = getCurrentSwapChainTexture();
+	Vulkan::RenderPass renderPass = {
+	.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
 
-	//Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
+	Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
 
-	//cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-	//BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
+	cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+	BeginRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_, "Render Pass Begin 11111", color);
 
-	////cmdBuffer.cmdDraw(3);
-	//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
-	//EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
-	//cmdBuffer.cmdEndRendering();
-	//submit(cmdBuffer, currentTexture);
+	//cmdBuffer.cmdDraw(3);
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+	EndRenderDocTrace(cmdBuffer.wrapper_->cmdBuf_);
+	cmdBuffer.cmdEndRendering();
+	submit(cmdBuffer, currentTexture);
 
 	#endif
 
@@ -1373,9 +1373,8 @@ void DeviceVulkan::destroy(Vulkan::BufferHandleSM handle)
 
 void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 {
-	SCOPE_EXIT{
-	  slootMapTextures_.destroy(handle);
-	};
+	
+
 
 	Vulkan::VulkanImage * tex = slootMapTextures_.get(handle);
 
@@ -1388,6 +1387,15 @@ void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 	{
 		return;
 	}
+
+	SCOPE_EXIT{
+		if( tex->imageView_ != VK_NULL_HANDLE )
+	  {
+		  vkDestroyImageView(device_, tex->imageView_, nullptr);
+	  }
+		  slootMapTextures_.destroy(handle);
+	
+	};
 
 	if( VMA_ALLOCATOR_VK )
 	{

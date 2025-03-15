@@ -127,9 +127,11 @@ struct IFNITY_API TextureDescription
     rhi::TextureType dimension = rhi::TextureType::TEXTURE2D;
 	rhi::TextureWrapping  wrapping  = rhi::TextureWrapping::REPEAT;
 	rhi::TextureUsageBits usage = rhi::TextureUsageBits::UNKNOW;
+	rhi::DepthStencilTextureFlags depthStencil = rhi::DepthStencilTextureFlags::DEPTH;
 	StorageType storage = StorageType::DEVICE; //for now , not implementint stagin buffer;
     std::string debugName;
     std::string filepath;
+
 	bool generateMipMaps = false;
 	bool isDepth = false;
 	bool isStencil = false;

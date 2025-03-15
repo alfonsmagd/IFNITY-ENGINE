@@ -40,7 +40,7 @@ namespace Vulkan
     {
     public:
         virtual TextureDescription GetTextureDescription() override { return m_TextureDescription; }
-        virtual uint32_t           GetTextureID() override { return m_TextureID; }
+        virtual uint32_t           GetTextureID() override { return *m_holdTexture; }
 
         //Constructor 
 		Texture() = default;
@@ -104,6 +104,8 @@ namespace Vulkan
         MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override;
         void SetRenderState(const RenderState& state);
         
+		//Set Depth Texture
+		void SetDepthTexture(TextureHandle texture) override;
 
 		//Vulkan Specific 
         VkPipeline getVkPipeline(GraphicsPipelineHandleSM gp) const;
@@ -127,6 +129,9 @@ namespace Vulkan
         VkImageUsageFlags getImageUsageFlags(const TextureDescription& texdesc);
 
         
+		//DepthTexture
+		TextureHandleSM depthTexture_;
+
 		const VkPhysicalDeviceLimits& getPhysicalDeviceLimits() const;
 
 		VkDevice vkDevice_ = VK_NULL_HANDLE;
@@ -135,6 +140,7 @@ namespace Vulkan
         DeviceVulkan* m_DeviceVulkan = nullptr;
 		std::unique_ptr<VulkanStagingDevice> m_StagingDevice;
         TextureHandleSM currentTexture_;
+
 
         #define MAX_SHADER_STAGES 4
         //Shaders loading by device 

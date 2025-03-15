@@ -67,6 +67,9 @@ namespace OpenGL
 		SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override;
 		MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override;
         void SetRenderState(const RenderState& state);
+
+		//Set Depth Texture
+		void SetDepthTexture(TextureHandle texture) override;
     private:
 		
 		    GLuint GetVAO() const { return m_VAO; }
