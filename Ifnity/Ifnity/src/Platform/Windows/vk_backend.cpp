@@ -128,18 +128,19 @@ namespace Vulkan
 		Vulkan::RenderPass renderPass = {
 		.color = { {.loadOp = Vulkan::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
 
+		Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture_ } } };
 		//Get if we have internal depth texture
-		if( depthTexture_ )
+		if( depthTexture_.valid() )
 		{
-			
+			framebuffer.depthStencil = { .texture = depthTexture_ };
+			renderPass.depth = { .loadOp = Vulkan::LoadOp_Clear, .clearDepth = 1.0f };
 		}
 
 
-		//Framebuffer with the current texture by default
-		Vulkan::Framebuffer framebuffer = { .color = { {.texture = currentTexture_ } } };
-
 		//Start Rendering
 		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+		cmdBuffer.cmdBindDepthState({ .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true });
+
 	}
 
 	void Device::StopRecording()
@@ -204,6 +205,7 @@ namespace Vulkan
 		const DeviceVulkan& ctx = getDeviceContextVulkan();
 
 		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat())); //Get the SwapChain Color Format 
+		pipeline->setDepthFormat(pipeline->GetGraphicsPipelineDesc().renderState.depthFormat);
 		pipeline->passSpecializationConstantToVkFormat();
 		pipeline->configureVertexAttributes();
 		pipeline->m_shaderFragment = *frag.get();
@@ -839,6 +841,7 @@ namespace Vulkan
 		    depthTexture_ = {}; //invalid texture
 		}
 
+
 	}
 
 	//--------------------------------------------------------------------------------------------------//
@@ -894,7 +897,7 @@ namespace Vulkan
 		StencilState& frontFaceStencil = gp->frontFaceStencil;
 
 
-		//const uint32_t numColorAttachments = &gp->m_rVkPipelineState.numColorAttachments_; only one color attachment format 
+		const uint32_t numColorAttachments = 1; 
 
 		// Not all attachments are valid. We need to create color blend attachments only for active attachments
 		VkPipelineColorBlendAttachmentState colorBlendAttachmentStates[ MAX_COLOR_ATTACHMENTS ] = {};
@@ -1019,12 +1022,14 @@ namespace Vulkan
 			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS)
 			.dynamicState(VK_DYNAMIC_STATE_BLEND_CONSTANTS)
 			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state
-			.dynamicState(VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE)
-			.dynamicState(VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE)
+			//.dynamicState(VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE)
+			//.dynamicState(VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE)
 			.dynamicState(VK_DYNAMIC_STATE_DEPTH_COMPARE_OP)
 			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state2
-			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE)
+			//.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE)
 			.primitiveTopology(ConvertToVkPrimitiveTopology(desc.rasterizationState.primitiveType))
+			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount,
+															m_DeviceVulkan->getFramebufferMSAABitMask()), minSampleShading)
 			.polygonMode(ConverToVkPolygonMode(desc.rasterizationState.polygonMode))
 			.stencilStateOps(VK_STENCIL_FACE_FRONT_BIT,
 							 ConvertstencilOpToVkStencilOp(frontFaceStencil.stencilFailureOp),
@@ -1036,9 +1041,7 @@ namespace Vulkan
 							 ConvertstencilOpToVkStencilOp(backFaceStencil.depthStencilPassOp),
 							 ConvertstencilOpToVkStencilOp(backFaceStencil.depthFailureOp),
 							 compareOpToVkCompareOp(backFaceStencil.stencilCompareOp))
-			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount,
-															m_DeviceVulkan->getFramebufferMSAABitMask()),
-								  minSampleShading)
+			
 			.stencilMasks(VK_STENCIL_FACE_FRONT_BIT, 0xFF, frontFaceStencil.writeMask, frontFaceStencil.readMask)
 			.stencilMasks(VK_STENCIL_FACE_BACK_BIT, 0xFF, backFaceStencil.writeMask, backFaceStencil.readMask)
 			.shaderStage(shaderStages[ VSHADER ])

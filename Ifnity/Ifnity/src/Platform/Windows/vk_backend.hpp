@@ -131,6 +131,8 @@ namespace Vulkan
         
 		//DepthTexture
 		TextureHandleSM depthTexture_;
+        //DepthFormat
+		VkFormat depthFormat_;
 
 		const VkPhysicalDeviceLimits& getPhysicalDeviceLimits() const;
 
@@ -212,6 +214,7 @@ namespace Vulkan
         void  setSpecializationConstant(const SpecializationConstantDesc& spec);
         void  SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = desc; }
 		void  setColorFormat(rhi::Format format) { colorFormat = format; }
+		void  setDepthFormat(rhi::Format format) { depthFormat = format; }
         const RenderPipelineState& getRenderPipelineState() const { return m_rVkPipelineState; }
 		RenderPipelineState& getRenderPipelineState() { return m_rVkPipelineState; }
 		RenderPipelineState* getRenderPipelineStatePtr() { return &m_rVkPipelineState; }

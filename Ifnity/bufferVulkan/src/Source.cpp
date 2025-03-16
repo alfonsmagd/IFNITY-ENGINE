@@ -187,6 +187,7 @@ private:
 	BufferHandle m_UBO;
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
+	TextureHandle m_depth;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_SolidPipeline;
 	GraphicsPipelineHandle m_WireFramePipeline;
@@ -333,8 +334,8 @@ public:
 		descTexture.depthStencil = DepthStencilTextureFlags::DEPTH;
 
 		//DepthStencil texture
-		auto texture = rdevice->CreateTexture(descTexture);
-		//rdevice->SetDepthTexture(texture);
+		m_depth = rdevice->CreateTexture(descTexture);
+		rdevice->SetDepthTexture(m_depth);
 		
 		//Vertex Attributes Configure Buffer 
 		{
@@ -379,7 +380,8 @@ public:
 				AddDebugName("Wireframe Pipeline").
 				SetVertexInput(vertexInput).
 				SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Line }).
-				AddSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , });
+				AddSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , })
+				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
 
 			//GraphicsPipelineDescription gdesc
 			m_WireFramePipeline = rdevice->CreateGraphicsPipeline(gdesc1);
@@ -390,7 +392,8 @@ public:
 				SetPixelShader(m_ps.get()).
 				AddDebugName("Solid Pipeline").
 				SetVertexInput(vertexInput).
-				SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Fill });
+				SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Fill })
+				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
 
 			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc2);
 		}
@@ -401,7 +404,7 @@ public:
 
 		
 		m_SolidPipeline->BindPipeline(rdevice);
-
+		
 
 		//exit(0);
 

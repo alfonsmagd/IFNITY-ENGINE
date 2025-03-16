@@ -64,25 +64,25 @@ namespace Vulkan
 		vkCmdSetScissor(wrapper_->cmdBuf_, 0, 1, &scissor);
 	}
 
-	//void CommandBuffer::cmdBindDepthState(const DepthState& desc)
-	//{
-	//	
+	void CommandBuffer::cmdBindDepthState(const DepthState& desc)
+	{
+		
 
-	//	const VkCompareOp op = compareOpToVkCompareOp(desc.compareOp);
-	//	vkCmdSetDepthWriteEnable(wrapper_->cmdBuf_, desc.isDepthWriteEnabled ? VK_TRUE : VK_FALSE);
-	//	vkCmdSetDepthTestEnable(wrapper_->cmdBuf_, op != VK_COMPARE_OP_ALWAYS || desc.isDepthWriteEnabled);
+		const VkCompareOp op = compareOpToVkCompareOp(desc.compareOp);
+		vkCmdSetDepthWriteEnable(wrapper_->cmdBuf_, desc.isDepthWriteEnabled ? VK_TRUE : VK_FALSE);
+		vkCmdSetDepthTestEnable(wrapper_->cmdBuf_, op != VK_COMPARE_OP_ALWAYS || desc.isDepthWriteEnabled);
 
-	//	#if defined(ANDROID)
-	//	// This is a workaround for the issue.
-	//	// On Android (Mali-G715-Immortalis MC11 v1.r38p1-01eac0.c1a71ccca2acf211eb87c5db5322f569)
-	//	// if depth-stencil texture is not set, call of vkCmdSetDepthCompareOp leads to disappearing of all content.
-	//	if(!framebuffer_.depthStencil.texture)
-	//	{
-	//		return;
-	//	}
-	//	#endif
-	//	vkCmdSetDepthCompareOp(wrapper_->cmdBuf_, op);
-	//}
+		#if defined(ANDROID)
+		// This is a workaround for the issue.
+		// On Android (Mali-G715-Immortalis MC11 v1.r38p1-01eac0.c1a71ccca2acf211eb87c5db5322f569)
+		// if depth-stencil texture is not set, call of vkCmdSetDepthCompareOp leads to disappearing of all content.
+		if(!framebuffer_.depthStencil.texture)
+		{
+			return;
+		}
+		#endif
+		vkCmdSetDepthCompareOp(wrapper_->cmdBuf_, op);
+	}
 
 	void CommandBuffer::cmdBeginRendering(const RenderPass& renderPass, Framebuffer& fb)
 	{
@@ -276,13 +276,7 @@ namespace Vulkan
 
 	}
 
-	void CommandBuffer::cmdBindDepthState(const DepthState& desc)
-	{
-		const VkCompareOp op = compareOpToVkCompareOp(desc.compareOp);
-		vkCmdSetDepthWriteEnable(wrapper_->cmdBuf_, desc.isDepthWriteEnabled ? VK_TRUE : VK_FALSE);
-		vkCmdSetDepthTestEnable(wrapper_->cmdBuf_, op != VK_COMPARE_OP_ALWAYS || desc.isDepthWriteEnabled);
-		vkCmdSetDepthCompareOp(wrapper_->cmdBuf_, op);
-	}
+	
 
 	void CommandBuffer::cmdBindRenderPipeline(GraphicsPipelineHandleSM pipeline)
 	{

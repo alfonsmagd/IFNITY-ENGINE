@@ -95,6 +95,8 @@ struct IFNITY_API RenderState
 	bool depthTest = false;
 	bool depthWrite = false;
 	bool stencil = false;
+	rhi::Format depthFormat = rhi::Format::UNKNOWN;
+	rhi::Format stencilFormat = rhi::Format::UNKNOWN;
 	BlendState blendState;
 };
 
