@@ -74,6 +74,7 @@ namespace Vulkan
 	Device::~Device()
 	{
 		destroyShaderModule();
+
 	}
 
 	void Device::Draw(DrawDescription& desc)
@@ -89,6 +90,15 @@ namespace Vulkan
 	//TODO: Implement this function texdesc information
 	void Device::DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)
 	{
+		DepthState depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = desc.depthTest };
+
+
+		cmdBuffer.cmdBindDepthState(depthState);
+		cmdBuffer.cmdSetDepthBiasEnable(desc.enableBias);
+		cmdBuffer.cmdSetDepthBias(desc.depthBiasValues.Constant,
+								  desc.depthBiasValues.Clamp,
+								  desc.depthBiasValues.Clamp);
+		
 		pipeline->BindPipeline(this);//This set pipeline like actualpilenine in VK.
 
 
@@ -107,16 +117,24 @@ namespace Vulkan
 			cmdBuffer.cmdBindIndexBuffer(ib, rhi::IndexFormat::IndexFormat_UINT32);
 		}
 
+
+		cmdBuffer.cmdBindDepthState(depthState);
 		cmdBuffer.cmdPushConstants(pushConstants.data,
 								   pushConstants.size,
 								   pushConstants.offset);
 
+		
 		cmdBuffer.cmdDraw(desc.size);
 
 	}
 
 	void Device::StartRecording()
 	{
+		DepthState depthState;
+		
+
+
+
 		Vulkan::CommandBuffer& cmdb = m_DeviceVulkan->acquireCommandBuffer();
 
 		cmdBuffer = std::move(cmdb);
@@ -134,17 +152,22 @@ namespace Vulkan
 		{
 			framebuffer.depthStencil = { .texture = depthTexture_ };
 			renderPass.depth = { .loadOp = Vulkan::LoadOp_Clear, .clearDepth = 1.0f };
+			depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true };
+			
+			
 		}
 
 
 		//Start Rendering
 		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-		cmdBuffer.cmdBindDepthState({ .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true });
+	
+
 
 	}
 
 	void Device::StopRecording()
 	{
+		
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
 		cmdBuffer.cmdEndRendering();
 		m_DeviceVulkan->submit(cmdBuffer, currentTexture_);
@@ -1022,11 +1045,11 @@ namespace Vulkan
 			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS)
 			.dynamicState(VK_DYNAMIC_STATE_BLEND_CONSTANTS)
 			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state
-			//.dynamicState(VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE)
-			//.dynamicState(VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE)
+			.dynamicState(VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE)
+			.dynamicState(VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE)
 			.dynamicState(VK_DYNAMIC_STATE_DEPTH_COMPARE_OP)
 			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state2
-			//.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE)
+			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE)
 			.primitiveTopology(ConvertToVkPrimitiveTopology(desc.rasterizationState.primitiveType))
 			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount,
 															m_DeviceVulkan->getFramebufferMSAABitMask()), minSampleShading)

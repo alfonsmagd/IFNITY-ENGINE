@@ -32,6 +32,8 @@ namespace Vulkan
 		void cmdPushConstants(const void* data, size_t size, size_t offset = 0);
 		void cmdBindVertexBuffer( uint32_t index, BufferHandleSM buffer, uint64_t bufferOffset = 0);
 		void cmdBindIndexBuffer(BufferHandleSM indexBuffer, rhi::IndexFormat indexFormat, uint64_t indexBufferOffset = 0);
+		void cmdSetDepthBias(float constantFactor, float slopeFactor, float clamp);
+		void cmdSetDepthBiasEnable(bool enable);
 		template<typename Struct>
 		void cmdPushConstants(const Struct& data, size_t offset = 0)
 		{

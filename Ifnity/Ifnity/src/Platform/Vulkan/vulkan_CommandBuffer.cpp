@@ -361,6 +361,19 @@ namespace Vulkan
 	}
 
 
+	
+void CommandBuffer::cmdSetDepthBias(float constantFactor, float slopeFactor, float clamp)
+{
+	vkCmdSetDepthBias(wrapper_->cmdBuf_, constantFactor, clamp, slopeFactor);
+}
+
+void CommandBuffer::cmdSetDepthBiasEnable(bool enable)
+{
+	vkCmdSetDepthBiasEnable(wrapper_->cmdBuf_, enable ? VK_TRUE : VK_FALSE);
+}
+
+
+
 	void CommandBuffer::cmdEndRendering()
 	{
 		assert(isRendering_);

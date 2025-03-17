@@ -22,9 +22,17 @@ struct IFNITY_API DrawDescription
 	RasterizationState rasterizationState;
 	ViewPortState      viewPortState;
 
+	bool depthTest = false;
+	bool enableBias = false;
 	bool isIndexed = false;
 	const void* indices = nullptr;
     unsigned int size;
+	struct
+	{
+		float Constant = 0.0f;
+		float Slope = 0.0f;
+		float Clamp = 0.0f;
+	}depthBiasValues;
 
 	//To vulkan uses 
 	bool startintRecord = false;

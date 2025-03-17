@@ -282,7 +282,7 @@ VkResult VulkanPipelineBuilder::build(VkDevice device,
 		depthStencilStateCI.front = depthStencilStateCI.back;
 
 	const VkGraphicsPipelineCreateInfo ci = {
-		 .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+		 .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR,
 		 .pNext = &renderingInfo,
 		 .flags = 0,
 		 .stageCount = numShaderStages_,

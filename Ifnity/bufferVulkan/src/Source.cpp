@@ -82,6 +82,11 @@ private:
 class ImGuiTestLayer: public IFNITY::Layer
 {
 public:
+	DrawDescription descImgui;
+
+
+
+public:
 	ImGuiTestLayer(): Layer("ImGuiTest") {}
 	~ImGuiTestLayer() {}
 
@@ -101,6 +106,7 @@ public:
 		ImGui::SetCurrentContext(context);
 
 		ChooseApi();
+		EnableDisableDepthBias();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
 	// Heredado vía Layer
@@ -173,8 +179,19 @@ private:
 		ImGui::End();  // Termina la creación de la ventana
 	}
 
+	void EnableDisableDepthBias()
+	{
+		
+		ImGui::Begin("Depth Bias");
+		ImGui::Checkbox("Enable Depth Bias", &descImgui.enableBias);
+		ImGui::Checkbox("Enable Depth Write Test", &descImgui.depthTest);
+		ImGui::SliderFloat("Constant Factor", &descImgui.depthBiasValues.Constant, 0.0f, 10.0f);
+		ImGui::SliderFloat("Clamp", &descImgui.depthBiasValues.Clamp, -10.0f, 5.0f);
+		ImGui::SliderFloat("Slope Factor", &descImgui.depthBiasValues.Slope, 0.0f, 10.0f);
+		ImGui::End();
+	}
 
-
+	
 
 
 
@@ -195,6 +212,7 @@ private:
 	std::shared_ptr<IShader> m_ps;
 
 	uint32_t msizeIndex = 0;	
+	ImGuiTestLayer m_ImGuiLayer;
 public:
 	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
@@ -209,7 +227,7 @@ public:
 		// Establecer el contexto de ImGui en la aplicación principal
 		//ImGui::SetCurrentContext(context);
 		PushLayer(new   IFNITY::NVML_Monitor());
-		PushLayer(new ImGuiTestLayer());
+		PushLayer(&m_ImGuiLayer);
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
 
 
@@ -429,10 +447,13 @@ public:
 
 		DrawDescription desc;
 		desc.size = msizeIndex;
-
+		
 		// desc.size = 3;
-
+		desc.depthTest = m_ImGuiLayer.descImgui.depthTest;
 		rdevice->DrawObject(m_SolidPipeline, desc);
+		desc.enableBias = m_ImGuiLayer.descImgui.enableBias;
+		desc.depthBiasValues = m_ImGuiLayer.descImgui.depthBiasValues;
+		
 		rdevice->DrawObject(m_WireFramePipeline, desc);
 
 		rdevice->StopRecording();
