@@ -312,7 +312,8 @@ public:
 
 
 		//assimp 
-		const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+		//const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+		const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
 
 		if(!scene || !scene->HasMeshes())
 		{
@@ -435,27 +436,28 @@ public:
 
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		const mat4 m = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
-		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 m = glm::rotate(mat4(1.0f), glm::radians(90.0f), vec3(1, 0, 0));
+		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.0f, -2.75f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
 		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
-
 
 		//StartRecording
 		rdevice->StartRecording();
-
 		rdevice->WriteBuffer(m_UBO, glm::value_ptr(p * v*  m), sizeof(glm::mat4));
-
 		DrawDescription desc;
-		desc.size = msizeIndex;
-		
-		// desc.size = 3;
-		desc.depthTest = m_ImGuiLayer.descImgui.depthTest;
-		rdevice->DrawObject(m_SolidPipeline, desc);
-		desc.enableBias = m_ImGuiLayer.descImgui.enableBias;
-		desc.depthBiasValues = m_ImGuiLayer.descImgui.depthBiasValues;
-		
-		rdevice->DrawObject(m_WireFramePipeline, desc);
-
+		//First Draw solid line pipeline 
+		{
+			desc.size = msizeIndex;
+			desc.drawMode = DRAW_INDEXED;
+			// desc.size = 3;
+			desc.depthTest = m_ImGuiLayer.descImgui.depthTest;
+			rdevice->DrawObject(m_SolidPipeline, desc);
+		}
+		//Second Draw wireframe pipeline
+		{
+			desc.enableBias = m_ImGuiLayer.descImgui.enableBias;
+			desc.depthBiasValues = m_ImGuiLayer.descImgui.depthBiasValues;
+			rdevice->DrawObject(m_WireFramePipeline, desc);
+		}
 		rdevice->StopRecording();
 		//StopRecording 
 

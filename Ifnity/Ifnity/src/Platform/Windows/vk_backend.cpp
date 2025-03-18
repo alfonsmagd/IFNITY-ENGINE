@@ -124,7 +124,7 @@ namespace Vulkan
 								   pushConstants.offset);
 
 		
-		cmdBuffer.cmdDraw(desc.size);
+		cmdBuffer.cmdDraw(desc.drawMode,desc.size);
 
 	}
 
