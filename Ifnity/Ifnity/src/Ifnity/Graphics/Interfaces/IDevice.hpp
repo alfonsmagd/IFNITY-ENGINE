@@ -14,14 +14,21 @@
 IFNITY_NAMESPACE
 
 
-
+enum IFNITY_API DrawModeUse
+{
+	DRAW = 0,
+	DRAW_INDEXED = 1,
+	DRAW_INDIRECT = 2,
+	DRAW_INDEXED_INDIRECT = 3
+	
+};
 
 
 struct IFNITY_API DrawDescription
 {
 	RasterizationState rasterizationState;
 	ViewPortState      viewPortState;
-
+	DrawModeUse drawMode = DRAW;
 	bool depthTest = false;
 	bool enableBias = false;
 	bool isIndexed = false;
@@ -106,7 +113,7 @@ public:
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) = 0;
 	virtual SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) = 0;
 	virtual MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) = 0;
-	virtual void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc) {}; //todo abstract 
+	virtual void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc) = 0; //todo abstract 
 	virtual void StartRecording() {};
 	virtual void StopRecording() {};
 	virtual void SetDepthTexture(TextureHandle texture) = 0;

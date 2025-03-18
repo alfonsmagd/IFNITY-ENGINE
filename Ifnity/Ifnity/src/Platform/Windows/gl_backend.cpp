@@ -386,7 +386,13 @@ namespace OpenGL
 	}
 
 
+	void Device::DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)
+	{
+		//For now not using.
+		//Report in the future.
 
+		IFNITY_LOG(LogApp, WARNING, "DrawObject its not implemented");
+	}
 
 	GLuint Device::CreateVAO()
 	{

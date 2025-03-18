@@ -15,22 +15,22 @@ namespace Vulkan
 	//help function to transition to color attachment
 	void static transitionToColorAttachment(VkCommandBuffer buffer, VulkanImage* colorTex)
 	{
-		if(!(colorTex))
+		if( !(colorTex) )
 		{
 			return;
 		}
 
-		if(!(!colorTex->isDepthFormat_ && !colorTex->isStencilFormat_))
+		if( !(!colorTex->isDepthFormat_ && !colorTex->isStencilFormat_) )
 		{
 			IFNITY_LOG(LogCore, ERROR, "Color attachments cannot have depth/stencil formats");
 			return;
 		}
 		IFNITY_ASSERT_MSG(colorTex->vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid color attachment format");
 		colorTex->transitionLayout(buffer,
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,// wait for all subsequent// fragment/compute shaders
-			VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
+								   VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+								   VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+								   VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,// wait for all subsequent// fragment/compute shaders
+								   VkImageSubresourceRange{ VK_IMAGE_ASPECT_COLOR_BIT, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
 	}
 
 	Vulkan::CommandBuffer::CommandBuffer(DeviceVulkan* ctx): ctx_(ctx), wrapper_(&ctx->immediate_->acquire())
@@ -66,7 +66,7 @@ namespace Vulkan
 
 	void CommandBuffer::cmdBindDepthState(const DepthState& desc)
 	{
-		
+
 
 		const VkCompareOp op = compareOpToVkCompareOp(desc.compareOp);
 		vkCmdSetDepthWriteEnable(wrapper_->cmdBuf_, desc.isDepthWriteEnabled ? VK_TRUE : VK_FALSE);
@@ -76,7 +76,7 @@ namespace Vulkan
 		// This is a workaround for the issue.
 		// On Android (Mali-G715-Immortalis MC11 v1.r38p1-01eac0.c1a71ccca2acf211eb87c5db5322f569)
 		// if depth-stencil texture is not set, call of vkCmdSetDepthCompareOp leads to disappearing of all content.
-		if(!framebuffer_.depthStencil.texture)
+		if( !framebuffer_.depthStencil.texture )
 		{
 			return;
 		}
@@ -105,15 +105,15 @@ namespace Vulkan
 
 		//2. transition all the color attachments and depth-stencil attachment
 			// transition all the color attachments
-		for(uint32_t i = 0; i != numFbColorAttachments; i++)
+		for( uint32_t i = 0; i != numFbColorAttachments; i++ )
 		{
-			if(const auto handle = fb.color[ i ].texture)
+			if( const auto handle = fb.color[ i ].texture )
 			{
 				VulkanImage* colorTex = ctx_->slootMapTextures_.get(handle);
 				transitionToColorAttachment(wrapper_->cmdBuf_, colorTex);
 			}
 			// handle MSAA
-			if(TextureHandleSM handle = fb.color[ i ].resolveTexture)
+			if( TextureHandleSM handle = fb.color[ i ].resolveTexture )
 			{
 				VulkanImage* colorResolveTex = ctx_->slootMapTextures_.get(handle);
 				transitionToColorAttachment(wrapper_->cmdBuf_, colorResolveTex);
@@ -122,17 +122,17 @@ namespace Vulkan
 		// transition depth-stencil attachment
 
 		TextureHandleSM depthTex = fb.depthStencil.texture;
-		if(depthTex)
+		if( depthTex )
 		{
 			const VulkanImage& depthImg = *ctx_->slootMapTextures_.get(depthTex);
 			IFNITY_ASSERT_MSG(depthImg.vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid depth attachment format");
 			const VkImageAspectFlags flags = depthImg.getImageAspectFlags();
 			depthImg.transitionLayout(wrapper_->cmdBuf_,
-				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-				VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // wait for all subsequent
-				// operations
-				VkImageSubresourceRange{ flags, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
+									  VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+									  VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+									  VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // wait for all subsequent
+									  // operations
+									  VkImageSubresourceRange{ flags, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
 		}
 
 		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
@@ -144,23 +144,23 @@ namespace Vulkan
 		//3. New structures are used to define the attachments used in dynamic rendering
 		VkRenderingAttachmentInfo colorAttachments[ MAX_COLOR_ATTACHMENTS ];
 
-		for(uint32_t i = 0; i != numFbColorAttachments; i++)
+		for( uint32_t i = 0; i != numFbColorAttachments; i++ )
 		{
 			Framebuffer::AttachmentDesc& attachment = fb.color[ i ];
 			//_ASSERT(!attachment.texture.empty());
 
 			auto& colorTexture = *ctx_->slootMapTextures_.get(attachment.texture);
 			auto& descColor = renderPass.color[ i ];
-			if(mipLevel && descColor.level)
+			if( mipLevel && descColor.level )
 			{
 				IFNITY_ASSERT_MSG(descColor.level == mipLevel, "All color attachments should have the same mip-level");
 			}
 			const VkExtent3D dim = colorTexture.vkExtent_;
-			if(fbWidth)
+			if( fbWidth )
 			{
 				IFNITY_ASSERT_MSG(dim.width == fbWidth, "All attachments should have the same width");
 			}
-			if(fbHeight)
+			if( fbHeight )
 			{
 				IFNITY_ASSERT_MSG(dim.height == fbHeight, "All attachments should have the same height");
 			}
@@ -197,7 +197,7 @@ namespace Vulkan
 		//4. Depth attachment Info
 		VkRenderingAttachmentInfo depthAttachment = {};
 
-		if(fb.depthStencil.texture)
+		if( fb.depthStencil.texture )
 		{
 
 			auto& depthTexture = *ctx_->slootMapTextures_.get(fb.depthStencil.texture);
@@ -227,11 +227,11 @@ namespace Vulkan
 				depthAttachment.resolveMode = VK_RESOLVE_MODE_AVERAGE_BIT;
 			}*/
 			const VkExtent3D dim = depthTexture.vkExtent_;
-			if(fbWidth)
+			if( fbWidth )
 			{
 				IFNITY_ASSERT_MSG(dim.width == fbWidth, "All attachments should have the same width");
 			}
-			if(fbHeight)
+			if( fbHeight )
 			{
 				IFNITY_ASSERT_MSG(dim.height == fbHeight, "All attachments should have the same height");
 			}
@@ -276,27 +276,27 @@ namespace Vulkan
 
 	}
 
-	
+
 
 	void CommandBuffer::cmdBindRenderPipeline(GraphicsPipelineHandleSM pipeline)
 	{
-		if(pipeline.empty())
+		if( pipeline.empty() )
 		{
 			return;
 		}
 
 		currentPipelineGraphics_ = pipeline;
 
-		 GraphicsPipeline* gp = ctx_->slotMapRenderPipelines_.get(pipeline);
+		GraphicsPipeline* gp = ctx_->slotMapRenderPipelines_.get(pipeline);
 
-		 RenderPipelineState& rps = gp->getRenderPipelineState();
-		if(!rps.pipeline_)
+		RenderPipelineState& rps = gp->getRenderPipelineState();
+		if( !rps.pipeline_ )
 		{
 			return;
 		}
 		VkPipeline vkpipeline = rps.pipeline_;
 
-		if(lastPipelineBound_ != vkpipeline)
+		if( lastPipelineBound_ != vkpipeline )
 		{
 			lastPipelineBound_ = vkpipeline;
 			vkCmdBindPipeline(wrapper_->cmdBuf_, VK_PIPELINE_BIND_POINT_GRAPHICS, vkpipeline);
@@ -308,13 +308,29 @@ namespace Vulkan
 	void CommandBuffer::cmdDraw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t baseInstance)
 	{
 
-		if(vertexCount == 0)
+		if( vertexCount == 0 )
 		{
 			return;
 		}
 
-		//vkCmdDraw(wrapper_->cmdBuf_, vertexCount, instanceCount, firstVertex, baseInstance);
-		vkCmdDrawIndexed(wrapper_->cmdBuf_, vertexCount, 1, 0, 0, 0);
+		vkCmdDraw(wrapper_->cmdBuf_, vertexCount, instanceCount, firstVertex, baseInstance);
+		//vkCmdDrawIndexed(wrapper_->cmdBuf_, vertexCount, 1, 0, 0, 0);
+
+	}
+
+	void CommandBuffer::cmdDraw(DrawModeUse drawMode, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t baseInstance)
+	{
+		if( drawMode == DRAW )
+		{
+			this->cmdDraw(vertexCount, instanceCount, firstVertex, baseInstance);
+		}
+		else
+		{
+			if( vertexCount == 0 ) { return; }
+
+			vkCmdDrawIndexed(wrapper_->cmdBuf_, vertexCount, 1, 0, 0, 0);
+		}
+
 
 	}
 
@@ -327,17 +343,17 @@ namespace Vulkan
 		RenderPipelineState* rps = &gp->getRenderPipelineState();
 
 		vkCmdPushConstants(wrapper_->cmdBuf_,
-			rps->pipelineLayout_,
-			rps->shaderStageFlags_,
-			(uint32_t)offset,
-			(uint32_t)size,
-			data);
+						   rps->pipelineLayout_,
+						   rps->shaderStageFlags_,
+						   (uint32_t)offset,
+						   (uint32_t)size,
+						   data);
 	}
 
 	void CommandBuffer::cmdBindVertexBuffer(uint32_t index, BufferHandleSM buffer, uint64_t bufferOffset)
 	{
-	
-		if(!IFNITY_VERIFY(!buffer.empty()))
+
+		if( !IFNITY_VERIFY(!buffer.empty()) )
 		{
 			return;
 		}
@@ -347,7 +363,7 @@ namespace Vulkan
 		IFNITY_ASSERT(buf->vkUsageFlags_ & VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
 
 		vkCmdBindVertexBuffers(wrapper_->cmdBuf_, index, 1, &buf->vkBuffer_, &bufferOffset);
-	
+
 	}
 
 	void CommandBuffer::cmdBindIndexBuffer(BufferHandleSM indexBuffer, rhi::IndexFormat indexFormat, uint64_t indexBufferOffset)
@@ -361,16 +377,16 @@ namespace Vulkan
 	}
 
 
-	
-void CommandBuffer::cmdSetDepthBias(float constantFactor, float slopeFactor, float clamp)
-{
-	vkCmdSetDepthBias(wrapper_->cmdBuf_, constantFactor, clamp, slopeFactor);
-}
 
-void CommandBuffer::cmdSetDepthBiasEnable(bool enable)
-{
-	vkCmdSetDepthBiasEnable(wrapper_->cmdBuf_, enable ? VK_TRUE : VK_FALSE);
-}
+	void CommandBuffer::cmdSetDepthBias(float constantFactor, float slopeFactor, float clamp)
+	{
+		vkCmdSetDepthBias(wrapper_->cmdBuf_, constantFactor, clamp, slopeFactor);
+	}
+
+	void CommandBuffer::cmdSetDepthBiasEnable(bool enable)
+	{
+		vkCmdSetDepthBiasEnable(wrapper_->cmdBuf_, enable ? VK_TRUE : VK_FALSE);
+	}
 
 
 
@@ -385,7 +401,7 @@ void CommandBuffer::cmdSetDepthBiasEnable(bool enable)
 		const uint32_t numFbColorAttachments = framebuffer_.getNumColorAttachments();
 
 		// set image layouts after the render pass
-		for(uint32_t i = 0; i != numFbColorAttachments; i++)
+		for( uint32_t i = 0; i != numFbColorAttachments; i++ )
 		{
 			auto& attachment = framebuffer_.color[ i ];
 			const VulkanImage& tex = *ctx_->slootMapTextures_.get(attachment.texture);
@@ -393,7 +409,7 @@ void CommandBuffer::cmdSetDepthBiasEnable(bool enable)
 			tex.vkImageLayout_ = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		}
 
-		if(framebuffer_.depthStencil.texture)
+		if( framebuffer_.depthStencil.texture )
 		{
 			auto& depthStencil = framebuffer_.depthStencil;
 			const VulkanImage& tex = *ctx_->slootMapTextures_.get(depthStencil.texture);

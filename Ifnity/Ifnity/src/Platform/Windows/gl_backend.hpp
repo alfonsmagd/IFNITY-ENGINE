@@ -43,6 +43,10 @@ namespace OpenGL
         */
         void Draw(DrawDescription& desc) override;
 
+
+
+		void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc) override;
+
         /**
         * @brief Creates a graphics pipeline.
         * 

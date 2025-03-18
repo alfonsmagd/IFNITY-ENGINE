@@ -438,7 +438,7 @@ public:
 		else
 		{
 			m_MeshObject->DrawInstancedDirect();
-			}
+		}
 		
 	}
 	void Animate() override

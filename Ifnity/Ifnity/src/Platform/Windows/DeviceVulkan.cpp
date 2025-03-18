@@ -135,7 +135,7 @@ void DeviceVulkan::OnUpdate()
 
 
 	#ifdef SANDBOX_TOOL
-	
+
 	//using vec3 = glm::vec3;
 	//static bool hasexecuted = false;
 	////First get acquire the command buffer 
@@ -286,7 +286,7 @@ void DeviceVulkan::InternalPreDestroy()
 	vkDeviceWaitIdle(device_.device);
 }
 
-void DeviceVulkan::ClearBackBuffer(float * color)
+void DeviceVulkan::ClearBackBuffer(float* color)
 {
 	std::copy(color, color + 4, m_Color);
 }
@@ -345,7 +345,7 @@ uint32_t DeviceVulkan::getFramebufferMSAABitMask() const
 	//framebufferColorSampleCounts: Indicates the multisample anti-aliasing (MSAA) capabilities that the physical device supports for color attachments in a framebuffer.
 	//framebufferDepthSampleCounts : Indicates the multisample anti - aliasing(MSAA) capabilities that the physical device supports for depth attachments in a framebuffer.
 
-	const VkPhysicalDeviceLimits & limits = properties2.properties.limits;
+	const VkPhysicalDeviceLimits& limits = properties2.properties.limits;
 	return limits.framebufferColorSampleCounts & limits.framebufferDepthSampleCounts;
 }
 
@@ -392,9 +392,9 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	bufferDeviceAddressFeatures.bufferDeviceAddressCaptureReplay = VK_TRUE;
 
 	// Estructura de características
-VkPhysicalDeviceDynamicRenderingUnusedAttachmentsFeaturesEXT dynamicRenderingUnusedAttachmentsFeatures = {};
-dynamicRenderingUnusedAttachmentsFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_FEATURES_EXT;
-dynamicRenderingUnusedAttachmentsFeatures.dynamicRenderingUnusedAttachments = VK_TRUE;
+	VkPhysicalDeviceDynamicRenderingUnusedAttachmentsFeaturesEXT dynamicRenderingUnusedAttachmentsFeatures = {};
+	dynamicRenderingUnusedAttachmentsFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_FEATURES_EXT;
+	dynamicRenderingUnusedAttachmentsFeatures.dynamicRenderingUnusedAttachments = VK_TRUE;
 
 
 	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface)
@@ -428,14 +428,14 @@ dynamicRenderingUnusedAttachmentsFeatures.dynamicRenderingUnusedAttachments = VK
 	std::vector<VkExtensionProperties> extensions(extensionCount);
 	vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extensionCount, extensions.data());
 
-	for( const auto & ext : extensions )
+	for( const auto& ext : extensions )
 	{
 		IFNITY_LOG(LogCore, INFO, "Supported extension: {}", ext.extensionName);
 	}
 
 	// Verificar si VK_EXT_debug_marker está en la lista de extensiones soportadas
 	bool debugMarkerSupported = false;
-	for( const auto & ext : extensions )
+	for( const auto& ext : extensions )
 	{
 		if( strcmp(ext.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0 )
 		{
@@ -584,7 +584,7 @@ bool DeviceVulkan::DestroyCommandPool()
 
 bool DeviceVulkan::DestroyShaderStages()
 {
-	Vulkan::Device * vkDevice = dynamic_cast<Vulkan::Device *>(GetRenderDevice());
+	Vulkan::Device* vkDevice = dynamic_cast<Vulkan::Device*>(GetRenderDevice());
 	if( !vkDevice )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to get Vulkan Device");
@@ -615,7 +615,7 @@ void DeviceVulkan::DestroyCommandBuffers()
 
 void DeviceVulkan::CleanFrameBuffers()
 {
-	for( auto & framebuffer : m_Framebuffers )
+	for( auto& framebuffer : m_Framebuffers )
 	{
 		vkDestroyFramebuffer(device_.device, framebuffer, nullptr);
 	}
@@ -635,7 +635,7 @@ void DeviceVulkan::DestroyPipelines()
 {
 	//Iterate about map destroy all pipelines
 
-	for( auto & [key, pipeline] : map_renderPipelines )
+	for( auto& [key, pipeline] : map_renderPipelines )
 	{
 		if( pipeline )
 		{
@@ -870,7 +870,7 @@ bool DeviceVulkan::GetDepthAvailableFormat()
 		VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM
 	};
 
-	for( const auto & depthFormat : depthFormats )
+	for( const auto& depthFormat : depthFormats )
 	{
 		VkFormatProperties formatProps;
 		vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice.physical_device, depthFormat, &formatProps);
@@ -1131,7 +1131,7 @@ bool DeviceVulkan::CreateImGuiDescriptorPool()
 
 
 
-void DeviceVulkan::setupCallbacks(VkDevice & i_device)
+void DeviceVulkan::setupCallbacks(VkDevice& i_device)
 {
 
 	// Check if the debug utils extension is present (which is the case if run from a graphics debugger)
@@ -1140,7 +1140,7 @@ void DeviceVulkan::setupCallbacks(VkDevice & i_device)
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
 	std::vector<VkExtensionProperties> extensions(extensionCount);
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-	for( auto & extension : extensions )
+	for( auto& extension : extensions )
 	{
 		if( strcmp(extension.extensionName, VK_EXT_DEBUG_UTILS_EXTENSION_NAME) == 0 )
 		{
@@ -1178,7 +1178,7 @@ void DeviceVulkan::setupCallbacks(VkDevice & i_device)
 
 }
 
-void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char * markerName, float color[ 4 ])
+void DeviceVulkan::BeginRenderDocTrace(VkCommandBuffer commandBuffer, const char* markerName, float color[ 4 ])
 {
 	if( vkCmdBeginDebugUtilsLabelEXT )
 	{
@@ -1207,7 +1207,7 @@ bool DeviceVulkan::createVulkanImmediateCommands()
 	return true;
 }
 
-Vulkan::CommandBuffer & DeviceVulkan::acquireCommandBuffer()
+Vulkan::CommandBuffer& DeviceVulkan::acquireCommandBuffer()
 {
 	IFNITY_ASSERT_MSG(!currentCommandBuffer_.ctx_, "Cannot acquire more than 1 command buffer simultaneously");
 
@@ -1233,7 +1233,7 @@ Vulkan::TextureHandleSM DeviceVulkan::getCurrentSwapChainTexture()
 		return {};
 	}
 
-	auto * texptr = slootMapTextures_.get(tex);
+	auto* texptr = slootMapTextures_.get(tex);
 	IFNITY_ASSERT_MSG(texptr->vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid image format");
 
 	return tex;
@@ -1246,9 +1246,9 @@ bool DeviceVulkan::hasSwapchain() const noexcept
 	return swapchain_ != nullptr;
 }
 
-Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer & commandBuffer, Vulkan::TextureHandleSM present)
+Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, Vulkan::TextureHandleSM present)
 {
-	auto vkCmdBuffer = static_cast<Vulkan::CommandBuffer *>(&commandBuffer);
+	auto vkCmdBuffer = static_cast<Vulkan::CommandBuffer*>(&commandBuffer);
 
 
 	IFNITY_ASSERT_MSG(vkCmdBuffer, "Not vkcmdbuffer ");
@@ -1258,7 +1258,7 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer & commandBuffer,
 	//Prepare image to be presented
 	if( present )
 	{
-		const Vulkan::VulkanImage & tex = *slootMapTextures_.get(present);
+		const Vulkan::VulkanImage& tex = *slootMapTextures_.get(present);
 		IFNITY_ASSERT_MSG(tex.isSwapchainImage_, "No SwapChainImage acquire to submit");
 
 		// prepare image for presentation the image might be coming from a compute shader
@@ -1295,7 +1295,7 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer & commandBuffer,
 
 }
 
-void DeviceVulkan::addGraphicsPipeline(Vulkan::GraphicsPipeline * pipeline)
+void DeviceVulkan::addGraphicsPipeline(Vulkan::GraphicsPipeline* pipeline)
 {
 	map_renderPipelines[ nextPipelineId ] = pipeline;
 	nextPipelineId++;
@@ -1325,7 +1325,7 @@ void DeviceVulkan::destroy(Vulkan::GraphicsPipelineHandleSM handle)
 
 void DeviceVulkan::destroy(Vulkan::ShaderModuleHandleSM handle)
 {
-	const Vulkan::ShaderModuleState * state = slotMapShaderModules_.get(handle);
+	const Vulkan::ShaderModuleState* state = slotMapShaderModules_.get(handle);
 
 	if( !state )
 	{
@@ -1350,7 +1350,7 @@ void DeviceVulkan::destroy(Vulkan::BufferHandleSM handle)
 	  slotMapBuffers_.destroy(handle);
 	};
 
-	Vulkan::VulkanBuffer * buf = slotMapBuffers_.get(handle);
+	Vulkan::VulkanBuffer* buf = slotMapBuffers_.get(handle);
 
 	if( !buf )
 	{
@@ -1380,10 +1380,10 @@ void DeviceVulkan::destroy(Vulkan::BufferHandleSM handle)
 
 void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 {
-	
 
 
-	Vulkan::VulkanImage * tex = slootMapTextures_.get(handle);
+
+	Vulkan::VulkanImage* tex = slootMapTextures_.get(handle);
 
 	if( !tex )
 	{
@@ -1401,7 +1401,7 @@ void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 		  vkDestroyImageView(device_, tex->imageView_, nullptr);
 	  }
 		  slootMapTextures_.destroy(handle);
-	
+
 	};
 
 	if( VMA_ALLOCATOR_VK )
@@ -1428,7 +1428,7 @@ void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 
 
 
-Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const void * spirv, size_t numBytes, const char * debugName)
+Vulkan::ShaderModuleState DeviceVulkan::createShaderModuleFromSpirVconst(const void* spirv, size_t numBytes, const char* debugName)
 {
 	return Vulkan::ShaderModuleState();
 }

@@ -313,6 +313,7 @@ public:
 
 		DrawDescription desc;
 		desc.size = 36;
+		desc.drawMode = DRAW;
 		rdevice->DrawObject(m_SolidPipeline, desc);
 		rdevice->DrawObject(m_WireFramePipeline, desc);
 		
