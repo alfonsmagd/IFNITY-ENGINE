@@ -50,6 +50,45 @@ namespace Vulkan
 		return true;
 	}
 
+	bool validateRange(const VkExtent3D& ext, uint32_t numLevels, const TextureRangeDesc& range)
+	{
+		bool isValidate = true;
+
+		if( !IFNITY_VERIFY(range.dimensions.width > 0 && range.dimensions.height > 0 || range.dimensions.depth > 0 || range.numLayers > 0 ||
+						   range.numMipLevels > 0) )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Invalid range dimensions");
+			return false;
+		}
+		if( range.mipLevel > numLevels )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Mip level out of range");
+			return false;
+
+		}
+
+		const uint32_t texWidth = std::max(ext.width >> range.mipLevel, 1u);
+		const uint32_t texHeight = std::max(ext.height >> range.mipLevel, 1u);
+		const uint32_t texDepth = std::max(ext.depth >> range.mipLevel, 1u);
+
+		if( range.dimensions.width > texWidth   ||
+		    range.dimensions.height > texHeight ||
+		    range.dimensions.depth > texDepth )
+		{
+			IFNITY_LOG(LogCore, ERROR, "range dimensions exceed texture dimensions");
+			return false;
+		}
+		if( range.offset.x > texWidth - range.dimensions.width   ||
+		    range.offset.y > texHeight - range.dimensions.height ||
+		    range.offset.z > texDepth - range.dimensions.depth )
+		{
+			IFNITY_LOG(LogCore, ERROR, "range offset exceeds texture dimensions");
+			return false;
+		}
+
+		return isValidate;
+	}
+
 
 	//-----------------------------------------------//
 	// Device METHODS                                //
@@ -98,7 +137,7 @@ namespace Vulkan
 		cmdBuffer.cmdSetDepthBias(desc.depthBiasValues.Constant,
 								  desc.depthBiasValues.Clamp,
 								  desc.depthBiasValues.Clamp);
-		
+
 		pipeline->BindPipeline(this);//This set pipeline like actualpilenine in VK.
 
 
@@ -123,15 +162,15 @@ namespace Vulkan
 								   pushConstants.size,
 								   pushConstants.offset);
 
-		
-		cmdBuffer.cmdDraw(desc.drawMode,desc.size);
+
+		cmdBuffer.cmdDraw(desc.drawMode, desc.size);
 
 	}
 
 	void Device::StartRecording()
 	{
 		DepthState depthState;
-		
+
 
 
 
@@ -153,21 +192,21 @@ namespace Vulkan
 			framebuffer.depthStencil = { .texture = depthTexture_ };
 			renderPass.depth = { .loadOp = Vulkan::LoadOp_Clear, .clearDepth = 1.0f };
 			depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true };
-			
-			
+
+
 		}
 
 
 		//Start Rendering
 		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
-	
+
 
 
 	}
 
 	void Device::StopRecording()
 	{
-		
+
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
 		cmdBuffer.cmdEndRendering();
 		m_DeviceVulkan->submit(cmdBuffer, currentTexture_);
@@ -478,6 +517,42 @@ namespace Vulkan
 
 	}
 
+	void Device::upload(TextureHandleSM handle, TextureRangeDesc desc, void* data)
+	{
+		if( !data )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Data is null to upload creatin texture vulkan ");
+			return;
+		}
+
+		VulkanImage* texture = m_DeviceVulkan->slootMapTextures_.get(handle);
+
+		if( !texture )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Texture not create,error at get in slotmap");
+			return;
+		}
+
+		/*const Result result = validateRange(texture->vkExtent_, texture->numLevels_, range);
+
+		if( !LVK_VERIFY(result.isOk()) )
+		{
+			return result;
+		}
+
+		const uint32_t numLayers = std::max(range.numLayers, 1u);
+
+		VkFormat vkFormat = texture->vkImageFormat_;*/
+
+
+
+
+
+
+
+
+	}
+
 	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)
 	{
 		if( buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER )
@@ -648,8 +723,8 @@ namespace Vulkan
 
 		//Get the correct VkImageCreateFlags and properties to build texture desc.
 		VkImageCreateFlags vkCreateFlags = 0;
-		VkImageViewType vkImageViewType;
-		VkImageType vkImageType;
+		VkImageViewType vkImageViewType = VK_IMAGE_VIEW_TYPE_2D; //by default, for now
+		VkImageType vkImageType = VK_IMAGE_TYPE_2D;
 		VkSampleCountFlagBits vkSamples = VK_SAMPLE_COUNT_1_BIT;
 		uint32_t numLayers = 1;
 
@@ -766,7 +841,7 @@ namespace Vulkan
 			{
 				aspect |= VK_IMAGE_ASPECT_DEPTH_BIT;
 			}
-			else if( image.isStencilFormat_ || texdesc.isStencil )
+			if( image.isStencilFormat_ || texdesc.isStencil )
 			{
 				aspect |= VK_IMAGE_ASPECT_STENCIL_BIT;
 			}
@@ -804,6 +879,16 @@ namespace Vulkan
 			Texture* tex = new Texture(texdesc, std::move(holder));
 			return TextureHandle(tex);
 		}
+
+
+		//Chek if texture has a valid value to use 
+		if( desc.data )
+		{
+			//upload process to texture 
+		}
+
+
+
 
 		IFNITY_LOG(LogCore, ERROR, "Failed to create texture in vulkan , not error reporter before ");
 		return {};
@@ -861,7 +946,7 @@ namespace Vulkan
 		if( !depthTexture_.valid() )
 		{
 			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanTexture depht dynamic cast");
-		    depthTexture_ = {}; //invalid texture
+			depthTexture_ = {}; //invalid texture
 		}
 
 
@@ -920,7 +1005,7 @@ namespace Vulkan
 		StencilState& frontFaceStencil = gp->frontFaceStencil;
 
 
-		const uint32_t numColorAttachments = 1; 
+		const uint32_t numColorAttachments = 1;
 
 		// Not all attachments are valid. We need to create color blend attachments only for active attachments
 		VkPipelineColorBlendAttachmentState colorBlendAttachmentStates[ MAX_COLOR_ATTACHMENTS ] = {};
@@ -1064,7 +1149,7 @@ namespace Vulkan
 							 ConvertstencilOpToVkStencilOp(backFaceStencil.depthStencilPassOp),
 							 ConvertstencilOpToVkStencilOp(backFaceStencil.depthFailureOp),
 							 compareOpToVkCompareOp(backFaceStencil.stencilCompareOp))
-			
+
 			.stencilMasks(VK_STENCIL_FACE_FRONT_BIT, 0xFF, frontFaceStencil.writeMask, frontFaceStencil.readMask)
 			.stencilMasks(VK_STENCIL_FACE_BACK_BIT, 0xFF, backFaceStencil.writeMask, backFaceStencil.readMask)
 			.shaderStage(shaderStages[ VSHADER ])

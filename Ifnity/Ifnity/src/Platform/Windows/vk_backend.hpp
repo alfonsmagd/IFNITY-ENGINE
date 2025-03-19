@@ -87,6 +87,7 @@ namespace Vulkan
         BufferHandle CreateBuffer(const BufferDescription& desc) override;
         
 		void upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0);
+        void upload(TextureHandleSM handle, TextureRangeDesc desc, void* data);
 
         void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) override;
 
@@ -128,7 +129,7 @@ namespace Vulkan
         bool validateTextureDescription(TextureDescription& texdesc);
         VkImageUsageFlags getImageUsageFlags(const TextureDescription& texdesc);
 
-        
+    private: 
 		//DepthTexture
 		TextureHandleSM depthTexture_;
         //DepthFormat
@@ -162,7 +163,7 @@ namespace Vulkan
 			size_t size;
 			size_t offset;
         }pushConstants;
-		
+		bool awaitCreation_ = false;
     };
 
     //Please constructor are not safe if you dont create the 

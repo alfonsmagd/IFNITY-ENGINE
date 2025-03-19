@@ -303,6 +303,19 @@ namespace rhi {
 		DEPTH_FORCE_INTERNAL_API = 1 << 3 /* Force the internal API to use depth and create internal depth buffer inside render device get the handler depth buffer in APIs like Vulkan - D3D12, Opengl not need it.*/
 	};
 
+
+    //-------------------------------------------------------------------------------------//
+	//STRUCTURES
+    //-------------------------------------------------------------------------------------//
+
+
+    
+
+
+
+
+
+
 	//-------------------------------------------------------------------------------------//
 	//VERTEX TYPES ATTRIBUTES
 	//-------------------------------------------------------------------------------------//

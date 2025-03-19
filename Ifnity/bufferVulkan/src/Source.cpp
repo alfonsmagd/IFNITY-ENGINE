@@ -448,7 +448,6 @@ public:
 		{
 			desc.size = msizeIndex;
 			desc.drawMode = DRAW_INDEXED;
-			// desc.size = 3;
 			desc.depthTest = m_ImGuiLayer.descImgui.depthTest;
 			rdevice->DrawObject(m_SolidPipeline, desc);
 		}

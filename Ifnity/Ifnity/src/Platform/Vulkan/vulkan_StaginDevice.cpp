@@ -45,13 +45,29 @@ namespace Vulkan
 		//If the buffer is not mapped, we need to map it and copy the data in staginbuffer
 	}
 
-	void VulkanStagingDevice::imageData2D(VulkanImage& image, const VkRect2D& imageRegion, uint32_t baseMipLevel, uint32_t numMipLevels, uint32_t layer, uint32_t numLayers, VkFormat format, const void* data)
+	void VulkanStagingDevice::imageData2D(VulkanImage& image,
+										  const VkRect2D& imageRegion, 
+										  uint32_t baseMipLevel,
+										  uint32_t numMipLevels,
+										  uint32_t layer,
+										  uint32_t numLayers,
+										  VkFormat format,
+										  const void* data)
 	{}
 
-	void VulkanStagingDevice::imageData3D(VulkanImage& image, const VkOffset3D& offset, const VkExtent3D& extent, VkFormat format, const void* data)
+	void VulkanStagingDevice::imageData3D(VulkanImage& image,
+										  const VkOffset3D& offset,
+										  const VkExtent3D& extent,
+										  VkFormat format,
+										  const void* data)
 	{}
 
-	void VulkanStagingDevice::getImageData(VulkanImage& image, const VkOffset3D& offset, const VkExtent3D& extent, VkImageSubresourceRange range, VkFormat format, void* outData)
+	void VulkanStagingDevice::getImageData(VulkanImage& image,
+										   const VkOffset3D& offset,
+										   const VkExtent3D& extent,
+										   VkImageSubresourceRange range,
+										   VkFormat format,
+										   void* outData)
 	{}
 
 	VulkanStagingDevice::MemoryRegionDesc VulkanStagingDevice::getNextFreeOffset(uint32_t size)
