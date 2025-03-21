@@ -16,40 +16,40 @@ IFNITY_NAMESPACE
 //-----------------------------------------------//
 static glslang_stage_t getGLSLangShaderStage(VkShaderStageFlagBits stage)
 {
-	switch(stage)
+	switch( stage )
 	{
-	case VK_SHADER_STAGE_VERTEX_BIT:
-		return GLSLANG_STAGE_VERTEX;
-	case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
-		return GLSLANG_STAGE_TESSCONTROL;
-	case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
-		return GLSLANG_STAGE_TESSEVALUATION;
-	case VK_SHADER_STAGE_GEOMETRY_BIT:
-		return GLSLANG_STAGE_GEOMETRY;
-	case VK_SHADER_STAGE_FRAGMENT_BIT:
-		return GLSLANG_STAGE_FRAGMENT;
-	case VK_SHADER_STAGE_COMPUTE_BIT:
-		return GLSLANG_STAGE_COMPUTE;
-	case VK_SHADER_STAGE_TASK_BIT_EXT:
-		return GLSLANG_STAGE_TASK;
-	case VK_SHADER_STAGE_MESH_BIT_EXT:
-		return GLSLANG_STAGE_MESH;
+		case VK_SHADER_STAGE_VERTEX_BIT:
+			return GLSLANG_STAGE_VERTEX;
+		case VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT:
+			return GLSLANG_STAGE_TESSCONTROL;
+		case VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT:
+			return GLSLANG_STAGE_TESSEVALUATION;
+		case VK_SHADER_STAGE_GEOMETRY_BIT:
+			return GLSLANG_STAGE_GEOMETRY;
+		case VK_SHADER_STAGE_FRAGMENT_BIT:
+			return GLSLANG_STAGE_FRAGMENT;
+		case VK_SHADER_STAGE_COMPUTE_BIT:
+			return GLSLANG_STAGE_COMPUTE;
+		case VK_SHADER_STAGE_TASK_BIT_EXT:
+			return GLSLANG_STAGE_TASK;
+		case VK_SHADER_STAGE_MESH_BIT_EXT:
+			return GLSLANG_STAGE_MESH;
 
-		// ray tracing
-	case VK_SHADER_STAGE_RAYGEN_BIT_KHR:
-		return GLSLANG_STAGE_RAYGEN;
-	case VK_SHADER_STAGE_ANY_HIT_BIT_KHR:
-		return GLSLANG_STAGE_ANYHIT;
-	case VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR:
-		return GLSLANG_STAGE_CLOSESTHIT;
-	case VK_SHADER_STAGE_MISS_BIT_KHR:
-		return GLSLANG_STAGE_MISS;
-	case VK_SHADER_STAGE_INTERSECTION_BIT_KHR:
-		return GLSLANG_STAGE_INTERSECT;
-	case VK_SHADER_STAGE_CALLABLE_BIT_KHR:
-		return GLSLANG_STAGE_CALLABLE;
-	default:
-		assert(false);
+			// ray tracing
+		case VK_SHADER_STAGE_RAYGEN_BIT_KHR:
+			return GLSLANG_STAGE_RAYGEN;
+		case VK_SHADER_STAGE_ANY_HIT_BIT_KHR:
+			return GLSLANG_STAGE_ANYHIT;
+		case VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR:
+			return GLSLANG_STAGE_CLOSESTHIT;
+		case VK_SHADER_STAGE_MISS_BIT_KHR:
+			return GLSLANG_STAGE_MISS;
+		case VK_SHADER_STAGE_INTERSECTION_BIT_KHR:
+			return GLSLANG_STAGE_INTERSECT;
+		case VK_SHADER_STAGE_CALLABLE_BIT_KHR:
+			return GLSLANG_STAGE_CALLABLE;
+		default:
+			assert(false);
 	};
 	assert(false);
 	return GLSLANG_STAGE_COUNT;
@@ -62,7 +62,7 @@ const char* getVulkanResultString(VkResult result)
 	#define RESULT_CASE(res) \
   case res:              \
     return #res
-	switch(result)
+	switch( result )
 	{
 		RESULT_CASE(VK_SUCCESS);
 		RESULT_CASE(VK_NOT_READY);
@@ -138,8 +138,8 @@ const char* getVulkanResultString(VkResult result)
 		RESULT_CASE(VK_OPERATION_DEFERRED_KHR);
 		// Provided by VK_KHR_deferred_host_operations
 		RESULT_CASE(VK_OPERATION_NOT_DEFERRED_KHR);
-	default:
-		return "Unknown VkResult Value";
+		default:
+			return "Unknown VkResult Value";
 	}
 	#undef RESULT_CASE
 }
@@ -148,15 +148,15 @@ const char* getVulkanResultString(VkResult result)
 
 PFN_vkSetDebugUtilsObjectNameEXT gvkSetDebugUtilsObjectNameEXT = nullptr;
 
-static uint32_t findMemoryType(VkPhysicalDevice physDev, uint32_t memoryTypeBits, VkMemoryPropertyFlags flags)
+uint32_t findMemoryType(VkPhysicalDevice physDev, uint32_t memoryTypeBits, VkMemoryPropertyFlags flags)
 {
 	VkPhysicalDeviceMemoryProperties memProperties;
 	vkGetPhysicalDeviceMemoryProperties(physDev, &memProperties);
 
-	for(uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
+	for( uint32_t i = 0; i < memProperties.memoryTypeCount; i++ )
 	{
 		const bool hasProperties = (memProperties.memoryTypes[ i ].propertyFlags & flags) == flags;
-		if((memoryTypeBits & (1 << i)) && hasProperties)
+		if( (memoryTypeBits & (1 << i)) && hasProperties )
 		{
 			return i;
 		}
@@ -176,19 +176,19 @@ IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
 	// Select prefix depending on flags passed to the callback
 	std::string prefix("");
 
-	if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+	if( messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT )
 	{
 		prefix = "VERBOSE: ";
 	}
-	else if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+	else if( messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT )
 	{
 		prefix = "INFO: ";
 	}
-	else if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+	else if( messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT )
 	{
 		prefix = "WARNING: ";
 	}
-	else if(messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+	else if( messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT )
 	{
 		prefix = "ERROR: ";
 	}
@@ -201,7 +201,7 @@ IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
 IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)
 {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-	if(func != nullptr)
+	if( func != nullptr )
 	{
 		return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
 	}
@@ -214,7 +214,7 @@ IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const V
 IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator)
 {
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-	if(func != nullptr)
+	if( func != nullptr )
 	{
 		func(instance, debugMessenger, pAllocator);
 	}
@@ -225,7 +225,7 @@ IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUti
 //Set debug object name without instance and previously luaded vkSetDebugUtilsObjectNameEXT 
 VkResult setDebugObjectName(VkDevice device, VkObjectType type, uint64_t handle, const char* name)
 {
-	if(!name || !*name)
+	if( !name || !*name )
 	{
 		return VK_SUCCESS;
 	}
@@ -236,7 +236,7 @@ VkResult setDebugObjectName(VkDevice device, VkObjectType type, uint64_t handle,
 		.pObjectName = name,
 	};
 
-	if(gvkSetDebugUtilsObjectNameEXT != nullptr)
+	if( gvkSetDebugUtilsObjectNameEXT != nullptr )
 	{
 		return gvkSetDebugUtilsObjectNameEXT(device, &ni);
 	}
@@ -260,7 +260,7 @@ bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT* deb
 	create_info.flags = 0;
 
 
-	if(CreateDebugUtilsMessengerEXT(instance, &create_info, nullptr, debugMessenger) != VK_SUCCESS)
+	if( CreateDebugUtilsMessengerEXT(instance, &create_info, nullptr, debugMessenger) != VK_SUCCESS )
 	{
 		IFNITY_LOG(LogCore, ERROR, "Failed to create debug utils messenger in Vulkan Device");
 		return false;
@@ -275,7 +275,7 @@ bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT* deb
 
 VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType type, uint64_t handle, const char* name)
 {
-	if(!name || !*name)
+	if( !name || !*name )
 	{
 		return VK_SUCCESS;
 	}
@@ -287,7 +287,7 @@ VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType t
 	};
 
 	auto func = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(instance, "vkSetDebugUtilsObjectNameEXT");
-	if(func != nullptr)
+	if( func != nullptr )
 	{
 		return func(device, &ni);
 	}
@@ -324,14 +324,14 @@ VkFence createFence(VkDevice device, const char* debugName)
 }
 
 void imageMemoryBarrier(VkCommandBuffer buffer,
-	VkImage image,
-	VkAccessFlags srcAccessMask,
-	VkAccessFlags dstAccessMask,
-	VkImageLayout oldImageLayout,
-	VkImageLayout newImageLayout,
-	VkPipelineStageFlags srcStageMask,
-	VkPipelineStageFlags dstStageMask,
-	VkImageSubresourceRange subresourceRange)
+						VkImage image,
+						VkAccessFlags srcAccessMask,
+						VkAccessFlags dstAccessMask,
+						VkImageLayout oldImageLayout,
+						VkImageLayout newImageLayout,
+						VkPipelineStageFlags srcStageMask,
+						VkPipelineStageFlags dstStageMask,
+						VkImageSubresourceRange subresourceRange)
 {
 	const VkImageMemoryBarrier barrier = {
 		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -345,12 +345,45 @@ void imageMemoryBarrier(VkCommandBuffer buffer,
 	vkCmdPipelineBarrier(buffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
+void imageMemoryBarrier2(VkCommandBuffer buffer,
+						 VkImage image,
+						 StageAccess src,
+						 StageAccess dst,
+						 VkImageLayout oldImageLayout,
+						 VkImageLayout newImageLayout,
+						 VkImageSubresourceRange subresourceRange)
+{
+	const VkImageMemoryBarrier2 barrier = {
+		.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+		.srcStageMask = src.stage,
+		.srcAccessMask = src.access,
+		.dstStageMask = dst.stage,
+		.dstAccessMask = dst.access,
+		.oldLayout = oldImageLayout,
+		.newLayout = newImageLayout,
+		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+		.image = image,
+		.subresourceRange = subresourceRange,
+	};
+
+	const VkDependencyInfo depInfo = {
+		.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+		.imageMemoryBarrierCount = 1,
+		.pImageMemoryBarriers = &barrier,
+	};
+
+	vkCmdPipelineBarrier2(buffer, &depInfo);
+}
+
+
+
 
 void saveSPIRVBinaryFile(const char* filename, const uint8_t* code, size_t size)
 {
 	FILE* f = fopen(filename, "wb");
 
-	if(!f)
+	if( !f )
 		return;
 
 	fwrite(code, sizeof(uint8_t), size, f);
@@ -361,7 +394,7 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 {
 	glslang_initialize_process();
 
-	if(!outSPIRV)
+	if( !outSPIRV )
 	{
 		IFNITY_LOG(LogCore, ERROR, "outSPIRV is null, check it out");
 		return VK_ERROR_INITIALIZATION_FAILED;
@@ -386,7 +419,7 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 	glslang_shader_t* shader = glslang_shader_create(&input);
 
 
-	if(!glslang_shader_preprocess(shader, &input))
+	if( !glslang_shader_preprocess(shader, &input) )
 	{
 		IFNITY_LOG(LogCore, TRACE, "Shader preprocessing failed:\n");
 		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_log(shader));
@@ -397,7 +430,7 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 		return VK_ERROR_INITIALIZATION_FAILED;
 	}
 
-	if(!glslang_shader_parse(shader, &input))
+	if( !glslang_shader_parse(shader, &input) )
 	{
 		IFNITY_LOG(LogCore, TRACE, "Shader parsing failed:\n");
 		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_log(shader));
@@ -414,7 +447,7 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 	//  glslang_program_delete(program);
 	//};
 
-	if(!glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT))
+	if( !glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT) )
 	{
 		IFNITY_LOG(LogCore, TRACE, "Shader linking failed:\n");
 		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_program_get_info_log(program));
@@ -436,7 +469,7 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 
 	glslang_program_SPIRV_generate_with_options(program, input.stage, &options);
 
-	if(glslang_program_SPIRV_get_messages(program))
+	if( glslang_program_SPIRV_get_messages(program) )
 	{
 		IFNITY_LOG(LogCore, ERROR, "%s\n", glslang_program_SPIRV_get_messages(program));
 	}
@@ -462,22 +495,22 @@ bool endsWith(const char* s, const char* part)
 
 VkShaderStageFlagBits vkShaderStageFromFileName(const char* fileName)
 {
-	if(endsWith(fileName, ".vert"))
+	if( endsWith(fileName, ".vert") )
 		return VK_SHADER_STAGE_VERTEX_BIT;
 
-	if(endsWith(fileName, ".frag"))
+	if( endsWith(fileName, ".frag") )
 		return VK_SHADER_STAGE_FRAGMENT_BIT;
 
-	if(endsWith(fileName, ".geom"))
+	if( endsWith(fileName, ".geom") )
 		return VK_SHADER_STAGE_GEOMETRY_BIT;
 
-	if(endsWith(fileName, ".comp"))
+	if( endsWith(fileName, ".comp") )
 		return VK_SHADER_STAGE_COMPUTE_BIT;
 
-	if(endsWith(fileName, ".tesc"))
+	if( endsWith(fileName, ".tesc") )
 		return VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
 
-	if(endsWith(fileName, ".tese"))
+	if( endsWith(fileName, ".tese") )
 		return VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
 
 	return VK_SHADER_STAGE_VERTEX_BIT;
@@ -624,10 +657,10 @@ glslang_resource_t getGlslangResource(const VkPhysicalDeviceLimits& limits)
 
 
 VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
-	VkDescriptorType descriptorType,
-	uint32_t descriptorCount,
-	VkShaderStageFlags stageFlags,
-	const VkSampler* immutableSamplers)
+														VkDescriptorType descriptorType,
+														uint32_t descriptorCount,
+														VkShaderStageFlags stageFlags,
+														const VkSampler* immutableSamplers)
 {
 	return VkDescriptorSetLayoutBinding{
 		.binding = binding,
@@ -639,12 +672,12 @@ VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
 }
 
 VkSpecializationInfo getPipelineShaderStageSpecializationInfo(Vulkan::SpecializationConstantDesc desc,
-	VkSpecializationMapEntry* outEntries)
+															  VkSpecializationMapEntry* outEntries)
 {
 	const uint32_t numEntries = desc.getNumSpecializationConstants();
-	if(outEntries)
+	if( outEntries )
 	{
-		for(uint32_t i = 0; i != numEntries; i++)
+		for( uint32_t i = 0; i != numEntries; i++ )
 		{
 			outEntries[ i ] = VkSpecializationMapEntry
 			{
@@ -667,27 +700,27 @@ VkSpecializationInfo getPipelineShaderStageSpecializationInfo(Vulkan::Specializa
 
 VkSampleCountFlagBits getVulkanSampleCountFlags(uint32_t numSamples, VkSampleCountFlags maxSamplesMask)
 {
-	if(numSamples <= 1 || VK_SAMPLE_COUNT_2_BIT > maxSamplesMask)
+	if( numSamples <= 1 || VK_SAMPLE_COUNT_2_BIT > maxSamplesMask )
 	{
 		return VK_SAMPLE_COUNT_1_BIT;
 	}
-	if(numSamples <= 2 || VK_SAMPLE_COUNT_4_BIT > maxSamplesMask)
+	if( numSamples <= 2 || VK_SAMPLE_COUNT_4_BIT > maxSamplesMask )
 	{
 		return VK_SAMPLE_COUNT_2_BIT;
 	}
-	if(numSamples <= 4 || VK_SAMPLE_COUNT_8_BIT > maxSamplesMask)
+	if( numSamples <= 4 || VK_SAMPLE_COUNT_8_BIT > maxSamplesMask )
 	{
 		return VK_SAMPLE_COUNT_4_BIT;
 	}
-	if(numSamples <= 8 || VK_SAMPLE_COUNT_16_BIT > maxSamplesMask)
+	if( numSamples <= 8 || VK_SAMPLE_COUNT_16_BIT > maxSamplesMask )
 	{
 		return VK_SAMPLE_COUNT_8_BIT;
 	}
-	if(numSamples <= 16 || VK_SAMPLE_COUNT_32_BIT > maxSamplesMask)
+	if( numSamples <= 16 || VK_SAMPLE_COUNT_32_BIT > maxSamplesMask )
 	{
 		return VK_SAMPLE_COUNT_16_BIT;
 	}
-	if(numSamples <= 32 || VK_SAMPLE_COUNT_64_BIT > maxSamplesMask)
+	if( numSamples <= 32 || VK_SAMPLE_COUNT_64_BIT > maxSamplesMask )
 	{
 		return VK_SAMPLE_COUNT_32_BIT;
 	}
@@ -696,9 +729,9 @@ VkSampleCountFlagBits getVulkanSampleCountFlags(uint32_t numSamples, VkSampleCou
 
 
 VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(VkShaderStageFlagBits stage,
-	VkShaderModule shaderModule,
-	const char* entryPoint,
-	const VkSpecializationInfo* specializationInfo)
+																 VkShaderModule shaderModule,
+																 const char* entryPoint,
+																 const VkSpecializationInfo* specializationInfo)
 {
 	return VkPipelineShaderStageCreateInfo
 	{
@@ -712,9 +745,9 @@ VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(VkShaderStageFl
 }
 
 VkSpecializationInfo getSpecializationInfo(uint32_t mapEntryCount,
-	const VkSpecializationMapEntry* mapEntries,
-	size_t dataSize,
-	const void* data)
+										   const VkSpecializationMapEntry* mapEntries,
+										   size_t dataSize,
+										   const void* data)
 {
 	VkSpecializationInfo specializationInfo{};
 	specializationInfo.mapEntryCount = mapEntryCount;
@@ -726,28 +759,28 @@ VkSpecializationInfo getSpecializationInfo(uint32_t mapEntryCount,
 
 VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage)
 {
-	
+
 	VkMemoryPropertyFlags memFlags{ 0 };
 
-	switch(storage)
+	switch( storage )
 	{
-	case StorageType::DEVICE:
-		memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-		break;
-	case StorageType::HOSTVISIBLE:
-		memFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
-		break;
-	case StorageType::MEMORYLESS:
-		memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
-		break;
+		case StorageType::DEVICE:
+			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+			break;
+		case StorageType::HOSTVISIBLE:
+			memFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			break;
+		case StorageType::MEMORYLESS:
+			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT;
+			break;
 	}
 	return memFlags;
 }
 
 VmaAllocator createVmaAllocator(VkPhysicalDevice physDev,
-	VkDevice device,
-	VkInstance instance,
-	uint32_t apiVersion)
+								VkDevice device,
+								VkInstance instance,
+								uint32_t apiVersion)
 {
 	const VmaVulkanFunctions funcs = {
 		 .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
@@ -796,10 +829,10 @@ VmaAllocator createVmaAllocator(VkPhysicalDevice physDev,
 }
 
 VkResult allocateMemory(VkPhysicalDevice physDev,
-	VkDevice device,
-	const VkMemoryRequirements* memRequirements,
-	VkMemoryPropertyFlags props,
-	VkDeviceMemory* outMemory)
+						VkDevice device,
+						const VkMemoryRequirements* memRequirements,
+						VkMemoryPropertyFlags props,
+						VkDeviceMemory* outMemory)
 {
 	assert(memRequirements);
 
@@ -817,10 +850,10 @@ VkResult allocateMemory(VkPhysicalDevice physDev,
 }
 
 VkResult allocateMemory2(VkPhysicalDevice physDev,
-	VkDevice device,
-	const VkMemoryRequirements2* memRequirements,
-	VkMemoryPropertyFlags props,
-	VkDeviceMemory* outMemory)
+						 VkDevice device,
+						 const VkMemoryRequirements2* memRequirements,
+						 VkMemoryPropertyFlags props,
+						 VkDeviceMemory* outMemory)
 {
 	assert(memRequirements);
 

@@ -34,7 +34,16 @@ namespace Vulkan
 		VkMemoryPropertyFlags vkMemFlags_ = 0;
 		void* mappedPtr_ = nullptr;
 		bool isCoherentMemory_ = false;
+
+		static inline  VkBufferCreateInfo bufferCreateInfo()
+		{
+			VkBufferCreateInfo bufferCreateInfo = {};
+			bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+			return bufferCreateInfo;
+		}
+
 	};
+
 	
 	
 

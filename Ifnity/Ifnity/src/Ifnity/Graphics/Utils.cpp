@@ -3,6 +3,7 @@
 
 
 #include "Utils.hpp"
+#include "Ifnity\Graphics\Interfaces\ITexture.hpp"
 
 
 IFNITY_NAMESPACE
@@ -10,7 +11,7 @@ IFNITY_NAMESPACE
 namespace Utils
 {
 
-	BufferDescription CreateConstantBufferDescription(uint64_t size, const std::string& debugName)
+	BufferDescription CreateConstantBufferDescription(uint64_t size, const std::string& debugName)noexcept
 	{
 
 		return BufferDescription{}.SetByteSize(size)
@@ -128,6 +129,24 @@ namespace Utils
 		}
 
 		return { vertexCode, fragmentCode, geometryCode };
+	}
+
+	IFNITY_API uint32_t getTextureBytesPerLayer(uint32_t width, uint32_t height, rhi::Format format, uint32_t level) noexcept
+	{
+		const uint32_t levelWidth = std::max(width >> level, 1u);
+		const uint32_t levelHeight = std::max(height >> level, 1u);
+		
+		const TextureFormatProperties props = properties[SCAST_U8(format)];
+
+		if (!props.compressed) {
+			return props.bytesPerBlock * levelWidth * levelHeight;
+		}
+
+		const uint32_t blockWidth = std::max((uint32_t)props.blockWidth, 1u);
+		const uint32_t blockHeight = std::max((uint32_t)props.blockHeight, 1u);
+		const uint32_t widthInBlocks = (levelWidth + props.blockWidth - 1) / props.blockWidth;
+		const uint32_t heightInBlocks = (levelHeight + props.blockHeight - 1) / props.blockHeight;
+		return widthInBlocks * heightInBlocks * props.bytesPerBlock;
 	}
 
 }

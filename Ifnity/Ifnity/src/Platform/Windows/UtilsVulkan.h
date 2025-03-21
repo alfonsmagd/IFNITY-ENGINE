@@ -41,6 +41,14 @@ extern PFN_vkSetDebugUtilsObjectNameEXT gvkSetDebugUtilsObjectNameEXT;
 
 #pragma endregion
 
+
+struct StageAccess {
+    VkPipelineStageFlags2 stage;
+    VkAccessFlags2 access;
+};
+
+
+
 IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT             messageType,
@@ -68,6 +76,14 @@ void imageMemoryBarrier(VkCommandBuffer buffer,
     VkPipelineStageFlags srcStageMask,
     VkPipelineStageFlags dstStageMask,
 	VkImageSubresourceRange subresourceRange);
+
+void imageMemoryBarrier2(VkCommandBuffer buffer,
+                         VkImage image,
+                         StageAccess src,
+                         StageAccess dst,
+                         VkImageLayout oldImageLayout,
+                         VkImageLayout newImageLayout,
+                         VkImageSubresourceRange subresourceRange);
 
 void saveSPIRVBinaryFile(const char* filename, const uint8_t * code, size_t size);
 glslang_resource_t getGlslangResource(const VkPhysicalDeviceLimits & limits);
@@ -122,6 +138,7 @@ VkResult allocateMemory2(VkPhysicalDevice physDev,
     VkMemoryPropertyFlags props,
     VkDeviceMemory * outMemory);
 
+uint32_t findMemoryType(VkPhysicalDevice physDev, uint32_t memoryTypeBits, VkMemoryPropertyFlags flags);
 
 
 IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);

@@ -77,6 +77,8 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
 	 return properties[ SCAST_U8(format) ].numPlanes;
  }
 
+
+
  
 
 IFNITY_END_NAMESPACE

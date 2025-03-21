@@ -136,7 +136,7 @@ namespace Vulkan
 	* @param vkFormat The Vulkan format.
 	* @return The corresponding RHI format, or rhi::Format::UNKNOWN if not found.
 	*/
-	inline rhi::Format GetRHIFormat(VkFormat vkFormat)
+	inline rhi::Format getRHIFormat(VkFormat vkFormat)
 	{
 		for(const auto& mapping : c_FormatMap)
 		{

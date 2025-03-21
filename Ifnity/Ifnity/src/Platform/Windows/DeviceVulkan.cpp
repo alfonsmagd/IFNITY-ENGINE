@@ -396,12 +396,20 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	dynamicRenderingUnusedAttachmentsFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_FEATURES_EXT;
 	dynamicRenderingUnusedAttachmentsFeatures.dynamicRenderingUnusedAttachments = VK_TRUE;
 
+	//Features  Vulkan 1.3
+	VkPhysicalDeviceVulkan13Features vulkan13Features = {};
+	vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+	vulkan13Features.synchronization2 = VK_TRUE;
+	vulkan13Features.maintenance4 = VK_TRUE;
+	vulkan13Features.dynamicRendering = VK_TRUE;
+
 
 	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface)
 		.add_required_extension_features(indexingFeatures)
 		.add_required_extension_features(bufferDeviceAddressFeatures)
-		.add_required_extension_features(dynamicRenderingFeatures)
+		//.add_required_extension_features(dynamicRenderingFeatures)
 		.add_required_extension_features(dynamicRenderingUnusedAttachmentsFeatures)
+		.add_required_extension_features(vulkan13Features)
 		.add_required_extension(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME)
 		.add_required_extension(VK_KHR_MAINTENANCE2_EXTENSION_NAME)
 		//.add_required_extension(VK_KHR_MULTIVIEW_EXTENSION_NAME)

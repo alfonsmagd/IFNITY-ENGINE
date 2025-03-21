@@ -87,7 +87,7 @@ namespace Vulkan
         BufferHandle CreateBuffer(const BufferDescription& desc) override;
         
 		void upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0);
-        void upload(TextureHandleSM handle, TextureRangeDesc desc, void* data);
+        void upload(TextureHandleSM handle, const TextureRangeDesc&  range, const void* data);
 
         void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) override;
 

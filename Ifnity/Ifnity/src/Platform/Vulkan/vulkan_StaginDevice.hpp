@@ -13,8 +13,10 @@ class VulkanBuffer;
 class VulkanImage;
 struct SubmitHandle;
 
+
 namespace Vulkan
 {
+    class Device;
 
     class VulkanStagingDevice final
     {
@@ -57,6 +59,7 @@ namespace Vulkan
         void waitAndReset();
 
     private:
+        Device* internalDevice_;
         DeviceVulkan& ctx_;
         HolderBufferSM stagingBuffer_;
         uint32_t stagingBufferSize_ = 0;

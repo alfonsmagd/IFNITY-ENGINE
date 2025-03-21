@@ -50,6 +50,16 @@ namespace Vulkan
 		return true;
 	}
 
+	/**
+	* @brief Validates the range of a texture.
+	*
+	* This function checks if the specified range of a texture is valid based on the provided texture extent and number of mip levels.
+	*
+	* @param ext The extent (dimensions) of the texture.
+	* @param numLevels The number of mip levels in the texture.
+	* @param range The range description to validate.
+	* @return true if the range is valid, false otherwise.
+	*/
 	bool validateRange(const VkExtent3D& ext, uint32_t numLevels, const TextureRangeDesc& range)
 	{
 		bool isValidate = true;
@@ -71,16 +81,16 @@ namespace Vulkan
 		const uint32_t texHeight = std::max(ext.height >> range.mipLevel, 1u);
 		const uint32_t texDepth = std::max(ext.depth >> range.mipLevel, 1u);
 
-		if( range.dimensions.width > texWidth   ||
-		    range.dimensions.height > texHeight ||
-		    range.dimensions.depth > texDepth )
+		if( range.dimensions.width > texWidth ||
+		   range.dimensions.height > texHeight ||
+		   range.dimensions.depth > texDepth )
 		{
 			IFNITY_LOG(LogCore, ERROR, "range dimensions exceed texture dimensions");
 			return false;
 		}
-		if( range.offset.x > texWidth - range.dimensions.width   ||
-		    range.offset.y > texHeight - range.dimensions.height ||
-		    range.offset.z > texDepth - range.dimensions.depth )
+		if( range.offset.x > texWidth - range.dimensions.width ||
+		   range.offset.y > texHeight - range.dimensions.height ||
+		   range.offset.z > texDepth - range.dimensions.depth )
 		{
 			IFNITY_LOG(LogCore, ERROR, "range offset exceeds texture dimensions");
 			return false;
@@ -266,7 +276,7 @@ namespace Vulkan
 		//3. Create the pipeline and configure colorFormat,
 		const DeviceVulkan& ctx = getDeviceContextVulkan();
 
-		pipeline->setColorFormat(GetRHIFormat(ctx.GetSwapChainFormat())); //Get the SwapChain Color Format 
+		pipeline->setColorFormat(getRHIFormat(ctx.GetSwapChainFormat())); //Get the SwapChain Color Format 
 		pipeline->setDepthFormat(pipeline->GetGraphicsPipelineDesc().renderState.depthFormat);
 		pipeline->passSpecializationConstantToVkFormat();
 		pipeline->configureVertexAttributes();
@@ -517,7 +527,7 @@ namespace Vulkan
 
 	}
 
-	void Device::upload(TextureHandleSM handle, TextureRangeDesc desc, void* data)
+	void Device::upload(TextureHandleSM handle, const TextureRangeDesc& range, const void* data)
 	{
 		if( !data )
 		{
@@ -533,17 +543,28 @@ namespace Vulkan
 			return;
 		}
 
-		/*const Result result = validateRange(texture->vkExtent_, texture->numLevels_, range);
 
-		if( !LVK_VERIFY(result.isOk()) )
+		if( !validateRange(texture->vkExtent_, texture->numLevels_, range) )
 		{
-			return result;
+			IFNITY_LOG(LogCore, ERROR, "Error at validate range");
+
 		}
 
 		const uint32_t numLayers = std::max(range.numLayers, 1u);
 
-		VkFormat vkFormat = texture->vkImageFormat_;*/
 
+		//Get the format of the texture
+		VkFormat vkFormat = texture->vkImageFormat_;
+
+		//For now we only use 2D textures
+		IFNITY_ASSERT(texture->vkType_ == VK_IMAGE_TYPE_2D);
+
+		//Get the image region for build image. 
+		const VkRect2D imageRegion = {
+			.offset = {.x = range.offset.x, .y = range.offset.y},
+			.extent = {.width = range.dimensions.width, .height = range.dimensions.height},
+		};
+		m_StagingDevice->imageData2D(*texture, imageRegion, range.mipLevel, range.numMipLevels, range.layer, range.numLayers, vkFormat, data);
 
 
 
@@ -874,10 +895,18 @@ namespace Vulkan
 
 		HolderTextureSM holder = makeHolder(m_DeviceVulkan, handle);
 
+		Texture* tex;
+
 		if( holder.get()->valid() )
 		{
-			Texture* tex = new Texture(texdesc, std::move(holder));
-			return TextureHandle(tex);
+			tex = new Texture(texdesc, std::move(holder));
+			
+		}
+		else
+		{
+			delete tex;
+			IFNITY_LOG(LogCore, ERROR, "Failed to create texture in vulkan , not error reporter before ");
+			return {};
 		}
 
 
@@ -885,13 +914,14 @@ namespace Vulkan
 		if( desc.data )
 		{
 			//upload process to texture 
+			upload(handle, { .dimensions = desc.dimensions, .numLayers = numLayers, .numMipLevels = 1 }, desc.data);
+
 		}
 
 
-
-
-		IFNITY_LOG(LogCore, ERROR, "Failed to create texture in vulkan , not error reporter before ");
-		return {};
+		
+		return TextureHandle(tex);
+		
 
 	}
 

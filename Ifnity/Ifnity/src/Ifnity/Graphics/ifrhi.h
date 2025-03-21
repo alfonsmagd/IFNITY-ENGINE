@@ -52,14 +52,18 @@ struct Color
 
 
 
-namespace rhi {
+namespace rhi
+{
 
-	//-------------------------------------------------------------------------------------//
-	//  VERTEX TYPES AND FORMTAS                                                           //
     //-------------------------------------------------------------------------------------//
- 
-    //TYPES 
+    //  VERTEX TYPES AND FORMTAS                                                           //
+    //-------------------------------------------------------------------------------------//
 
+    //TYPES 
+    enum
+    {
+        MAX_MIPMAPS_LEVEL = 16,
+    };
     /**
      * @enum eBitmapType
      * @brief Enum representing the type of bitmap.
