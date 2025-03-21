@@ -35,15 +35,24 @@ public:
 	const VkPhysicalDeviceLimits& GetPhysicalDeviceLimits() const { return vkPhysicalDeviceProperties2_.properties.limits; }
 	const uint32_t getApiVersion() const { return vkPhysicalDeviceProperties2_.properties.apiVersion; }
 	void* getVmaAllocator() const { return m_Allocator; }
-	
+
 	VkPhysicalDevice getPhysicalDevice() const { return m_PhysicalDevice.physical_device; }
 
 
-	//Destroy operations 
+	//Creation Operations 
+	Vulkan::SamplerHandleSM createSampler(const VkSamplerCreateInfo& ci,
+										  const char* debugName);
+
+
+
+
+
+		//Destroy operations 
 	void destroy(Vulkan::TextureHandleSM handle);
 	void destroy(Vulkan::GraphicsPipelineHandleSM handle);
 	void destroy(Vulkan::ShaderModuleHandleSM handle);
 	void destroy(Vulkan::BufferHandleSM handle);
+	void destroy(Vulkan::SamplerHandleSM handle);
 
 
 
@@ -72,9 +81,12 @@ public:
 	SlotMap<Vulkan::GraphicsPipeline> slotMapRenderPipelines_;
 	SlotMap<Vulkan::ShaderModuleState> slotMapShaderModules_;
 	SlotMap<Vulkan::VulkanBuffer> slotMapBuffers_;
+	SlotMap<VkSampler> slotMapSamplers_;
 
 	//flags
 	bool useStaging_ = false;
+	mutable bool awaitingCreation_ = false;
+
 
 protected:
 	// Heredado vía GraphicsDeviceManager
@@ -244,8 +256,8 @@ private:
 
 	//This move to device create s
 	Vulkan::ShaderModuleState createShaderModuleFromSpirVconst(const void* spirv,
-		size_t numBytes,
-		const char* debugName);
+															   size_t numBytes,
+															   const char* debugName);
 
 	void EndRenderDocTrace(VkCommandBuffer commandBuffer);
 

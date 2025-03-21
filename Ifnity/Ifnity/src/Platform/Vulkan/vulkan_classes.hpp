@@ -28,6 +28,7 @@ namespace Vulkan
 	using GraphicsPipelineHandleSM = Handle<struct GraphicsPipeline>;
 	using ShaderModuleHandleSM = Handle< struct ShaderModuleState>;
 	using BufferHandleSM = Handle<struct VulkanBuffer>;
+	using SamplerHandleSM = Handle<VkSampler>;
 
 	template<typename Handle>
 	void destroy(DeviceVulkan* ctx, Handle handle);

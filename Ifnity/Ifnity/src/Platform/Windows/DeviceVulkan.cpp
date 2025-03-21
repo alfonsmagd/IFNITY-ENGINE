@@ -242,6 +242,12 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 	//Get properties2 
 	IFNITY_ASSERT_MSG(m_PhysicalDevice.physical_device != VK_NULL_HANDLE, "No physical device create");
 	getPhysicalDeviceProperties2(m_PhysicalDevice.physical_device);
+
+
+	//Force create default sampler and dummyTexture
+
+
+
 	growDescriptorPool(16, 16);
 
 	m_RenderDevice = Vulkan::CreateDevice(device_, this);
@@ -1384,6 +1390,40 @@ void DeviceVulkan::destroy(Vulkan::BufferHandleSM handle)
 		vkDestroyBuffer(device_, buf->vkBuffer_, nullptr);
 		vkFreeMemory(device_, buf->vkMemory_, nullptr);
 	}
+}
+
+void DeviceVulkan::destroy(Vulkan::SamplerHandleSM handle)
+{
+	VkSampler sampler = *slotMapSamplers_.get(handle);
+
+	//In the future will be delete at pipeline time or futureTask delete 
+	if( sampler != VK_NULL_HANDLE )
+	{
+		vkDestroySampler(device_, sampler, nullptr);
+	}
+	slotMapSamplers_.destroy(handle);
+
+	
+
+}
+
+Vulkan::SamplerHandleSM DeviceVulkan::createSampler(const VkSamplerCreateInfo& ci, const char* debugName)
+{
+	
+
+
+	VkSampler sampler = VK_NULL_HANDLE;
+	VK_ASSERT(vkCreateSampler(device_, &ci, nullptr, &sampler));
+	VK_ASSERT(setDebugObjectName(device_, VK_OBJECT_TYPE_SAMPLER, (uint64_t)sampler, debugName));
+
+	Vulkan::SamplerHandleSM handle = slotMapSamplers_.create(VkSampler(sampler));
+
+	awaitingCreation_ = true;
+
+	return handle;
+
+
+
 }
 
 void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
