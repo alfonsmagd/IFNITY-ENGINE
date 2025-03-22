@@ -296,6 +296,9 @@ namespace Vulkan
 		}
 		VkPipeline vkpipeline = rps.pipeline_;
 
+
+		//First Bind the pipeline then the descriptor sets
+		//
 		if( lastPipelineBound_ != vkpipeline )
 		{
 			lastPipelineBound_ = vkpipeline;

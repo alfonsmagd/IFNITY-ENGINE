@@ -66,9 +66,7 @@ namespace Vulkan
 	using HolderTextureSM = Holder<VulkanImage>;
 	using HolderGraphicsPipelineSM = Holder<GraphicsPipeline>;
 	using HolderBufferSM = Holder<VulkanBuffer>;
-
-
-
+	using HolderSamplerSM = Holder<VkSampler>;
 
 
 
