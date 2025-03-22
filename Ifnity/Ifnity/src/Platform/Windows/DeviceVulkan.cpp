@@ -245,7 +245,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 
 
 	//Force create default sampler and dummyTexture
-	createSampler(VkSamplerCreateInfo{},"Default Sampler");
+	createSampler(VkSamplerCreateInfo{}, "Default Sampler");
 
 	growDescriptorPool(16, 16);
 
@@ -1402,7 +1402,7 @@ void DeviceVulkan::destroy(Vulkan::SamplerHandleSM handle)
 	}
 	slotMapSamplers_.destroy(handle);
 
-	
+
 
 }
 
@@ -1443,6 +1443,153 @@ Vulkan::SamplerHandleSM DeviceVulkan::createSampler(const VkSamplerCreateInfo& c
 
 
 }
+
+void DeviceVulkan::checkAndUpdateDescriptorSets()
+{
+
+	if( !awaitingCreation_ )
+	{
+		// nothing to update here
+		return;
+	}
+
+
+
+	// update Vulkan descriptor set here
+
+	// make sure the guard values are always there
+	IFNITY_ASSERT(slootMapTextures_.numObjects() >= 1);
+	IFNITY_ASSERT(slotMapSamplers_.numObjects() >= 1);
+
+	uint32_t newMaxTextures = currentMaxTextures_;
+	uint32_t newMaxSamplers = currentMaxSamplers_;
+
+
+	while( slootMapTextures_.slots.size() > newMaxTextures )
+	{
+		newMaxTextures *= 2;
+	}
+	while( slotMapSamplers_.slots.size() > newMaxSamplers )
+	{
+		newMaxSamplers *= 2;
+	}
+
+	if( newMaxTextures != currentMaxTextures_ || newMaxSamplers != currentMaxSamplers_)
+	{
+		growDescriptorPool(newMaxTextures, newMaxSamplers);
+	}
+
+	// 1. Sampled and storage images
+	std::vector<VkDescriptorImageInfo> infoSampledImages;
+	std::vector<VkDescriptorImageInfo> infoStorageImages;
+	
+
+	infoSampledImages.reserve(slootMapTextures_.numObjects());
+	infoStorageImages.reserve(slootMapTextures_.numObjects());
+
+
+	// use the dummy texture to avoid sparse array
+	VkImageView dummyImageView = slootMapTextures_.slots[ 0 ].obj.imageView_;
+
+	for( const auto& obj : slootMapTextures_.slots )
+	{
+		const Vulkan::VulkanImage& img = obj.obj;
+		const VkImageView view = obj.obj.imageView_;
+		const VkImageView storageView = obj.obj.imageViewStorage_ ? obj.obj.imageViewStorage_ : view;
+		// multisampled images cannot be directly accessed from shaders
+		const bool isTextureAvailable = (img.vkSamples_ & VK_SAMPLE_COUNT_1_BIT) == VK_SAMPLE_COUNT_1_BIT;
+		const bool isSampledImage = isTextureAvailable && img.isSampledImage();
+		const bool isStorageImage = isTextureAvailable && img.isStorageImage();
+		infoSampledImages.push_back(VkDescriptorImageInfo{
+			.sampler = VK_NULL_HANDLE,
+			.imageView = isSampledImage ? view : dummyImageView,
+			.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+									});
+
+		//Not for now
+	/*	IFNITY_ASSERT(infoSampledImages.back().imageView != VK_NULL_HANDLE);
+		infoStorageImages.push_back(VkDescriptorImageInfo{
+			.sampler = VK_NULL_HANDLE,
+			.imageView = isStorageImage ? storageView : dummyImageView,
+			.imageLayout = VK_IMAGE_LAYOUT_GENERAL,
+									});*/
+	}
+
+	// 2. Samplers
+	std::vector<VkDescriptorImageInfo> infoSamplers;
+	infoSamplers.reserve(slotMapSamplers_.numObjects());
+
+	for( const auto& sampler : slotMapSamplers_.slots )
+	{
+		infoSamplers.push_back({
+			.sampler = sampler.obj ? sampler.obj : slotMapSamplers_.slots[ 0 ].obj,
+			.imageView = VK_NULL_HANDLE,
+			.imageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+							   });
+	}
+
+	
+
+	VkWriteDescriptorSet write[ kBinding_NumBindings ] = {};
+	uint32_t numWrites = 0;
+
+	
+
+	if( !infoSampledImages.empty() )
+	{
+		write[ numWrites++ ] = VkWriteDescriptorSet{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet = vkDSet_,
+			.dstBinding = kBinding_Textures,
+			.dstArrayElement = 0,
+			.descriptorCount = (uint32_t)infoSampledImages.size(),
+			.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+			.pImageInfo = infoSampledImages.data(),
+		};
+	}
+
+	if( !infoSamplers.empty() )
+	{
+		write[ numWrites++ ] = VkWriteDescriptorSet{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet = vkDSet_,
+			.dstBinding = kBinding_Samplers,
+			.dstArrayElement = 0,
+			.descriptorCount = (uint32_t)infoSamplers.size(),
+			.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER,
+			.pImageInfo = infoSamplers.data(),
+		};
+	}
+
+	if( !infoStorageImages.empty() )
+	{
+		write[ numWrites++ ] = VkWriteDescriptorSet{
+			.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+			.dstSet = vkDSet_,
+			.dstBinding = kBinding_StorageImages,
+			.dstArrayElement = 0,
+			.descriptorCount = (uint32_t)infoStorageImages.size(),
+			.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE,
+			.pImageInfo = infoStorageImages.data(),
+		};
+	}
+
+	
+
+	// do not switch to the next descriptor set if there is nothing to update
+	if( numWrites )
+	{
+		IFNITY_LOG(LogCore, TRACE, "Updating descriptor set with %u writes", numWrites);
+		immediate_->wait(immediate_->getLastSubmitHandle());
+		
+		vkUpdateDescriptorSets(device_, numWrites, write, 0, nullptr);
+		
+	}
+
+	awaitingCreation_ = false;
+}
+
+
 
 void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 {

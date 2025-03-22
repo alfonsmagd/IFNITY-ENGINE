@@ -59,14 +59,16 @@ class SlotMap final
 {
 	struct Slot
 	{
-		ObjectType obj;
+		ObjectType obj = {};
 		uint32_t gen = 1;
 	};
 
-	std::vector<Slot> slots;
+	
 	std::vector<uint32_t> freeList; // Pila de índices libres
 
 public:
+	std::vector<Slot> slots;
+
 	Handle<ObjectType> create(ObjectType&& obj)
 	{
 		uint32_t index;

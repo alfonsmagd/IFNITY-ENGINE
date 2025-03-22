@@ -267,7 +267,7 @@ namespace Vulkan
 		cmdBindScissorRect(scissor);
 		cmdBindDepthState({});
 
-		//ctx_->checkAndUpdateDescriptorSets();
+		ctx_->checkAndUpdateDescriptorSets();
 
 		vkCmdSetDepthCompareOp(wrapper_->cmdBuf_, VK_COMPARE_OP_ALWAYS);
 		vkCmdSetDepthBiasEnable(wrapper_->cmdBuf_, VK_FALSE);

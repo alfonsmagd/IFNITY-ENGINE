@@ -27,6 +27,15 @@ IFNITY_NAMESPACE
 
 class DeviceVulkan final: public GraphicsDeviceManager
 {
+	enum
+	{
+		kBinding_NumBindings = 3,
+		kBinding_Textures = 0,
+		kBinding_Samplers = 1,
+		kBinding_StorageImages = 2,
+	};
+
+
 
 public:
 	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
@@ -43,7 +52,8 @@ public:
 	Vulkan::SamplerHandleSM createSampler(const VkSamplerCreateInfo& ci,
 										  const char* debugName);
 
-
+	//Important function that uses differnte slotmaps and descriptors sets. 
+	void checkAndUpdateDescriptorSets();
 
 
 

@@ -205,7 +205,7 @@ private:
 	BufferHandle m_UBO;
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
-	TextureHandle m_depth;
+	TextureHandle texture;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_SolidPipeline;
 	GraphicsPipelineHandle m_WireFramePipeline;
@@ -323,19 +323,19 @@ public:
 		const uint8_t* img = stbi_load("data/wood.jpg", &w, &h, &comp, 4);
 
 
-		////DepthText texture
-		//TextureDescription descTexture;
-		//descTexture.dimensions = {(uint32_t)w, (uint32_t)h};
-		//descTexture.format = Format::RGBA_UNORM8;
-		//descTexture.usage = TextureUsageBits::SAMPLED;
-		//descTexture.isDepth = false;
-		//descTexture.debugName = "Depth buffer";
-		//descTexture.data = img;
+		//DepthText texture
+		TextureDescription descTexture;
+		descTexture.dimensions = {(uint32_t)w, (uint32_t)h};
+		descTexture.format = Format::RGBA_UNORM8;
+		descTexture.usage = TextureUsageBits::SAMPLED;
+		descTexture.isDepth = false;
+		descTexture.debugName = "Depth buffer";
+		descTexture.data = img;
 
-		////DepthStencil texture
-		//m_depth = rdevice->CreateTexture(descTexture);
+		//DepthStencil texture
+		texture = rdevice->CreateTexture(descTexture);
 		
-
+		auto value = texture.get()->GetTextureID();
 		
 
 
@@ -363,16 +363,16 @@ public:
 			uint32_t textureId;
 		} pc = {
 			.mvp       = p * m,
-			//.textureId = texture.index(),
+			.textureId = texture.get()->GetTextureID(),
 		};
 
 		//StartRecording
 		rdevice->StartRecording();
-		rdevice->WriteBuffer(m_UBO, glm::value_ptr(pc.mvp), sizeof(glm::mat4));
+		rdevice->WriteBuffer(m_UBO, (&pc), sizeof(pc));
 		DrawDescription desc;
 		//First Draw solid line pipeline 
 		{
-			desc.size = 6;
+			desc.size = 4;
 			desc.drawMode = DRAW;
 		
 			rdevice->DrawObject(m_SolidPipeline, desc);
