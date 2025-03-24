@@ -33,15 +33,7 @@ namespace Vulkan
 
 		//IFNITY ASSERT
 		IFNITY_ASSERT(minBufferSize_ <= maxBufferSize_, "");
-
-		//Internal Device try dinamicCast 
-		Vulkan::Device* ptrDevice = dynamic_cast<Device*>(ctx.GetRenderDevice());
-		if( !ptrDevice )
-		{
-			internalDevice_ = ptrDevice;
-			IFNITY_LOG(LogCore, ERROR, "Internal Device is null");
-			return;
-		}
+	
 
 
 	}
@@ -186,9 +178,13 @@ namespace Vulkan
 
 			image.vkImageLayout_ = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-			 ctx_.immediate_->submit(wrapper);
+			 auto handle = ctx_.immediate_->submit(wrapper);
 
 			 //Destroy the staging buffer
+			 while( !ctx_.immediate_->isReady(handle) )
+			 {
+				 //ctx_.immediate_->wait(handle);
+			 }
 			 vkDestroyBuffer(ctx_.device_, stagingBuffer, nullptr);
 			 vkFreeMemory(ctx_.device_, stagingMemory, nullptr);
 

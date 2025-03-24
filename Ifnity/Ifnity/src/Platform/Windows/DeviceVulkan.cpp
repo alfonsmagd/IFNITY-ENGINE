@@ -250,6 +250,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 	growDescriptorPool(16, 16);
 
 	m_RenderDevice = Vulkan::CreateDevice(device_, this);
+	
 
 	PrintEnabledFeature(m_PhysicalDevice.physical_device);
 
