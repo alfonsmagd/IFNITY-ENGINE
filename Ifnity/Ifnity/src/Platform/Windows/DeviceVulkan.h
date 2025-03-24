@@ -69,6 +69,7 @@ public:
 public:
 	Vulkan::CommandBuffer currentCommandBuffer_;
 	std::unique_ptr<Vulkan::VulkanImmediateCommands> immediate_;
+	std::unique_ptr<Vulkan::VulkanStagingDevice> m_StagingDevice;
 	vkb::Device    device_; // Vulkan device bootstrapper
 	vkb::Swapchain swapchainBootStraap_; // Vulkan swapchain
 	std::unique_ptr<Vulkan::VulkanSwapchain> swapchain_;

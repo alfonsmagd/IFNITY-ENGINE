@@ -59,7 +59,6 @@ namespace Vulkan
         void waitAndReset();
 
     private:
-        Device* internalDevice_;
         DeviceVulkan& ctx_;
         HolderBufferSM stagingBuffer_;
         uint32_t stagingBufferSize_ = 0;

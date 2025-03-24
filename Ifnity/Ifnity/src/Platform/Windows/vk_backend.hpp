@@ -141,7 +141,7 @@ namespace Vulkan
 		VkPhysicalDevice vkPhysicalDevice_ = VK_NULL_HANDLE;
 		CommandBuffer cmdBuffer;
         DeviceVulkan* m_DeviceVulkan = nullptr;
-		std::unique_ptr<VulkanStagingDevice> m_StagingDevice;
+		
         TextureHandleSM currentTexture_;
 
 

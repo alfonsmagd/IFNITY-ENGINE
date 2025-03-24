@@ -250,6 +250,7 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 	growDescriptorPool(16, 16);
 
 	m_RenderDevice = Vulkan::CreateDevice(device_, this);
+	m_StagingDevice = std::make_unique<Vulkan::VulkanStagingDevice>(*this);
 	
 
 	PrintEnabledFeature(m_PhysicalDevice.physical_device);

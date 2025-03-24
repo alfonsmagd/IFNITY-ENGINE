@@ -110,7 +110,7 @@ namespace Vulkan
 		IFNITY_ASSERT_MSG(m_DeviceVulkan != nullptr, "DeviceVulkan is null");
 
 		//set the stagindevice
-		m_StagingDevice = std::make_unique<VulkanStagingDevice>(*m_DeviceVulkan);
+		
 		vkPhysicalDevice_ = m_DeviceVulkan->getPhysicalDevice();
 
 		IFNITY_ASSERT_MSG(vkPhysicalDevice_ != VK_NULL_HANDLE, "VkPhysicalDevice is null, creatin device");
@@ -521,7 +521,7 @@ namespace Vulkan
 		}
 
 		//Lets to staginDevice to upload data 
-		m_StagingDevice->bufferSubData(*buf, offset, size, data);
+		m_DeviceVulkan->m_StagingDevice->bufferSubData(*buf, offset, size, data);
 
 
 
@@ -564,7 +564,7 @@ namespace Vulkan
 			.offset = {.x = range.offset.x, .y = range.offset.y},
 			.extent = {.width = range.dimensions.width, .height = range.dimensions.height},
 		};
-		m_StagingDevice->imageData2D(*texture, imageRegion, range.mipLevel, range.numMipLevels, range.layer, range.numLayers, vkFormat, data);
+		m_DeviceVulkan->m_StagingDevice->imageData2D(*texture, imageRegion, range.mipLevel, range.numMipLevels, range.layer, range.numLayers, vkFormat, data);
 
 
 
