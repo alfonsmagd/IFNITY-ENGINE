@@ -40,13 +40,13 @@ namespace Vulkan
     {
     public:
         virtual TextureDescription GetTextureDescription() override { return m_TextureDescription; }
-        virtual uint32_t           GetTextureID() override { return *m_holdTexture; }
+        virtual uint32_t           GetTextureID() override { return m_TextureID; }
 
         //Constructor 
 		Texture() = default;
 		Texture(const TextureDescription & desc, uint32_t uid): m_TextureDescription(desc), m_TextureID(uid)
 		{}
-        Texture(const TextureDescription & desc, HolderTextureSM && texture): m_TextureDescription(desc), m_holdTexture(std::move(texture)){}
+        Texture(const TextureDescription& desc, HolderTextureSM&& texture): m_TextureDescription(desc), m_holdTexture(std::move(texture)) { m_TextureID = *m_holdTexture; } //Operator overloading 
         Texture(TextureDescription& desc);
         Texture(int w, int h, const void* img);
 
@@ -143,7 +143,7 @@ namespace Vulkan
         DeviceVulkan* m_DeviceVulkan = nullptr;
 		
         TextureHandleSM currentTexture_;
-
+        TextureHandle dummyTexture_;
 
         #define MAX_SHADER_STAGES 4
         //Shaders loading by device 

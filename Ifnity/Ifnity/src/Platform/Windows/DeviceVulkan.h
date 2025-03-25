@@ -1,4 +1,5 @@
 
+
 #include "Ifnity/GraphicsDeviceManager.hpp"
 #include  "Platform/ImguiRender/ImguiVulkanRender.h"
 #include "vk_mem_alloc.h"
@@ -56,6 +57,10 @@ public:
 	void checkAndUpdateDescriptorSets();
 
 
+	//DeferredTask
+	void processDeferredTasks();
+	void waitDeferredTasks();
+	void addDeferredTask(std::packaged_task<void()>&& task, Vulkan::SubmitHandle handle);
 
 		//Destroy operations 
 	void destroy(Vulkan::TextureHandleSM handle);
@@ -80,12 +85,18 @@ public:
 	//Formats depth 
 	std::vector<VkFormat> depthFormats_;
 
+	//Vector Deferred Task
+	std::deque<DeferredTask<Vulkan::SubmitHandle>> deferredTasks_;
+
 	//Using instancing. 
 	VkDescriptorSetLayout vkDSL_ = VK_NULL_HANDLE; // Descriptor Set Layout
 	VkDescriptorPool vkDPool_ = VK_NULL_HANDLE;		// Descriptor Pool	
 	VkDescriptorSet vkDSet_ = VK_NULL_HANDLE;		// Descriptor Set
 	Vulkan::SubmitHandle lastSubmitHandle_ = Vulkan::SubmitHandle();
 	Vulkan::GraphicsPipeline* actualPipeline_ = VK_NULL_HANDLE;
+
+	//DummyTexture
+	TextureHandle dummyTexture_;
 
 	//SlotMap estructures 
 	SlotMap<Vulkan::VulkanImage> slootMapTextures_;

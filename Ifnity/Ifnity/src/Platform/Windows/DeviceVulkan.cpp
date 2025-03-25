@@ -247,13 +247,39 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 	//Force create default sampler and dummyTexture
 	createSampler(VkSamplerCreateInfo{}, "Default Sampler");
 
-	growDescriptorPool(16, 16);
+
+	m_StagingDevice = std::make_unique<Vulkan::VulkanStagingDevice>(*this);
+	PrintEnabledFeature(m_PhysicalDevice.physical_device);
 
 	m_RenderDevice = Vulkan::CreateDevice(device_, this);
-	m_StagingDevice = std::make_unique<Vulkan::VulkanStagingDevice>(*this);
-	
 
-	PrintEnabledFeature(m_PhysicalDevice.physical_device);
+
+	//Create a dummyTexture. 
+	const uint32_t dummypixel = 0xFF000000;
+	//Create a DummyTexture internally 
+	TextureDescription desc = {};
+	desc.format = rhi::Format::R8G8B8A8_UNORM;
+	desc.width = 1;
+	desc.height = 1;
+	desc.depth = 1;
+	desc.mipLevels = 1;
+	desc.usage = SCAST_U8(rhi::TextureUsageBits::SAMPLED | rhi::TextureUsageBits::STORAGE);
+	desc.debugName = "DummyTexture";
+	desc.isDepth = false;
+	desc.isStencil = false;
+	desc.generateMipMaps = false;
+	desc.data = &dummypixel;
+
+	//Create the texture first create the dummy texture
+	dummyTexture_ = m_RenderDevice->CreateTexture(desc);
+
+
+	growDescriptorPool(16, 16);
+
+	swapchain_ = std::make_unique<Vulkan::VulkanSwapchain>(*this,
+														   swapchainBootStraap_.extent.width,
+														   swapchainBootStraap_.extent.height);
+	
 
 
 	return true;
@@ -319,6 +345,8 @@ DeviceVulkan::~DeviceVulkan()
 	DestroyPipelineCache();
 	DestroyShaderStages();
 
+	//Destroy dummytexture
+	dummyTexture_.reset();
 	//Destroy Vma Allocator
 	vmaDestroyAllocator(m_Allocator);
 
@@ -568,9 +596,7 @@ bool DeviceVulkan::CreateSwapChain()
 	//Get image_count 
 	m_commandBufferCount = swapchainBootStraap_.image_count;
 
-	swapchain_ = std::make_unique<Vulkan::VulkanSwapchain>(*this,
-														   swapchainBootStraap_.extent.width,
-														   swapchainBootStraap_.extent.height);
+	
 
 	return true;
 }
@@ -1297,7 +1323,7 @@ Vulkan::SubmitHandle DeviceVulkan::submit(Vulkan::CommandBuffer& commandBuffer, 
 		swapchain_->present(immediate_->acquireLastSubmitSemaphore());
 	}
 
-	//processDeferredTasks();
+	processDeferredTasks();
 
 	Vulkan::SubmitHandle handle = vkCmdBuffer->lastSubmitHandle_;
 
@@ -1476,7 +1502,7 @@ void DeviceVulkan::checkAndUpdateDescriptorSets()
 		newMaxSamplers *= 2;
 	}
 
-	if( newMaxTextures != currentMaxTextures_ || newMaxSamplers != currentMaxSamplers_)
+	if( newMaxTextures != currentMaxTextures_ || newMaxSamplers != currentMaxSamplers_ )
 	{
 		growDescriptorPool(newMaxTextures, newMaxSamplers);
 	}
@@ -1484,7 +1510,7 @@ void DeviceVulkan::checkAndUpdateDescriptorSets()
 	// 1. Sampled and storage images
 	std::vector<VkDescriptorImageInfo> infoSampledImages;
 	std::vector<VkDescriptorImageInfo> infoStorageImages;
-	
+
 
 	infoSampledImages.reserve(slootMapTextures_.numObjects());
 	infoStorageImages.reserve(slootMapTextures_.numObjects());
@@ -1530,12 +1556,12 @@ void DeviceVulkan::checkAndUpdateDescriptorSets()
 							   });
 	}
 
-	
+
 
 	VkWriteDescriptorSet write[ kBinding_NumBindings ] = {};
 	uint32_t numWrites = 0;
 
-	
+
 
 	if( !infoSampledImages.empty() )
 	{
@@ -1576,19 +1602,54 @@ void DeviceVulkan::checkAndUpdateDescriptorSets()
 		};
 	}
 
-	
+
 
 	// do not switch to the next descriptor set if there is nothing to update
 	if( numWrites )
 	{
 		IFNITY_LOG(LogCore, TRACE, "Updating descriptor set with %u writes", numWrites);
 		immediate_->wait(immediate_->getLastSubmitHandle());
-		
+
 		vkUpdateDescriptorSets(device_, numWrites, write, 0, nullptr);
-		
+
 	}
 
 	awaitingCreation_ = false;
+}
+
+void DeviceVulkan::processDeferredTasks()
+{
+	while( !deferredTasks_.empty() && immediate_->isReady(deferredTasks_.front().handle_, true) )
+	{
+		deferredTasks_.front().task_();
+		deferredTasks_.pop_front();
+	}
+
+
+
+}
+
+void DeviceVulkan::waitDeferredTasks()
+{
+
+	for( auto& task : deferredTasks_ )
+	{
+		immediate_->wait(task.handle_);
+		task.task_();
+	}
+	deferredTasks_.clear();
+
+}
+
+void DeviceVulkan::addDeferredTask(std::packaged_task<void()>&& task, Vulkan::SubmitHandle handle)
+{
+	if( handle.empty() )
+	{
+		handle = immediate_->getNextSubmitHandle();
+
+	}
+	deferredTasks_.emplace_back(std::move(task), handle);
+
 }
 
 

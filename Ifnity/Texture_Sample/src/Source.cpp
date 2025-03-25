@@ -373,6 +373,7 @@ public:
 		//First Draw solid line pipeline 
 		{
 			desc.size = 4;
+			desc.instanceCount = 1;
 			desc.drawMode = DRAW;
 		
 			rdevice->DrawObject(m_SolidPipeline, desc);

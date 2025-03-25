@@ -219,7 +219,7 @@ namespace rhi
         COUNT              /**< Wrapping count */
     };
 
-    enum class TextureUsageBits: uint8_t
+    enum  TextureUsageBits: uint8_t
     {
         SAMPLED = 1 << 0,
         STORAGE = 1 << 1,

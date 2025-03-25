@@ -34,6 +34,7 @@ struct IFNITY_API DrawDescription
 	bool isIndexed = false;
 	const void* indices = nullptr;
     unsigned int size;
+	unsigned int instanceCount = 1;
 	struct
 	{
 		float Constant = 0.0f;

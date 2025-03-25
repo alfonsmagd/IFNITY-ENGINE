@@ -82,3 +82,13 @@ bool compareVectors(const std::vector<T>& vec1, const std::vector<T>& vec2)
 
     return true;
 }
+
+
+
+//macros define 
+#define DESTROY_STAGING_BUFFER(device, stagingBuffer, stagingMemory) \
+    std::packaged_task<void()>([device, stagingBuffer, stagingMemory]() \
+    { \
+        vkDestroyBuffer(device, stagingBuffer, nullptr); \
+        vkFreeMemory(device, stagingMemory, nullptr); \
+    })

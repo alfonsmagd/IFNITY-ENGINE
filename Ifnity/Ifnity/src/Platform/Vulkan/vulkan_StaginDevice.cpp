@@ -33,7 +33,7 @@ namespace Vulkan
 
 		//IFNITY ASSERT
 		IFNITY_ASSERT(minBufferSize_ <= maxBufferSize_, "");
-	
+
 
 
 	}
@@ -94,8 +94,8 @@ namespace Vulkan
 
 
 		//Process with staggin buffer 
-		VkBuffer stagingBuffer;
-		VkDeviceMemory stagingMemory;
+		VkBuffer stagingBuffer = VK_NULL_HANDLE;
+		VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
 		VkMemoryAllocateInfo memAllocInfo{ .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
 		VkMemoryRequirements memReqs = {};
 
@@ -137,56 +137,52 @@ namespace Vulkan
 
 		// 2. Copy the pixel data from the staging buffer into the image
 		uint32_t planeOffset = 0;
-		
-			const VkExtent2D extent = 
-				{
-					.width = std::max(1u, imageRegion.extent.width ), //for now not mip levels
-					.height = std::max(1u, imageRegion.extent.height),//for now not mip levels 
-				};
-			const VkRect2D region = {
-				.offset = {.x = imageRegion.offset.x , .y = imageRegion.offset.y},
-				.extent = extent,
-			};
-			const VkBufferImageCopy copy = {
-				// the offset for this level is at the start of all mip-levels plus the size of all previous mip-levels being uploaded
-				.bufferOffset = 0,
-				.bufferRowLength = 0,
-				.bufferImageHeight = 0,
-				.imageSubresource =
-				VkImageSubresourceLayers{imageAspect, currentMipLevel, layer, 1},
-				.imageOffset = {.x = region.offset.x, .y = region.offset.y, .z = 0},
-				.imageExtent = {.width = region.extent.width, .height = region.extent.height, .depth = 1u},
-			};
-			vkCmdCopyBufferToImage(wrapper.cmdBuf_,
-								   stagingBuffer, 
-								   image.vkImage_, 
-								   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-								   1,
-								   &copy);
-			
-			// 3. Transition TRANSFER_DST_OPTIMAL into SHADER_READ_ONLY_OPTIMAL
-			imageMemoryBarrier2(
-				wrapper.cmdBuf_,
-				image.vkImage_,
-				StageAccess{ .stage = VK_PIPELINE_STAGE_2_TRANSFER_BIT,     .access = VK_ACCESS_2_TRANSFER_WRITE_BIT },
-				StageAccess{ .stage = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT, .access = VK_ACCESS_2_MEMORY_READ_BIT | VK_ACCESS_2_MEMORY_WRITE_BIT },
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VkImageSubresourceRange{ imageAspect, currentMipLevel, 1, layer, 1 });
+
+		const VkExtent2D extent =
+		{
+			.width = std::max(1u, imageRegion.extent.width), //for now not mip levels
+			.height = std::max(1u, imageRegion.extent.height),//for now not mip levels 
+		};
+		const VkRect2D region = {
+			.offset = {.x = imageRegion.offset.x , .y = imageRegion.offset.y},
+			.extent = extent,
+		};
+		const VkBufferImageCopy copy = {
+			// the offset for this level is at the start of all mip-levels plus the size of all previous mip-levels being uploaded
+			.bufferOffset = 0,
+			.bufferRowLength = 0,
+			.bufferImageHeight = 0,
+			.imageSubresource =
+			VkImageSubresourceLayers{imageAspect, currentMipLevel, layer, 1},
+			.imageOffset = {.x = region.offset.x, .y = region.offset.y, .z = 0},
+			.imageExtent = {.width = region.extent.width, .height = region.extent.height, .depth = 1u},
+		};
+		vkCmdCopyBufferToImage(wrapper.cmdBuf_,
+							   stagingBuffer,
+							   image.vkImage_,
+							   VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+							   1,
+							   &copy);
+
+		// 3. Transition TRANSFER_DST_OPTIMAL into SHADER_READ_ONLY_OPTIMAL
+		imageMemoryBarrier2(
+			wrapper.cmdBuf_,
+			image.vkImage_,
+			StageAccess{ .stage = VK_PIPELINE_STAGE_2_TRANSFER_BIT,     .access = VK_ACCESS_2_TRANSFER_WRITE_BIT },
+			StageAccess{ .stage = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT, .access = VK_ACCESS_2_MEMORY_READ_BIT | VK_ACCESS_2_MEMORY_WRITE_BIT },
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VkImageSubresourceRange{ imageAspect, currentMipLevel, 1, layer, 1 });
 
 
 
-			image.vkImageLayout_ = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		image.vkImageLayout_ = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-			 auto handle = ctx_.immediate_->submit(wrapper);
+		auto handle = ctx_.immediate_->submit(wrapper);
+		auto device = ctx_.device_;
+		ctx_.addDeferredTask(DESTROY_STAGING_BUFFER(device, stagingBuffer, stagingMemory), handle);
 
-			 //Destroy the staging buffer
-			 while( !ctx_.immediate_->isReady(handle) )
-			 {
-				 //ctx_.immediate_->wait(handle);
-			 }
-			 vkDestroyBuffer(ctx_.device_, stagingBuffer, nullptr);
-			 vkFreeMemory(ctx_.device_, stagingMemory, nullptr);
+
 
 	}
 

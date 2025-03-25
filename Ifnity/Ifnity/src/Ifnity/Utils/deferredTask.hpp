@@ -11,7 +11,7 @@ struct DeferredTask
 {
 	//Default Constructors.
 	DeferredTask(std::packaged_task<void()>&& task, FinishHandle handle): 
-		task_(std::move(task)), FinishHandle(handle) {}
+		task_(std::move(task)), handle_(handle) {}
 
 
 	std::packaged_task<void()> task_;

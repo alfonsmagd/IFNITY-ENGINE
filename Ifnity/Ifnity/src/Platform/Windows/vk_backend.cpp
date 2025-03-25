@@ -115,6 +115,7 @@ namespace Vulkan
 
 		IFNITY_ASSERT_MSG(vkPhysicalDevice_ != VK_NULL_HANDLE, "VkPhysicalDevice is null, creatin device");
 
+	
 
 	}
 
@@ -123,6 +124,8 @@ namespace Vulkan
 	Device::~Device()
 	{
 		destroyShaderModule();
+		//Destroy the dummy texture
+		
 
 	}
 
@@ -173,7 +176,7 @@ namespace Vulkan
 								   pushConstants.offset);
 
 
-		cmdBuffer.cmdDraw(desc.drawMode, desc.size);
+		cmdBuffer.cmdDraw(desc.drawMode, desc.size,desc.instanceCount);
 
 	}
 
