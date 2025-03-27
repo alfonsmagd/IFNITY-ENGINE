@@ -358,7 +358,7 @@ public:
 		
 		//Vertex Attributes Configure Buffer 
 		{
-			desc.storage = StorageType::HOSTVISIBLE;
+			desc.storage = StorageType::HOST_VISIBLE;
 			desc.type = BufferType::VERTEX_BUFFER;
 			desc.binding = 0;
 			desc.size = vertexBufferSize;

@@ -23,6 +23,7 @@ add_subdirectory(glslang_vk_test)
 #add_subdirectory(CubeMap_Texture)
 add_subdirectory(bufferVulkan)
 add_subdirectory(Texture_Sample)
+add_subdirectory(camera_mesh_vk)
 
 # El dll que genera Ifnity se copiará automáticamente a la carpeta de salida de Sandbox
 

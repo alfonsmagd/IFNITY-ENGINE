@@ -209,9 +209,6 @@ bool DeviceVulkan::InitInternalInstance()
 
 bool DeviceVulkan::InitializeDeviceAndContext()
 {
-
-
-
 	if( !CreateSurface() ||
 	   !CreatePhysicalDevice() ||
 	   !CreateDevice() ||
@@ -244,13 +241,12 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 	getPhysicalDeviceProperties2(m_PhysicalDevice.physical_device);
 
 
-	//Force create default sampler and dummyTexture
-	createSampler(VkSamplerCreateInfo{}, "Default Sampler");
 
-
+	//Create Stagin Device First. 
 	m_StagingDevice = std::make_unique<Vulkan::VulkanStagingDevice>(*this);
 	PrintEnabledFeature(m_PhysicalDevice.physical_device);
 
+	//RenderDeviceCreation.
 	m_RenderDevice = Vulkan::CreateDevice(device_, this);
 
 
@@ -272,14 +268,15 @@ bool DeviceVulkan::InitializeDeviceAndContext()
 
 	//Create the texture first create the dummy texture
 	dummyTexture_ = m_RenderDevice->CreateTexture(desc);
+	//Force create default sampler 
+	dummySampler_ = createSampler(VkSamplerCreateInfo{}, "Default Sampler");
 
-
-	growDescriptorPool(16, 16);
+	growDescriptorPool(kInitBindless_Textures, kInitBindless_Samplers);
 
 	swapchain_ = std::make_unique<Vulkan::VulkanSwapchain>(*this,
 														   swapchainBootStraap_.extent.width,
 														   swapchainBootStraap_.extent.height);
-	
+
 
 
 	return true;
@@ -596,7 +593,7 @@ bool DeviceVulkan::CreateSwapChain()
 	//Get image_count 
 	m_commandBufferCount = swapchainBootStraap_.image_count;
 
-	
+
 
 	return true;
 }

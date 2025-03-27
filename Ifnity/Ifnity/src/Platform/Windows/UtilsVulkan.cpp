@@ -767,7 +767,7 @@ VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage)
 		case StorageType::DEVICE:
 			memFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
 			break;
-		case StorageType::HOSTVISIBLE:
+		case StorageType::HOST_VISIBLE:
 			memFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 			break;
 		case StorageType::MEMORYLESS:

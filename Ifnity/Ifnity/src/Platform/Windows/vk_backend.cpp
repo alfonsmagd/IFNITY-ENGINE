@@ -316,7 +316,7 @@ namespace Vulkan
 
 		if( !m_DeviceVulkan->useStaging_ && (desc.storage == StorageType::DEVICE) )
 		{
-			storage = StorageType::HOSTVISIBLE;
+			storage = StorageType::HOST_VISIBLE;
 		}
 
 		// Use staging device to transfer data into the buffer when the storage is private to the device

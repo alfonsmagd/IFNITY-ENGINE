@@ -3,7 +3,6 @@
 // IFNITY.cp
 
 #include <Ifnity.h>
-#include "..\..\Ifnity\vendor\assimp\contrib\stb_image\stb_image.h"
 
 using namespace IFNITY;
 using namespace IFNITY::rhi;
@@ -205,7 +204,7 @@ private:
 	BufferHandle m_UBO;
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
-	TextureHandle texture;
+	TextureHandle m_depth;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_SolidPipeline;
 	GraphicsPipelineHandle m_WireFramePipeline;
@@ -273,15 +272,15 @@ public:
 		{
 			DescriptionShader.NoCompile = true;
 			//DescriptionShader.FileName = "triangle01.vert";
-			DescriptionShader.FileName = "texture_simple.vert";
-			
+			DescriptionShader.FileName = "glm.vert";
+			DescriptionShader.FileName = "position_wireframe.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.NoCompile = true;
 			//DescriptionShader.FileName = "triangle01.frag";
-			
-			DescriptionShader.FileName = "texture_simple.frag";
+			DescriptionShader.FileName = "glm.frag";
+			DescriptionShader.FileName = "position_wireframe.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
 
@@ -290,25 +289,7 @@ public:
 
 		const uint32_t wireframe = 1;
 		GraphicsPipelineDescription gdesc1;
-		
-
-		{
-			gdesc1.AddDebugName("Texture ").
-				SetVertexShader(m_vs.get()).
-				SetPixelShader(m_ps.get()).
-				SetRasterizationState({ 
-				.primitiveType = rhi::PrimitiveType::TriangleStrip,
-				.cullMode = rhi::CullModeType::Back ,
-				.polygonMode = rhi::PolygonModeType::Fill }).
-				SetRenderState({ .depthTest = false });
-
-
-			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc1);
-		}
-
-		m_SolidPipeline->BindPipeline(rdevice);
-
-
+		GraphicsPipelineDescription gdesc2;
 
 		BufferDescription desc;
 		desc.size = sizeof(glm::mat4);
@@ -318,25 +299,133 @@ public:
 
 		m_UBO = rdevice->CreateBuffer(desc);
 
-	
-		int w, h, comp;
-		const uint8_t* img = stbi_load("data/wood.jpg", &w, &h, &comp, 4);
+		//Triangle Generation position only
+		std::vector<vec3> triangleVertices = { 
+			vec3(-0.5f, -0.5f, 0.0f), 
+			vec3(0.6f, -0.5f, 0.5f),
+			vec3(0.1f, 0.8f, 0.0f)
+		};
+		uint32_t vertexBufferSize = static_cast<uint32_t>(triangleVertices.size()) * sizeof(vec3);
+
+		// Setup indices
+		std::vector<uint32_t> indexBuffer{ 0, 1, 2 };
+		uint32_t indexBufferSize = static_cast<uint32_t>(indexBuffer.size()) * sizeof(uint32_t);
+
+
+		//assimp 
+		//const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+		const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
+
+		if(!scene || !scene->HasMeshes())
+		{
+			printf("Unable to load data/rubber_duck/scene.gltf\n");
+			exit(255);
+		}
+
+		const aiMesh* mesh = scene->mMeshes[ 0 ];
+		std::vector<vec3> positions;
+		std::vector<uint32_t> indices;
+		for(unsigned int i = 0; i != mesh->mNumVertices; i++)
+		{
+			const aiVector3D v = mesh->mVertices[ i ];
+			positions.push_back(vec3(v.x, v.y, v.z));
+		}
+
+		for(unsigned int i = 0; i != mesh->mNumFaces; i++)
+		{
+			for(int j = 0; j != 3; j++)
+			{
+				indices.push_back(mesh->mFaces[ i ].mIndices[ j ]);
+			}
+		}
+
+
+
+		aiReleaseImport(scene);
 
 
 		//DepthText texture
 		TextureDescription descTexture;
-		descTexture.dimensions = {(uint32_t)w, (uint32_t)h};
-		descTexture.format = Format::RGBA_UNORM8;
-		descTexture.usage = TextureUsageBits::SAMPLED;
-		descTexture.isDepth = false;
+		descTexture.dimensions = { 1280 , 720 ,1 };//please change this to the size of the window
+		descTexture.format = Format::Z_FLOAT32;
+		descTexture.usage = TextureUsageBits::ATTACHMENT;
+		descTexture.isDepth = true;
 		descTexture.debugName = "Depth buffer";
-		descTexture.data = img;
+		descTexture.depthStencil = DepthStencilTextureFlags::DEPTH;
 
 		//DepthStencil texture
-		texture = rdevice->CreateTexture(descTexture);
-		
-		auto value = texture.get()->GetTextureID();
-		
+		m_depth = rdevice->CreateTexture(descTexture);
+		rdevice->SetDepthTexture(m_depth);
+
+		//Vertex Attributes Configure Buffer 
+		{
+			desc.storage = StorageType::HOST_VISIBLE;
+			desc.type = BufferType::VERTEX_BUFFER;
+			desc.binding = 0;
+			desc.size = vertexBufferSize;
+			desc.size = sizeof(vec3) * positions.size();
+			desc.data = positions.data();
+			desc.debugName = "Buffer: vertex";
+
+			m_vertexBuffer = rdevice->CreateBuffer(desc);
+		}
+
+		//Indexbuffer
+		{
+			//uint32_t indices[] = { 0, 1, 2 };
+			desc.type = BufferType::INDEX_BUFFER;
+			desc.size =  sizeof(uint32_t) * indices.size();
+			desc.data = indices.data();
+			desc.debugName = "Buffer: index";
+
+			msizeIndex = indices.size();
+
+			m_indexBuffer = rdevice->CreateBuffer(desc);
+
+		}
+
+		//Vertex Attributes Configure 
+		rhi::VertexInput vertexInput;
+		uint8_t position = 0;
+		vertexInput.addVertexAttribute({ .location = position,
+									   .binding = 0, 
+									   .format = rhi::Format::R32G32B32_FLOAT,
+									   .offset = 0 }, position);
+
+		vertexInput.addVertexInputBinding({ .stride = sizeof(vec3) }, position);
+
+		{
+			gdesc1.SetVertexShader(m_vs.get()).
+				SetPixelShader(m_ps.get()).
+				AddDebugName("Wireframe Pipeline").
+				SetVertexInput(vertexInput).
+				SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Line }).
+				AddSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , })
+				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
+
+			//GraphicsPipelineDescription gdesc
+			m_WireFramePipeline = rdevice->CreateGraphicsPipeline(gdesc1);
+		}
+
+		{
+			gdesc2.SetVertexShader(m_vs.get()).
+				SetPixelShader(m_ps.get()).
+				AddDebugName("Solid Pipeline").
+				SetVertexInput(vertexInput).
+				SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Fill })
+				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
+
+			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc2);
+		}
+
+		rdevice->BindingIndexBuffer(m_indexBuffer);
+		rdevice->BindingVertexAttributesBuffer(m_vertexBuffer);
+
+
+
+		m_SolidPipeline->BindPipeline(rdevice);
+
+
 		//exit(0);
 
 	}
@@ -348,30 +437,27 @@ public:
 
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		const mat4 m = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 0.0f, 1.0f));
-		const mat4 p = glm::ortho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-
-		const struct PerFrameData {
-			mat4 mvp;
-			uint32_t textureId;
-		} pc = {
-			.mvp       = p * m,
-			.textureId = texture.get()->GetTextureID(),
-		};
+		const mat4 m = glm::rotate(mat4(1.0f), glm::radians(90.0f), vec3(1, 0, 0));
+		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.0f, -2.75f)), App::GetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
 		//StartRecording
 		rdevice->StartRecording();
-		rdevice->WriteBuffer(m_UBO, (&pc), sizeof(pc));
+		rdevice->WriteBuffer(m_UBO, glm::value_ptr(p * v*  m), sizeof(glm::mat4));
 		DrawDescription desc;
 		//First Draw solid line pipeline 
 		{
-			desc.size = 4;
-			desc.instanceCount = 1;
-			desc.drawMode = DRAW;
-		
+			desc.size = msizeIndex;
+			desc.drawMode = DRAW_INDEXED;
+			desc.depthTest = m_ImGuiLayer->descImgui.depthTest;
 			rdevice->DrawObject(m_SolidPipeline, desc);
 		}
-	
+		//Second Draw wireframe pipeline
+		{
+			desc.enableBias = &(*m_ImGuiLayer).descImgui.enableBias;
+			desc.depthBiasValues = (*m_ImGuiLayer).descImgui.depthBiasValues;
+			rdevice->DrawObject(m_WireFramePipeline, desc);
+		}
 		rdevice->StopRecording();
 		//StopRecording 
 

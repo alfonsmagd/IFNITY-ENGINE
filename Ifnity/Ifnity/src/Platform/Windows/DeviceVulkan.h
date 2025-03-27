@@ -34,7 +34,10 @@ class DeviceVulkan final: public GraphicsDeviceManager
 		kBinding_Textures = 0,
 		kBinding_Samplers = 1,
 		kBinding_StorageImages = 2,
+		kInitBindless_Textures = 16,
+		kInitBindless_Samplers = 16
 	};
+
 
 
 
@@ -97,6 +100,8 @@ public:
 
 	//DummyTexture
 	TextureHandle dummyTexture_;
+	//DummySampler
+	Vulkan::SamplerHandleSM dummySampler_;
 
 	//SlotMap estructures 
 	SlotMap<Vulkan::VulkanImage> slootMapTextures_;

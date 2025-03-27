@@ -59,7 +59,7 @@ enum class IFNITY_API BufferType: unsigned char
 enum class IFNITY_API StorageType: unsigned char
 {
     DEVICE,
-    HOSTVISIBLE,
+    HOST_VISIBLE,
     MEMORYLESS
 };
 

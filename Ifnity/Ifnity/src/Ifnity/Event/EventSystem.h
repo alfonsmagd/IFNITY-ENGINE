@@ -78,9 +78,8 @@ namespace events
         eventSource.addEventListener(eventlistener);
     }
 
-    /// The connect function template is a syntax sugar to unregister an event
-    /// listener from an event source.
-    
+    // The connect function template is a syntax sugar to unregister an event
+    // listener from an event source.
     template <class Event>
     void disconnect(const EventSource<Event>& eventSource, EventListener<Event>& eventlistener)
     {
@@ -90,8 +89,8 @@ namespace events
     // namespace events
 
 
-       /// The EventRepeater class is an abstract template class designed to listen
-       /// to events and automatically dispatch them.
+       // The EventRepeater class is an abstract template class designed to listen
+       // to events and automatically dispatch them.
     template <class Event>
     class EventRepeater:
         public EventListener<Event>,
