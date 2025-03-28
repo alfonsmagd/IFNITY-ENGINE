@@ -51,7 +51,7 @@ static void PrintEnabledFeature(VkPhysicalDevice vkpd)
 
 	vkGetPhysicalDeviceFeatures2(vkpd, &deviceFeatures2);
 
-	// Imprimir características de VkPhysicalDeviceFeatures
+	// Imprimir características de VkPhysicalDeviceFeatures;
 	IFNITY_LOG(LogCore, INFO, "RobustBufferAccess: {}", deviceFeatures2.features.robustBufferAccess ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "FullDrawIndexUint32: {}", deviceFeatures2.features.fullDrawIndexUint32 ? "Enabled" : "Disabled");
 	// Agrega más características según sea necesario...

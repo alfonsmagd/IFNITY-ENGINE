@@ -171,7 +171,7 @@ namespace rhi
         R8G8B8_UINT, /**< R8G8B8 unsigned integer format */
         R8G8B8,      /**< R8G8B8 format */
         R8G8B8A8,    /**< R8G8B8A8 format */
-        R32G32B32_FLOAT, /**< R32G32B32 float format */
+        R32G32B32_FLOAT, /**< R32G32B32 float format used to glm vec3 */
         R8G8B8A8_UNORM, /**< R8G8B8A8 unorm format */
         B8G8R8A8_UNORM, /**< B8G8R8A8 unorm format */
         R_UNORM8,    /**< R unsigned normalized 8-bit format */
@@ -185,7 +185,7 @@ namespace rhi
         RG_UINT32,   /**< RG unsigned 32-bit integer format */
         RG_UNORM16,  /**< RG unsigned normalized 16-bit format */
         RG_FLOAT16,  /**< RG 16-bit float format */
-        RG_FLOAT32,  /**< RG 32-bit float format */
+        R32G32_FLOAT,  /**< RG 32-bit float format Similar vec2 glm  */
         RGBA_UNORM8, /**< RGBA unsigned normalized 8-bit format */
         RGBA_UINT32, /**< RGBA unsigned 32-bit integer format */
         RGBA_FLOAT16,/**< RGBA 16-bit float format */

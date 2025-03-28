@@ -342,10 +342,12 @@ namespace Vulkan
 
 
 		//Check if is a vertex buffer or index buffer 
-
-
-
 		Buffer* handle = new Buffer(desc, std::move(buffer));
+		//Try to set the buffer gpu address
+		handle->getBufferGpuAddress(*m_DeviceVulkan);
+
+		IFNITY_LOG(LogCore, INFO,  STRMESSAGE("BufferCreation: ",desc.debugName));
+
 		return BufferHandle(handle);
 
 	}
@@ -1495,6 +1497,24 @@ namespace Vulkan
 		}
 
 
+	}
+
+
+	VkDeviceAddress Buffer::getBufferGpuAddress(const DeviceVulkan& device) const
+	{
+		const Vulkan::VulkanBuffer* vkBuffer = device.slotMapBuffers_.get(*m_holdBuffer);
+
+		if( vkBuffer->vkDeviceAddress_ )
+		{
+			IFNITY_LOG(LogCore, TRACE, "Buffer has a valid VkDeviceAddress");
+			if( m_BufferGpuAddress == 0 )
+			{
+				m_BufferGpuAddress = vkBuffer->vkDeviceAddress_;
+			}
+			return vkBuffer->vkDeviceAddress_;
+		}
+
+		return 0;
 	}
 
 }

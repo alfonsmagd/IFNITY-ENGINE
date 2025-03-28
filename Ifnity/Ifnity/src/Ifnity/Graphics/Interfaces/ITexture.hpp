@@ -61,7 +61,7 @@ static constexpr TextureFormatProperties properties[] = {
 	PROPS(RG_UINT32, 8),
 	PROPS(RG_UNORM16, 4),
 	PROPS(RG_FLOAT16, 4),
-	PROPS(RG_FLOAT32, 8),
+	PROPS(R32G32_FLOAT, 8),
 	PROPS(RGBA_UNORM8, 4),
 	PROPS(RGBA_UINT32, 16),
 	PROPS(RGBA_FLOAT16, 8),
@@ -220,6 +220,7 @@ public:
 	virtual ~ITexture() = default;
 
 	virtual TextureDescription GetTextureDescription() = 0;
+	//Todo: GetTextureFormatProperties
 	virtual uint32_t  GetTextureID() = 0;
 
 };

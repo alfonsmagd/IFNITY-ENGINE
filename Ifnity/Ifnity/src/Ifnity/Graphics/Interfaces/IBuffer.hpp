@@ -48,6 +48,7 @@ enum class IFNITY_API BufferType: unsigned char
 	VERTEX_PULLING_BUFFER_INDEX = 0x10,///< Buffer for vertex pulling data this implies that the buffer is used for vertex pulling and configure the index buffer 
 	VERTEX_PULLING_BUFFER = 0x20,///< Buffer for vertex pulling data , Vertex data, no index buffer.
 	STORAGE_BUFFER = 0x30,     ///< Buffer for storage data
+	UNIFORM_BUFFER = 0x40,     ///< Buffer for uniform data
 
     NO_DEFINE_BUFFER = 0xFF ///< Undefined buffer type
 };
@@ -161,6 +162,8 @@ private:
 /**
  * @brief Interface for buffer objects.
  */
+
+
 class IFNITY_API IBuffer
 {
 public:
