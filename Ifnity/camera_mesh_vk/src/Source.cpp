@@ -3,6 +3,7 @@
 // IFNITY.cp
 
 #include <Ifnity.h>
+#include "..\..\Ifnity\vendor\assimp\contrib\stb_image\stb_image.h"
 
 using namespace IFNITY;
 using namespace IFNITY::rhi;
@@ -29,7 +30,7 @@ public:
 	void ConnectToEventBusImpl(void* bus) override
 	{
 		auto eventBus = static_cast<IFNITY::GLFWEventSource*>(bus);
-		if(eventBus)
+		if( eventBus )
 		{
 			CONNECT_EVENT_LAYER(WindowResize, eventBus);
 			CONNECT_EVENT_LAYER(WindowClose, eventBus);
@@ -98,7 +99,7 @@ public:
 	void OnUpdate() override
 	{
 		ImGuiContext* context = GetImGuiContext();
-		if(context == nullptr)
+		if( context == nullptr )
 		{
 			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
 			return;
@@ -121,7 +122,7 @@ private:
 	{
 
 		GraphicsAPI api = IFNITY::App::GetApp().GetGraphicsAPI();
-		switch(opcionSeleccionada)
+		switch( opcionSeleccionada )
 		{
 			case 0:
 				// Acción para la opción 1
@@ -165,13 +166,13 @@ private:
 		ImGui::Begin("API WINDOW");  // Comienza la creación de la ventana
 
 		// Combo box con las opciones
-		if(ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options)))
+		if( ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options)) )
 		{
 			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
 		}
 
 		// Botón que ejecuta la función cuando se hace clic
-		if(ImGui::Button("OK"))
+		if( ImGui::Button("OK") )
 		{
 			AccionPorOpcion(selectOption);
 		}
@@ -204,66 +205,72 @@ private:
 	BufferHandle m_UBO;
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
+	BufferHandle m_bufferPerFrame;
 	TextureHandle m_depth;
+	TextureHandle texture;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_SolidPipeline;
 	GraphicsPipelineHandle m_WireFramePipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 
-	uint32_t msizeIndex = 0;	
+	//CAMERA LAYER
+	// Camera objects 
+	IFNITY::EventCameraListener m_CameraListener;
+	CameraPositioner_FirstPerson m_camera;
+	const vec3 kInitialCameraPos    = vec3(0.0f, 1.0f, -1.5f);
+	const vec3 kInitialCameraTarget = vec3(0.0f, 0.5f, 0.0f);
+
+	uint32_t msizeIndex = 0;
 	ImGuiTestLayer* m_ImGuiLayer;
 public:
-	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	Source(IFNITY::rhi::GraphicsAPI api):
+		IFNITY::App(api),
+		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
+		m_camera(vec3(0.f, 1.0f, -1.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_CameraListener(&m_camera)
 	{
-		// Obtener el contexto de ImGui desde IFNITY  DLL
-		/*ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
-		{
-		IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
-		return;
-		}*/
 
-		// Establecer el contexto de ImGui en la aplicación principal
-		//ImGui::SetCurrentContext(context);
 		m_ImGuiLayer = new ImGuiTestLayer();
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(m_ImGuiLayer);
+		PushLayer(new IFNITY::CameraLayer(&m_CameraListener));
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
-
-
-
 	}
+
+	//Vertex struct initialization 
+	struct VertexData
+	{
+		vec3 pos;
+		vec3 n;
+		vec2 tc;
+	};
+
+	struct PerFrameData
+	{
+		mat4 model;
+		mat4 view;
+		mat4 proj;
+		vec4 cameraPos;
+		uint32_t tex = 0;
+	};
 
 	void Initialize() override
 	{
+
+
+
+
 		//File System Instance get it 
 		auto& vfs = IFNITY::VFS::GetInstance();
 
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
 		vfs.Mount("test", "Shaders/testShader", IFNITY::FolderType::NO_DEFINED);
 
-		auto files = vfs.ListFilesInCurrentDirectory("test");
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
-		auto getFileName = [ &files ](const std::string& extension) -> const char*
-			{
-				for(const auto& file : files)
-				{
-					if(file.size() >= extension.size() &&
-					   file.compare(file.size() - extension.size(), extension.size(), extension) == 0)
-					{
-						return file.c_str();
-					}
-				}
-				return nullptr;
-			};
 
-		IFNITY::testShaderCompilation(getFileName(".vert"), "Shaders/testShader/main.vert.spv");
-		IFNITY::testShaderCompilation(getFileName(".frag"), "Shaders/testShader/main.frag.spv");
 
 		IFNITY_LOG(LogApp, INFO, "END APP ONLY TEST SHADER BUILDING ");
-
-
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
@@ -274,6 +281,7 @@ public:
 			//DescriptionShader.FileName = "triangle01.vert";
 			DescriptionShader.FileName = "glm.vert";
 			DescriptionShader.FileName = "position_wireframe.vert";
+			DescriptionShader.FileName = "mesh_camera.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
@@ -281,6 +289,7 @@ public:
 			//DescriptionShader.FileName = "triangle01.frag";
 			DescriptionShader.FileName = "glm.frag";
 			DescriptionShader.FileName = "position_wireframe.frag";
+			DescriptionShader.FileName = "mesh_camera.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
 
@@ -291,56 +300,40 @@ public:
 		GraphicsPipelineDescription gdesc1;
 		GraphicsPipelineDescription gdesc2;
 
-		BufferDescription desc;
-		desc.size = sizeof(glm::mat4);
-		desc.type = BufferType::CONSTANT_BUFFER;
-		desc.binding = 0;
-		desc.data = nullptr;
-
-		m_UBO = rdevice->CreateBuffer(desc);
-
-		//Triangle Generation position only
-		std::vector<vec3> triangleVertices = { 
-			vec3(-0.5f, -0.5f, 0.0f), 
-			vec3(0.6f, -0.5f, 0.5f),
-			vec3(0.1f, 0.8f, 0.0f)
-		};
-		uint32_t vertexBufferSize = static_cast<uint32_t>(triangleVertices.size()) * sizeof(vec3);
-
-		// Setup indices
-		std::vector<uint32_t> indexBuffer{ 0, 1, 2 };
-		uint32_t indexBufferSize = static_cast<uint32_t>(indexBuffer.size()) * sizeof(uint32_t);
+		
+	
 
 
 		//assimp 
-		//const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
-		const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
+		const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+		//const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
 
-		if(!scene || !scene->HasMeshes())
+		if( !scene || !scene->HasMeshes() )
 		{
 			printf("Unable to load data/rubber_duck/scene.gltf\n");
 			exit(255);
 		}
 
 		const aiMesh* mesh = scene->mMeshes[ 0 ];
-		std::vector<vec3> positions;
-		std::vector<uint32_t> indices;
-		for(unsigned int i = 0; i != mesh->mNumVertices; i++)
+		std::vector<VertexData> vertices;
+		for( uint32_t i = 0; i != mesh->mNumVertices; i++ )
 		{
 			const aiVector3D v = mesh->mVertices[ i ];
-			positions.push_back(vec3(v.x, v.y, v.z));
+			const aiVector3D n = mesh->mNormals[ i ];
+			const aiVector3D t = mesh->mTextureCoords[ 0 ][ i ];
+			vertices.push_back({ .pos = vec3(v.x, v.y, v.z),
+							   .n = vec3(n.x, n.y, n.z),
+							   .tc = vec2(t.x, 1.0 - t.y) });
 		}
-
-		for(unsigned int i = 0; i != mesh->mNumFaces; i++)
+		std::vector<uint32_t> indices;
+		for( uint32_t i = 0; i != mesh->mNumFaces; i++ )
 		{
-			for(int j = 0; j != 3; j++)
-			{
+			for( uint32_t j = 0; j != 3; j++ )
 				indices.push_back(mesh->mFaces[ i ].mIndices[ j ]);
-			}
 		}
 
-
-
+		const size_t kSizeIndices = sizeof(uint32_t) * indices.size();
+		const size_t kSizeVertices = sizeof(VertexData) * vertices.size();
 		aiReleaseImport(scene);
 
 
@@ -357,24 +350,44 @@ public:
 		m_depth = rdevice->CreateTexture(descTexture);
 		rdevice->SetDepthTexture(m_depth);
 
+
+
+		//Texture simple 
+		int w, h, comp;
+		const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 4);
+
+
+		//DepthText texture
+		
+		descTexture.dimensions = {(uint32_t)w, (uint32_t)h};
+		descTexture.format = Format::RGBA_UNORM8;
+		descTexture.usage = TextureUsageBits::SAMPLED;
+		descTexture.isDepth = false;
+		descTexture.debugName = "image";
+		descTexture.data = img;
+
+		//DepthStencil texture
+		texture = rdevice->CreateTexture(descTexture);
+
+
+		BufferDescription desc;
 		//Vertex Attributes Configure Buffer 
 		{
+
 			desc.storage = StorageType::HOST_VISIBLE;
 			desc.type = BufferType::VERTEX_BUFFER;
 			desc.binding = 0;
-			desc.size = vertexBufferSize;
-			desc.size = sizeof(vec3) * positions.size();
-			desc.data = positions.data();
+			desc.size = kSizeVertices;
+			desc.data = vertices.data();
 			desc.debugName = "Buffer: vertex";
 
 			m_vertexBuffer = rdevice->CreateBuffer(desc);
 		}
-
 		//Indexbuffer
 		{
 			//uint32_t indices[] = { 0, 1, 2 };
 			desc.type = BufferType::INDEX_BUFFER;
-			desc.size =  sizeof(uint32_t) * indices.size();
+			desc.size = kSizeIndices;
 			desc.data = indices.data();
 			desc.debugName = "Buffer: index";
 
@@ -383,29 +396,40 @@ public:
 			m_indexBuffer = rdevice->CreateBuffer(desc);
 
 		}
+		//BufferPerFrame 
+		{
+
+			desc.type = BufferType::UNIFORM_BUFFER;
+			desc.size = sizeof(PerFrameData);
+			desc.debugName = "Buffer: per-frame";
+			desc.data = nullptr;
+
+			m_bufferPerFrame = rdevice->CreateBuffer(desc);
+		}
 
 		//Vertex Attributes Configure 
 		rhi::VertexInput vertexInput;
 		uint8_t position = 0;
+		uint8_t normal = 1;
+		uint8_t texcoord = 2;
 		vertexInput.addVertexAttribute({ .location = position,
-									   .binding = 0, 
+									   .binding = 0,
 									   .format = rhi::Format::R32G32B32_FLOAT,
-									   .offset = 0 }, position);
+									   .offset = offsetof(VertexData,pos) }, position);
 
-		vertexInput.addVertexInputBinding({ .stride = sizeof(vec3) }, position);
+		vertexInput.addVertexAttribute({ .location = normal,
+									   .binding = 0,
+									   .format = rhi::Format::R32G32B32_FLOAT,
+									   .offset = offsetof(VertexData,n) }, normal);
 
-		{
-			gdesc1.SetVertexShader(m_vs.get()).
-				SetPixelShader(m_ps.get()).
-				AddDebugName("Wireframe Pipeline").
-				SetVertexInput(vertexInput).
-				SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Line }).
-				AddSpecializationConstant({ .id = 0, .size = sizeof(uint32_t) , .dataSize = sizeof(wireframe),.data = &wireframe , })
-				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
+		vertexInput.addVertexAttribute({ .location = texcoord,
+									   .binding = 0,
+									   .format = rhi::Format::R32G32_FLOAT,
+									   .offset = offsetof(VertexData,tc) }, texcoord);
 
-			//GraphicsPipelineDescription gdesc
-			m_WireFramePipeline = rdevice->CreateGraphicsPipeline(gdesc1);
-		}
+
+		vertexInput.addVertexInputBinding({ .stride = sizeof(VertexData) }, position);
+
 
 		{
 			gdesc2.SetVertexShader(m_vs.get()).
@@ -433,17 +457,37 @@ public:
 	void Render() override
 	{
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
-
-
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-		const mat4 m = glm::rotate(mat4(1.0f), glm::radians(90.0f), vec3(1, 0, 0));
-		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.0f, -2.75f)), App::GetTime(), vec3(0.0f, 1.0f, 0.0f));
-		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
+
+
+		const vec4 cameraPos = vec4(m_camera.getPosition(), 1.0f);
+
+		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
+		const mat4 m1 = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
+		const mat4 m2 = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 v = glm::translate(mat4(1.0f), vec3(cameraPos));
+
+
+		/*const mat4 m = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
+		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.0f, -2.75f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);*/
+
+
+
+
+		const PerFrameData pc = {
+			.model = m2*m1,
+			.view = v,
+			.proj = p,
+			.cameraPos = cameraPos,
+			.tex = texture->GetTextureID(),
+			//.texCube   = cubemapTex.index(),
+		};
 
 		//StartRecording
 		rdevice->StartRecording();
-		rdevice->WriteBuffer(m_UBO, glm::value_ptr(p * v*  m), sizeof(glm::mat4));
+		rdevice->WriteBuffer(m_bufferPerFrame, &pc, sizeof(pc));
 		DrawDescription desc;
 		//First Draw solid line pipeline 
 		{
@@ -452,12 +496,7 @@ public:
 			desc.depthTest = m_ImGuiLayer->descImgui.depthTest;
 			rdevice->DrawObject(m_SolidPipeline, desc);
 		}
-		//Second Draw wireframe pipeline
-		{
-			desc.enableBias = &(*m_ImGuiLayer).descImgui.enableBias;
-			desc.depthBiasValues = (*m_ImGuiLayer).descImgui.depthBiasValues;
-			rdevice->DrawObject(m_WireFramePipeline, desc);
-		}
+
 		rdevice->StopRecording();
 		//StopRecording 
 

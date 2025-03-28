@@ -24,9 +24,11 @@ namespace Vulkan
         void SetData(const void* data) {}
 		const void* GetData() const { return nullptr; }
         BufferHandleSM getBufferHandleSM() const { return *m_holdBuffer; }
+        VkDeviceAddress getBufferGpuAddress(const DeviceVulkan& device) const;
 
     private:
         uint32_t m_BufferID = 0; ///< The buffer ID.
+		mutable uint64_t m_BufferGpuAddress = 0; ///< The buffer GPU address.
 		BufferDescription m_Description; ///< The buffer description.
 		HolderBufferSM  m_holdBuffer; ///< The buffer handle.
         
@@ -87,6 +89,7 @@ namespace Vulkan
         BufferHandle CreateBuffer(const BufferDescription& desc) override;
         
 		void upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0);
+		void upload(Vulkan::VulkanBuffer* buffer, const void* data, size_t size, uint32_t offset = 0);
         void upload(TextureHandleSM handle, const TextureRangeDesc&  range, const void* data);
 
         void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) override;

@@ -114,7 +114,7 @@ public:
 	ObjectType* getByIndex(uint32_t index)
 	{
 		if( index >= slots.size() ) return nullptr;  // Verifica si el índice está fuera de rango
-		const auto& slot = slots[ index ];
+		auto& slot = slots[ index ];
 		if( slot.gen == 0 ) return nullptr;  // Verifica que la generación no sea 0, lo que indica un objeto inválido
 		return &slot.obj;
 	}

@@ -1982,7 +1982,7 @@ IFNITY::App* IFNITY::CreateApp()
 
 	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
-	return new Source_Texture(api);
+	return new Source_Cube(api);
 
 	//return new Source_CUBEMAP_FIGURE(api);
 }

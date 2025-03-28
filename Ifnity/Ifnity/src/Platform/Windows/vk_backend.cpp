@@ -342,10 +342,12 @@ namespace Vulkan
 
 
 		//Check if is a vertex buffer or index buffer 
-
-
-
 		Buffer* handle = new Buffer(desc, std::move(buffer));
+		//Try to set the buffer gpu address
+		handle->getBufferGpuAddress(*m_DeviceVulkan);
+
+		IFNITY_LOG(LogCore, INFO,  STRMESSAGE("BufferCreation: ",desc.debugName));
+
 		return BufferHandle(handle);
 
 	}
@@ -530,6 +532,41 @@ namespace Vulkan
 
 	}
 
+	void Device::upload(Vulkan::VulkanBuffer* buffer, const void* data, size_t size, uint32_t offset)
+	{
+	
+		//Previos check if the buffer is null and check it 
+		if( !data )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Data is null to upload ");
+			return;
+		}
+
+		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
+
+
+		if( !buffer )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Buffer is null to upload ");
+			return;
+		}
+
+		if( !IFNITY_VERIFY(offset + size <= buffer->bufferSize_) )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Buffer is enough size ");
+			return;
+		}
+
+		//Lets to staginDevice to upload data 
+		m_DeviceVulkan->m_StagingDevice->bufferSubData(*buffer, offset, size, data);
+	
+	
+	
+	
+	
+	
+	}
+
 	void Device::upload(TextureHandleSM handle, const TextureRangeDesc& range, const void* data)
 	{
 		if( !data )
@@ -585,6 +622,26 @@ namespace Vulkan
 			pushConstants.data = data;
 			pushConstants.size = size;
 			pushConstants.offset = offset;
+		}
+		if( buffer->GetBufferDescription().type == BufferType::UNIFORM_BUFFER )
+		{
+			//Get the BufferHandleSM by index  to avoid dynamic_cast. 
+			Vulkan::VulkanBuffer* buf = m_DeviceVulkan->slotMapBuffers_.getByIndex(buffer->GetBufferID());
+			if( !buf )
+			{
+				IFNITY_LOG(LogCore, ERROR, "Buffer is null to write ");
+				return;
+			}
+			upload(buf, data, size, offset);
+
+			if( buf->vkDeviceAddress_ )
+			{
+				//Update push constant
+				pushConstants.data = &buf->vkDeviceAddress_;
+				pushConstants.size = sizeof(uint64_t);
+				pushConstants.offset = 0; // force to offset 0 in vulkan 
+
+			}
 		}
 
 	}
@@ -1495,6 +1552,24 @@ namespace Vulkan
 		}
 
 
+	}
+
+
+	VkDeviceAddress Buffer::getBufferGpuAddress(const DeviceVulkan& device) const
+	{
+		const Vulkan::VulkanBuffer* vkBuffer = device.slotMapBuffers_.get(*m_holdBuffer);
+
+		if( vkBuffer->vkDeviceAddress_ )
+		{
+			IFNITY_LOG(LogCore, TRACE, "Buffer has a valid VkDeviceAddress");
+			if( m_BufferGpuAddress == 0 )
+			{
+				m_BufferGpuAddress = vkBuffer->vkDeviceAddress_;
+			}
+			return vkBuffer->vkDeviceAddress_;
+		}
+
+		return 0;
 	}
 
 }

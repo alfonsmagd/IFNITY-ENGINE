@@ -61,7 +61,7 @@ namespace OpenGL
     { rhi::Format::RG_UINT32, GL_RG32UI },
     { rhi::Format::RG_UNORM16, GL_RG16 },
     { rhi::Format::RG_FLOAT16, GL_RG16F },
-    { rhi::Format::RG_FLOAT32, GL_RG32F },
+    { rhi::Format::R32G32_FLOAT, GL_RG32F },
     { rhi::Format::RGBA_UNORM8, GL_RGBA8 },
     { rhi::Format::RGBA_UINT32, GL_RGBA32UI },
     { rhi::Format::RGBA_FLOAT16, GL_RGBA16F },

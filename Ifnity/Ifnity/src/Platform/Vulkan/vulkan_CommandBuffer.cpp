@@ -341,6 +341,11 @@ namespace Vulkan
 	{
 		_ASSERT(isRendering_);
 		_ASSERT(currentPipelineGraphics_);
+
+		if( size == 0 )
+		{
+			return;
+		}
 		GraphicsPipeline* gp = ctx_->slotMapRenderPipelines_.get(currentPipelineGraphics_);
 
 		RenderPipelineState* rps = &gp->getRenderPipelineState();

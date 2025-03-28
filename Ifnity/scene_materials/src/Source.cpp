@@ -366,18 +366,18 @@ public:
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 0 ].fileName,
+			.filePath = vSceneconfig[ 3 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 0 ]
+			.sceneConfig = vSceneconfig[ 3 ]
 		};
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder(0.1);
+		MeshDataBuilderAssimp<rhi::VertexScene> builder(1);
 
-		//builder.buildSceneData(meshAssimp);
+		builder.buildSceneData(meshAssimp);
 
 		//Create a SceneObject with the data.
 		m_SceneObject = rdevice->CreateSceneObject(meshAssimp.sceneConfig.outputMesh.c_str(),
@@ -431,14 +431,10 @@ public:
 
 		//Change the Pipeline to render the Scene
 		m_GraphicsPipeline[ SCENE ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
-		if(m_ImGuiLayer->showCheckbox)
-		{
-			m_MeshObject->DrawIndirect();
-		}
-		else
-		{
-			m_MeshObject->DrawInstancedDirect();
-		}
+		
+		m_MeshObject->DrawIndirect();
+		
+		
 		
 	}
 	void Animate() override

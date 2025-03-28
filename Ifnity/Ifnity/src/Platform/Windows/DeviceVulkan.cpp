@@ -51,7 +51,7 @@ static void PrintEnabledFeature(VkPhysicalDevice vkpd)
 
 	vkGetPhysicalDeviceFeatures2(vkpd, &deviceFeatures2);
 
-	// Imprimir características de VkPhysicalDeviceFeatures
+	// Imprimir características de VkPhysicalDeviceFeatures;
 	IFNITY_LOG(LogCore, INFO, "RobustBufferAccess: {}", deviceFeatures2.features.robustBufferAccess ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "FullDrawIndexUint32: {}", deviceFeatures2.features.fullDrawIndexUint32 ? "Enabled" : "Disabled");
 	// Agrega más características según sea necesario...
@@ -440,12 +440,12 @@ bool DeviceVulkan::CreatePhysicalDevice()
 		.add_required_extension_features(indexingFeatures)
 		.add_required_extension_features(bufferDeviceAddressFeatures)
 		//.add_required_extension_features(dynamicRenderingFeatures)
-		.add_required_extension_features(dynamicRenderingUnusedAttachmentsFeatures)
+		//.add_required_extension_features(dynamicRenderingUnusedAttachmentsFeatures)
 		.add_required_extension_features(vulkan13Features)
 		.add_required_extension(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME)
 		.add_required_extension(VK_KHR_MAINTENANCE2_EXTENSION_NAME)
-		//.add_required_extension(VK_KHR_MULTIVIEW_EXTENSION_NAME)
-		//.add_required_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME)
+		.add_required_extension(VK_KHR_MULTIVIEW_EXTENSION_NAME)
+		.add_required_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME)
 		.add_required_extension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME)
 		.add_required_extension(VK_EXT_DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_EXTENSION_NAME)
 		.select();
