@@ -329,7 +329,7 @@ namespace Vulkan
 		VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags(storage);
 
 		//Create the buffer holder 
-		HolderBufferSM buffer = CreateInternalVkBuffer(desc.size, usageFlags, memFlags, desc.debugName.c_str());
+		HolderBufferSM buffer = CreateInternalVkBuffer(desc.byteSize, usageFlags, memFlags, desc.debugName.c_str());
 
 		//Check if the buffer its created
 		IFNITY_ASSERT_MSG(buffer, "Buffer its not created internal ");
@@ -337,7 +337,7 @@ namespace Vulkan
 		//Upload data if the bufferdesc have it; 
 		if( desc.data )
 		{
-			upload(*buffer, desc.data, desc.size, desc.offset);
+			upload(*buffer, desc.data, desc.byteSize, desc.offset);
 		}
 
 
