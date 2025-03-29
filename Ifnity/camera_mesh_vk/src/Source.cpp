@@ -305,8 +305,8 @@ public:
 
 
 		//assimp 
-		const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
-		//const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
+		//const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+		const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
 
 		if( !scene || !scene->HasMeshes() )
 		{
@@ -354,8 +354,8 @@ public:
 
 		//Texture simple 
 		int w, h, comp;
-		const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 4);
-
+		//const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 4);
+		const uint8_t* img = stbi_load("data/helmet/Default_albedo.jpg", &w, &h, &comp, 4);
 
 		//DepthText texture
 		
@@ -377,7 +377,7 @@ public:
 			desc.storage = StorageType::HOST_VISIBLE;
 			desc.type = BufferType::VERTEX_BUFFER;
 			desc.binding = 0;
-			desc.size = kSizeVertices;
+			desc.byteSize = kSizeVertices;
 			desc.data = vertices.data();
 			desc.debugName = "Buffer: vertex";
 
@@ -387,7 +387,7 @@ public:
 		{
 			//uint32_t indices[] = { 0, 1, 2 };
 			desc.type = BufferType::INDEX_BUFFER;
-			desc.size = kSizeIndices;
+			desc.byteSize = kSizeIndices;
 			desc.data = indices.data();
 			desc.debugName = "Buffer: index";
 
@@ -400,7 +400,7 @@ public:
 		{
 
 			desc.type = BufferType::UNIFORM_BUFFER;
-			desc.size = sizeof(PerFrameData);
+			desc.byteSize = sizeof(PerFrameData);
 			desc.debugName = "Buffer: per-frame";
 			desc.data = nullptr;
 
@@ -464,7 +464,7 @@ public:
 		const vec4 cameraPos = vec4(m_camera.getPosition(), 1.0f);
 
 		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
-		const mat4 m1 = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
+		const mat4 m1 = glm::rotate(mat4(1.0f), glm::radians(90.0f), vec3(1, 0, 0));
 		const mat4 m2 = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
 		const mat4 v = glm::translate(mat4(1.0f), vec3(cameraPos));
 
@@ -478,7 +478,7 @@ public:
 
 		const PerFrameData pc = {
 			.model = m2*m1,
-			.view = v,
+			.view = m_camera.getViewMatrix(),
 			.proj = p,
 			.cameraPos = cameraPos,
 			.tex = texture->GetTextureID(),

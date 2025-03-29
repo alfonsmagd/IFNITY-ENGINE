@@ -5,7 +5,7 @@
 
 
 
-#define SANDBOX_TOOL 
+//#define SANDBOX_TOOL 
 #define VMA_ALLOCATOR_VK 1
 
 #if defined(_WIN32) || defined(_WIN64)
