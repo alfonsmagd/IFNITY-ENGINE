@@ -435,20 +435,34 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	vulkan13Features.maintenance4 = VK_TRUE;
 	vulkan13Features.dynamicRendering = VK_TRUE;
 
-
-	auto physicalDevSelRet = physicalDevSel.set_surface(m_Surface)
+	physicalDevSel.set_surface(m_Surface)
 		.add_required_extension_features(indexingFeatures)
 		.add_required_extension_features(bufferDeviceAddressFeatures)
 		//.add_required_extension_features(dynamicRenderingFeatures)
-		//.add_required_extension_features(dynamicRenderingUnusedAttachmentsFeatures)
+		.add_required_extension_features(dynamicRenderingUnusedAttachmentsFeatures)
 		.add_required_extension_features(vulkan13Features)
 		.add_required_extension(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME)
 		.add_required_extension(VK_KHR_MAINTENANCE2_EXTENSION_NAME)
 		.add_required_extension(VK_KHR_MULTIVIEW_EXTENSION_NAME)
 		.add_required_extension(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME)
-		.add_required_extension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME)
-		.add_required_extension(VK_EXT_DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_EXTENSION_NAME)
-		.select();
+		.add_required_extension(VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME);
+
+	//Check if RenderDoc is present on runtime.
+	bool isRenderDocPresent = false;
+	if( GetModuleHandleA("renderdoc.dll") != nullptr )
+	{
+		isRenderDocPresent = true;
+		IFNITY_LOG(LogCore, INFO, "RenderDoc is present");
+	}
+
+	// if not renderdoc.
+	if( !isRenderDocPresent )
+	{
+		physicalDevSel.add_required_extension(VK_EXT_DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_EXTENSION_NAME);
+		IFNITY_LOG(LogCore, INFO, "RenderDoc is not present");
+	}
+
+	auto physicalDevSelRet = physicalDevSel.select();
 
 	if( !physicalDevSelRet )
 	{
@@ -1030,11 +1044,6 @@ void DeviceVulkan::getPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice)
 
 }
 
-void DeviceVulkan::createWeaknessDeviceReference()
-{
-
-
-}
 
 bool DeviceVulkan::AcquireNextImage()
 {

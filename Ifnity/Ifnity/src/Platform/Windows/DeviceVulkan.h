@@ -246,7 +246,7 @@ private:
 	VkResult growDescriptorPool(uint32_t maxTextures, uint32_t maxSamplers);
 
 	void getPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice);
-	void createWeaknessDeviceReference();
+	
 
 	//Destroy private methods
 	bool DestroyCommandPool();
