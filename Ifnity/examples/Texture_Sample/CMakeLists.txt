@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 # Nombre del proyecto
-project(Sandbox)
+project(Texture_Sample)
 
 # C++ 17 standar 
 set(CMAKE_CXX_STANDARD 20)
@@ -17,8 +17,8 @@ file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/src/*.hpp")
 
 # Incluye directories
 include_directories(
-    "${PROJECT_SOURCE_DIR}/../Ifnity/vendor/spdlog/include"
-    "${PROJECT_SOURCE_DIR}/../Ifnity/src"
+    "${PROJECT_SOURCE_DIR}/../../Ifnity/vendor/spdlog/include"
+    "${PROJECT_SOURCE_DIR}/../../Ifnity/src"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -44,12 +44,17 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>
 )
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/../Shaders
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
-)
-
+#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy_directory
+#    ${CMAKE_SOURCE_DIR}/../Shaders
+#    $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
+#)
+#
+#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+#    COMMAND ${CMAKE_COMMAND} -E copy_directory
+#    ${CMAKE_SOURCE_DIR}/../data
+#    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
+#)
 
 # Filtrar y mostrar solo los destinos que generan archivos .exe
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

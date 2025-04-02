@@ -6,24 +6,42 @@ option(BUILD_SHARED_IFNITY "Build Ifnity as a shared library dll " OFF)
 # Asegurar modulos cmake
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
+set(EXAMPLES_BASE_PATH "${CMAKE_SOURCE_DIR}/examples")
+
 # Añade el subdirectorio que contiene el proyecto Ifnity
 add_subdirectory(Ifnity)
 
 # Añade el subdirectorio que contiene el proyecto Sandbox Y EJEMPLOS 
-add_subdirectory(Sandbox)
+#add_subdirectory(Sandbox)
 #add_subdirectory(GPU_MONITOR)
 #add_subdirectory(ShadersPipeLine)
-add_subdirectory(Simple_Texture)
+#add_subdirectory(Simple_Texture)
 #add_subdirectory(Tetahedre)
 #add_subdirectory(Skybox_Camera)
 #add_subdirectory(MeshGeometrical_Draw)
-add_subdirectory(scene_materials)
-add_subdirectory(glslang_vk_test)
+#add_subdirectory(scene_materials)
+#add_subdirectory(glslang_vk_test)
 #add_subdirectory(Source_VTXP_HLSL)
 #add_subdirectory(CubeMap_Texture)
-add_subdirectory(bufferVulkan)
-add_subdirectory(Texture_Sample)
-add_subdirectory(camera_mesh_vk)
+#add_subdirectory(bufferVulkan)
+#add_subdirectory(Texture_Sample)
+#add_subdirectory(camera_mesh_vk)
 
+
+set(EXAMPLE_DIRS
+    Sandbox
+    #Simple_Texture
+    scene_materials
+	#glslang_vk_test
+	#bufferVulkan
+   Texture_Sample
+   #camera_mesh_vk
+)
+
+# Itera sobre la lista y añade cada subdirectorio
+foreach(EXAMPLE ${EXAMPLE_DIRS})
+    add_subdirectory("${EXAMPLES_BASE_PATH}/${EXAMPLE}" "${CMAKE_BINARY_DIR}/${EXAMPLE}")
+    set_target_properties(${EXAMPLE} PROPERTIES FOLDER "Examples") #to configure in visual studio more organized
+endforeach()
 # El dll que genera Ifnity se copiará automáticamente a la carpeta de salida de Sandbox
 

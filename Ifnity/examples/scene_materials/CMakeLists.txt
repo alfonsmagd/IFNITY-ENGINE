@@ -1,6 +1,7 @@
+cmake_minimum_required(VERSION 3.8)
 
-
-
+# Nombre del proyecto
+project(scene_materials)
 
 # C++ 17 standar 
 set(CMAKE_CXX_STANDARD 20)
@@ -16,8 +17,8 @@ file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/src/*.hpp")
 
 # Incluye directories
 include_directories(
-    "${PROJECT_SOURCE_DIR}/../Ifnity/vendor/spdlog/include"
-    "${PROJECT_SOURCE_DIR}/../Ifnity/src"
+    "${PROJECT_SOURCE_DIR}/../../Ifnity/vendor/spdlog/include"
+    "${PROJECT_SOURCE_DIR}/../../Ifnity/src"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
