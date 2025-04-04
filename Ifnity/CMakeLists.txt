@@ -32,10 +32,11 @@ set(EXAMPLE_DIRS
     Sandbox
     #Simple_Texture
     scene_materials
+    Geometry_Mesh
 	#glslang_vk_test
 	#bufferVulkan
    Texture_Sample
-   #camera_mesh_vk
+   camera_mesh_vk
 )
 
 # Itera sobre la lista y añade cada subdirectorio

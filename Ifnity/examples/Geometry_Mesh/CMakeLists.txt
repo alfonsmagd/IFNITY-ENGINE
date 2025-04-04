@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 # Nombre del proyecto
-project(camera_mesh_vk)
+project(Geometry_Mesh)
 
 # C++ 17 standar 
 set(CMAKE_CXX_STANDARD 20)
@@ -50,11 +50,11 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
 )
 
-#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_directory
-#    ${CMAKE_SOURCE_DIR}/../data
-#    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
-#)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/../data
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
+)
 
 # Filtrar y mostrar solo los destinos que generan archivos .exe
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
