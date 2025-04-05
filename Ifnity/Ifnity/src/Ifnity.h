@@ -13,7 +13,6 @@
 #include "BenchMark/FpsCounter.hpp"
 
 //Maths
-
 #include "Ifnity/Maths/math.h"
 
 //Models

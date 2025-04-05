@@ -150,6 +150,10 @@ bool MeshDataBuilderAssimp<VertexType>::loadFileAssimp(const char* fileName, Mes
         meshData.meshes_.push_back(convertAIMesh(scene->mMeshes[ i ], meshData));
     }
 
+	//delete scene 
+	//[CHECK] if this dont break 
+	aiReleaseImport(scene);
+
     return true;
 }
 

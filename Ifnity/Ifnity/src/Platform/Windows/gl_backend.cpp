@@ -324,6 +324,7 @@ namespace OpenGL
 
 	}
 
+	//[REFACTOR]: Create a MeshObjectAuto, to uses a generi meshDatabuilder, this way the user does not need to know who to build, the problem is create a Builder Templatized that be generic in some types ..
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
 	{
 		//Check if MeshData its valid ? 
@@ -349,7 +350,7 @@ namespace OpenGL
 			//Create a MeshObject with the data. 
 
 			/*MeshObject* mesh = new MeshObject(&desc.meshFileHeader, desc.meshData.meshes_.data(), desc.meshData.indexData_.data(), desc.meshData.vertexData_.data(), this);*/
-			MeshObject* mesh = new MeshObject(std::move(desc), this);
+			MeshObject* mesh = new MeshObject(std::move(const_cast<MeshObjectDescription&>(desc)), this);
 
 			return MeshObjectHandle(mesh);
 		}
@@ -358,7 +359,7 @@ namespace OpenGL
 		return nullptr;
 
 	}
-
+	//[REFACTOR]: Create a MeshObjectAuto, to uses a generi meshDatabuilder, this way the user does not need to know who to build, the problem is create a Builder Templatized that be generic in some types ..
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
 	{
 		if(meshbuilder)

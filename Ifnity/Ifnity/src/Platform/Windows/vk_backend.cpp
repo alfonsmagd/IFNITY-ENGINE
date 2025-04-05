@@ -110,12 +110,12 @@ namespace Vulkan
 		IFNITY_ASSERT_MSG(m_DeviceVulkan != nullptr, "DeviceVulkan is null");
 
 		//set the stagindevice
-		
+
 		vkPhysicalDevice_ = m_DeviceVulkan->getPhysicalDevice();
 
 		IFNITY_ASSERT_MSG(vkPhysicalDevice_ != VK_NULL_HANDLE, "VkPhysicalDevice is null, creatin device");
 
-	
+
 
 	}
 
@@ -125,7 +125,7 @@ namespace Vulkan
 	{
 		destroyShaderModule();
 		//Destroy the dummy texture
-		
+
 
 	}
 
@@ -176,7 +176,7 @@ namespace Vulkan
 								   pushConstants.offset);
 
 
-		cmdBuffer.cmdDraw(desc.drawMode, desc.size,desc.instanceCount);
+		cmdBuffer.cmdDraw(desc.drawMode, desc.size, desc.instanceCount);
 
 	}
 
@@ -276,6 +276,7 @@ namespace Vulkan
 		auto& vert = m_shaderVert.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
 		auto& frag = m_shaderFragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
 
+
 		//3. Create the pipeline and configure colorFormat,
 		const DeviceVulkan& ctx = getDeviceContextVulkan();
 
@@ -285,6 +286,7 @@ namespace Vulkan
 		pipeline->configureVertexAttributes();
 		pipeline->m_shaderFragment = *frag.get();
 		pipeline->m_shaderVert = *vert.get();
+
 
 
 		pipeline->ownerHandle_ = m_DeviceVulkan->slotMapRenderPipelines_.create(std::move(*pipeline));
@@ -346,7 +348,7 @@ namespace Vulkan
 		//Try to set the buffer gpu address
 		handle->getBufferGpuAddress(*m_DeviceVulkan);
 
-		IFNITY_LOG(LogCore, INFO,  STRMESSAGE("BufferCreation: ",desc.debugName));
+		IFNITY_LOG(LogCore, INFO, STRMESSAGE("BufferCreation: ", desc.debugName));
 
 		return BufferHandle(handle);
 
@@ -534,7 +536,7 @@ namespace Vulkan
 
 	void Device::upload(Vulkan::VulkanBuffer* buffer, const void* data, size_t size, uint32_t offset)
 	{
-	
+
 		//Previos check if the buffer is null and check it 
 		if( !data )
 		{
@@ -559,12 +561,12 @@ namespace Vulkan
 
 		//Lets to staginDevice to upload data 
 		m_DeviceVulkan->m_StagingDevice->bufferSubData(*buffer, offset, size, data);
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
 	}
 
 	void Device::upload(TextureHandleSM handle, const TextureRangeDesc& range, const void* data)
@@ -960,7 +962,7 @@ namespace Vulkan
 		if( holder.get()->valid() )
 		{
 			tex = new Texture(texdesc, std::move(holder));
-			
+
 		}
 		else
 		{
@@ -979,9 +981,9 @@ namespace Vulkan
 		}
 
 
-		
+
 		return TextureHandle(tex);
-		
+
 
 	}
 
@@ -994,9 +996,29 @@ namespace Vulkan
 
 
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
-	{
-		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+	{// Not implemented yet//Check if MeshData its valid ? 
+		if(desc.meshData.indexData_.empty() || desc.meshData.vertexData_.empty())
+		{
+			IFNITY_LOG(LogApp, ERROR, "MeshData its invalid, are you sure that mesh Object Desc has data? , you have to build, or use a IMeshObjectBuilder");
+			return nullptr;
+		}
+		// Check if ist not a large mesh 
+
+
+		//For now its a largeMesh 
+		else if(desc.isLargeMesh)
+		{
+			//Create a MeshObject with the data. 
+
+			/*MeshObject* mesh = new MeshObject(&desc.meshFileHeader, desc.meshData.meshes_.data(), desc.meshData.indexData_.data(), desc.meshData.vertexData_.data(), this);*/
+			MeshObject* mesh = new MeshObject(std::move(const_cast<MeshObjectDescription&>(desc)), this);
+
+			return MeshObjectHandle(mesh);
+		}
+
+
+		return nullptr;
+		
 	}
 
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
@@ -1058,8 +1080,6 @@ namespace Vulkan
 		// 7. Create VkPipelineShaderStageCreateInfo for each shader module.
 		// 8. Create VkPipelineLayout.
 		// 9. Build the pipeline using VulkanPipelineBuilder.
-		#define VSHADER 0
-		#define FSHADER 1
 
 		IFNITY_ASSERT_MSG(handle.valid(), "GraphicsPipeline is null");
 
@@ -1076,6 +1096,8 @@ namespace Vulkan
 
 		// build a new Vulkan pipeline
 
+		enum ShaderStage { VSHADER = 0, FSHADER = 1, GSHADER = 2, MAX_SHADER_STAGE = 3 };
+
 		VkPipelineLayout layout = VK_NULL_HANDLE;
 		VkPipeline pipeline = VK_NULL_HANDLE;
 
@@ -1087,6 +1109,7 @@ namespace Vulkan
 		//Todo: get the shader modules from the pipeline description TESSELATION, MESH, GEOM
 		const ShaderModuleState* vertModule = gp->getVertexShaderModule();
 		const ShaderModuleState* fragModule = gp->getFragmentShaderModule();
+		const ShaderModuleState* geomModule = gp->getGeometryShaderModule();
 
 		const uint32_t samplesCount = gp->samplesCount;
 		const float minSampleShading = gp->minSampleShading;
@@ -1156,9 +1179,11 @@ namespace Vulkan
 
 		//7. Create VkPipelineShaderStageCreateInfo for each shader module
 
-		VkPipelineShaderStageCreateInfo shaderStages[ 2 ] = {};
+		VkPipelineShaderStageCreateInfo shaderStages[ MAX_SHADER_STAGE ] = {};
 		shaderStages[ VSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT, vertModule->sm, "main", &si);
 		shaderStages[ FSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragModule->sm, "main", &si);
+		shaderStages[ GSHADER ] = geomModule ? getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_GEOMETRY_BIT, geomModule->sm, "main", &si) : VkPipelineShaderStageCreateInfo{ .module = VK_NULL_HANDLE };
+
 
 		#define UPDATE_PUSH_CONSTANT_SIZE(sm, bit)                                  \
 			if (sm) {                                                                 \
@@ -1169,6 +1194,7 @@ namespace Vulkan
 		uint32_t pushConstantsSize = 0;
 		UPDATE_PUSH_CONSTANT_SIZE(vertModule, VK_SHADER_STAGE_VERTEX_BIT);
 		UPDATE_PUSH_CONSTANT_SIZE(fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
+		UPDATE_PUSH_CONSTANT_SIZE(geomModule, VK_SHADER_STAGE_GEOMETRY_BIT);
 
 		#undef UPDATE_PUSH_CONSTANT_SIZE
 
@@ -1226,8 +1252,7 @@ namespace Vulkan
 			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state2
 			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE)
 			.primitiveTopology(ConvertToVkPrimitiveTopology(desc.rasterizationState.primitiveType))
-			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount,
-															m_DeviceVulkan->getFramebufferMSAABitMask()), minSampleShading)
+			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount, m_DeviceVulkan->getFramebufferMSAABitMask()), minSampleShading)
 			.polygonMode(ConverToVkPolygonMode(desc.rasterizationState.polygonMode))
 			.stencilStateOps(VK_STENCIL_FACE_FRONT_BIT,
 							 ConvertstencilOpToVkStencilOp(frontFaceStencil.stencilFailureOp),
@@ -1239,11 +1264,11 @@ namespace Vulkan
 							 ConvertstencilOpToVkStencilOp(backFaceStencil.depthStencilPassOp),
 							 ConvertstencilOpToVkStencilOp(backFaceStencil.depthFailureOp),
 							 compareOpToVkCompareOp(backFaceStencil.stencilCompareOp))
-
 			.stencilMasks(VK_STENCIL_FACE_FRONT_BIT, 0xFF, frontFaceStencil.writeMask, frontFaceStencil.readMask)
 			.stencilMasks(VK_STENCIL_FACE_BACK_BIT, 0xFF, backFaceStencil.writeMask, backFaceStencil.readMask)
 			.shaderStage(shaderStages[ VSHADER ])
 			.shaderStage(shaderStages[ FSHADER ])
+			.shaderStage(shaderStages[ GSHADER ])
 			.cullMode(cullModeToVkCullMode(desc.rasterizationState.cullMode))
 			.frontFace(windingModeToVkFrontFace(desc.rasterizationState.frontFace))
 			.vertexInputState(ciVertexInputState)
@@ -1256,10 +1281,7 @@ namespace Vulkan
 		rps->pipeline_ = pipeline;
 		rps->pipelineLayout_ = layout;
 
-		//9. 
 
-		#undef VSHADER
-		#undef FSHADER
 
 		m_DeviceVulkan->addGraphicsPipeline(gp);
 
@@ -1278,25 +1300,30 @@ namespace Vulkan
 	void Device::destroyShaderModule()
 	{
 
+		auto resetShaderModule = [](auto& shaderModule, const char* shaderType)
+			{
+				if( shaderModule )
+				{
+					IFNITY_LOG(LogApp, INFO, STRMESSAGE("Destroy ", shaderType, " Shader Module"));
+					shaderModule.reset();
+				}
+			};
+
 		for( auto& vertex : m_shaderVert )
 		{
-			if( vertex )
-			{
-				IFNITY_LOG(LogApp, INFO, "Destroy Vertex Shader Module");
-				vertex.reset();
-				//Trace 
-			}
+			resetShaderModule(vertex, "Vertex");
 		}
 
 		for( auto& fragment : m_shaderFragment )
 		{
-			if( fragment )
-			{
-				IFNITY_LOG(LogApp, INFO, "Destroy Fragment Shader Module");
-				fragment.reset();
-				//Trace 
-			}
+			resetShaderModule(fragment, "Fragment");
 		}
+
+		for( auto& geometry : m_shaderGeometry )
+		{
+			resetShaderModule(geometry, "Geometry");
+		}
+		
 
 	}
 
@@ -1459,6 +1486,18 @@ namespace Vulkan
 		return nullptr;
 	}
 
+	ShaderModuleState* GraphicsPipeline::getGeometryShaderModule()
+	{
+		if( m_shaderVert.valid() )
+		{
+			ShaderModuleState* geom = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderGeometry);
+			return geom;
+		}
+		IFNITY_LOG(LogApp, ERROR, "Geometry  Module State getHandle   its not valid");
+
+		return nullptr;
+	}
+
 	void GraphicsPipeline::setSpecializationConstant(const SpecializationConstantDesc& spec)
 	{
 		if( spec.data && spec.dataSize )
@@ -1571,6 +1610,51 @@ namespace Vulkan
 
 		return 0;
 	}
+	//==================================================================================================//
+	//  MeshObject Methods			                                                                    //
+	//==================================================================================================//
+
+	//Constructor 
+	MeshObject::MeshObject(const MeshObjectDescription&& desc, IDevice* device)
+		: m_MeshObjectDescription(std::move(desc)), m_Device(device)
+	{
+		//Not implemented yet
+	}
+
+	void MeshObject::Draw()
+	{
+		//Not implemented yet
+		throw std::runtime_error("The function or operation is not implemented.");
+	}
+
+	void MeshObject::DrawIndexed()
+	{
+		//Not implemented yet
+		throw std::runtime_error("The function or operation is not implemented.");
+	}
+
+	void MeshObject::DrawIndirect()
+	{
+		//Not implemented yet
+		throw std::runtime_error("The function or operation is not implemented.");
+	}
+	void MeshObject:: Draw(const DrawDescription& desc)
+	{
+		//Not implemented yet
+		throw std::runtime_error("The function or operation is not implemented.");
+	}
+
+	MeshObjectDescription& MeshObject::GetMeshObjectDescription()
+	{
+		return m_MeshObjectDescription;
+	}
+
+	void MeshObject::DrawInstancedDirect()
+	{
+		//Not implemented yet
+		throw std::runtime_error("The function or operation is not implemented.");
+	}
+
 
 }
 
