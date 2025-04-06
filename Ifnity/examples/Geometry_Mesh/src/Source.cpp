@@ -300,7 +300,22 @@ public:
 		GraphicsPipelineDescription gdesc1;
 		GraphicsPipelineDescription gdesc2;
 
+		MeshObjectDescription meshAssimp =
+		{
+			.filePath = "data/helmet/helmet.gltf",
+			.isLargeMesh = true,
+			.isGeometryModel = false,
+			.meshData = MeshData{},
+			.meshFileHeader = MeshFileHeader{},
+			.meshDataBuilder = nullptr
+		};
 
+		//meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 1.f));
+		/*meshAssimp.meshFileHeader = loadMeshData(test3Result.c_str(), meshAssimp.meshData);
+		m_meshData = meshAssimp.meshData;
+		header = meshAssimp.meshFileHeader;*/
+
+		auto meshObject = rdevice->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp<rhi::VertexScene>(0.01f));
 
 
 

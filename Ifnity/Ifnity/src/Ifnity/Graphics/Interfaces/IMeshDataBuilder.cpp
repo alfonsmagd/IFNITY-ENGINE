@@ -259,7 +259,7 @@ void MeshDataBuilderAssimp<VertexType>::buildMeshData(MeshObjectDescription& des
         IFNITY_LOG(LogCore, ERROR, "error loading file %s", description.filePath.c_str());
     }
 
-    IFNITY_LOG(LogCore, INFO, "Loaded file successfully", description.filePath.c_str());
+    IFNITY_LOG(LogCore, INFO, "Loaded file successfully {}", description.filePath.c_str());
 
     saveMeshData(description.filePath.c_str(), description.meshData, description.meshFileHeader);
 }

@@ -163,9 +163,9 @@ namespace Vulkan
 
 		struct
 		{
-			const void* data;
-			size_t size;
-			size_t offset;
+			const void* data = nullptr;
+			size_t size = 0;
+			size_t offset = 0;
 		}pushConstants;
 		bool awaitCreation_ = false;
 	};
@@ -243,6 +243,15 @@ namespace Vulkan
 	class IFNITY_API MeshObject final: public IMeshObject
 	{
 	public:
+
+		enum class MeshStatus
+		{
+			READY_TO_DRAW,
+			IDEVICE_NOT_VALID,
+			BUFFER_NOT_INITIALIZED,
+			// Agrega más estados según sea necesario
+		}meshStatus_ = MeshStatus::IDEVICE_NOT_VALID;
+
 		MeshObject( const MeshObjectDescription&& desc, IDevice* device);
 
 
@@ -256,7 +265,7 @@ namespace Vulkan
 
 
 	private :
-		IDevice* m_Device = nullptr; // avoid circular reference 
+		Device* m_Device = nullptr; // avoid circular reference 
 		MeshObjectDescription m_MeshObjectDescription;
 
 		uint32_t numIndices_ = 0;

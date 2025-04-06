@@ -843,7 +843,10 @@ namespace OpenGL
 		glBindVertexArray(m_VAO);
 	}
 
-	MeshObject::MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device): m_Device(device), m_header(header), m_meshes(meshes)
+	MeshObject::MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device):
+		m_Device(device),
+		m_header(header),
+		m_meshes(meshes)
 	{
 
 		Device* dev = dynamic_cast<Device*>(device);

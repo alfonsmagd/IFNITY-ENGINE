@@ -153,6 +153,12 @@ struct IFNITY_API BufferDescription
 		return *this;
 	}
 
+	constexpr BufferDescription& SetStorageType(StorageType value) noexcept
+	{
+		storage = value;
+		return *this;
+	}
+
 private:
 	friend class IDevice;
     unsigned int meshIDasociate = -1;      ///< Associate mesh ID, for example in OPENGL this is the VAO ID

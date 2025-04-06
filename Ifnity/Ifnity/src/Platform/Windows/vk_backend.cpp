@@ -1023,8 +1023,16 @@ namespace Vulkan
 
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
 	{
-		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		if(meshbuilder)
+		{
+			meshbuilder->buildMeshData(const_cast<MeshObjectDescription&>(desc));
+			return CreateMeshObject(desc);
+		}
+		else
+		{
+			IFNITY_LOG(LogApp, ERROR, "MeshDataBuilder its invalid");
+			return nullptr;
+		}
 	}
 
 	SceneObjectHandler Device::CreateSceneObject(const char* meshes, const char* scene, const char* materials)
@@ -1616,9 +1624,97 @@ namespace Vulkan
 
 	//Constructor 
 	MeshObject::MeshObject(const MeshObjectDescription&& desc, IDevice* device)
-		: m_MeshObjectDescription(std::move(desc)), m_Device(device)
+		: m_MeshObjectDescription(std::move(desc))
 	{
-		//Not implemented yet
+
+		m_Device = dynamic_cast<Device*>(device);
+
+		//Chec if device its valid 
+		if( !m_Device )
+		{
+			IFNITY_LOG(LogApp, ERROR, "Device is not valid");
+			return;
+		}
+		//Chec if mesh data its valid
+		meshStatus_ = MeshStatus::BUFFER_NOT_INITIALIZED;
+
+		//Get vertex data and indices
+		const uint32_t* indices = desc.meshData.indexData_.data();
+		const float* vertices = desc.meshData.vertexData_.data();
+
+		//Create drawcommands 
+		std::vector<uint8_t> drawCommands;
+		const uint32_t numCommands = desc.meshFileHeader.meshCount;
+
+		struct DrawIndexedIndirectCommand 
+		{
+			uint32_t count;
+			uint32_t instanceCount;
+			uint32_t firstIndex;
+			int32_t baseVertex;
+			uint32_t baseInstance;
+		};
+
+	
+
+		drawCommands.resize(sizeof(DrawIndexedIndirectCommand) * numCommands + sizeof(uint32_t));
+
+		// store the number of draw commands in the very beginning of the buffer
+		memcpy(drawCommands.data(), &numCommands, sizeof(numCommands));
+
+		//avoid aliassing issues. 
+		DrawIndexedIndirectCommand* cmd = std::launder(reinterpret_cast<DrawIndexedIndirectCommand*>(drawCommands.data() + sizeof(uint32_t)));
+
+		// prepare indirect commands buffer
+		for (uint32_t i = 0; i != numCommands; i++) {
+			*cmd++ = {
+				.count         = desc.meshData.meshes_[i].getLODIndicesCount(0),
+				.instanceCount = 1,
+				.firstIndex    = desc.meshData.meshes_[i].indexOffset,
+				.baseVertex    = (int32_t)desc.meshData.meshes_[i].vertexOffset,
+				.baseInstance  = 0,
+			};
+		}
+		//Now drawcommands are ready and filled with the cmd data.
+		// 
+		BufferDescription bufferDesc = {};
+		{
+			bufferDesc.SetDebugName("Indices Data Buffer - MeshObject");
+			bufferDesc.SetBufferType(BufferType::INDEX_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(desc.meshFileHeader.indexDataSize);
+			bufferDesc.SetData(indices);
+		}
+		m_BufferIndex = m_Device->CreateBuffer(bufferDesc);
+		IFNITY_ASSERT_MSG(m_BufferIndex, "Failed to create index buffer");
+
+		//VertexData
+		{
+			bufferDesc.SetDebugName("Vertex Data Buffer - MeshObject");
+			bufferDesc.SetBufferType(BufferType::VERTEX_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(desc.meshFileHeader.vertexDataSize);
+			bufferDesc.SetData(vertices);
+		}
+
+		m_BufferVertex = m_Device->CreateBuffer(bufferDesc);
+		IFNITY_ASSERT_MSG(m_BufferVertex, "Failed to create vertex buffer");
+
+		//Indrect buffer
+		{
+			bufferDesc.SetDebugName("Indirect Data Buffer - MeshObject");
+			bufferDesc.SetBufferType(BufferType::INDIRECT_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(sizeof(DrawIndexedIndirectCommand) * numCommands + sizeof(uint32_t));
+			bufferDesc.SetData(drawCommands.data());
+		}
+
+		m_BufferIndirect = m_Device->CreateBuffer(bufferDesc);
+		IFNITY_ASSERT_MSG(m_BufferIndirect, "Failed to create indirect buffer");
+
+		meshStatus_ = MeshStatus::READY_TO_DRAW;
+			
+		
 	}
 
 	void MeshObject::Draw()
