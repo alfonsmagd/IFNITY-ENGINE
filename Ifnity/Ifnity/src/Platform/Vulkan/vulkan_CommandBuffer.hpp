@@ -35,7 +35,7 @@ namespace Vulkan
 		void cmdBindIndexBuffer(BufferHandleSM indexBuffer, rhi::IndexFormat indexFormat, uint64_t indexBufferOffset = 0);
 		void cmdSetDepthBias(float constantFactor, float slopeFactor, float clamp);
 		void cmdSetDepthBiasEnable(bool enable);
-		template<typename Struct>
+		template<PushConstentImpl Struct>
 		void cmdPushConstants(const Struct& data, size_t offset = 0)
 		{
 			this->cmdPushConstants(&data, sizeof(Struct), offset);

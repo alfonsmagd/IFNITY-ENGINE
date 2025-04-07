@@ -9,6 +9,16 @@ IFNITY_NAMESPACE
 
 namespace Vulkan
 {
+
+
+
+
+
+
+
+
+
+
 	//------------------------------------------------------------------------------------//
 	// BUFFER VULKAN                                                                       //
 	//-------------------------------------------------------------------------------------//
@@ -72,6 +82,8 @@ namespace Vulkan
 		* @brief Constructor for the Device class.
 		*/
 
+		
+
 		Device(VkDevice vkDevice, DeviceVulkan* ptr);
 
 		virtual ~Device();
@@ -115,10 +127,11 @@ namespace Vulkan
 		VkPipeline getVkPipeline(GraphicsPipelineHandleSM gp) const;
 		const DeviceVulkan& getDeviceContextVulkan() const { return *m_DeviceVulkan; }
 		void setActualPipeline(GraphicsPipeline* pipeline);
-
+		CommandBuffer& getCommandBuffer() { return cmdBuffer; }
 		//Void Destroy Shader Module
 		void destroyShaderModule();
 
+		//
 
 	private:
 		// Add private members here
@@ -168,6 +181,8 @@ namespace Vulkan
 			size_t offset = 0;
 		}pushConstants;
 		bool awaitCreation_ = false;
+
+		friend class MeshObject;
 	};
 
 	//Please constructor are not safe if you dont create the 
@@ -272,7 +287,18 @@ namespace Vulkan
 		BufferHandle m_BufferVertex;
 		BufferHandle m_BufferIndex;
 		BufferHandle m_BufferIndirect;
+		
+		struct SMBuffers
+		{
+			BufferHandleSM vertexBuffer;
+			BufferHandleSM indexBuffer;
+			BufferHandleSM indirectBuffer;		
+		}m_SM;
+
+
 	};
+
+	
 }
 
 

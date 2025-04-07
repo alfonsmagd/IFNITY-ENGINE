@@ -205,8 +205,6 @@ namespace Vulkan
 			framebuffer.depthStencil = { .texture = depthTexture_ };
 			renderPass.depth = { .loadOp = Vulkan::LoadOp_Clear, .clearDepth = 1.0f };
 			depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true };
-
-
 		}
 
 
@@ -1305,6 +1303,8 @@ namespace Vulkan
 		m_DeviceVulkan->actualPipeline_ = pipeline;
 	}
 
+
+
 	void Device::destroyShaderModule()
 	{
 
@@ -1686,6 +1686,7 @@ namespace Vulkan
 			bufferDesc.SetData(indices);
 		}
 		m_BufferIndex = m_Device->CreateBuffer(bufferDesc);
+		
 		IFNITY_ASSERT_MSG(m_BufferIndex, "Failed to create index buffer");
 
 		//VertexData
@@ -1712,15 +1713,33 @@ namespace Vulkan
 		m_BufferIndirect = m_Device->CreateBuffer(bufferDesc);
 		IFNITY_ASSERT_MSG(m_BufferIndirect, "Failed to create indirect buffer");
 
+		//Fill al m_SM
+		m_SM.indexBuffer    = DCAST_BUFFER(m_BufferIndex.get())->getBufferHandleSM();
+		m_SM.vertexBuffer   = DCAST_BUFFER(m_BufferVertex.get())->getBufferHandleSM();
+		m_SM.indirectBuffer = DCAST_BUFFER(m_BufferIndirect.get())->getBufferHandleSM();
+
 		meshStatus_ = MeshStatus::READY_TO_DRAW;
 			
+		
 		
 	}
 
 	void MeshObject::Draw()
 	{
 		//Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		auto& buf = m_Device->getCommandBuffer();
+		const auto& pc = m_Device->pushConstants;
+
+		
+		buf.cmdBindIndexBuffer(m_SM.indexBuffer, rhi::IndexFormat::IndexFormat_UINT32);
+		buf.cmdBindVertexBuffer(0, m_SM.vertexBuffer);
+		
+		buf.cmdPushConstants(pc.data, pc.size, pc.offset);
+		
+		buf.cmdBindDepthState({ .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true });
+		
+
+
 	}
 
 	void MeshObject::DrawIndexed()

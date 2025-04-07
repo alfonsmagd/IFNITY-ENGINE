@@ -43,4 +43,10 @@
 #define ARRAY_NUM_ELEMENTS(array) (sizeof(array) / sizeof(array[0]))
 #define SCAST_U8(x) static_cast<uint8_t>(x) 
 #define SCAST_U16(x) static_cast<uint16_t>(x)
+#define DCAST_BUFFER(handle) static_cast<Buffer*>(handle)
+#define DCAST_DEVICE(handle) static_cast<Device*>(handle)
 
+
+//Templates
+template<typename T>
+concept PushConstentImpl = requires { sizeof(T); };
