@@ -274,6 +274,8 @@ namespace Vulkan
 		auto& vert = m_shaderVert.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
 		auto& frag = m_shaderFragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
 
+		auto& geom = m_shaderGeometry.emplace_back(createShaderModule(gShaderCode, geometryCode.size(), VK_SHADER_STAGE_GEOMETRY_BIT, gsbinary, "Geometry Shader"));
+
 
 		//3. Create the pipeline and configure colorFormat,
 		const DeviceVulkan& ctx = getDeviceContextVulkan();
@@ -284,6 +286,7 @@ namespace Vulkan
 		pipeline->configureVertexAttributes();
 		pipeline->m_shaderFragment = *frag.get();
 		pipeline->m_shaderVert = *vert.get();
+		pipeline->m_shaderGeometry = *geom.get();
 
 
 
@@ -622,6 +625,7 @@ namespace Vulkan
 			pushConstants.data = data;
 			pushConstants.size = size;
 			pushConstants.offset = offset;
+			return;
 		}
 		if( buffer->GetBufferDescription().type == BufferType::UNIFORM_BUFFER )
 		{
@@ -1053,7 +1057,7 @@ namespace Vulkan
 
 	void Device::SetDepthTexture(TextureHandle texture)
 	{
-		Texture* vkdepth = dynamic_cast<Texture*>(texture.get());
+		Texture* vkdepth = DCAST_TEXTURE(texture.get());
 		if( !vkdepth )
 		{
 			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanTexture depht dynamic cast");
@@ -1301,6 +1305,19 @@ namespace Vulkan
 	{
 
 		m_DeviceVulkan->actualPipeline_ = pipeline;
+	}
+
+	Vulkan::GraphicsPipeline* Device::getActualPipeline() const
+	{
+		if( m_DeviceVulkan->actualPipeline_ )
+		{
+			return m_DeviceVulkan->actualPipeline_;
+		}
+		else
+		{
+			IFNITY_LOG(LogApp, ERROR, "Actual pipeline is null");
+			return nullptr;
+		}
 	}
 
 
@@ -1730,14 +1747,18 @@ namespace Vulkan
 		auto& buf = m_Device->getCommandBuffer();
 		const auto& pc = m_Device->pushConstants;
 
+		DepthState depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true };
+
+
+		buf.cmdBindDepthState(depthState);
+		buf.cmdBindRenderPipeline(*m_Device->getActualPipeline());
+
 		
 		buf.cmdBindIndexBuffer(m_SM.indexBuffer, rhi::IndexFormat::IndexFormat_UINT32);
 		buf.cmdBindVertexBuffer(0, m_SM.vertexBuffer);
-		
 		buf.cmdPushConstants(pc.data, pc.size, pc.offset);
-		
 		buf.cmdBindDepthState({ .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true });
-		
+		buf.cmdDrawIndexedIndirect(m_SM.indirectBuffer, sizeof(uint32_t), m_MeshObjectDescription.meshFileHeader.meshCount);
 
 
 	}

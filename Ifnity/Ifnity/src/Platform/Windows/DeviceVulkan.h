@@ -216,7 +216,7 @@ private:
 
 	friend class Vulkan::Device;
 	friend class Vulkan::GraphicsPipeline;
-
+	friend class Vulkan::CommandBuffer;
 
 
 private:

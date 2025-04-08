@@ -202,17 +202,19 @@ private:
 class Source: public IFNITY::App
 {
 private:
-	BufferHandle m_UBO;
+	BufferHandle m_ConstantBuffer;
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
 	BufferHandle m_bufferPerFrame;
 	TextureHandle m_depth;
 	TextureHandle texture;
+	MeshObjectHandle m_MeshScene;
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_SolidPipeline;
 	GraphicsPipelineHandle m_WireFramePipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
+	std::shared_ptr<IShader> m_gs;
 
 	//CAMERA LAYER
 	// Camera objects 
@@ -242,8 +244,8 @@ public:
 	struct VertexData
 	{
 		vec3 pos;
-		vec3 n;
 		vec2 tc;
+		vec3 n;
 	};
 
 	struct PerFrameData
@@ -274,35 +276,35 @@ public:
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
+		m_gs = std::make_shared<IShader>();
 
 		ShaderCreateDescription DescriptionShader;
 		{
 			DescriptionShader.NoCompile = true;
-			//DescriptionShader.FileName = "triangle01.vert";
-			DescriptionShader.FileName = "glm.vert";
-			DescriptionShader.FileName = "position_wireframe.vert";
-			DescriptionShader.FileName = "mesh_camera.vert";
+			DescriptionShader.FileName = "meshRendered.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.NoCompile = true;
-			//DescriptionShader.FileName = "triangle01.frag";
-			DescriptionShader.FileName = "glm.frag";
-			DescriptionShader.FileName = "position_wireframe.frag";
-			DescriptionShader.FileName = "mesh_camera.frag";
+			DescriptionShader.FileName = "meshRendered.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "meshRendered.geom";
+			m_gs->SetShaderDescription(DescriptionShader);
 		}
 
 		ShaderCompiler::CompileShader(m_vs.get());
 		ShaderCompiler::CompileShader(m_ps.get());
+		ShaderCompiler::CompileShader(m_gs.get());
 
-		const uint32_t wireframe = 1;
-		GraphicsPipelineDescription gdesc1;
-		GraphicsPipelineDescription gdesc2;
+		
+		
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = "data/helmet/helmet.gltf",
+			.filePath = "data/bistro/Exterior/exterior.obj",
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
@@ -310,46 +312,24 @@ public:
 			.meshDataBuilder = nullptr
 		};
 
-		//meshAssimp.setMeshDataBuilder(new MeshDataBuilderAssimp(8, 1.f));
-		/*meshAssimp.meshFileHeader = loadMeshData(test3Result.c_str(), meshAssimp.meshData);
-		m_meshData = meshAssimp.meshData;
-		header = meshAssimp.meshFileHeader;*/
+		
+		meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
+		
 
-		auto meshObject = rdevice->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp<rhi::VertexScene>(0.01f));
+		const float scale = 0.03f;
+		//m_MeshScene = rdevice->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp<rhi::VertexScene>(scale));
+		m_MeshScene = rdevice->CreateMeshObject(meshAssimp);
 
+		//Buffer Consants 
+		BufferDescription desc;
+		desc.byteSize = sizeof(mat4);
+		desc.type = BufferType::CONSTANT_BUFFER;
+		desc.binding = 0;
+		desc.data = nullptr;
 
+		m_ConstantBuffer = rdevice->CreateBuffer(desc);
 
-		//assimp 
-		//const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
-		const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
-
-		if( !scene || !scene->HasMeshes() )
-		{
-			printf("Unable to load data/rubber_duck/scene.gltf\n");
-			exit(255);
-		}
-
-		const aiMesh* mesh = scene->mMeshes[ 0 ];
-		std::vector<VertexData> vertices;
-		for( uint32_t i = 0; i != mesh->mNumVertices; i++ )
-		{
-			const aiVector3D v = mesh->mVertices[ i ];
-			const aiVector3D n = mesh->mNormals[ i ];
-			const aiVector3D t = mesh->mTextureCoords[ 0 ][ i ];
-			vertices.push_back({ .pos = vec3(v.x, v.y, v.z),
-							   .n = vec3(n.x, n.y, n.z),
-							   .tc = vec2(t.x, 1.0 - t.y) });
-		}
-		std::vector<uint32_t> indices;
-		for( uint32_t i = 0; i != mesh->mNumFaces; i++ )
-		{
-			for( uint32_t j = 0; j != 3; j++ )
-				indices.push_back(mesh->mFaces[ i ].mIndices[ j ]);
-		}
-
-		const size_t kSizeIndices = sizeof(uint32_t) * indices.size();
-		const size_t kSizeVertices = sizeof(VertexData) * vertices.size();
-		aiReleaseImport(scene);
+		
 
 
 		//DepthText texture
@@ -366,106 +346,45 @@ public:
 		rdevice->SetDepthTexture(m_depth);
 
 
-
-		//Texture simple 
-		int w, h, comp;
-		//const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 4);
-		const uint8_t* img = stbi_load("data/helmet/Default_albedo.jpg", &w, &h, &comp, 4);
-
-		//DepthText texture
-
-		descTexture.dimensions = {(uint32_t)w, (uint32_t)h};
-		descTexture.format = Format::RGBA_UNORM8;
-		descTexture.usage = TextureUsageBits::SAMPLED;
-		descTexture.isDepth = false;
-		descTexture.debugName = "image";
-		descTexture.data = img;
-
-		//DepthStencil texture
-		texture = rdevice->CreateTexture(descTexture);
-
-
-		BufferDescription desc;
-		//Vertex Attributes Configure Buffer 
-		{
-
-			desc.storage = StorageType::HOST_VISIBLE;
-			desc.type = BufferType::VERTEX_BUFFER;
-			desc.binding = 0;
-			desc.byteSize = kSizeVertices;
-			desc.data = vertices.data();
-			desc.debugName = "Buffer: vertex";
-
-			m_vertexBuffer = rdevice->CreateBuffer(desc);
-		}
-		//Indexbuffer
-		{
-			//uint32_t indices[] = { 0, 1, 2 };
-			desc.type = BufferType::INDEX_BUFFER;
-			desc.byteSize = kSizeIndices;
-			desc.data = indices.data();
-			desc.debugName = "Buffer: index";
-
-			msizeIndex = indices.size();
-
-			m_indexBuffer = rdevice->CreateBuffer(desc);
-
-		}
-		//BufferPerFrame 
-		{
-
-			desc.type = BufferType::UNIFORM_BUFFER;
-			desc.byteSize = sizeof(PerFrameData);
-			desc.debugName = "Buffer: per-frame";
-			desc.data = nullptr;
-
-			m_bufferPerFrame = rdevice->CreateBuffer(desc);
-		}
-
 		//Vertex Attributes Configure 
 		rhi::VertexInput vertexInput;
 		uint8_t position = 0;
-		uint8_t normal = 1;
-		uint8_t texcoord = 2;
+		uint8_t texcoord = 1;
+		uint8_t normal = 2;
 		vertexInput.addVertexAttribute({ .location = position,
 									   .binding = 0,
 									   .format = rhi::Format::R32G32B32_FLOAT,
 									   .offset = offsetof(VertexData,pos) }, position);
+
+		vertexInput.addVertexAttribute({ .location = texcoord,
+									   .binding = 0,
+									   .format = rhi::Format::R32G32_FLOAT,
+									   .offset = offsetof(VertexData,tc) },texcoord);
 
 		vertexInput.addVertexAttribute({ .location = normal,
 									   .binding = 0,
 									   .format = rhi::Format::R32G32B32_FLOAT,
 									   .offset = offsetof(VertexData,n) }, normal);
 
-		vertexInput.addVertexAttribute({ .location = texcoord,
-									   .binding = 0,
-									   .format = rhi::Format::R32G32_FLOAT,
-									   .offset = offsetof(VertexData,tc) }, texcoord);
-
 
 		vertexInput.addVertexInputBinding({ .stride = sizeof(VertexData) }, position);
 
-
+		GraphicsPipelineDescription gdesc2;
 		{
-			gdesc2.SetVertexShader(m_vs.get()).
-				SetPixelShader(m_ps.get()).
-				AddDebugName("Solid Pipeline").
-				SetVertexInput(vertexInput).
-				SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Fill })
+			gdesc2.SetVertexShader(m_vs.get())
+				.SetPixelShader(m_ps.get())
+				.SetGeometryShader(m_gs.get())
+				.AddDebugName("Solid Pipeline")
+				.SetVertexInput(vertexInput)
+				.SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Fill })
 				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
 
 			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc2);
 		}
 
-		rdevice->BindingIndexBuffer(m_indexBuffer);
-		rdevice->BindingVertexAttributesBuffer(m_vertexBuffer);
-
-
-
 		m_SolidPipeline->BindPipeline(rdevice);
 
 
-		//exit(0);
 
 	}
 
@@ -475,42 +394,17 @@ public:
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
 
-
-		const vec4 cameraPos = vec4(m_camera.getPosition(), 1.0f);
-
+		const mat4 m(glm::scale(mat4(1.0f), vec3(0.2f)));
 		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
-		const mat4 m1 = glm::rotate(mat4(1.0f), glm::radians(90.0f), vec3(1, 0, 0));
-		const mat4 m2 = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
-		const mat4 v = glm::translate(mat4(1.0f), vec3(cameraPos));
+		const mat4 mvp = p * m_camera.getViewMatrix() * m;
 
 
-		/*const mat4 m = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
-		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.0f, -2.75f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
-		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);*/
-
-
-
-
-		const PerFrameData pc = {
-			.model = m2*m1,
-			.view = m_camera.getViewMatrix(),
-			.proj = p,
-			.cameraPos = cameraPos,
-			.tex = texture->GetTextureID(),
-			//.texCube   = cubemapTex.index(),
-		};
-
-		//StartRecording
+		////StartRecording
 		rdevice->StartRecording();
-		rdevice->WriteBuffer(m_bufferPerFrame, &pc, sizeof(pc));
-		DrawDescription desc;
-		//First Draw solid line pipeline 
-		{
-			desc.size = msizeIndex;
-			desc.drawMode = DRAW_INDEXED;
-			desc.depthTest = m_ImGuiLayer->descImgui.depthTest;
-			rdevice->DrawObject(m_SolidPipeline, desc);
-		}
+		rdevice->WriteBuffer(m_ConstantBuffer, &mvp, sizeof(mvp));
+		
+		m_MeshScene->Draw();
+	
 
 		rdevice->StopRecording();
 		//StopRecording 

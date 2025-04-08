@@ -337,6 +337,23 @@ namespace Vulkan
 
 	}
 
+	void CommandBuffer::cmdDrawIndexedIndirect(BufferHandleSM indirectBuffer, size_t indirectBufferOffset, uint32_t drawCount, uint32_t stride)
+	{
+		Vulkan::VulkanBuffer* bufIndirect = ctx_->slotMapBuffers_.get(indirectBuffer);
+
+		if( !bufIndirect )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Indirect buffer is null");
+			return;
+		}
+
+		vkCmdDrawIndexedIndirect(
+			wrapper_->cmdBuf_, bufIndirect->vkBuffer_, indirectBufferOffset, drawCount, stride ? stride : sizeof(VkDrawIndexedIndirectCommand));
+	
+	
+	
+	}
+
 	void CommandBuffer::cmdPushConstants(const void* data, size_t size, size_t offset)
 	{
 		_ASSERT(isRendering_);
@@ -428,6 +445,33 @@ namespace Vulkan
 		framebuffer_ = {};
 	}
 
+	void CommandBuffer::cmdPushDebugGroupLabel(const char* label, uint32_t colorRGBA) const
+	{
+		if( !label || !ctx_->vkCmdBeginDebugUtilsLabelEXT )
+		{
+			return;
+		}
+		const VkDebugUtilsLabelEXT utilsLabel = {
+			.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_LABEL_EXT,
+			.pNext = nullptr,
+			.pLabelName = label,
+			.color = {float((colorRGBA >> 0) & 0xff) / 255.0f,
+			float((colorRGBA >> 8) & 0xff) / 255.0f,
+			float((colorRGBA >> 16) & 0xff) / 255.0f,
+			float((colorRGBA >> 24) & 0xff) / 255.0f},
+		};
+		ctx_->vkCmdBeginDebugUtilsLabelEXT(wrapper_->cmdBuf_, &utilsLabel);
+
+	}
+
+	void CommandBuffer::cmdPushDebugGroupLabel()
+	{
+		if( !ctx_->vkCmdEndDebugUtilsLabelEXT )
+		{
+			return;
+		}
+		ctx_->vkCmdEndDebugUtilsLabelEXT(wrapper_->cmdBuf_);
+	}
 
 
 }

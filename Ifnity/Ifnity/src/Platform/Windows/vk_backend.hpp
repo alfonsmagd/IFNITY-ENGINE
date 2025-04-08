@@ -127,6 +127,7 @@ namespace Vulkan
 		VkPipeline getVkPipeline(GraphicsPipelineHandleSM gp) const;
 		const DeviceVulkan& getDeviceContextVulkan() const { return *m_DeviceVulkan; }
 		void setActualPipeline(GraphicsPipeline* pipeline);
+		Vulkan::GraphicsPipeline* getActualPipeline() const;
 		CommandBuffer& getCommandBuffer() { return cmdBuffer; }
 		//Void Destroy Shader Module
 		void destroyShaderModule();
