@@ -56,6 +56,45 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 #    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
 #)
 
+
+
+# Buscar archivos .glsl, .frag, .vert, .geom, .sp, y .h dentro de src/
+file(GLOB_RECURSE GLSL_SHADERS "${PROJECT_SOURCE_DIR}/src/*.glsl")
+file(GLOB_RECURSE VULKAN_SHADERS "${PROJECT_SOURCE_DIR}/src/*.frag" "${PROJECT_SOURCE_DIR}/src/*.vert" "${PROJECT_SOURCE_DIR}/src/*.geom")
+file(GLOB_RECURSE SPIRV_HEADERS "${PROJECT_SOURCE_DIR}/src/*.sp" "${PROJECT_SOURCE_DIR}/src/*.h")
+
+# Crear directorios destino si no existen y copiar los archivos correspondientes
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders/opengl"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders/vk"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders"
+)
+
+foreach(shader ${GLSL_SHADERS})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${shader}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders/opengl"
+    )
+endforeach()
+
+foreach(shader ${VULKAN_SHADERS})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${shader}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders/vk"
+    )
+endforeach()
+
+foreach(shader ${SPIRV_HEADERS})
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${shader}"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders"
+    )
+endforeach()
+
+
 # Filtrar y mostrar solo los destinos que generan archivos .exe
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Executables")

@@ -1644,7 +1644,7 @@ namespace Vulkan
 		: m_MeshObjectDescription(std::move(desc))
 	{
 
-		m_Device = dynamic_cast<Device*>(device);
+		m_Device = DCAST_DEVICE(device);
 
 		//Chec if device its valid 
 		if( !m_Device )
