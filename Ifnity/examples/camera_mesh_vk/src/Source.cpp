@@ -223,6 +223,11 @@ private:
 
 	uint32_t msizeIndex = 0;
 	ImGuiTestLayer* m_ImGuiLayer;
+
+	//FPS Counter
+	IFNITY::FpsCounter m_FpsCounter;
+	float deltaSeconds = 0.0f;
+	double timeStamp = 0.0;
 public:
 	Source(IFNITY::rhi::GraphicsAPI api):
 		IFNITY::App(api),
@@ -278,17 +283,11 @@ public:
 		ShaderCreateDescription DescriptionShader;
 		{
 			DescriptionShader.NoCompile = true;
-			//DescriptionShader.FileName = "triangle01.vert";
-			DescriptionShader.FileName = "glm.vert";
-			DescriptionShader.FileName = "position_wireframe.vert";
 			DescriptionShader.FileName = "mesh_camera.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.NoCompile = true;
-			//DescriptionShader.FileName = "triangle01.frag";
-			DescriptionShader.FileName = "glm.frag";
-			DescriptionShader.FileName = "position_wireframe.frag";
 			DescriptionShader.FileName = "mesh_camera.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
@@ -305,8 +304,8 @@ public:
 
 
 		//assimp 
-		//const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
-		const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
+		const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+		//const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
 
 		if( !scene || !scene->HasMeshes() )
 		{
@@ -354,8 +353,8 @@ public:
 
 		//Texture simple 
 		int w, h, comp;
-		//const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 4);
-		const uint8_t* img = stbi_load("data/helmet/Default_albedo.jpg", &w, &h, &comp, 4);
+		const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 4);
+		//const uint8_t* img = stbi_load("data/helmet/Default_albedo.jpg", &w, &h, &comp, 4);
 
 		//DepthText texture
 		
@@ -456,6 +455,11 @@ public:
 
 	void Render() override
 	{
+		//Update FPS 
+		const double newTimeStamp = App::GetTime();
+		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
+		timeStamp = newTimeStamp;
+		m_FpsCounter.tick(deltaSeconds);
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
@@ -464,7 +468,7 @@ public:
 		const vec4 cameraPos = vec4(m_camera.getPosition(), 1.0f);
 
 		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
-		const mat4 m1 = glm::rotate(mat4(1.0f), glm::radians(90.0f), vec3(1, 0, 0));
+		const mat4 m1 = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
 		const mat4 m2 = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
 		const mat4 v = glm::translate(mat4(1.0f), vec3(cameraPos));
 
@@ -501,12 +505,12 @@ public:
 		//StopRecording 
 
 
-		IFNITY_LOG(LogApp, INFO, "Render App");
+		//IFNITY_LOG(LogApp, INFO, "Render App");
 	}
 
 	void Animate() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Animate App");
+		//IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
 	~Source() override {}
 };

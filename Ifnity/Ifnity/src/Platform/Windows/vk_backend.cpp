@@ -218,7 +218,7 @@ namespace Vulkan
 	void Device::StopRecording()
 	{
 
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+		//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
 		cmdBuffer.cmdEndRendering();
 		m_DeviceVulkan->submit(cmdBuffer, currentTexture_);
 
@@ -274,7 +274,15 @@ namespace Vulkan
 		auto& vert = m_shaderVert.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
 		auto& frag = m_shaderFragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
 
-		auto& geom = m_shaderGeometry.emplace_back(createShaderModule(gShaderCode, geometryCode.size(), VK_SHADER_STAGE_GEOMETRY_BIT, gsbinary, "Geometry Shader"));
+		//Check if we have geometry shader
+		if( gs )
+		{
+			auto& geom = m_shaderGeometry.emplace_back(createShaderModule(gShaderCode, geometryCode.size(), VK_SHADER_STAGE_GEOMETRY_BIT, gsbinary, "Geometry Shader"));
+			pipeline->m_shaderGeometry = *geom.get();
+		}
+		
+		
+	
 
 
 		//3. Create the pipeline and configure colorFormat,
@@ -286,7 +294,7 @@ namespace Vulkan
 		pipeline->configureVertexAttributes();
 		pipeline->m_shaderFragment = *frag.get();
 		pipeline->m_shaderVert = *vert.get();
-		pipeline->m_shaderGeometry = *geom.get();
+		
 
 
 
@@ -1096,8 +1104,29 @@ namespace Vulkan
 		GraphicsPipeline* gp = m_DeviceVulkan->slotMapRenderPipelines_.get(handle);
 
 
+		if( !gp )
+		{
+			IFNITY_LOG(LogCore, ERROR, "GraphicsPipeline is null");
+			return VK_NULL_HANDLE;
+		}
 
 		RenderPipelineState* rps = gp->getRenderPipelineStatePtr();
+		auto& vkDSL_ = m_DeviceVulkan->vkDSL_; // get the descriptor set layout
+		auto& ctx_ = m_DeviceVulkan;
+
+		if( rps->lastVkDescriptorSetLayout_ != vkDSL_ )
+		{
+			// Destroy the old pipeline and pipeline layout this is because the descriptor set layout has changed
+			//and need to be recreated , the pipeline will be destroy in last place 
+			auto device = ctx_->device_;
+			auto pipeline = rps->pipeline_;
+			auto pipelineLayout = rps->pipelineLayout_;
+			ctx_->addDeferredTask(DESTROY_VK_PIPELINE_DEFERRED(device, pipeline));
+			ctx_->addDeferredTask(DESTROY_VK_PIPELINE_LAYOUT_DEFERRED(device, pipelineLayout));
+		
+			rps->pipeline_ = VK_NULL_HANDLE;
+			rps->lastVkDescriptorSetLayout_ = vkDSL_ ;
+		}
 
 		if( rps->pipeline_ != VK_NULL_HANDLE )
 		{

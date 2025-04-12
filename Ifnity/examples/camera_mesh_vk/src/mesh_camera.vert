@@ -9,7 +9,7 @@
 #extension GL_EXT_samplerless_texture_functions : require
 #extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
 
-#include <Chapter04/04_CubeMap/src/common.sp>
+#include <Shaders/common.sp>
 
 layout (location = 0) in vec3 pos;
 layout (location = 1) in vec3 normal;

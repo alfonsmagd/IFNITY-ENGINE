@@ -593,7 +593,7 @@ bool DeviceVulkan::CreateSwapChain()
 
 	/* VK_PRESENT_MODE_FIFO_KHR enables vsync */
 	auto swapChainBuildRet = swapChainBuild.set_old_swapchain(swapchainBootStraap_).
-		set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).
+		set_desired_present_mode(VK_PRESENT_MODE_MAILBOX_KHR).
 		set_desired_format({ VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR }).
 		add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT).
 		build();

@@ -86,9 +86,21 @@ bool compareVectors(const std::vector<T>& vec1, const std::vector<T>& vec2)
 
 
 //macros define 
-#define DESTROY_STAGING_BUFFER(device, stagingBuffer, stagingMemory) \
+#define DESTROY_VK_STAGING_BUFFER_DEFFERED(device, stagingBuffer, stagingMemory) \
     std::packaged_task<void()>([device, stagingBuffer, stagingMemory]() \
     { \
         vkDestroyBuffer(device, stagingBuffer, nullptr); \
         vkFreeMemory(device, stagingMemory, nullptr); \
+    })
+
+#define DESTROY_VK_PIPELINE_DEFERRED(device, pipeline) \
+    std::packaged_task<void()>([device, pipeline]() \
+    { \
+        vkDestroyPipeline(device, pipeline, nullptr); \
+    })
+
+#define DESTROY_VK_PIPELINE_LAYOUT_DEFERRED(device, pipelineLayout) \
+    std::packaged_task<void()>([device, pipelineLayout]() \
+    { \
+        vkDestroyPipelineLayout(device, pipelineLayout, nullptr); \
     })

@@ -41,7 +41,7 @@
          //
 
 //
-#include <Chapter04/04_CubeMap/src/common.sp>
+#include <Shaders/common.sp>
 
 layout (location=0) in PerVertex vtx;
 

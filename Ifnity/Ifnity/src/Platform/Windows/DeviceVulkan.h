@@ -34,7 +34,7 @@ class DeviceVulkan final: public GraphicsDeviceManager
 		kBinding_Textures = 0,
 		kBinding_Samplers = 1,
 		kBinding_StorageImages = 2,
-		kInitBindless_Textures = 16,
+		kInitBindless_Textures =  16,
 		kInitBindless_Samplers = 16
 	};
 
@@ -63,7 +63,7 @@ public:
 	//DeferredTask
 	void processDeferredTasks();
 	void waitDeferredTasks();
-	void addDeferredTask(std::packaged_task<void()>&& task, Vulkan::SubmitHandle handle);
+	void addDeferredTask(std::packaged_task<void()>&& task, Vulkan::SubmitHandle handle = Vulkan::SubmitHandle());
 
 		//Destroy operations 
 	void destroy(Vulkan::TextureHandleSM handle);

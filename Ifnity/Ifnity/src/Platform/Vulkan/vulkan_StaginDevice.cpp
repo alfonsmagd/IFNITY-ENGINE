@@ -178,9 +178,10 @@ namespace Vulkan
 
 		image.vkImageLayout_ = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
+		//Lambdas capture 
 		auto handle = ctx_.immediate_->submit(wrapper);
 		auto device = ctx_.device_;
-		ctx_.addDeferredTask(DESTROY_STAGING_BUFFER(device, stagingBuffer, stagingMemory), handle);
+		ctx_.addDeferredTask(DESTROY_VK_STAGING_BUFFER_DEFFERED(device, stagingBuffer, stagingMemory), handle);
 
 
 

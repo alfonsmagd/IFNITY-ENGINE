@@ -19,7 +19,7 @@ public:
 
 	void OnUpdate() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Update App");
+		//IFNITY_LOG(LogApp, INFO, "Update App");
 	}
 
 
@@ -225,6 +225,12 @@ private:
 
 	uint32_t msizeIndex = 0;
 	ImGuiTestLayer* m_ImGuiLayer;
+
+	//FPS Counter
+	IFNITY::FpsCounter m_FpsCounter;
+	float deltaSeconds = 0.0f;
+	double timeStamp = 0.0;
+
 public:
 	Source(IFNITY::rhi::GraphicsAPI api):
 		IFNITY::App(api),
@@ -302,9 +308,18 @@ public:
 		
 		
 
-		MeshObjectDescription meshAssimp =
+	/*	MeshObjectDescription meshAssimp =
 		{
 			.filePath = "data/bistro/Exterior/exterior.obj",
+			.isLargeMesh = true,
+			.isGeometryModel = false,
+			.meshData = MeshData{},
+			.meshFileHeader = MeshFileHeader{},
+			.meshDataBuilder = nullptr
+		};*/
+		MeshObjectDescription meshAssimp =
+		{
+			.filePath = "data/helmet/helmet.gltf",
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
@@ -316,7 +331,7 @@ public:
 		meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
 		
 
-		const float scale = 0.03f;
+		const float scale = 0.01f;
 		//m_MeshScene = rdevice->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp<rhi::VertexScene>(scale));
 		m_MeshScene = rdevice->CreateMeshObject(meshAssimp);
 
@@ -390,6 +405,13 @@ public:
 
 	void Render() override
 	{
+		//Update FPS 
+		const double newTimeStamp = App::GetTime();
+		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
+		timeStamp = newTimeStamp;
+		m_FpsCounter.tick(deltaSeconds);
+
+
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
@@ -410,12 +432,12 @@ public:
 		//StopRecording 
 
 
-		IFNITY_LOG(LogApp, INFO, "Render App");
+		//IFNITY_LOG(LogApp, INFO, "Render App");
 	}
 
 	void Animate() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Animate App");
+		//IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
 	~Source() override {}
 };
