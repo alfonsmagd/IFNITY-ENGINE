@@ -85,7 +85,7 @@ bool compareVectors(const std::vector<T>& vec1, const std::vector<T>& vec2)
 
 
 
-//macros define 
+//macros define to destroy objects in deferred way.
 #define DESTROY_VK_STAGING_BUFFER_DEFFERED(device, stagingBuffer, stagingMemory) \
     std::packaged_task<void()>([device, stagingBuffer, stagingMemory]() \
     { \
@@ -103,4 +103,15 @@ bool compareVectors(const std::vector<T>& vec1, const std::vector<T>& vec2)
     std::packaged_task<void()>([device, pipelineLayout]() \
     { \
         vkDestroyPipelineLayout(device, pipelineLayout, nullptr); \
+    })
+
+#define DESTROY_VK_DESCRIPTOR_SET_LAYOUT_DEFERRED(device, descriptorSetLayout) \
+    std::packaged_task<void()>([device, descriptorSetLayout]() \
+    { \
+        vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr); \
+    })
+#define DESTROY_VK_DESCRIPTOR_POOL_DEFERRED(device, descriptorPool) \
+    std::packaged_task<void()>([device, descriptorPool]() \
+    { \
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr); \
     })

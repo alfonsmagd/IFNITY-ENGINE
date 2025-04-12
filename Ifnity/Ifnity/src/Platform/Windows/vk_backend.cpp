@@ -991,6 +991,8 @@ namespace Vulkan
 		}
 
 
+		//Update awaitingCreation , because we have a new texture 
+		m_DeviceVulkan->awaitingCreation_ = true;
 
 		return TextureHandle(tex);
 
@@ -1132,6 +1134,8 @@ namespace Vulkan
 		{
 			return rps->pipeline_;
 		}
+
+		ctx_->checkAndUpdateDescriptorSets();
 
 		// build a new Vulkan pipeline
 

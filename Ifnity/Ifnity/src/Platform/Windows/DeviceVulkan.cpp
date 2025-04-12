@@ -401,7 +401,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	vkb::PhysicalDeviceSelector physicalDevSel{ m_Instance };
 
 	//Try to enable Geomtry shaders
-	VkPhysicalDeviceFeatures physicalDeviceFeatures {};
+	VkPhysicalDeviceFeatures physicalDeviceFeatures{};
 	physicalDeviceFeatures.geometryShader = VK_TRUE;
 
 
@@ -962,6 +962,18 @@ VkResult DeviceVulkan::growDescriptorPool(uint32_t maxTextures, uint32_t maxSamp
 	}
 
 	// Deallocate Descriptor Pool , Descriptor set layout
+	if( vkDSL_ != VK_NULL_HANDLE )
+	{
+		auto device = device_.device;
+		auto descriptorSetLayout = vkDSL_;
+		addDeferredTask(DESTROY_VK_DESCRIPTOR_SET_LAYOUT_DEFERRED(device, descriptorSetLayout));
+	}
+	if( vkDPool_ != VK_NULL_HANDLE )
+	{
+		auto device = device_.device;
+		auto descriptorPool = vkDPool_;
+		addDeferredTask(DESTROY_VK_DESCRIPTOR_POOL_DEFERRED(device, descriptorPool));
+	}
 
 
 

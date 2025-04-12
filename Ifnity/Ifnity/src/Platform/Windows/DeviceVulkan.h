@@ -34,8 +34,8 @@ class DeviceVulkan final: public GraphicsDeviceManager
 		kBinding_Textures = 0,
 		kBinding_Samplers = 1,
 		kBinding_StorageImages = 2,
-		kInitBindless_Textures =  16,
-		kInitBindless_Samplers = 16
+		kInitBindless_Textures = 2,
+		kInitBindless_Samplers = 2
 	};
 
 
