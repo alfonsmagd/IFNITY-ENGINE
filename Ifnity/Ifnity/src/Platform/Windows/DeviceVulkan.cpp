@@ -1696,7 +1696,19 @@ void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 		{
 		  vkDestroyImageView(device_, tex->imageView_, nullptr);
 		}
+		for( size_t i = 0; i != Vulkan::MAX_MIP_LEVELS; i++ )
+		{
+			for( size_t j = 0; j != ARRAY_NUM_ELEMENTS(tex->imageViewForFramebuffer_[ 0 ]); j++ )
+			{
+				VkImageView v = tex->imageViewForFramebuffer_[ i ][ j ];
+				if( v != VK_NULL_HANDLE )
+				{
+					vkDestroyImageView(device_, v, nullptr);
+				}
+			}
+		}
 		  slootMapTextures_.destroy(handle);
+		  awaitingCreation_ = true; //ensure that validation layers are building correctly. 
 
 	};
 
@@ -1713,11 +1725,16 @@ void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 	{
 		if( tex->mappedPtr_ )
 		{
-			vkUnmapMemory(device_, tex->vkMemory_[ 0 ]);
+			for( size_t i = 0; i != ARRAY_NUM_ELEMENTS(tex->vkMemory_); i++ )
+			{
+				vkUnmapMemory(device_, tex->vkMemory_[ i ]);
+			}
+
 		}
-
-
-		vkFreeMemory(device_, tex->vkMemory_[ 0 ], nullptr);
+		for( size_t i = 0; i != ARRAY_NUM_ELEMENTS(tex->vkMemory_); i++ )
+		{
+			vkFreeMemory(device_, tex->vkMemory_[ i ],nullptr);
+		}
 	}
 }
 

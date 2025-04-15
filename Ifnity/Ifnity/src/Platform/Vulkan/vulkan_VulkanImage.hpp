@@ -82,7 +82,7 @@ namespace Vulkan
 		// precached image views - owned by this VulkanImage
 		VkImageView imageView_ = VK_NULL_HANDLE; // default view with all mip-levels
 		VkImageView imageViewStorage_ = VK_NULL_HANDLE; // default view with identity swizzle (all mip-levels)
-		VkImageView imageViewForFramebuffer_[ 1 ][ 1 ] = {}; // max 6 faces for cubemap rendering
+		VkImageView imageViewForFramebuffer_[ MAX_MIP_LEVELS ][ 1 ] = {}; // max 6 faces for cubemap rendering
 
 	};
 
