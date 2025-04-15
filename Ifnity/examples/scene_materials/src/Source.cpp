@@ -366,13 +366,13 @@ public:
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 0 ].fileName,
+			.filePath = vSceneconfig[ 3 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 0 ]
+			.sceneConfig = vSceneconfig[ 3 ]
 		};
 
 		MeshDataBuilderAssimp<rhi::VertexScene> builder(1);

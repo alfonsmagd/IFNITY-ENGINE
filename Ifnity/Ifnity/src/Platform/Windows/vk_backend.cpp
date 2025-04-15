@@ -1049,8 +1049,11 @@ namespace Vulkan
 
 	SceneObjectHandler Device::CreateSceneObject(const char* meshes, const char* scene, const char* materials)
 	{
-		// Not implemented yet
+		//Create a SceneObject with the data. 
+		//SceneObject* sceneObject = new SceneObject(meshes, scene, materials);
+		//return SceneObjectHandler(sceneObject);
 		throw std::runtime_error("The function or operation is not implemented.");
+
 	}
 
 	MeshObjectHandle Device::CreateMeshObjectFromScene(const SceneObjectHandler& scene)
@@ -1824,6 +1827,23 @@ namespace Vulkan
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
 
+
+	//==================================================================================================//
+	//  Scene Objects Methods			                                                        //
+	//==================================================================================================//
+	SceneObject::SceneObject(const char* meshFile, const char* sceneFile, const char* materialFile)
+	{
+		////1.First load the mesh file
+		header_ = loadMeshData(meshFile, meshData_);
+		IFNITY::loadScene(sceneFile,scene_);
+
+
+		////2.Load materials		
+		std::vector<std::string> textureFiles;
+		loadMaterials(materialFile, materials_, textureFiles);
+
+
+	}
 
 }
 

@@ -319,7 +319,7 @@ public:
 		};*/
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = "data/helmet/helmet.gltf",
+			.filePath = "data/helmet/DamagedHelmet.gltf",
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
@@ -328,11 +328,11 @@ public:
 		};
 
 		
-		meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
+		//meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
 		
 
-		const float scale = 0.01f;
-		//m_MeshScene = rdevice->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp<rhi::VertexScene>(scale));
+		const float scale = 30.f;
+		m_MeshScene = rdevice->CreateMeshObject(meshAssimp,new MeshDataBuilderAssimp<rhi::VertexScene>(scale));
 		m_MeshScene = rdevice->CreateMeshObject(meshAssimp);
 
 		//Buffer Consants 

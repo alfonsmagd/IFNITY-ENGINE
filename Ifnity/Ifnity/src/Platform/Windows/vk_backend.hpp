@@ -283,22 +283,58 @@ namespace Vulkan
 	private :
 		Device* m_Device = nullptr; // avoid circular reference 
 		MeshObjectDescription m_MeshObjectDescription;
-
 		uint32_t numIndices_ = 0;
+
 		BufferHandle m_BufferVertex;
 		BufferHandle m_BufferIndex;
 		BufferHandle m_BufferIndirect;
+		BufferHandle m_BufferMaterials;
+		BufferHandle m_BufferDrawID;
+		BufferHandle m_BufferModelMatrices;
+
 		
 		struct SMBuffers
 		{
 			BufferHandleSM vertexBuffer;
 			BufferHandleSM indexBuffer;
 			BufferHandleSM indirectBuffer;		
+			BufferHandleSM drawIDBuffer;
+			BufferHandleSM materialBuffer;
+			BufferHandleSM modelMatricesBuffer;
 		}m_SM;
 
 
 	};
 
+	//------------------------------------------------------------------------------------//
+	//  SCENE OBJECT VULKAN                                                               //
+	//-------------------------------------------------------------------------------------//
+
+	class IFNITY_API SceneObject final: public ISceneObject
+	{
+	public:
+		SceneObject(
+			const char* meshFile,
+			const char* sceneFile,
+			const char* materialFile);
+
+		//Implement Interface
+
+		const MeshFileHeader& getHeader() const override { return header_; }
+		const MeshData& getMeshData() const override { return meshData_; }
+		const Scene& getScene() const override { return scene_; }
+		const std::vector<MaterialDescription>& getMaterials() const override { return materials_; }
+
+
+		MeshFileHeader header_;
+		MeshData meshData_;
+	private:
+		Scene scene_;
+		std::vector<MaterialDescription> materials_;
+	
+
+
+	};
 	
 }
 
