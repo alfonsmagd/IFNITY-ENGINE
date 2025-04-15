@@ -37,6 +37,7 @@ set(EXAMPLE_DIRS
 	#bufferVulkan
    Texture_Sample
    camera_mesh_vk
+   SceneVk
 )
 
 # Itera sobre la lista y añade cada subdirectorio

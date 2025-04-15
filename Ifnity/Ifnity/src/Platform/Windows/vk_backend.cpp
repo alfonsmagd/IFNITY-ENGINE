@@ -944,17 +944,17 @@ namespace Vulkan
 			aspect = VK_IMAGE_ASPECT_COLOR_BIT;
 		}
 
-		image.imageView_ = image.createImageView(vkDevice_,
-												 vkImageViewType,
-												 vkFormat,
-												 aspect,
-												 0,
-												 VK_REMAINING_MIP_LEVELS,
-												 0,
-												 numLayers,
-												 {},
-												 nullptr,
-												 debugNameImageView);
+		image.imageView_ = image.createImageView(vkDevice_,		    
+												 vkImageViewType,   // Type of image view
+												 vkFormat,			//Format of the image
+												 aspect,			//Aspect of the image
+												 0,					// Base mip level
+												 VK_REMAINING_MIP_LEVELS,// Number of mip levels
+												 0,						// Base array layer
+												 numLayers,				// Number of array layers
+												 {}, 					// Swizzle
+												 nullptr,			  // View format
+												 debugNameImageView); //Debug name for the image view
 		if( !IFNITY_VERIFY(image.imageView_ != VK_NULL_HANDLE) )
 		{
 			IFNITY_LOG(LogCore, ERROR, "Failed to create image view");

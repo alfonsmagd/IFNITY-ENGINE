@@ -50,5 +50,5 @@ project({nuevo_nombre_proyecto})
         print(f"Error: {e}")
 
 # Solicitar el nombre del proyecto al usuario
-nombre_proyecto = input("Introduce el nombre del nuevo proyecto: ")
+nombre_proyecto = input("Please put the project name: ")
 crear_proyecto_desde_base(nombre_proyecto)

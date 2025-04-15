@@ -1,6 +1,7 @@
+cmake_minimum_required(VERSION 3.8)
 
-
-
+# Nombre del proyecto
+project(SceneVk)
 
 # C++ 17 standar 
 set(CMAKE_CXX_STANDARD 20)

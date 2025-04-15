@@ -81,18 +81,7 @@ namespace Vulkan
 
 		const uint32_t storageSize = layerStorageSize * numLayers;
 
-		//ensureStagingBufferSize(layerStorageSize);
-
-		//MemoryRegionDesc desc = getNextFreeOffset(storageSize);
-		//// No support for copying image in multiple smaller chunk sizes. If we get smaller buffer size than storageSize, we will wait for GPU idle
-		//// and get bigger chunk.
-		//if( desc.size_ < storageSize )
-		//{
-		//	waitAndReset();
-		//	desc = getNextFreeOffset(storageSize);
-		//}
-
-
+	
 		//Process with staggin buffer 
 		VkBuffer stagingBuffer = VK_NULL_HANDLE;
 		VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
@@ -182,8 +171,6 @@ namespace Vulkan
 		auto handle = ctx_.immediate_->submit(wrapper);
 		auto device = ctx_.device_;
 		ctx_.addDeferredTask(DESTROY_VK_STAGING_BUFFER_DEFFERED(device, stagingBuffer, stagingMemory), handle);
-
-
 
 	}
 
