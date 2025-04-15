@@ -512,7 +512,10 @@ public:
 	{
 		//IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
-	~Source() override {}
+	~Source() override 
+	{
+		m_depth.reset();
+	}
 };
 
 class Source_TestD3D12: public IFNITY::App

@@ -9,6 +9,8 @@
 #include "DeviceVulkan.h"
 #include "../Vulkan/vulkan_PipelineBuilder.hpp"
 
+#include <span>
+#include <execution>
 IFNITY_NAMESPACE
 
 namespace Vulkan
@@ -124,6 +126,8 @@ namespace Vulkan
 	Device::~Device()
 	{
 		destroyShaderModule();
+		
+		
 		//Destroy the dummy texture
 
 
@@ -280,9 +284,9 @@ namespace Vulkan
 			auto& geom = m_shaderGeometry.emplace_back(createShaderModule(gShaderCode, geometryCode.size(), VK_SHADER_STAGE_GEOMETRY_BIT, gsbinary, "Geometry Shader"));
 			pipeline->m_shaderGeometry = *geom.get();
 		}
-		
-		
-	
+
+
+
 
 
 		//3. Create the pipeline and configure colorFormat,
@@ -294,7 +298,7 @@ namespace Vulkan
 		pipeline->configureVertexAttributes();
 		pipeline->m_shaderFragment = *frag.get();
 		pipeline->m_shaderVert = *vert.get();
-		
+
 
 
 
@@ -662,6 +666,12 @@ namespace Vulkan
 	bool Device::validateTextureDescription(TextureDescription& texdesc)
 	{
 		const rhi::TextureType type = texdesc.dimension;
+
+		if( texdesc.width <= 0 && texdesc.height <= 0 && texdesc.depth <= 0 )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Texture dimension is invalid");
+			return false;
+		}
 		if( !(type == TextureType::TEXTURE2D || type == TextureType::TEXTURECUBE || type == TextureType::TEXTURE3D) )
 		{
 			IFNITY_ASSERT(false, "Only 2D, 3D and Cube textures are supported");
@@ -944,7 +954,7 @@ namespace Vulkan
 			aspect = VK_IMAGE_ASPECT_COLOR_BIT;
 		}
 
-		image.imageView_ = image.createImageView(vkDevice_,		    
+		image.imageView_ = image.createImageView(vkDevice_,
 												 vkImageViewType,   // Type of image view
 												 vkFormat,			//Format of the image
 												 aspect,			//Aspect of the image
@@ -961,14 +971,11 @@ namespace Vulkan
 			return {};
 		}
 
-		//Creating all 
-
+		//Creating all  IMAGE-->MOVE TO HANDLE --> CREATE THE HOLDER AND MOVE THE HANDLE --> THE TEXTURE ITS OWNER NOW ABOUT TEXTURE
 		TextureHandleSM handle = m_DeviceVulkan->slootMapTextures_.create(std::move(image));
-
 		HolderTextureSM holder = makeHolder(m_DeviceVulkan, handle);
 
 		Texture* tex;
-
 		if( holder.get()->valid() )
 		{
 			tex = new Texture(texdesc, std::move(holder));
@@ -1009,7 +1016,7 @@ namespace Vulkan
 
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
 	{// Not implemented yet//Check if MeshData its valid ? 
-		if(desc.meshData.indexData_.empty() || desc.meshData.vertexData_.empty())
+		if( desc.meshData.indexData_.empty() || desc.meshData.vertexData_.empty() )
 		{
 			IFNITY_LOG(LogApp, ERROR, "MeshData its invalid, are you sure that mesh Object Desc has data? , you have to build, or use a IMeshObjectBuilder");
 			return nullptr;
@@ -1018,7 +1025,7 @@ namespace Vulkan
 
 
 		//For now its a largeMesh 
-		else if(desc.isLargeMesh)
+		else if( desc.isLargeMesh )
 		{
 			//Create a MeshObject with the data. 
 
@@ -1030,12 +1037,12 @@ namespace Vulkan
 
 
 		return nullptr;
-		
+
 	}
 
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
 	{
-		if(meshbuilder)
+		if( meshbuilder )
 		{
 			meshbuilder->buildMeshData(const_cast<MeshObjectDescription&>(desc));
 			return CreateMeshObject(desc);
@@ -1050,16 +1057,17 @@ namespace Vulkan
 	SceneObjectHandler Device::CreateSceneObject(const char* meshes, const char* scene, const char* materials)
 	{
 		//Create a SceneObject with the data. 
-		//SceneObject* sceneObject = new SceneObject(meshes, scene, materials);
-		//return SceneObjectHandler(sceneObject);
-		throw std::runtime_error("The function or operation is not implemented.");
+		SceneObject* sceneObject = new SceneObject(meshes, scene, materials);
+		return SceneObjectHandler(sceneObject);
+		
 
 	}
 
 	MeshObjectHandle Device::CreateMeshObjectFromScene(const SceneObjectHandler& scene)
 	{
 		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		MeshObject* mesh = new MeshObject(scene, this);
+		return MeshObjectHandle(mesh);
 	}
 
 	void Device::SetRenderState(const RenderState& state)
@@ -1128,9 +1136,9 @@ namespace Vulkan
 			auto pipelineLayout = rps->pipelineLayout_;
 			ctx_->addDeferredTask(DESTROY_VK_PIPELINE_DEFERRED(device, pipeline));
 			ctx_->addDeferredTask(DESTROY_VK_PIPELINE_LAYOUT_DEFERRED(device, pipelineLayout));
-		
+
 			rps->pipeline_ = VK_NULL_HANDLE;
-			rps->lastVkDescriptorSetLayout_ = vkDSL_ ;
+			rps->lastVkDescriptorSetLayout_ = vkDSL_;
 		}
 
 		if( rps->pipeline_ != VK_NULL_HANDLE )
@@ -1384,7 +1392,7 @@ namespace Vulkan
 		{
 			resetShaderModule(geometry, "Geometry");
 		}
-		
+
 
 	}
 
@@ -1699,7 +1707,7 @@ namespace Vulkan
 		std::vector<uint8_t> drawCommands;
 		const uint32_t numCommands = desc.meshFileHeader.meshCount;
 
-		struct DrawIndexedIndirectCommand 
+		struct DrawIndexedIndirectCommand
 		{
 			uint32_t count;
 			uint32_t instanceCount;
@@ -1708,7 +1716,7 @@ namespace Vulkan
 			uint32_t baseInstance;
 		};
 
-	
+
 
 		drawCommands.resize(sizeof(DrawIndexedIndirectCommand) * numCommands + sizeof(uint32_t));
 
@@ -1719,13 +1727,14 @@ namespace Vulkan
 		DrawIndexedIndirectCommand* cmd = std::launder(reinterpret_cast<DrawIndexedIndirectCommand*>(drawCommands.data() + sizeof(uint32_t)));
 
 		// prepare indirect commands buffer
-		for (uint32_t i = 0; i != numCommands; i++) {
+		for( uint32_t i = 0; i != numCommands; i++ )
+		{
 			*cmd++ = {
-				.count         = desc.meshData.meshes_[i].getLODIndicesCount(0),
+				.count = desc.meshData.meshes_[ i ].getLODIndicesCount(0),
 				.instanceCount = 1,
-				.firstIndex    = desc.meshData.meshes_[i].indexOffset,
-				.baseVertex    = (int32_t)desc.meshData.meshes_[i].vertexOffset,
-				.baseInstance  = 0,
+				.firstIndex = desc.meshData.meshes_[ i ].indexOffset,
+				.baseVertex = (int32_t)desc.meshData.meshes_[ i ].vertexOffset,
+				.baseInstance = 0,
 			};
 		}
 		//Now drawcommands are ready and filled with the cmd data.
@@ -1739,7 +1748,7 @@ namespace Vulkan
 			bufferDesc.SetData(indices);
 		}
 		m_BufferIndex = m_Device->CreateBuffer(bufferDesc);
-		
+
 		IFNITY_ASSERT_MSG(m_BufferIndex, "Failed to create index buffer");
 
 		//VertexData
@@ -1767,14 +1776,49 @@ namespace Vulkan
 		IFNITY_ASSERT_MSG(m_BufferIndirect, "Failed to create indirect buffer");
 
 		//Fill al m_SM
-		m_SM.indexBuffer    = DCAST_BUFFER(m_BufferIndex.get())->getBufferHandleSM();
-		m_SM.vertexBuffer   = DCAST_BUFFER(m_BufferVertex.get())->getBufferHandleSM();
+		m_SM.indexBuffer = DCAST_BUFFER(m_BufferIndex.get())->getBufferHandleSM();
+		m_SM.vertexBuffer = DCAST_BUFFER(m_BufferVertex.get())->getBufferHandleSM();
 		m_SM.indirectBuffer = DCAST_BUFFER(m_BufferIndirect.get())->getBufferHandleSM();
 
 		meshStatus_ = MeshStatus::READY_TO_DRAW;
-			
+
+
+
+	}
+
+	MeshObject::MeshObject(const SceneObjectHandler& data, IDevice* device): m_Device(DCAST_DEVICE(device))
+	{
+	
+		//Get information about scene 
+		//Chec if device its valid 
+		if( !m_Device )
+		{
+			IFNITY_LOG(LogApp, ERROR, "Device is not valid");
+			return;
+		}
+		//Chec if mesh data its valid
+		meshStatus_ = MeshStatus::BUFFER_NOT_INITIALIZED;
+
+		//GET data information 
+		const MeshData& meshData    = data->getMeshData();
+		const MeshFileHeader header = data->getHeader();
+
+		const uint32_t* indices = meshData.indexData_.data();
+		const float* vertices = meshData.vertexData_.data();
+
+		//Get data to modify like materials in vk , this solution its not optimal but in the future
+		//when we have a better solution that solve vk and d3d12, probably unify that Opengl scene pipeline. 
+		auto materials = data->getMaterials();
+
+
+		//Convert Materials 
+		convertToVkMaterial(materials, *m_Device, data->getTexturesFiles(),allMaterialsTextures_);
+
 		
-		
+
+
+
+
 	}
 
 	void MeshObject::Draw()
@@ -1789,7 +1833,7 @@ namespace Vulkan
 		buf.cmdBindDepthState(depthState);
 		buf.cmdBindRenderPipeline(*m_Device->getActualPipeline());
 
-		
+
 		buf.cmdBindIndexBuffer(m_SM.indexBuffer, rhi::IndexFormat::IndexFormat_UINT32);
 		buf.cmdBindVertexBuffer(0, m_SM.vertexBuffer);
 		buf.cmdPushConstants(pc.data, pc.size, pc.offset);
@@ -1810,7 +1854,7 @@ namespace Vulkan
 		//Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
-	void MeshObject:: Draw(const DrawDescription& desc)
+	void MeshObject::Draw(const DrawDescription& desc)
 	{
 		//Not implemented yet
 		throw std::runtime_error("The function or operation is not implemented.");
@@ -1827,6 +1871,74 @@ namespace Vulkan
 		throw std::runtime_error("The function or operation is not implemented.");
 	}
 
+	void MeshObject::convertToVkMaterial(std::vector<MaterialDescription>& mt,
+										 Device& device, 
+										 const std::vector<std::string>& files,
+										 std::vector<TextureHandle>& mtlTextures)
+	{
+		uint32_t id = 0;
+		//For all files convert to material. 
+		//Iterate for all files and build texture
+		mtlTextures.resize(files.size());
+		for( auto& file : files )
+		{
+			//load texture from file
+			TextureDescription texdesc = {};
+			texdesc.debugName = file;
+			texdesc.dimension = rhi::TextureType::TEXTURE2D;
+			texdesc.format = Format::R8G8B8A8;
+			texdesc.filepath = file;
+			texdesc.usage = TextureUsageBits::SAMPLED;
+			texdesc.isDepth = false;
+			// upload texture and fill widht, height, 
+			const void* img = LoadTextureFromFileDescription(texdesc);
+			texdesc.data = img;					//fill de data. 
+
+			//Now create the texture
+			TextureHandle texHandle = device.CreateTexture(texdesc);
+			//Get the texture now using dcast 
+			mtlTextures[ id++ ] = texHandle;
+		}
+
+		//Now create and update the material 
+		auto getTextureId = [](uint32_t idx,const std::span<TextureHandle>& textures )->uint32_t
+			{
+				if( idx == INVALID_TEXTURE )[[likely]] 
+				{
+					return 0;
+				}
+				else
+				{
+					//Get the texture index. 
+					const auto& texture = textures[ idx ];
+					//Get the texture id.
+					Texture* vktexture = DCAST_TEXTURE(texture.get());
+					if( !vktexture )
+					{
+						IFNITY_LOG(LogApp, ERROR, "Failed to get VulkanTexturedynamic cast");
+						return 0;
+					}
+					//Get the texture id.
+					return vktexture->getTextureHandleSM().index();
+				}
+			};
+
+		// use for each 
+		std::for_each(std::execution::par,mt.begin(), mt.end(), [&getTextureId,&mtlTextures](auto& mtl)
+					  {
+						  //Get the texture id. 
+						  mtl.ambientOcclusionMap_  = getTextureId(mtl.ambientOcclusionMap_ , mtlTextures);
+						  mtl.emissiveMap_          = getTextureId(mtl.emissiveMap_         , mtlTextures);
+						  mtl.albedoMap_            = getTextureId(mtl.albedoMap_           , mtlTextures);
+						  mtl.metallicRoughnessMap_ = getTextureId(mtl.metallicRoughnessMap_, mtlTextures);
+						  mtl.normalMap_            = getTextureId(mtl.normalMap_           , mtlTextures);
+						  mtl.opacityMap_           = getTextureId(mtl.opacityMap_          , mtlTextures);
+					  });
+
+
+
+	}
+
 
 	//==================================================================================================//
 	//  Scene Objects Methods			                                                        //
@@ -1835,14 +1947,41 @@ namespace Vulkan
 	{
 		////1.First load the mesh file
 		header_ = loadMeshData(meshFile, meshData_);
-		IFNITY::loadScene(sceneFile,scene_);
+		loadSceneShapes(sceneFile);
+		loadMaterials(materialFile, materials_, textureFiles_);
 
 
-		////2.Load materials		
-		std::vector<std::string> textureFiles;
-		loadMaterials(materialFile, materials_, textureFiles);
+	}
 
+	void SceneObject::loadSceneShapes(const char* sceneFile)
+	{
+		IFNITY::loadScene(sceneFile, scene_);
 
+		// prepare draw data buffer
+		for(const auto& c : scene_.meshes_)
+		{
+			auto material = scene_.materialForNode_.find(c.first);
+			if(material != scene_.materialForNode_.end())
+			{
+				shapes_.push_back(
+					DrawData{
+						.meshIndex = c.second, // c.second is the mesh index
+						.materialIndex = material->second, // material->second is the material index
+						.LOD = 0,
+						.indexOffset = meshData_.meshes_ [ c.second ].indexOffset,
+						.vertexOffset = meshData_.meshes_[ c.second ].vertexOffset,
+						.transformIndex = c.first // c.first is the node index
+					});
+			}
+		}
+
+		// force recalculation of all global transformations
+		IFNITY::markAsChanged(scene_, 0);
+		IFNITY::recalculateGlobalTransforms(scene_);
+	
+	
+	
+	
 	}
 
 }

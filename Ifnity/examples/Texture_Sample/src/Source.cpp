@@ -244,25 +244,8 @@ public:
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
 		vfs.Mount("test", "Shaders/testShader", IFNITY::FolderType::NO_DEFINED);
 
-		auto files = vfs.ListFilesInCurrentDirectory("test");
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
-		auto getFileName = [ &files ](const std::string& extension) -> const char*
-			{
-				for(const auto& file : files)
-				{
-					if(file.size() >= extension.size() &&
-					   file.compare(file.size() - extension.size(), extension.size(), extension) == 0)
-					{
-						return file.c_str();
-					}
-				}
-				return nullptr;
-			};
-
-		IFNITY::testShaderCompilation(getFileName(".vert"), "Shaders/testShader/main.vert.spv");
-		IFNITY::testShaderCompilation(getFileName(".frag"), "Shaders/testShader/main.frag.spv");
-
-		IFNITY_LOG(LogApp, INFO, "END APP ONLY TEST SHADER BUILDING ");
+	
 
 
 
@@ -320,8 +303,13 @@ public:
 
 	
 		int w, h, comp;
-		const uint8_t* img = stbi_load("data/wood.jpg", &w, &h, &comp, 4);
+		const uint8_t* img = stbi_load("data/diffuse_madera.jpg", &w, &h, &comp, 4);
 
+		if( !img )
+		{
+			IFNITY_LOG(LogApp, ERROR, "Failed to load image");
+			assert(true);
+		}
 
 		//DepthText texture
 		TextureDescription descTexture;

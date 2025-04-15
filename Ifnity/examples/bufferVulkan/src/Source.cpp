@@ -242,23 +242,12 @@ public:
 		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
 		vfs.Mount("test", "Shaders/testShader", IFNITY::FolderType::NO_DEFINED);
 
-		auto files = vfs.ListFilesInCurrentDirectory("test");
+		//auto files = vfs.ListFilesInCurrentDirectory("test");
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
-		auto getFileName = [ &files ](const std::string& extension) -> const char*
-			{
-				for(const auto& file : files)
-				{
-					if(file.size() >= extension.size() &&
-						file.compare(file.size() - extension.size(), extension.size(), extension) == 0)
-					{
-						return file.c_str();
-					}
-				}
-				return nullptr;
-			};
+		
 
-		IFNITY::testShaderCompilation(getFileName(".vert"), "Shaders/testShader/main.vert.spv");
-		IFNITY::testShaderCompilation(getFileName(".frag"), "Shaders/testShader/main.frag.spv");
+		/*IFNITY::testShaderCompilation(getFileName(".vert"), "Shaders/testShader/main.vert.spv");
+		IFNITY::testShaderCompilation(getFileName(".frag"), "Shaders/testShader/main.frag.spv");*/
 
 		IFNITY_LOG(LogApp, INFO, "END APP ONLY TEST SHADER BUILDING ");
 

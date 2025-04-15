@@ -20,6 +20,7 @@ public:
     virtual const Scene& getScene() const = 0;
     virtual const std::vector<MaterialDescription>& getMaterials() const = 0;
     virtual const std::vector<DrawData>& getShapes() const = 0;
+    virtual const std::vector<std::string>& getTexturesFiles() { return {}; }
 };
 
 using SceneObjectHandler = std::shared_ptr<ISceneObject>;

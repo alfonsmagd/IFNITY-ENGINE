@@ -269,6 +269,7 @@ namespace Vulkan
 		}meshStatus_ = MeshStatus::IDEVICE_NOT_VALID;
 
 		MeshObject( const MeshObjectDescription&& desc, IDevice* device);
+		MeshObject( const SceneObjectHandler& data, IDevice* device);
 
 
 		void Draw() override;
@@ -278,6 +279,11 @@ namespace Vulkan
 		MeshObjectDescription& GetMeshObjectDescription() override;
 		void DrawIndirect() override;
 		void DrawInstancedDirect() override;
+
+		void convertToVkMaterial(std::vector<MaterialDescription>& mt,
+								 Device& device, 
+								 const std::vector<std::string>& files,
+								 std::vector<TextureHandle>& mtlTextures );
 
 
 	private :
@@ -291,7 +297,6 @@ namespace Vulkan
 		BufferHandle m_BufferMaterials;
 		BufferHandle m_BufferDrawID;
 		BufferHandle m_BufferModelMatrices;
-
 		
 		struct SMBuffers
 		{
@@ -303,6 +308,7 @@ namespace Vulkan
 			BufferHandleSM modelMatricesBuffer;
 		}m_SM;
 
+		std::vector<TextureHandle> allMaterialsTextures_; //In this case textures will be building because we use device to create textures, Opengl can create textures itself.
 
 	};
 
@@ -324,13 +330,19 @@ namespace Vulkan
 		const MeshData& getMeshData() const override { return meshData_; }
 		const Scene& getScene() const override { return scene_; }
 		const std::vector<MaterialDescription>& getMaterials() const override { return materials_; }
-
+		
+		//Shapes its not overload here 
+		const std::vector<DrawData>& getShapes() const override { return shapes_; }
+		const std::vector<std::string>& getTexturesFiles() override { return textureFiles_; }
+		void loadSceneShapes(const char* sceneFile);
 
 		MeshFileHeader header_;
 		MeshData meshData_;
 	private:
 		Scene scene_;
-		std::vector<MaterialDescription> materials_;
+		std::vector<std::string> textureFiles_;
+		mutable std::vector<MaterialDescription> materials_;
+		std::vector<DrawData> shapes_;
 	
 
 

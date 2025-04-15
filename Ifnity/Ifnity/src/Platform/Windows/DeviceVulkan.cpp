@@ -1679,8 +1679,6 @@ void DeviceVulkan::addDeferredTask(std::packaged_task<void()>&& task, Vulkan::Su
 void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 {
 
-
-
 	Vulkan::VulkanImage* tex = slootMapTextures_.get(handle);
 
 	if( !tex )
@@ -1695,9 +1693,9 @@ void DeviceVulkan::destroy(Vulkan::TextureHandleSM handle)
 
 	SCOPE_EXIT{
 		if( tex->imageView_ != VK_NULL_HANDLE )
-	  {
+		{
 		  vkDestroyImageView(device_, tex->imageView_, nullptr);
-	  }
+		}
 		  slootMapTextures_.destroy(handle);
 
 	};
