@@ -403,6 +403,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	//Try to enable Geomtry shaders
 	VkPhysicalDeviceFeatures physicalDeviceFeatures{};
 	physicalDeviceFeatures.geometryShader = VK_TRUE;
+	physicalDeviceFeatures.shaderInt64 = VK_TRUE;
 
 
 	//Try to enable dynamic rendering 
@@ -437,6 +438,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	vulkan13Features.synchronization2 = VK_TRUE;
 	vulkan13Features.maintenance4 = VK_TRUE;
 	vulkan13Features.dynamicRendering = VK_TRUE;
+	
 
 	physicalDevSel.set_surface(m_Surface)
 		.set_required_features(physicalDeviceFeatures)

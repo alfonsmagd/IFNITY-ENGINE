@@ -132,6 +132,7 @@ namespace OpenGL
 		const uint32_t GetBufferID() const override { return m_BufferID; }
 		void SetData(const void* data) override { this->data = data; }
 		const void* GetData() const override { return data; }
+		const uint64_t GetBufferGpuAddress() override { return GetBufferID(); } //make happy IBuffer
 
 
     private:

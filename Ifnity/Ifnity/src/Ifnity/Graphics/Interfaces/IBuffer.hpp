@@ -181,6 +181,7 @@ public:
      */
     virtual BufferDescription& GetBufferDescription() = 0;
 	virtual const uint32_t GetBufferID() const = 0;
+    virtual const uint64_t GetBufferGpuAddress() = 0;
 	virtual void SetData(const void* data) = 0;
 	virtual const void* GetData() const = 0;
 };

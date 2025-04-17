@@ -222,7 +222,7 @@ namespace Vulkan
 	void Device::StopRecording()
 	{
 
-		//ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
 		cmdBuffer.cmdEndRendering();
 		m_DeviceVulkan->submit(cmdBuffer, currentTexture_);
 
@@ -1068,6 +1068,7 @@ namespace Vulkan
 	MeshObjectHandle Device::CreateMeshObjectFromScene(const SceneObjectHandler& scene)
 	{
 		// Not implemented yet
+		
 		MeshObject* mesh = new MeshObject(scene, this);
 		return MeshObjectHandle(mesh);
 	}
@@ -1791,7 +1792,7 @@ namespace Vulkan
 		//Chec if mesh data its valid
 		meshStatus_ = MeshStatus::BUFFER_NOT_INITIALIZED;
 
-		//GET data information 
+		//GET data information and fill m_MeshObjectDescription
 		const MeshData& meshData    = data->getMeshData();
 		const MeshFileHeader header = data->getHeader();
 
@@ -1800,6 +1801,10 @@ namespace Vulkan
 
 		const size_t transformsSize = data->getScene().globalTransform_.size() * sizeof(glm::mat4);
 		const void* transformsData = data->getScene().globalTransform_.data();
+
+		m_MeshObjectDescription.meshFileHeader = header; // for now its only de data avaialbe in the future 
+														 // its important to move the data sceen to meshobjectDescription. to avoid lost data. 
+		
 		
 
 		//Get data to modify like materials in vk , this solution its not optimal but in the future
@@ -1905,6 +1910,22 @@ namespace Vulkan
 		m_BufferDrawID = m_Device->CreateBuffer(bufferDesc);
 		IFNITY_ASSERT_MSG(m_BufferDrawID, "Failed to create drawID buffer");
 
+		//Fill al m_SM
+		m_SM.vertexBuffer		 = DCAST_BUFFER(m_BufferVertex.get())->getBufferHandleSM();
+		m_SM.indexBuffer		 = DCAST_BUFFER(m_BufferIndex.get())->getBufferHandleSM();
+		m_SM.indirectBuffer		 = DCAST_BUFFER(m_BufferIndirect.get())->getBufferHandleSM();
+		m_SM.drawIDBuffer		 = DCAST_BUFFER(m_BufferDrawID.get())->getBufferHandleSM();
+		m_SM.materialBuffer		 = DCAST_BUFFER(m_BufferMaterials.get())->getBufferHandleSM();
+		m_SM.modelMatricesBuffer = DCAST_BUFFER(m_BufferModelMatrices.get())->getBufferHandleSM();
+
+
+		//Fill the gpu address
+		m_SM.gpuAddress.drawId        = m_BufferDrawID->GetBufferGpuAddress();
+		m_SM.gpuAddress.materials      = m_BufferMaterials->GetBufferGpuAddress();
+		m_SM.gpuAddress.modelMatrices = m_BufferModelMatrices->GetBufferGpuAddress();
+
+
+		meshStatus_ = MeshStatus::READY_TO_DRAW;
 
 
 
@@ -1943,7 +1964,40 @@ namespace Vulkan
 	void MeshObject::DrawIndirect()
 	{
 		//Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		auto& buf = m_Device->getCommandBuffer();
+		const auto& pc = m_Device->pushConstants;
+		//Force now to use MAT4 [TODO] REMOVE FROM THIS. ITS ONLY FOR TESTING PURPOSES.
+		glm::mat4 viewmodel = *reinterpret_cast<const glm::mat4*>(pc.data);
+
+		//Build push constants
+		const struct {	
+			mat4 viewProj;
+			uint64_t bufferTransforms;
+			uint64_t bufferDrawData;
+			uint64_t bufferMaterials;
+		} pushConstans = {
+				.viewProj = viewmodel,
+				.bufferTransforms = m_SM.gpuAddress.modelMatrices,
+				.bufferDrawData   = m_SM.gpuAddress.drawId,
+				.bufferMaterials  = m_SM.gpuAddress.materials,
+		};
+		
+
+
+		DepthState depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true };
+		buf.cmdBindDepthState(depthState);
+
+		auto* pipeline = m_Device->getActualPipeline();
+		CHECK_PTR(pipeline, "Pipeline is null");
+		
+		buf.cmdBindRenderPipeline(*pipeline);
+		buf.cmdBindIndexBuffer(m_SM.indexBuffer, rhi::IndexFormat::IndexFormat_UINT32);
+		buf.cmdBindVertexBuffer(0, m_SM.vertexBuffer);
+		buf.cmdPushConstants(pushConstans);
+		buf.cmdDrawIndexedIndirect(m_SM.indirectBuffer, 0, m_MeshObjectDescription.meshFileHeader.meshCount);
+		
+
+		
 	}
 	void MeshObject::Draw(const DrawDescription& desc)
 	{

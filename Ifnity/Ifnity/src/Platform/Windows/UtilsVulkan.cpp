@@ -422,8 +422,8 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 	if( !glslang_shader_preprocess(shader, &input) )
 	{
 		IFNITY_LOG(LogCore, TRACE, "Shader preprocessing failed:\n");
-		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_log(shader));
-		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_debug_log(shader));
+		IFNITY_LOG(LogCore, TRACE, "  {}", glslang_shader_get_info_log(shader));
+		IFNITY_LOG(LogCore, TRACE, "  {}", glslang_shader_get_info_debug_log(shader));
 
 		assert(false);
 		IFNITY_LOG(LogCore, ERROR, "glslang_shader_preprocess() failed");
@@ -433,8 +433,8 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 	if( !glslang_shader_parse(shader, &input) )
 	{
 		IFNITY_LOG(LogCore, TRACE, "Shader parsing failed:\n");
-		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_log(shader));
-		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_shader_get_info_debug_log(shader));
+		IFNITY_LOG(LogCore, TRACE, "   {}", glslang_shader_get_info_log(shader));
+		IFNITY_LOG(LogCore, TRACE, "  {}", glslang_shader_get_info_debug_log(shader));
 		Utils::printShaderSource(glslang_shader_get_preprocessed_code(shader));
 		IFNITY_LOG(LogCore, ERROR, "glslang_shader_parse() failed");
 		return VK_ERROR_INITIALIZATION_FAILED;
@@ -450,8 +450,8 @@ VkResult compileShaderVK(VkShaderStageFlagBits stage, const char* code, std::vec
 	if( !glslang_program_link(program, GLSLANG_MSG_SPV_RULES_BIT | GLSLANG_MSG_VULKAN_RULES_BIT) )
 	{
 		IFNITY_LOG(LogCore, TRACE, "Shader linking failed:\n");
-		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_program_get_info_log(program));
-		IFNITY_LOG(LogCore, TRACE, "  %s\n", glslang_program_get_info_debug_log(program));
+		IFNITY_LOG(LogCore, TRACE, "  {}", glslang_program_get_info_log(program));
+		IFNITY_LOG(LogCore, TRACE, " {}", glslang_program_get_info_debug_log(program));
 		IFNITY_LOG(LogCore, ERROR, "glslang program link() failed");
 		return VK_ERROR_INITIALIZATION_FAILED;
 	}

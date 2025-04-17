@@ -73,3 +73,10 @@ namespace IFNITY
 
 #define IFNITY_VERIFY(cond) ((cond) ? true : (IFNITY::Assert(false, __FILE__, __LINE__, #cond), false))
 
+#define CHECK_PTR(ptr, msg)                   \
+    do {                                      \
+        if (!(ptr)) {                         \
+            IFNITY_LOG(LogApp, ERROR, msg);   \
+            return;                           \
+        }                                     \
+    } while(0)

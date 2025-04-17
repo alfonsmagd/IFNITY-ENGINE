@@ -216,8 +216,7 @@ private:
 	GraphicsPipelineHandle m_WireFramePipeline;
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
-	std::shared_ptr<IShader> m_gs;
-
+	
 	//CAMERA LAYER
 	// Camera objects 
 	IFNITY::EventCameraListener m_CameraListener;
@@ -285,41 +284,36 @@ public:
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
-		m_gs = std::make_shared<IShader>();
 
 		ShaderCreateDescription DescriptionShader;
 		{
 			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "meshRendered.vert";
+			DescriptionShader.FileName = "scene_vk.vert";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
 			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "meshRendered.frag";
+			DescriptionShader.FileName = "scene_vk.frag";
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
-		{
-			DescriptionShader.NoCompile = true;
-			DescriptionShader.FileName = "meshRendered.geom";
-			m_gs->SetShaderDescription(DescriptionShader);
-		}
+		
 
 		ShaderCompiler::CompileShader(m_vs.get());
 		ShaderCompiler::CompileShader(m_ps.get());
-		ShaderCompiler::CompileShader(m_gs.get());
+	
 
 
 
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 3 ].fileName,
+			.filePath = vSceneconfig[ 0 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
-			.meshFileHeader = MeshFileHeader{},
+			.meshFileHeader = MeshFileHeader{},  
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 3 ]
+			.sceneConfig = vSceneconfig[ 0 ]
 		};
 
 		//meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
@@ -383,18 +377,17 @@ public:
 									   .binding = 0,
 									   .format = rhi::Format::R32G32B32_FLOAT,
 									   .offset = offsetof(VertexData,n) }, normal);
-
-
 		vertexInput.addVertexInputBinding({ .stride = sizeof(VertexData) }, position);
+
+
 
 		GraphicsPipelineDescription gdesc2;
 		{
 			gdesc2.SetVertexShader(m_vs.get())
 				.SetPixelShader(m_ps.get())
-				.SetGeometryShader(m_gs.get())
 				.AddDebugName("Solid Pipeline")
 				.SetVertexInput(vertexInput)
-				.SetRasterizationState({ .cullMode = rhi::CullModeType::Back ,.polygonMode = rhi::PolygonModeType::Fill })
+				.SetRasterizationState({ .cullMode = rhi::CullModeType::None ,.polygonMode = rhi::PolygonModeType::Fill })
 				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
 
 			m_SolidPipeline = rdevice->CreateGraphicsPipeline(gdesc2);
@@ -408,34 +401,33 @@ public:
 
 	void Render() override
 	{
-		////Update FPS 
-		//const double newTimeStamp = App::GetTime();
-		//deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
-		//timeStamp = newTimeStamp;
-		//m_FpsCounter.tick(deltaSeconds);
+		//Update FPS 
+		const double newTimeStamp = App::GetTime();
+		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
+		timeStamp = newTimeStamp;
+		m_FpsCounter.tick(deltaSeconds);
 
 
-		//auto* rdevice = m_ManagerDevice->GetRenderDevice();
-		//float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+		auto* rdevice = m_ManagerDevice->GetRenderDevice();
+		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
 
-		//const mat4 m(glm::scale(mat4(1.0f), vec3(0.2f)));
-		//const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
-		//const mat4 mvp = p * m_camera.getViewMatrix() * m;
+		const mat4 m(glm::scale(mat4(1.0f), vec3(0.2f)));
+		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
+		const mat4 mvp = p * m_camera.getViewMatrix() * m;
 
 
-		//////StartRecording
-		//rdevice->StartRecording();
-		//rdevice->WriteBuffer(m_ConstantBuffer, &mvp, sizeof(mvp));
+		////StartRecording
+		rdevice->StartRecording();
+		rdevice->WriteBuffer(m_ConstantBuffer, &mvp, sizeof(mvp));
 
-		//m_MeshScene->Draw();
-
-
-		//rdevice->StopRecording();
-		//StopRecording 
+		m_MeshObject->DrawIndirect();
 
 
-		//IFNITY_LOG(LogApp, INFO, "Render App");
+		rdevice->StopRecording();
+		
+
+		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
 
 	void Animate() override

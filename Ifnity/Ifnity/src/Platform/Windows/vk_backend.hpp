@@ -28,13 +28,15 @@ namespace Vulkan
 	public:
 		Buffer(const BufferDescription& desc): m_Description(desc) {}
 		Buffer(uint32_t bufferID, const BufferDescription& desc): m_BufferID(bufferID), m_Description(desc) {}
-		Buffer(const BufferDescription& desc, HolderBufferSM&& buffer): m_Description(desc), m_holdBuffer(std::move(buffer)) {}
+		Buffer(const BufferDescription& desc, HolderBufferSM&& buffer): m_Description(desc), m_holdBuffer(std::move(buffer)) { m_BufferID = GetBufferID(); }
 		BufferDescription& GetBufferDescription() override { return m_Description; }
 		const uint32_t GetBufferID()  const override { return m_holdBuffer.get()->index(); }
 		void SetData(const void* data) {}
 		const void* GetData() const { return nullptr; }
 		BufferHandleSM getBufferHandleSM() const { return *m_holdBuffer; }
 		VkDeviceAddress getBufferGpuAddress(const DeviceVulkan& device) const;
+		const uint64_t GetBufferGpuAddress() override { return getGpuAddress(); } //make happy IBuffer
+		uint64_t getGpuAddress() const { return m_BufferGpuAddress; }
 
 	private:
 		uint32_t m_BufferID = 0; ///< The buffer ID.
@@ -307,6 +309,12 @@ namespace Vulkan
 		BufferHandle m_BufferDrawID;
 		BufferHandle m_BufferModelMatrices;
 		
+		struct BufferGpuAddres
+		{
+			uint64_t drawId;
+			uint64_t materials;
+			uint64_t modelMatrices;
+		};
 		struct SMBuffers
 		{
 			BufferHandleSM vertexBuffer;
@@ -315,7 +323,10 @@ namespace Vulkan
 			BufferHandleSM drawIDBuffer;
 			BufferHandleSM materialBuffer;
 			BufferHandleSM modelMatricesBuffer;
+			BufferGpuAddres gpuAddress;
 		}m_SM;
+
+		
 
 		std::vector<TextureHandle> allMaterialsTextures_; //In this case textures will be building because we use device to create textures, Opengl can create textures itself.
 
