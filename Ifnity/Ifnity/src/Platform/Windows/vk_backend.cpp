@@ -540,6 +540,8 @@ namespace Vulkan
 			return;
 		}
 
+		
+
 		//Lets to staginDevice to upload data 
 		m_DeviceVulkan->m_StagingDevice->bufferSubData(*buf, offset, size, data);
 
@@ -1707,16 +1709,6 @@ namespace Vulkan
 		std::vector<uint8_t> drawCommands;
 		const uint32_t numCommands = desc.meshFileHeader.meshCount;
 
-		struct DrawIndexedIndirectCommand
-		{
-			uint32_t count;
-			uint32_t instanceCount;
-			uint32_t firstIndex;
-			int32_t baseVertex;
-			uint32_t baseInstance;
-		};
-
-
 
 		drawCommands.resize(sizeof(DrawIndexedIndirectCommand) * numCommands + sizeof(uint32_t));
 
@@ -1806,15 +1798,114 @@ namespace Vulkan
 		const uint32_t* indices = meshData.indexData_.data();
 		const float* vertices = meshData.vertexData_.data();
 
+		const size_t transformsSize = data->getScene().globalTransform_.size() * sizeof(glm::mat4);
+		const void* transformsData = data->getScene().globalTransform_.data();
+		
+
 		//Get data to modify like materials in vk , this solution its not optimal but in the future
 		//when we have a better solution that solve vk and d3d12, probably unify that Opengl scene pipeline. 
 		auto materials = data->getMaterials();
-
-
-		//Convert Materials 
+		//Convert Materials to vk format and make happy to GPU. 
 		convertToVkMaterial(materials, *m_Device, data->getTexturesFiles(),allMaterialsTextures_);
 
+		//Create Buffers and fill the data.
+		BufferDescription bufferDesc = {};
+		{
+			bufferDesc.SetDebugName("Indices Data Buffer - MeshObject");
+			bufferDesc.SetBufferType(BufferType::INDEX_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(header.indexDataSize);
+			bufferDesc.SetData(indices);
+		}
+		m_BufferIndex = m_Device->CreateBuffer(bufferDesc);
+		IFNITY_ASSERT_MSG(m_BufferIndex, "Failed to create index buffer");
+		//VertexData
+		{
+			bufferDesc.SetDebugName("Vertex Data Buffer - MeshObject");
+			bufferDesc.SetBufferType(BufferType::VERTEX_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(header.vertexDataSize);
+			bufferDesc.SetData(vertices);
+		}
+		m_BufferVertex = m_Device->CreateBuffer(bufferDesc);
+		IFNITY_ASSERT_MSG(m_BufferVertex, "Failed to create vertex buffer");
+		//Buffer Transformers Model Matrices
+		{
+			bufferDesc.SetDebugName("TransformerBuffer  - MeshObject");
+			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(transformsSize);
+			bufferDesc.SetData(transformsData);
+		}
+		m_BufferModelMatrices = m_Device->CreateBuffer(bufferDesc);
+		IFNITY_ASSERT_MSG(m_BufferModelMatrices, "Failed to create model matrices buffer");
+
+		//Buffer Materials 
+		{
+			bufferDesc.SetDebugName("Material Buffer  - MeshObject");
+			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(sizeof(MaterialDescription) * materials.size());
+			bufferDesc.SetData(materials.data());
+		}
+		m_BufferMaterials = m_Device->CreateBuffer(bufferDesc);
+
+		//DrawCommands Buffer and DrawData 
+		std::vector<DrawIndexedIndirectCommand> drawCommands;
+		std::vector<DrawID> drawID;
+
+		const uint32_t numCommands = header.meshCount;
+
+		drawCommands.resize(numCommands);
+		drawID.resize(numCommands);
+
+		DrawIndexedIndirectCommand* cmd = drawCommands.data();
+		DrawID* dd                    =   drawID.data();
+
+		IFNITY_ASSERT(data->getScene().meshes_.size() == numCommands);
 		
+		uint32_t ddindex = 0;
+		//Fill the draw commands and draw data 
+		for( auto& shape : data->getShapes() )
+		{
+			int32_t meshId = shape.meshIndex;
+			*cmd++ = {
+				.count = meshData.meshes_[ meshId ].getLODIndicesCount(0),
+				.instanceCount = 1,
+				.firstIndex = shape.indexOffset,
+				.baseVertex = (int32_t)shape.vertexOffset,
+				.baseInstance = ddindex++,
+			};
+			*dd++ = {
+				.transformId = shape.transformIndex,
+				.materialId =  shape.materialIndex,
+			};
+		}
+
+		// Now Build the buffer Indirect buffer and DrawID storage buffer 
+		// prepare indirect commands buffer
+		{
+			bufferDesc.SetDebugName("Indirect Data Buffer - MeshObject");
+			bufferDesc.SetBufferType(BufferType::INDIRECT_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(sizeof(DrawIndexedIndirectCommand) * numCommands);
+			bufferDesc.SetData(drawCommands.data());
+		}
+		m_BufferIndirect = m_Device->CreateBuffer(bufferDesc);
+		IFNITY_ASSERT_MSG(m_BufferIndirect, "Failed to create indirect buffer");
+
+		//DrawID buffer
+		{
+			bufferDesc.SetDebugName("DrawID Data Buffer - MeshObject");
+			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
+			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetByteSize(sizeof(DrawID) * numCommands);
+			bufferDesc.SetData(drawID.data());
+		}
+		m_BufferDrawID = m_Device->CreateBuffer(bufferDesc);
+		IFNITY_ASSERT_MSG(m_BufferDrawID, "Failed to create drawID buffer");
+
+
 
 
 
@@ -1924,7 +2015,7 @@ namespace Vulkan
 			};
 
 		// use for each 
-		std::for_each(std::execution::par,mt.begin(), mt.end(), [&getTextureId,&mtlTextures](auto& mtl)
+		std::for_each(mt.begin(), mt.end(), [&getTextureId,&mtlTextures](auto& mtl)
 					  {
 						  //Get the texture id. 
 						  mtl.ambientOcclusionMap_  = getTextureId(mtl.ambientOcclusionMap_ , mtlTextures);

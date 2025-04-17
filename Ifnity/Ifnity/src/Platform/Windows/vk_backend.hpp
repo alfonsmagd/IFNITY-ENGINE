@@ -268,6 +268,15 @@ namespace Vulkan
 			// Agrega más estados según sea necesario
 		}meshStatus_ = MeshStatus::IDEVICE_NOT_VALID;
 
+		struct DrawIndexedIndirectCommand
+		{
+			uint32_t count;
+			uint32_t instanceCount;
+			uint32_t firstIndex;
+			int32_t baseVertex;
+			uint32_t baseInstance;
+		};
+
 		MeshObject( const MeshObjectDescription&& desc, IDevice* device);
 		MeshObject( const SceneObjectHandler& data, IDevice* device);
 
