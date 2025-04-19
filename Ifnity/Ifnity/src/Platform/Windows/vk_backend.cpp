@@ -1736,7 +1736,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("Indices Data Buffer - MeshObject");
 			bufferDesc.SetBufferType(BufferType::INDEX_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(desc.meshFileHeader.indexDataSize);
 			bufferDesc.SetData(indices);
 		}
@@ -1748,7 +1748,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("Vertex Data Buffer - MeshObject");
 			bufferDesc.SetBufferType(BufferType::VERTEX_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(desc.meshFileHeader.vertexDataSize);
 			bufferDesc.SetData(vertices);
 		}
@@ -1760,7 +1760,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("Indirect Data Buffer - MeshObject");
 			bufferDesc.SetBufferType(BufferType::INDIRECT_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(sizeof(DrawIndexedIndirectCommand) * numCommands + sizeof(uint32_t));
 			bufferDesc.SetData(drawCommands.data());
 		}
@@ -1818,7 +1818,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("Indices Data Buffer - MeshObject");
 			bufferDesc.SetBufferType(BufferType::INDEX_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(header.indexDataSize);
 			bufferDesc.SetData(indices);
 		}
@@ -1828,7 +1828,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("Vertex Data Buffer - MeshObject");
 			bufferDesc.SetBufferType(BufferType::VERTEX_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(header.vertexDataSize);
 			bufferDesc.SetData(vertices);
 		}
@@ -1838,7 +1838,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("TransformerBuffer  - MeshObject");
 			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(transformsSize);
 			bufferDesc.SetData(transformsData);
 		}
@@ -1849,7 +1849,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("Material Buffer  - MeshObject");
 			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(sizeof(MaterialDescription) * materials.size());
 			bufferDesc.SetData(materials.data());
 		}
@@ -1892,7 +1892,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("Indirect Data Buffer - MeshObject");
 			bufferDesc.SetBufferType(BufferType::INDIRECT_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(sizeof(DrawIndexedIndirectCommand) * numCommands);
 			bufferDesc.SetData(drawCommands.data());
 		}
@@ -1903,7 +1903,7 @@ namespace Vulkan
 		{
 			bufferDesc.SetDebugName("DrawID Data Buffer - MeshObject");
 			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
-			bufferDesc.SetStorageType(StorageType::HOST_VISIBLE);
+			bufferDesc.SetStorageType(StorageType::DEVICE);
 			bufferDesc.SetByteSize(sizeof(DrawID) * numCommands);
 			bufferDesc.SetData(drawID.data());
 		}
@@ -1920,9 +1920,9 @@ namespace Vulkan
 
 
 		//Fill the gpu address
-		m_SM.gpuAddress.drawId        = m_BufferDrawID->GetBufferGpuAddress();
+		m_SM.gpuAddress.drawId         = m_BufferDrawID->GetBufferGpuAddress();
 		m_SM.gpuAddress.materials      = m_BufferMaterials->GetBufferGpuAddress();
-		m_SM.gpuAddress.modelMatrices = m_BufferModelMatrices->GetBufferGpuAddress();
+		m_SM.gpuAddress.modelMatrices  = m_BufferModelMatrices->GetBufferGpuAddress();
 
 
 		meshStatus_ = MeshStatus::READY_TO_DRAW;

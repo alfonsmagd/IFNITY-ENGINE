@@ -399,6 +399,7 @@ public:
 		{
 
 			desc.type = BufferType::UNIFORM_BUFFER;
+			desc.storage = StorageType::DEVICE;
 			desc.byteSize = sizeof(PerFrameData);
 			desc.debugName = "Buffer: per-frame";
 			desc.data = nullptr;

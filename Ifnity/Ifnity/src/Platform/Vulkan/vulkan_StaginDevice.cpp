@@ -48,6 +48,52 @@ namespace Vulkan
 		}
 
 		//If the buffer is not mapped, we need to map it and copy the data in staginbuffer
+		VkBuffer stagingBuffer = VK_NULL_HANDLE;
+		VkDeviceMemory stagingMemory = VK_NULL_HANDLE;
+
+		// 1. Create the staging buffer
+		const VkBufferCreateInfo ci = {
+			.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+			.size = size,
+			.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+			.sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+		};
+		VK_ASSERT(vkCreateBuffer(ctx_.device_, &ci, nullptr, &stagingBuffer));
+
+		// 2. Allocate host-visible memory for the staging buffer
+		VkMemoryRequirements reqs;
+		vkGetBufferMemoryRequirements(ctx_.device_, stagingBuffer, &reqs);
+
+		VK_ASSERT(allocateMemory(
+			ctx_.getPhysicalDevice(),
+			ctx_.device_,
+			&reqs,
+			VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+			&stagingMemory));
+
+		VK_ASSERT(vkBindBufferMemory(ctx_.device_, stagingBuffer, stagingMemory, 0));
+
+		// 3. Map and copy the data into the staging buffer
+		void* mapped = nullptr;
+		VK_ASSERT(vkMapMemory(ctx_.device_, stagingMemory, 0, size, 0, &mapped));
+		memcpy(mapped, data, size);
+		vkUnmapMemory(ctx_.device_, stagingMemory);
+
+		// 4. Record copy command from staging buffer to the destination buffer
+		const auto& cmd = ctx_.immediate_->acquire();
+
+		const VkBufferCopy region = {
+			.srcOffset = 0,
+			.dstOffset = dstOffset,
+			.size = size
+		};
+		vkCmdCopyBuffer(cmd.cmdBuf_, stagingBuffer, buffer.vkBuffer_, 1, &region);
+
+		// 5. Submit the command and defer destruction of the staging buffer
+		auto handle = ctx_.immediate_->submit(cmd);
+		auto device = ctx_.device_;
+		ctx_.addDeferredTask(DESTROY_VK_STAGING_BUFFER_DEFFERED(device, stagingBuffer, stagingMemory), handle);
+		
 	}
 
 	void VulkanStagingDevice::imageData2D(VulkanImage& image,

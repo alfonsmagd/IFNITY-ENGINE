@@ -111,7 +111,7 @@ public:
 	SlotMap<VkSampler> slotMapSamplers_;
 
 	//flags
-	bool useStaging_ = false;
+	bool useStaging_ = true;
 	mutable bool awaitingCreation_ = false;
 
 
