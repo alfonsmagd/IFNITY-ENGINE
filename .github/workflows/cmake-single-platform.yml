@@ -1,4 +1,4 @@
-1name: C++/C CMake
+name: C++/C CMake
 
 on:
   push:
@@ -38,6 +38,10 @@ jobs:
 
     - name: Configure CMake
       run: cmake -S ${{ github.workspace }}/Ifnity -B ${{ github.workspace }}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/Ifnity/build --config ${{ env.BUILD_TYPE }}
+
 
     - name: Build
       run: cmake --build ${{ github.workspace }}/Ifnity/build --config ${{ env.BUILD_TYPE }}
