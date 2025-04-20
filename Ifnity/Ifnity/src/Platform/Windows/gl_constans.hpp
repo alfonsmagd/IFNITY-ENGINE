@@ -13,7 +13,7 @@ namespace OpenGL
      */
     struct VertexAttribute
     {
-        GLuint index;          /**< Index of the vertex attribute. */
+        GLuint location;          /**< Index of the vertex attribute. */
         GLint size;            /**< Size of the vertex attribute. */
         GLenum type;           /**< Data type of the vertex attribute. */
         GLboolean normalized;  /**< Whether the attribute is normalized. */
@@ -44,12 +44,67 @@ namespace OpenGL
     };
 
     static const std::array<FormatMapping, size_t(rhi::Format::COUNT)> c_FormatMap = { {
-        { rhi::Format::R8G8B8_UINT, GL_RGB8UI },
-        { rhi::Format::R8G8B8, GL_RGB8 },
-        { rhi::Format::R8G8B8A8, GL_RGBA8 },
-        { rhi::Format::R32G32B32_FLOAT, GL_RGB32F }
-    } };
+    { rhi::Format::R8G8B8_UINT, GL_RGB8UI },
+    { rhi::Format::R8G8B8, GL_RGB8 },
+    { rhi::Format::R8G8B8A8, GL_RGBA8 },
+    { rhi::Format::R32G32B32_FLOAT, GL_RGB32F },
+    { rhi::Format::R8G8B8A8_UNORM, GL_RGBA8 },
+    { rhi::Format::B8G8R8A8_UNORM, GL_BGRA },
+    { rhi::Format::R_UNORM8, GL_R8 },
+    { rhi::Format::R_UINT16, GL_R16UI },
+    { rhi::Format::R_UINT32, GL_R32UI },
+    { rhi::Format::R_UNORM16, GL_R16 },
+    { rhi::Format::R_FLOAT16, GL_R16F },
+    { rhi::Format::R_FLOAT32, GL_R32F },
+    { rhi::Format::RG_UNORM8, GL_RG8 },
+    { rhi::Format::RG_UINT16, GL_RG16UI },
+    { rhi::Format::RG_UINT32, GL_RG32UI },
+    { rhi::Format::RG_UNORM16, GL_RG16 },
+    { rhi::Format::RG_FLOAT16, GL_RG16F },
+    { rhi::Format::R32G32_FLOAT, GL_RG32F },
+    { rhi::Format::RGBA_UNORM8, GL_RGBA8 },
+    { rhi::Format::RGBA_UINT32, GL_RGBA32UI },
+    { rhi::Format::RGBA_FLOAT16, GL_RGBA16F },
+    { rhi::Format::RGBA_FLOAT32, GL_RGBA32F },
+    { rhi::Format::RGBA_SRGB8, GL_SRGB8_ALPHA8 },
+    { rhi::Format::BGRA_UNORM8, GL_BGRA },
+    { rhi::Format::BGRA_SRGB8, GL_SRGB8_ALPHA8 },
+    { rhi::Format::ETC2_RGB8, GL_COMPRESSED_RGB8_ETC2 },
+    { rhi::Format::ETC2_SRGB8, GL_COMPRESSED_SRGB8_ETC2 },
+    { rhi::Format::BC7_RGBA, GL_COMPRESSED_RGBA_BPTC_UNORM },
+    { rhi::Format::Z_UNORM16, GL_DEPTH_COMPONENT16 },
+    { rhi::Format::Z_UNORM24, GL_DEPTH_COMPONENT24 },
+    { rhi::Format::Z_FLOAT32, GL_DEPTH_COMPONENT32F },
+    { rhi::Format::Z_UNORM24_S_UINT8, GL_DEPTH24_STENCIL8 },
+    { rhi::Format::Z_FLOAT32_S_UINT8, GL_DEPTH32F_STENCIL8 }
+} };
 
+
+
+	/**
+	 * @brief Get the RHI format corresponding to the given OpenGL format.
+	 * @param glFormat The OpenGL format.
+	 * @return The corresponding RHI format, or rhi::Format::UNKNOWN if not found.
+	 */
+    /*std::vector<VkFormat> getCompatibleDepthStencilFormats(lvk::Format format)
+    {
+        switch(format)
+        {
+        case lvk::Format_Z_UN16:
+            return { VK_FORMAT_D16_UNORM, VK_FORMAT_D16_UNORM_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT };
+        case lvk::Format_Z_UN24:
+            return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT, VK_FORMAT_D16_UNORM_S8_UINT };
+        case lvk::Format_Z_F32:
+            return { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT };
+        case lvk::Format_Z_UN24_S_UI8:
+            return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT };
+        case lvk::Format_Z_F32_S_UI8:
+            return { VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D16_UNORM_S8_UINT };
+        default:
+            return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT };
+        }
+        return { VK_FORMAT_D24_UNORM_S8_UINT, VK_FORMAT_D32_SFLOAT };
+    }*/
     /**
      * @brief Sets the OpenGL rasterization state.
      * 
@@ -125,27 +180,27 @@ namespace OpenGL
      * @param dimension The RHI texture dimension.
      * @return The corresponding OpenGL texture target.
      */
-    inline GLenum ConvertToOpenGLTextureTarget(rhi::TextureDimension dimension)
+    inline GLenum ConvertToOpenGLTextureTarget(rhi::TextureType dimension)
     {
         switch(dimension)
         {
-        case rhi::TextureDimension::TEXTURE1D:
+        case rhi::TextureType::TEXTURE1D:
             return GL_TEXTURE_1D;
-        case rhi::TextureDimension::TEXTURE1DARRAY:
+        case rhi::TextureType::TEXTURE1DARRAY:
             return GL_TEXTURE_1D_ARRAY;
-        case rhi::TextureDimension::TEXTURE2D:
+        case rhi::TextureType::TEXTURE2D:
             return GL_TEXTURE_2D;
-        case rhi::TextureDimension::TEXTURE2DARRAY:
+        case rhi::TextureType::TEXTURE2DARRAY:
             return GL_TEXTURE_2D_ARRAY;
-        case rhi::TextureDimension::TEXTURECUBE:
+        case rhi::TextureType::TEXTURECUBE:
             return GL_TEXTURE_CUBE_MAP;
-        case rhi::TextureDimension::TEXTURECUBEARRAY:
+        case rhi::TextureType::TEXTURECUBEARRAY:
             return GL_TEXTURE_CUBE_MAP_ARRAY;
-        case rhi::TextureDimension::TEXTURE2DMS:
+        case rhi::TextureType::TEXTURE2DMS:
             return GL_TEXTURE_2D_MULTISAMPLE;
-        case rhi::TextureDimension::TEXTURE2DMSARRAY:
+        case rhi::TextureType::TEXTURE2DMSARRAY:
             return GL_TEXTURE_2D_MULTISAMPLE_ARRAY;
-        case rhi::TextureDimension::TEXTURE3D:
+        case rhi::TextureType::TEXTURE3D:
             return GL_TEXTURE_3D;
         default:
             return GL_TEXTURE_2D; // Default value

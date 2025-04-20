@@ -86,6 +86,12 @@ struct IFNITY_API DrawData
 	uint32_t transformIndex;  /**< Index of the transform to apply */
 };
 
+struct IFNITY_API DrawID
+{
+	uint32_t transformId;
+	uint32_t materialId;
+};
+
 /**
  * @brief Represents the data of a mesh including indices, vertices, and mesh descriptors.
  */

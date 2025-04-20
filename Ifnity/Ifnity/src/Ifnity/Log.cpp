@@ -20,6 +20,22 @@ namespace IFNITY
 
 	}
 
+
+	void Assert(bool condition, const char* file, int line, const char* format, ...)
+	{
+		if(!condition)
+		{
+			va_list args;
+			va_start(args, format);
+			Log::GetCoreLogger()->error("Assertion failed at {}:{}: ", file, line);
+            char buffer[1024];
+            vsnprintf(buffer, sizeof(buffer), format, args);
+            Log::GetCoreLogger()->error(buffer);
+			va_end(args);
+			std::abort(); // Termina el programa
+		}
+	}
+
 }
 
 

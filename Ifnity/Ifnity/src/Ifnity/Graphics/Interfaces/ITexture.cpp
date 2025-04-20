@@ -30,10 +30,10 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
     const void* img = nullptr;
     switch(desc.dimension)
     {
-    case rhi::TextureDimension::TEXTURECUBE:
+    case rhi::TextureType::TEXTURECUBE:
         img = stbi_loadf(desc.filepath.c_str(), &w, &h, &comp, 3);
         break;
-    case rhi::TextureDimension::TEXTURE2D:
+    case rhi::TextureType::TEXTURE2D:
 		if(desc.format == rhi::Format::R8G8B8A8)
        img = stbi_load(desc.filepath.c_str(), &w, &h, &comp, STBI_rgb_alpha);
         else
@@ -64,6 +64,22 @@ const void* LoadTextureFromFileDescription(TextureDescription& desc)
 	stbi_image_free(const_cast<void*>(img));
 
 }
+
+
+ bool isDepthFormat(rhi::Format format)
+ {
+	 return properties   [SCAST_U8(format) ].depth 
+            || properties[SCAST_U8(format)].stencil;
+ }
+
+ bool getNumImagePlanes(rhi::Format format)
+ {
+	 return properties[ SCAST_U8(format) ].numPlanes;
+ }
+
+
+
+ 
 
 IFNITY_END_NAMESPACE
 

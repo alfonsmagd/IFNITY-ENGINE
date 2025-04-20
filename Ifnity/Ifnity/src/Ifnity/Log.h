@@ -8,6 +8,8 @@
 
 
 
+#define STRMESSAGE(msg, var) (std::string(msg) + std::string(var))
+
 #define IFNITY_LOG(logger, level, fmt, ...) \
     do { \
         if (level == WARNING) { \
@@ -23,7 +25,6 @@
         } \
     } while (0)
 
-#define STRMESSAGE(msg, var) (std::string(msg) + std::string(var))
 namespace IFNITY
 {
 
@@ -44,6 +45,8 @@ namespace IFNITY
 		
 	};
 
+    void Assert(bool condition, const char* file, int line, const char* format, ...);
+
 	
 }
 
@@ -53,3 +56,27 @@ namespace IFNITY
 #define INFO    spdlog::level::info
 #define ERROR   spdlog::level::err
 #define TRACE   spdlog::level::trace
+
+#define IFNITY_ASSERT_MSG(cond, fmt, ...) \
+    do { \
+        if (!(cond)) { \
+            IFNITY::Assert(false, __FILE__, __LINE__, (fmt), ##__VA_ARGS__); \
+        } \
+    } while (0)
+
+#define IFNITY_ASSERT(cond) \
+    do { \
+        if (!(cond)) { \
+            IFNITY::Assert(false, __FILE__, __LINE__, "Assertion failed: " #cond); \
+        } \
+    } while (0)
+
+#define IFNITY_VERIFY(cond) ((cond) ? true : (IFNITY::Assert(false, __FILE__, __LINE__, #cond), false))
+
+#define CHECK_PTR(ptr, msg)                   \
+    do {                                      \
+        if (!(ptr)) {                         \
+            IFNITY_LOG(LogApp, ERROR, msg);   \
+            return;                           \
+        }                                     \
+    } while(0)

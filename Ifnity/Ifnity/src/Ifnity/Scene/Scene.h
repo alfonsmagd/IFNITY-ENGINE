@@ -60,6 +60,11 @@ struct Hierarchy
  */
 struct  IFNITY_API Scene
 {
+	//To simplify 
+	using node = uint32_t;
+	using material = uint32_t;
+	using name = uint32_t;
+
 	// local transformations for each node and global transforms
 	// + an array of 'dirty/changed' local transforms
 	std::vector<mat4> localTransform_;
@@ -72,13 +77,13 @@ struct  IFNITY_API Scene
 	std::vector<Hierarchy> hierarchy_;
 
 	// Mesh component: Which node corresponds to which node
-	std::unordered_map<uint32_t, uint32_t> meshes_;
+	std::unordered_map<node, node> meshes_;
 
 	// Material component: Which material belongs to which node
-	std::unordered_map<uint32_t, uint32_t> materialForNode_;
+	std::unordered_map<node, material> materialForNode_;
 
 	// Node name component: Which name is assigned to the node
-	std::unordered_map<uint32_t, uint32_t> nameForNode_;
+	std::unordered_map<node, name> nameForNode_;
 
 	// List of scene node names
 	std::vector<std::string> names_;

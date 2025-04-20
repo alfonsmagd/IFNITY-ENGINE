@@ -1,12 +1,36 @@
-
 #pragma once
 
 #include  "pch.h"
 
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
+#include <glslang\Include\glslang_c_interface.h>
+#include "../Vulkan/vulkan_classes.hpp"
 
-#include <VkBootstrap.h>
-#include <vk_mem_alloc.h>
 
+
+IFNITY_NAMESPACE
+
+
+#pragma region DEFINES AND MACROS
+
+#define VK_CHECK(result, errorMessage) \
+    if ((result) != VK_SUCCESS) { \
+        IFNITY_LOG(LogCore, ERROR, errorMessage); \
+        \
+    }
+
+#define VK_ASSERT(func)                                            \
+  {                                                                \
+    const VkResult vk_assert_result = func;                        \
+    if (vk_assert_result != VK_SUCCESS) {                          \
+      IFNITY_LOG(LogCore,ERROR,"Vulkan API call failed: %s:%i\n  %s\n  %s\n", \
+                    getVulkanResultString(vk_assert_result)); \
+      assert(false);                                               \
+    }                                                              \
+  }
+
+extern PFN_vkSetDebugUtilsObjectNameEXT gvkSetDebugUtilsObjectNameEXT;
 
 
 #define VK_CHECK(result, errorMessage) \
@@ -15,76 +39,110 @@
         \
     }
 
+#pragma endregion
 
 
-
-//Forward declaration
-struct GLFWwindow;
-
-struct ImageBlock
-{
-	VkImage			image = VK_NULL_HANDLE;
-	VkImageView     imageView = VK_NULL_HANDLE;
-	VkFormat		format;
-	VmaAllocation	imageAlloc = VK_NULL_HANDLE;
-	VkDeviceMemory  imageMemory = VK_NULL_HANDLE;
+struct StageAccess {
+    VkPipelineStageFlags2 stage;
+    VkAccessFlags2 access;
 };
 
-struct VkRenderData
-{
-	GLFWwindow* rdWindow = nullptr;
 
-	int rdWidth = 0;
-	int rdHeight = 0;
 
-	unsigned int rdTriangleCount = 0;
+IFNITY_INLINE VKAPI_ATTR VkBool32 VKAPI_CALL debugUtilsMessengerCallback(
+	VkDebugUtilsMessageSeverityFlagBitsEXT      messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT             messageType,
+	const VkDebugUtilsMessengerCallbackDataEXT * pCallbackData,
+	void* pUserData);
 
-	VmaAllocator rdAllocator = nullptr;
+IFNITY_INLINE VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger);
 
-	vkb::Instance rdVkbInstance{};
-	vkb::PhysicalDevice rdVkbPhysicalDevice{};
-	vkb::Device rdVkbDevice{};
-	vkb::Swapchain rdVkbSwapchain{};
+ extern IFNITY_INLINE void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks * pAllocator);
 
-	std::vector<VkImage> rdSwapchainImages;
-	std::vector<VkImageView> rdSwapchainImageViews;
-	std::vector<VkFramebuffer> rdFramebuffers;
 
-	VkQueue rdGraphicsQueue = VK_NULL_HANDLE;
-	VkQueue rdPresentQueue = VK_NULL_HANDLE;
+//Set debug object name without instance and previously luaded vkSetDebugUtilsObjectNameEXT 
+VkResult setDebugObjectName(VkDevice device, VkObjectType type, uint64_t handle, const char* name);
+bool setupDebugCallbacksVK123(VkInstance instance, VkDebugUtilsMessengerEXT* debugMessenger);
+VkResult setDebugObjectName(VkInstance instance, VkDevice device, VkObjectType type, uint64_t handle, const char* name);
+VkSemaphore createSemaphore(VkDevice device, const char* debugName);
+VkFence createFence(VkDevice device, const char* debugName);
+const char* getVulkanResultString(VkResult result);
+void imageMemoryBarrier(VkCommandBuffer buffer,
+    VkImage image,
+    VkAccessFlags srcAccessMask,
+    VkAccessFlags dstAccessMask,
+    VkImageLayout oldImageLayout,
+    VkImageLayout newImageLayout,
+    VkPipelineStageFlags srcStageMask,
+    VkPipelineStageFlags dstStageMask,
+	VkImageSubresourceRange subresourceRange);
 
-	VkImage rdDepthImage = VK_NULL_HANDLE;
-	VkImageView rdDepthImageView = VK_NULL_HANDLE;
-	VkFormat rdDepthFormat;
-	VmaAllocation rdDepthImageAlloc = VK_NULL_HANDLE;
+void imageMemoryBarrier2(VkCommandBuffer buffer,
+                         VkImage image,
+                         StageAccess src,
+                         StageAccess dst,
+                         VkImageLayout oldImageLayout,
+                         VkImageLayout newImageLayout,
+                         VkImageSubresourceRange subresourceRange);
 
-	VkRenderPass rdRenderpass;
-	VkPipelineLayout rdPipelineLayout = VK_NULL_HANDLE;
-	VkPipeline rdBasicPipeline = VK_NULL_HANDLE;
-	VkPipeline rdChangedPipeline = VK_NULL_HANDLE;
+void saveSPIRVBinaryFile(const char* filename, const uint8_t * code, size_t size);
+glslang_resource_t getGlslangResource(const VkPhysicalDeviceLimits & limits);
 
-	VkCommandPool rdCommandPool = VK_NULL_HANDLE;
-	VkCommandBuffer rdCommandBuffer = VK_NULL_HANDLE;
 
-	VkSemaphore rdPresentSemaphore = VK_NULL_HANDLE;
-	VkSemaphore rdRenderSemaphore = VK_NULL_HANDLE;
-	VkFence rdRenderFence = VK_NULL_HANDLE;
+VkResult compileShaderVK(VkShaderStageFlagBits stage,
+    const char* code,
+    std::vector<uint8_t>*outSPIRV,
+    const glslang_resource_t * glslLangResource);
 
-	VkImage rdTextureImage = VK_NULL_HANDLE;
-	VkImageView rdTextureImageView = VK_NULL_HANDLE;
-	VkSampler rdTextureSampler = VK_NULL_HANDLE;
-	VmaAllocation rdTextureImageAlloc = nullptr;
+VkDescriptorSetLayoutBinding descriptorSetLayoutBinding(uint32_t binding,
+    VkDescriptorType descriptorType,
+    uint32_t descriptorCount,
+    VkShaderStageFlags stageFlags,
+    const VkSampler * immutableSamplers = nullptr);
 
-	VkDescriptorPool rdTextureDescriptorPool = VK_NULL_HANDLE;
-	VkDescriptorSetLayout rdTextureDescriptorLayout = VK_NULL_HANDLE;
-	VkDescriptorSet rdTextureDescriptorSet = VK_NULL_HANDLE;
 
-	VkBuffer rdUboBuffer = VK_NULL_HANDLE;
-	VmaAllocation rdUboBufferAlloc = nullptr;
+VkSpecializationInfo getPipelineShaderStageSpecializationInfo( Vulkan::SpecializationConstantDesc desc,
+    VkSpecializationMapEntry* outEntries);
 
-	VkDescriptorPool rdUBODescriptorPool = VK_NULL_HANDLE;
-	VkDescriptorSetLayout rdUBODescriptorLayout = VK_NULL_HANDLE;
-	VkDescriptorSet rdUBODescriptorSet = VK_NULL_HANDLE;
+VkSampleCountFlagBits getVulkanSampleCountFlags(uint32_t numSamples, VkSampleCountFlags maxSamplesMask);
 
-	VkDescriptorPool rdImguiDescriptorPool = VK_NULL_HANDLE;
-};
+VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(VkShaderStageFlagBits stage,
+    VkShaderModule shaderModule,
+    const char* entryPoint,
+    const VkSpecializationInfo * specializationInfo);
+
+
+VkSpecializationInfo getSpecializationInfo(uint32_t mapEntryCount,
+                                           const VkSpecializationMapEntry * mapEntries,
+                                           size_t dataSize,
+                                           const void* data);
+
+VkMemoryPropertyFlags storageTypeToVkMemoryPropertyFlags(StorageType storage);
+
+VmaAllocator createVmaAllocator(VkPhysicalDevice physDev,
+    VkDevice device,
+    VkInstance instance,
+    uint32_t apiVersion);
+
+
+VkResult allocateMemory(VkPhysicalDevice physDev,
+    VkDevice device,
+    const VkMemoryRequirements * memRequirements,
+    VkMemoryPropertyFlags props,
+    VkDeviceMemory * outMemory);
+
+
+VkResult allocateMemory2(VkPhysicalDevice physDev,
+    VkDevice device,
+    const VkMemoryRequirements2 * memRequirements,
+    VkMemoryPropertyFlags props,
+    VkDeviceMemory * outMemory);
+
+uint32_t findMemoryType(VkPhysicalDevice physDev, uint32_t memoryTypeBits, VkMemoryPropertyFlags flags);
+
+
+IFNITY_API void testShaderCompilation(const char* sourceFilename, const char* destFilename);
+
+
+
+IFNITY_END_NAMESPACE

@@ -42,16 +42,27 @@ enum class IFNITY_API BufferType: unsigned char
     DEFAULT_BUFFER = 0x00,    ///< Default buffer type
     VERTEX_BUFFER  = 0x01 ,    ///< Buffer for vertex data
     INDEX_BUFFER   = 0x02,     ///< Buffer for index data
+	INDIRECT_BUFFER = 0x04,    ///< Buffer for indirect data
 	VERTEX_INDEX_BUFFER = VERTEX_BUFFER | INDEX_BUFFER, ///< Buffer for vertex and index data
     CONSTANT_BUFFER = 0xF0,    ///< Buffer for constant data
 	VERTEX_PULLING_BUFFER_INDEX = 0x10,///< Buffer for vertex pulling data this implies that the buffer is used for vertex pulling and configure the index buffer 
 	VERTEX_PULLING_BUFFER = 0x20,///< Buffer for vertex pulling data , Vertex data, no index buffer.
 	STORAGE_BUFFER = 0x30,     ///< Buffer for storage data
+	UNIFORM_BUFFER = 0x40,     ///< Buffer for uniform data
 
     NO_DEFINE_BUFFER = 0xFF ///< Undefined buffer type
 };
 
-
+/**
+ * @brief Enum class representing different types of storage USING IN VK/D3D12 Opengl discard it.
+ *
+ */
+enum class IFNITY_API StorageType: unsigned char
+{
+    DEVICE,
+    HOST_VISIBLE,
+    MEMORYLESS
+};
 
 
 
@@ -66,8 +77,10 @@ struct IFNITY_API BufferDescription
     uint32_t strideSize = 0;        ///< Stride size of the buffer
 	uint32_t offset = 0;            ///< Offset of the buffer
     std::string debugName;          ///< Debug name for the buffer
-    BufferType type = BufferType::NO_DEFINE_BUFFER; ///< Type of the buffer
+    BufferType type         = BufferType::NO_DEFINE_BUFFER; ///< Type of the buffer
+	StorageType storage = StorageType::DEVICE; ///< Storage type of the buffer
 	uint8_t binding = 0;            ///< Binding point of the buffer
+
 	const void* data ;     ///< Data to be written to the buffer
 
 
@@ -140,6 +153,12 @@ struct IFNITY_API BufferDescription
 		return *this;
 	}
 
+	constexpr BufferDescription& SetStorageType(StorageType value) noexcept
+	{
+		storage = value;
+		return *this;
+	}
+
 private:
 	friend class IDevice;
     unsigned int meshIDasociate = -1;      ///< Associate mesh ID, for example in OPENGL this is the VAO ID
@@ -149,6 +168,8 @@ private:
 /**
  * @brief Interface for buffer objects.
  */
+
+
 class IFNITY_API IBuffer
 {
 public:
@@ -160,6 +181,7 @@ public:
      */
     virtual BufferDescription& GetBufferDescription() = 0;
 	virtual const uint32_t GetBufferID() const = 0;
+    virtual const uint64_t GetBufferGpuAddress() = 0;
 	virtual void SetData(const void* data) = 0;
 	virtual const void* GetData() const = 0;
 };

@@ -63,7 +63,7 @@ void MeshDataBuilderAssimp<VertexType>::processScene(const SceneConfig& cfg, Mes
 	}
 
 	// Material Conversion
-	Scene ourScene;
+    IFNITY::Scene ourScene;
 	std::vector<MaterialDescription> materials;
 	std::vector<std::string>& materialNames = ourScene.materialNames_;
 	std::vector<std::string> files;
@@ -85,9 +85,7 @@ void MeshDataBuilderAssimp<VertexType>::processScene(const SceneConfig& cfg, Mes
 	// Save materials
 	saveMaterials(cfg.outputMaterials.c_str(), materials, files);
 
-	std::vector<MaterialDescription> allMaterials;
-	std::vector<std::string> files2;
-	loadMaterials(cfg.outputMaterials.c_str(), allMaterials, files2);
+	
 
 	// Scene hierarchy conversion
 	traverse(scene, ourScene, scene->mRootNode, -1, 0);
@@ -96,6 +94,9 @@ void MeshDataBuilderAssimp<VertexType>::processScene(const SceneConfig& cfg, Mes
 	// Check if scene is correct
 	#ifdef _TEST_MODE
 	Scene ourScene_check;
+    std::vector<MaterialDescription> allMaterials;
+    std::vector<std::string> files2;
+    loadMaterials(cfg.outputMaterials.c_str(), allMaterials, files2);
 	loadScene(cfg.outputScene.c_str(), ourScene_check);
 	if(!(ourScene_check == ourScene))
 	{
@@ -149,6 +150,10 @@ bool MeshDataBuilderAssimp<VertexType>::loadFileAssimp(const char* fileName, Mes
     {
         meshData.meshes_.push_back(convertAIMesh(scene->mMeshes[ i ], meshData));
     }
+
+	//delete scene 
+	//[CHECK] if this dont break 
+	aiReleaseImport(scene);
 
     return true;
 }
@@ -255,7 +260,7 @@ void MeshDataBuilderAssimp<VertexType>::buildMeshData(MeshObjectDescription& des
         IFNITY_LOG(LogCore, ERROR, "error loading file %s", description.filePath.c_str());
     }
 
-    IFNITY_LOG(LogCore, INFO, "Loaded file successfully", description.filePath.c_str());
+    IFNITY_LOG(LogCore, INFO, "Loaded file successfully {}", description.filePath.c_str());
 
     saveMeshData(description.filePath.c_str(), description.meshData, description.meshFileHeader);
 }

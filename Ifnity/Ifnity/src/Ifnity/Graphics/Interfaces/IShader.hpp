@@ -27,23 +27,32 @@ enum IFNITY_API ShaderCompileFlagType: uint32_t
 	ENABLE_SPIRV = 0x4,
 	PACK_MATRIX_ROW_MAJOR = 0x8,
 
+
 	DEFAULT_FLAG = 0x0C     
 	// Agrega más flags según sea necesario
 };
 
+//This flag its only works in Vulkan API 
+enum IFNITY_API ShaderAPIflag: uint8_t
+{
+	DEFAULT_GLSL = 0x00,
+	SPIRV_BIN = 0x01
+};
 
 
 struct IFNITY_API ShaderCreateDescription
 {
 	ShaderType Type;
+	ShaderAPIflag APIflag = ShaderAPIflag::DEFAULT_GLSL;
+	ShaderCompileFlagType Flags;
+
 	std::wstring ShaderSource;
 	std::wstring EntryPoint;
 	std::wstring Profile;
-	ShaderCompileFlagType Flags;
-	bool SaveFile{ true };
 	std::string FileName;
 	std::string Filepath{};
 	bool NoCompile = false;
+	bool SaveFile{ true };
 
 	// Operator to compare two ShaderCreateDescription and uses in std::set
 	bool operator<(const ShaderCreateDescription& other) const

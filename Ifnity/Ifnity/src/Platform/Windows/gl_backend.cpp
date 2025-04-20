@@ -1,6 +1,8 @@
 #include "gl_backend.hpp"
 #include <GLFW\glfw3.h>
 #include "..\..\..\vendor\glfw\deps\stb_image_write.h"
+#include "Ifnity\Graphics\Utils.hpp"
+
 
 
 
@@ -11,13 +13,13 @@ using vec2 = glm::vec2;
 
 namespace OpenGL
 {
-	int getNumMipMapLevels2D(int w, int h)
+	/*int getNumMipMapLevels2D(int w, int h)
 	{
 		int levels = 1;
 		while((w | h) >> levels)
 			levels += 1;
 		return levels;
-	}
+	}*/
 
 	void CheckOpenGLError(const char* stmt, const char* fname, int line)
 	{
@@ -34,79 +36,9 @@ namespace OpenGL
         CheckOpenGLError(#stmt, __FILE__, __LINE__); \
     } while (0)
 
-	std::string readShaderFile(const char* fileName)
-	{
-		FILE* file = fopen(fileName, "r");
+	
 
-		if(!file)
-		{
-			IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot open shader file \n" + std::string(fileName));
-			
-		
-		}
-
-		fseek(file, 0L, SEEK_END);
-		const auto bytesinfile = ftell(file);
-		fseek(file, 0L, SEEK_SET);
-
-		char* buffer = (char*)alloca(static_cast<size_t>(bytesinfile) + 1);
-		const size_t bytesread = fread(buffer, 1, bytesinfile, file);
-		fclose(file);
-
-		buffer[ bytesread ] = 0;
-
-		static constexpr unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
-
-		if(bytesread > 3)
-		{
-			if(!memcmp(buffer, BOM, 3))
-				memset(buffer, ' ', 3);
-		}
-
-		std::string code(buffer);
-
-		while(code.find("#include ") != code.npos)
-		{
-			const auto pos = code.find("#include ");
-			const auto p1 = code.find('<', pos);
-			const auto p2 = code.find('>', pos);
-			if(p1 == code.npos || p2 == code.npos || p2 <= p1)
-			{
-				IFNITY_LOG(LogCore, ERROR, "I/O error. Cannot include  shader file '%s'\n", fileName);
-				return std::string();
-			}
-			const std::string name = code.substr(p1 + 1, p2 - p1 - 1);
-			const std::string include = readShaderFile(name.c_str());
-			code.replace(pos, p2 - pos + 1, include.c_str());
-		}
-
-		return code;
-	}
-
-	void printShaderSource(const char* text)
-	{
-		int line = 1;
-		IFNITY_LOG(LogCore, TRACE, "Shader source code Start : -------------------------------------------------------------\n");
-		printf("\n(%3i) ", line);
-
-		while(text && *text++)
-		{
-			if(*text == '\n')
-			{
-				printf("\n(%3i) ", ++line);
-			}
-			else if(*text == '\r')
-			{
-			}
-			else
-			{
-				printf("%c", *text);
-			}
-		}
-
-		printf("\n");
-		IFNITY_LOG(LogCore, TRACE, "Shader source code END : -------------------------------------------------------------\n");
-	}
+	
 
 	Device::Device()
 	{}
@@ -164,14 +96,14 @@ namespace OpenGL
 			const auto& vsfile = vs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
 			const auto& psfile = fs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
 
-			vertexCode = readShaderFile(vsfile.c_str());
-			fragmentCode = readShaderFile(psfile.c_str());
+			vertexCode =   Utils::readShaderFile(vsfile.c_str());
+			fragmentCode = Utils::readShaderFile(psfile.c_str());
 
 			if(gs)
 			{
 				const auto& gsfile = gs->GetShaderDescpritionbyAPI(rhi::GraphicsAPI::OPENGL).Filepath;
 
-				geometryCode = readShaderFile(gsfile.c_str());
+				geometryCode = Utils::readShaderFile(gsfile.c_str());
 			}
 		}
 		catch(std::ifstream::failure& e)
@@ -348,6 +280,17 @@ namespace OpenGL
 		}//endfor
 	}
 
+	void Device::BindingVertexAttributesBuffer(BufferHandle& bf)
+	{
+		IFNITY_LOG(LogApp, ERROR, "BindingVertexAttributesBuffer its not implemented");
+	}
+
+	void Device::BindingIndexBuffer(BufferHandle& bf)
+	{
+
+		IFNITY_LOG(LogApp, ERROR, "BindingVertexAttributesBuffer its not implemented");
+	}
+
 	/**
 	 * @brief Creates a texture in OpenGL from the given description.
 	 *
@@ -362,7 +305,7 @@ namespace OpenGL
 		//Create Switch for the type of texture
 		switch(desc.dimension)
 		{
-		case rhi::TextureDimension::TEXTURE2D:
+		case rhi::TextureType::TEXTURE2D:
 			if(desc.hasFlag(TextureDescription::TextureFlags::IS_ARB_BINDLESS_TEXTURE))
 			{
 				//Create a bindless texture
@@ -371,7 +314,7 @@ namespace OpenGL
 			return CreateTexture2DImpl(desc);
 			break;
 
-		case rhi::TextureDimension::TEXTURECUBE:
+		case rhi::TextureType::TEXTURECUBE:
 			return CreateTextureCubeMapImpl(desc);
 			break;
 		default:
@@ -381,6 +324,7 @@ namespace OpenGL
 
 	}
 
+	//[REFACTOR]: Create a MeshObjectAuto, to uses a generi meshDatabuilder, this way the user does not need to know who to build, the problem is create a Builder Templatized that be generic in some types ..
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
 	{
 		//Check if MeshData its valid ? 
@@ -406,7 +350,7 @@ namespace OpenGL
 			//Create a MeshObject with the data. 
 
 			/*MeshObject* mesh = new MeshObject(&desc.meshFileHeader, desc.meshData.meshes_.data(), desc.meshData.indexData_.data(), desc.meshData.vertexData_.data(), this);*/
-			MeshObject* mesh = new MeshObject(std::move(desc), this);
+			MeshObject* mesh = new MeshObject(std::move(const_cast<MeshObjectDescription&>(desc)), this);
 
 			return MeshObjectHandle(mesh);
 		}
@@ -415,7 +359,7 @@ namespace OpenGL
 		return nullptr;
 
 	}
-
+	//[REFACTOR]: Create a MeshObjectAuto, to uses a generi meshDatabuilder, this way the user does not need to know who to build, the problem is create a Builder Templatized that be generic in some types ..
 	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
 	{
 		if(meshbuilder)
@@ -443,7 +387,13 @@ namespace OpenGL
 	}
 
 
+	void Device::DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)
+	{
+		//For now not using.
+		//Report in the future.
 
+		IFNITY_LOG(LogApp, WARNING, "DrawObject its not implemented");
+	}
 
 	GLuint Device::CreateVAO()
 	{
@@ -589,7 +539,7 @@ namespace OpenGL
 		};
 		#if _DEBUG
 		IFNITY_LOG(LogCore, TRACE, "Vertex Shader Source: " + std::string( vertexShader));
-		printShaderSource(vertexShader);
+		Utils::printShaderSource(vertexShader);
 		#endif
 
 		const GLuint shaderFragment = glCreateShader(GL_FRAGMENT_SHADER);
@@ -605,7 +555,7 @@ namespace OpenGL
 
 		#if _DEBUG
 			IFNITY_LOG(LogCore, TRACE, STRMESSAGE("Fragment Shader Source: ", fragmentShader));
-			printShaderSource(fragmentShader);
+			Utils::printShaderSource(fragmentShader);
 		#endif
 		const GLuint program = glCreateProgram();
 		glAttachShader(program, shaderVertex);
@@ -652,7 +602,7 @@ namespace OpenGL
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n", infoLog);
 		}
 		#if _DEBUG
-		printShaderSource(vertexShader);
+		Utils::printShaderSource(vertexShader);
 		#endif
 
 		// Compile fragment shader
@@ -666,7 +616,7 @@ namespace OpenGL
 			IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n", infoLog);
 		}
 		#if _DEBUG
-		printShaderSource(fragmentShader);
+		Utils::printShaderSource(fragmentShader);
 		#endif
 
 		// Compile geometry shader if provided
@@ -683,7 +633,7 @@ namespace OpenGL
 				IFNITY_LOG(LogApp, ERROR, "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n", infoLog);
 			}
 			#if _DEBUG
-			printShaderSource(geometryShader);
+			Utils::printShaderSource(geometryShader);
 			#endif
 		}
 
@@ -800,9 +750,9 @@ namespace OpenGL
 
 		for(const auto& attr : attributes)
 		{
-			glEnableVertexArrayAttrib(vao, attr.index);
-			glVertexArrayAttribFormat(vao, attr.index, attr.size, attr.type, attr.normalized, attr.offset);
-			glVertexArrayAttribBinding(vao, attr.index, attr.bindingindex);
+			glEnableVertexArrayAttrib(vao, attr.location);
+			glVertexArrayAttribFormat(vao, attr.location, attr.size, attr.type, attr.normalized, attr.offset);
+			glVertexArrayAttribBinding(vao, attr.location, attr.bindingindex);
 		}
 	}
 
@@ -821,6 +771,11 @@ namespace OpenGL
 	
 	}
 
+	void Device::SetDepthTexture(TextureHandle texture)
+	{
+		IFNITY_LOG(LogCore, INFO, "DepthTexture its only implented in VK and D3D12");
+	}
+
 
 
 	/**
@@ -836,6 +791,7 @@ namespace OpenGL
 			glDeleteProgram(m_Program.id);
 		}
 	}
+
 
 	void GraphicsPipeline::BindPipeline(IDevice* device)
 	{
@@ -887,7 +843,10 @@ namespace OpenGL
 		glBindVertexArray(m_VAO);
 	}
 
-	MeshObject::MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device): m_Device(device), m_header(header), m_meshes(meshes)
+	MeshObject::MeshObject(const MeshFileHeader* header, const Mesh* meshes, const void* indices, const void* vertexattrib, IDevice* device):
+		m_Device(device),
+		m_header(header),
+		m_meshes(meshes)
 	{
 
 		Device* dev = dynamic_cast<Device*>(device);
@@ -1209,7 +1168,7 @@ namespace OpenGL
 		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, wrapping);
 
 		// Generar mipmaps y almacenar la textura
-		GLsizei numMipmaps = getNumMipMapLevels2D(width, height);
+		GLsizei numMipmaps = Utils::getNumMipMapLevels2D(width, height);
 		glTextureStorage2D(m_TextureID, numMipmaps, GL_RGBA8, width, height);
 		GLenum error = glGetError();
 		if(error != GL_NO_ERROR)
@@ -1258,7 +1217,7 @@ namespace OpenGL
 	{
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
-		int numMipmaps = getNumMipMapLevels2D(w, h);
+		int numMipmaps = Utils::getNumMipMapLevels2D(w, h);
 		glTextureStorage2D(m_TextureID, numMipmaps, GL_RGBA8, w, h);
 		glTextureSubImage2D(m_TextureID, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, img);
 		glGenerateTextureMipmap(m_TextureID);
@@ -1308,7 +1267,7 @@ namespace OpenGL
 			assert(allMaterialTextures_.capacity() >= textureFiles.size());
 		#endif // BUILD_SHARED_IFNITY
 		TextureDescription desc;
-		desc.setDimension(rhi::TextureDimension::TEXTURE2D);
+		desc.setDimension(rhi::TextureType::TEXTURE2D);
 		desc.setFlag(TextureDescription::TextureFlags::IS_ARB_BINDLESS_TEXTURE,true);
 		desc.setFormat(rhi::Format::R8G8B8A8);
 

@@ -52,42 +52,18 @@ struct Color
 
 
 
+namespace rhi
+{
 
-
-
-
-
-namespace rhi {
-
-
-
-    struct IFNITY_API VertexScene
-    {
-        
-    };
-
-    struct IFNITY_API VertexBasic
-    {
-    };
-
-    template <typename T>
-    struct IFNITY_API VertexTraits;
-
-    template <>
-    struct VertexTraits<VertexScene>
-    {
-        static constexpr uint16_t numElements = 8;
-    };
-
-    template <>
-    struct VertexTraits<VertexBasic>
-    {
-        static constexpr uint16_t numElements = 3;
-    };
-
+    //-------------------------------------------------------------------------------------//
+    //  VERTEX TYPES AND FORMTAS                                                           //
+    //-------------------------------------------------------------------------------------//
 
     //TYPES 
-
+    enum
+    {
+        MAX_MIPMAPS_LEVEL = 16,
+    };
     /**
      * @enum eBitmapType
      * @brief Enum representing the type of bitmap.
@@ -160,8 +136,14 @@ namespace rhi {
         Solid,      /**< Solid fill */
         Point,      /**< Point fill */
         Wireframe   /**< Wireframe fill */
-    };
 
+    };
+    enum class PolygonModeType: uint8_t
+    {
+       Fill = 0,
+       Line = 1,
+
+    };
     /**
      * @enum FrontFaceType
      * @brief Enum representing the type of front face.
@@ -175,16 +157,54 @@ namespace rhi {
     /**
      * @enum Format
      * @brief Enum representing the format type.
+	 * if you want add more formats, add behind the last format because 
+	 * it is used as an index in the format map.
      */
-    enum class Format : uint8_t
+     /**
+  * @enum Format
+  * @brief Enum representing the format type.
+  * if you want add more formats, add behind the last format because
+  * it is used as an index in the format map.
+  */
+    enum class Format: uint8_t
     {
         R8G8B8_UINT, /**< R8G8B8 unsigned integer format */
         R8G8B8,      /**< R8G8B8 format */
-		R8G8B8A8,    /**< R8G8B8A8 format */
-		R32G32B32_FLOAT, /**< R32G32B32 float format */
+        R8G8B8A8,    /**< R8G8B8A8 format */
+        R32G32B32_FLOAT, /**< R32G32B32 float format used to glm vec3 */
+        R8G8B8A8_UNORM, /**< R8G8B8A8 unorm format */
+        B8G8R8A8_UNORM, /**< B8G8R8A8 unorm format */
+        R_UNORM8,    /**< R unsigned normalized 8-bit format */
+        R_UINT16,    /**< R unsigned 16-bit integer format */
+        R_UINT32,    /**< R unsigned 32-bit integer format */
+        R_UNORM16,   /**< R unsigned normalized 16-bit format */
+        R_FLOAT16,   /**< R 16-bit float format */
+        R_FLOAT32,   /**< R 32-bit float format */
+        RG_UNORM8,   /**< RG unsigned normalized 8-bit format */
+        RG_UINT16,   /**< RG unsigned 16-bit integer format */
+        RG_UINT32,   /**< RG unsigned 32-bit integer format */
+        RG_UNORM16,  /**< RG unsigned normalized 16-bit format */
+        RG_FLOAT16,  /**< RG 16-bit float format */
+        R32G32_FLOAT,  /**< RG 32-bit float format Similar vec2 glm  */
+        RGBA_UNORM8, /**< RGBA unsigned normalized 8-bit format */
+        RGBA_UINT32, /**< RGBA unsigned 32-bit integer format */
+        RGBA_FLOAT16,/**< RGBA 16-bit float format */
+        RGBA_FLOAT32,/**< RGBA 32-bit float format */
+        RGBA_SRGB8,  /**< RGBA sRGB 8-bit format */
+        BGRA_UNORM8, /**< BGRA unsigned normalized 8-bit format */
+        BGRA_SRGB8,  /**< BGRA sRGB 8-bit format */
+        ETC2_RGB8,   /**< ETC2 RGB 8-bit format */
+        ETC2_SRGB8,  /**< ETC2 sRGB 8-bit format */
+        BC7_RGBA,    /**< BC7 RGBA format */
+        Z_UNORM16,   /**< Depth 16-bit unorm format */
+        Z_UNORM24,   /**< Depth 24-bit unorm format */
+        Z_FLOAT32,   /**< Depth 32-bit float format */
+        Z_UNORM24_S_UINT8, /**< Depth 24-bit unorm with stencil 8-bit uint format */
+        Z_FLOAT32_S_UINT8, /**< Depth 32-bit float with stencil 8-bit uint format */
         UNKNOWN,     /**< Unknown format */
-        COUNT        /**< Format count */
+        COUNT
     };
+
 
     /**
      * @enum TextureWrapping
@@ -199,11 +219,19 @@ namespace rhi {
         COUNT              /**< Wrapping count */
     };
 
+    enum  TextureUsageBits: uint8_t
+    {
+        SAMPLED = 1 << 0,
+        STORAGE = 1 << 1,
+        ATTACHMENT = 1 << 2,
+        UNKNOW = 0
+    };
+
     /**
-     * @enum TextureDimension
+     * @enum TextureType
      * @brief Enum representing the dimension of texture.
      */
-    enum class TextureDimension : uint8_t
+    enum class TextureType : uint8_t
     {
         UNKNOWN,            /**< Unknown dimension */
         TEXTURE1D,          /**< 1D texture */
@@ -229,12 +257,162 @@ namespace rhi {
         SRC_COLOR,          /**< Blend factor source color */
         ONE_MINUS_SRC_ALPHA,/**< Blend factor one minus source alpha */
 		ONE_MINUS_SRC_COLOR,/**< Blend factor one minus source color */
-        SRC_ALPHA           /**< Blend factor source alpha */
+        SRC_ALPHA     ,      /**< Blend factor source alpha */
+		OPERATION_ADD,     /**< Blend factor operation add */
+
+		COUNT			   /**< Blend factor count */
     };
 
    
+    enum class StencilOp: uint8_t
+    {
+        StencilOp_Keep = 0,
+        StencilOp_Zero,
+        StencilOp_Replace,
+        StencilOp_IncrementClamp,
+        StencilOp_DecrementClamp,
+        StencilOp_Invert,
+        StencilOp_IncrementWrap,
+        StencilOp_DecrementWrap
+    };
+
+    enum class CompareOp: uint8_t
+    {
+        CompareOp_Never = 0,
+        CompareOp_Less,
+        CompareOp_Equal,
+        CompareOp_LessEqual,
+        CompareOp_Greater,
+        CompareOp_NotEqual,
+        CompareOp_GreaterEqual,
+        CompareOp_AlwaysPass
+    };
+
+    enum class WindingMode: uint8_t { WindingMode_CCW, WindingMode_CW };
 
 
+	enum class IndexFormat: uint8_t
+	{
+		IndexFormat_UINT8 = 0,
+		IndexFormat_UINT16,
+		IndexFormat_UINT32
+	};
+
+	enum class DepthStencilTextureFlags: uint8_t
+	{
+
+		DEPTH = 1 << 1,
+		STENCIL = 1 << 2,
+		DEPTH_STENCIL = DEPTH | STENCIL,
+		DEPTH_FORCE_INTERNAL_API = 1 << 3 /* Force the internal API to use depth and create internal depth buffer inside render device get the handler depth buffer in APIs like Vulkan - D3D12, Opengl not need it.*/
+	};
+
+
+    //-------------------------------------------------------------------------------------//
+	//STRUCTURES
+    //-------------------------------------------------------------------------------------//
+
+
+    
+
+
+
+
+
+
+	//-------------------------------------------------------------------------------------//
+	//VERTEX TYPES ATTRIBUTES
+	//-------------------------------------------------------------------------------------//
+
+
+    struct IFNITY_API VertexScene
+    {
+
+    };
+
+    struct IFNITY_API VertexBasic
+    {};
+
+    template <typename T>
+    struct IFNITY_API VertexTraits;
+
+    template <>
+    struct VertexTraits<VertexScene>
+    {
+        static constexpr uint16_t numElements = 8;
+    };
+
+    template <>
+    struct VertexTraits<VertexBasic>
+    {
+        static constexpr uint16_t numElements = 3;
+    };
+
+    /**
+    *
+    * @brief Stuct use by the user in create pipeline, uses to VK, OR d3d12, now opengl not needit
+    * because the Vertexinput its hardcoded inside. In the future probably unify this
+    */
+    struct IFNITY_API VertexInput final
+    {
+
+        static constexpr uint32_t VERTEX_ATTRIBUTES_MAX = 16;
+        static constexpr uint32_t VERTEX_BUFFER_MAX = 16;
+
+        struct VertexAttribute final
+        {
+            uint32_t location = 0; // a buffer which contains this attribute stream
+            uint32_t binding = 0;
+            rhi::Format format = rhi::Format::UNKNOWN; // per-element format
+            uintptr_t offset = 0; // an offset where the first element of this attribute stream starts
+        };
+
+        struct VertexInputBinding final
+        {
+            uint32_t stride = 0;
+        };
+
+        std::array<VertexAttribute, VERTEX_ATTRIBUTES_MAX> attributes;
+        std::array<VertexInputBinding, VERTEX_BUFFER_MAX> inputBindings;
+
+        VertexInput()
+        {
+            attributes.fill(VertexAttribute{});
+            inputBindings.fill(VertexInputBinding{});
+        }
+
+
+		void addVertexAttribute(const VertexAttribute& attribute, uint8_t index)
+		{
+			attributes[ index ] = attribute;
+		}
+
+        void addVertexInputBinding(const VertexInputBinding& binding, uint8_t index)
+        {
+			inputBindings[ index ] = binding;
+        }
+
+        uint32_t getNumAttributes() const
+        {
+            return std::count_if(attributes.begin(), attributes.end(), [](const VertexAttribute& attr)
+                {
+                    return attr.format < rhi::Format::UNKNOWN;
+                });
+        }
+
+        uint32_t getNumInputBindings() const
+        {
+            return std::count_if(inputBindings.begin(), inputBindings.end(), [](const VertexInputBinding& binding)
+                {
+                    return binding.stride != 0;
+                });
+        }
+
+        bool operator==(const VertexInput& other) const
+        {
+            return memcmp(this, &other, sizeof(VertexInput)) == 0;
+        }
+    };
 
 
        // Definición de los errores de D3D12

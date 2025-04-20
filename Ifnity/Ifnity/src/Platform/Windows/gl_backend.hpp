@@ -43,6 +43,10 @@ namespace OpenGL
         */
         void Draw(DrawDescription& desc) override;
 
+
+
+		void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc) override;
+
         /**
         * @brief Creates a graphics pipeline.
         * 
@@ -57,6 +61,9 @@ namespace OpenGL
 
         void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)   override;
         void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
+		void BindingVertexAttributesBuffer(BufferHandle& bf) override;
+		void BindingIndexBuffer(BufferHandle& bf) override;
+      
 
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override;
@@ -64,6 +71,9 @@ namespace OpenGL
 		SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override;
 		MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override;
         void SetRenderState(const RenderState& state);
+
+		//Set Depth Texture
+		void SetDepthTexture(TextureHandle texture) override;
     private:
 		
 		    GLuint GetVAO() const { return m_VAO; }
@@ -122,6 +132,7 @@ namespace OpenGL
 		const uint32_t GetBufferID() const override { return m_BufferID; }
 		void SetData(const void* data) override { this->data = data; }
 		const void* GetData() const override { return data; }
+		const uint64_t GetBufferGpuAddress() override { return GetBufferID(); } //make happy IBuffer
 
 
     private:

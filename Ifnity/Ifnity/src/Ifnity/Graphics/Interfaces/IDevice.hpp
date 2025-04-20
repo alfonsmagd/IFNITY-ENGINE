@@ -14,18 +14,37 @@
 IFNITY_NAMESPACE
 
 
-
+enum IFNITY_API DrawModeUse
+{
+	DRAW = 0,
+	DRAW_INDEXED = 1,
+	DRAW_INDIRECT = 2,
+	DRAW_INDEXED_INDIRECT = 3
+	
+};
 
 
 struct IFNITY_API DrawDescription
 {
 	RasterizationState rasterizationState;
 	ViewPortState      viewPortState;
-
+	DrawModeUse drawMode = DRAW;
+	bool depthTest = false;
+	bool enableBias = false;
 	bool isIndexed = false;
 	const void* indices = nullptr;
     unsigned int size;
+	unsigned int instanceCount = 1;
+	struct
+	{
+		float Constant = 0.0f;
+		float Slope = 0.0f;
+		float Clamp = 0.0f;
+	}depthBiasValues;
 
+	//To vulkan uses 
+	bool startintRecord = false;
+	bool onlyOneRender  = false;
 	constexpr DrawDescription& SetRasterizationState(const RasterizationState& state)
 	{
 		rasterizationState = state;
@@ -36,6 +55,18 @@ struct IFNITY_API DrawDescription
 		viewPortState = state;
 		return *this;
 	}
+
+	constexpr DrawDescription& StartRecording()
+	{
+		startintRecord = true;
+		return *this;
+	}
+	constexpr DrawDescription& StopRecording()
+	{
+		startintRecord = false;
+		return *this;
+	}
+
 
 	//Constructors 
 	DrawDescription() = default;
@@ -75,12 +106,18 @@ public:
 	virtual void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0) = 0;
     virtual void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size) = 0;
 	virtual void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) {}; //todo abstract
+	virtual void BindingVertexAttributesBuffer(BufferHandle& bf) = 0;
+	virtual void BindingIndexBuffer(BufferHandle& bf) = 0 ;
 	virtual BufferHandle CreateBuffer(const BufferDescription& desc) = 0;
-	virtual TextureHandle CreateTexture(TextureDescription& desc) = 0;
+	virtual TextureHandle CreateTexture(TextureDescription& desc) = 0; //TODO add TextureDescripton const
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) = 0;
 	virtual MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) = 0;
 	virtual SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) = 0;
 	virtual MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) = 0;
+	virtual void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc) = 0; //todo abstract 
+	virtual void StartRecording() {};
+	virtual void StopRecording() {};
+	virtual void SetDepthTexture(TextureHandle texture) = 0;
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
 };
