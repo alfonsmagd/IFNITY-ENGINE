@@ -1,4 +1,4 @@
-name: C++/C CMake
+1name: C++/C CMake
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
           ${{ runner.os }}-cmake-
 
     - name: Prepare Vulkan SDK
-      uses: humbletim/setup-vulkan-sdk@v1.2.0
+      uses: humbletim/setup-vulkan-sdk@v1.2.1
       with:
         vulkan-query-version: 1.3.275.0
         vulkan-components: Vulkan-Headers, Vulkan-Loader
