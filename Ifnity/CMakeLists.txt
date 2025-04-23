@@ -31,13 +31,13 @@ add_subdirectory(Ifnity)
 set(EXAMPLE_DIRS
     Sandbox
     #Simple_Texture
-    scene_materials
-    Geometry_Mesh
+    #scene_materials
+    #Geometry_Mesh
 	#glslang_vk_test
 	#bufferVulkan
-   Texture_Sample
-   camera_mesh_vk
-   SceneVk
+   #Texture_Sample
+   #camera_mesh_vk
+   #SceneVk
 )
 
 # Itera sobre la lista y añade cada subdirectorio

@@ -6,6 +6,9 @@
 #include "D3D12MemAlloc.h"
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
+
+#include "Platform/D3D12/d3d12_ImmediateCommands.hpp"
+
 IFNITY_NAMESPACE
 
 using namespace Microsoft::WRL;
@@ -27,6 +30,8 @@ public:
 	HWND m_hWnd = nullptr;
 
 	ComPtr<D3D12MA::Allocator> g_Allocator;
+
+	std::unique_ptr<D3D12::D3D12ImmediateCommands> m_ImmediateCommands = nullptr;
 
 	//States 
 	bool m_MsaaState = false;
@@ -111,6 +116,8 @@ private:
 	UINT CheckMSAAQualitySupport(UINT SampleCount, DXGI_FORMAT format);
 	bool CreateSwapChain();
 	void CreateCommandQueue();
+	void CreateImmediateCommands();
+
 	void CaptureD3D12DebugMessages() const ;
 	ID3D12Resource* CurrentBackBuffer() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;

@@ -230,7 +230,7 @@ IFNITY::App* IFNITY::CreateApp()
 {
 
 
-	auto api = IFNITY::rhi::GraphicsAPI::VULKAN;
+	auto api = IFNITY::rhi::GraphicsAPI::D3D12;
 
 
 	//return new Source_TestD3D12(api);

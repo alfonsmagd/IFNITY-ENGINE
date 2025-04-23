@@ -363,6 +363,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	// Create CommandQueue 
 	CreateCommandQueue();
 	//Create SwapChain
+	CreateImmediateCommands();
 	CreateSwapChain();
 	//Crate RTV and DSV Descriptor Heaps
 	CreateRtvAndDsvDescriptorHeaps();
@@ -557,6 +558,23 @@ void DeviceD3D12::CreateCommandQueue()
 	m_CommandList->Close();
 
 }
+
+void DeviceD3D12::CreateImmediateCommands()
+{
+	if( m_CommandQueue )
+	{
+		//m_ImmediateCommands = std::make_unique<D3D12::D3D12ImmediateCommands>();
+		m_ImmediateCommands = std::make_unique<D3D12::D3D12ImmediateCommands>(m_Device.Get(), m_CommandQueue.Get());
+	}
+	else
+	{
+		IFNITY_LOG(LogCore, ERROR, "Command Queue is not created yet.");
+	}
+
+
+}
+
+
 
 void DeviceD3D12::CaptureD3D12DebugMessages() const
 {
