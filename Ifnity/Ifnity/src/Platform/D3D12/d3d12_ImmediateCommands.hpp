@@ -21,7 +21,7 @@ namespace D3D12
 
 
 		D3D12ImmediateCommands(ID3D12Device* device, ID3D12CommandQueue* queue, uint32_t numContexts = 4);
-		~D3D12ImmediateCommands() {};
+		~D3D12ImmediateCommands();
 		D3D12ImmediateCommands(const D3D12ImmediateCommands&) = delete;
 		D3D12ImmediateCommands& operator=(const D3D12ImmediateCommands&) = delete;
 

@@ -8,6 +8,35 @@ IFNITY_NAMESPACE
 
 namespace D3D12
 {
+	D3D12ImmediateCommands::~D3D12ImmediateCommands()
+	{
+		// 1. Wait for all command buffers to finish executing
+		for (auto& buf : buffers_)
+		{
+			if (buf.fence && buf.fence->GetCompletedValue() < buf.fenceValue)
+			{
+				buf.fence->SetEventOnCompletion(buf.fenceValue, buf.fenceEvent);
+				WaitForSingleObject(buf.fenceEvent, INFINITE);
+			}
+		}
+
+		// 2. Destroy all per-buffer resources
+		for (auto& buf : buffers_)
+		{
+			if (buf.fenceEvent)
+			{
+				CloseHandle(buf.fenceEvent);
+				buf.fenceEvent = nullptr;
+			}
+
+			buf.fence.Reset();
+			buf.commandList.Reset();
+			buf.allocator.Reset();
+		}
+
+		// 3. Optionally destroy the command queue if owned
+		
+	}
 
 	
 	D3D12ImmediateCommands::D3D12ImmediateCommands(ID3D12Device* device, ID3D12CommandQueue* queue, uint32_t numContexts): device_(device), queue_(queue), numAvailableCommandBuffers_(numContexts)
