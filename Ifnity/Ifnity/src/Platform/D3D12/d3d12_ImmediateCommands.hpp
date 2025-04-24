@@ -32,7 +32,7 @@ namespace D3D12
 			ComPtr<ID3D12Fence> fence;
 			SubmitHandle handle_{};
 			HANDLE fenceEvent = nullptr;
-			uint64_t fenceValue = 0;
+			mutable uint64_t fenceValue = 0;
 			bool isEncoding_ = false;
 		};
 
@@ -43,7 +43,7 @@ namespace D3D12
 		//VkFence getVkFence(SubmitHandle handle) const;
 		SubmitHandle getLastSubmitHandle() const;
 		SubmitHandle getNextSubmitHandle() const;
-		bool isReady(SubmitHandle handle, bool fastCheckD3D12 = false) const;
+		bool isReady(SubmitHandle handle, bool fastCheckNoD3D12 = false) const;
 		void wait(SubmitHandle handle);
 		void waitAll();
 
@@ -58,7 +58,7 @@ namespace D3D12
 		SubmitHandle lastSubmitHandle_ = SubmitHandle();
 		SubmitHandle nextSubmitHandle_ = SubmitHandle();
 		uint32_t numAvailableCommandBuffers_ = kMaxCommandBuffers;
-		uint32_t submitCounter_ = 1;
+		uint32_t fenceCounter_ = 1;          // Start from 1 to avoid confusion with the initial value of 0
 	};
 
 

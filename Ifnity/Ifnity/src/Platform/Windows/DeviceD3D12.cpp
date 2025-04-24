@@ -96,43 +96,6 @@ DeviceD3D12::~DeviceD3D12()
 void DeviceD3D12::OnUpdate()
 {
 
-
-	//// Indicate a state transition on the resource usage.
-	//m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(),
-	//	D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
-
-
-	//// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
-	//m_CommandList->RSSetViewports(1, &m_ScreenViewport);
-	//m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
-
-	//// Transition the depth/stencil buffer to be writable.
-	//m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-	//	D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
-
-
-	//// Clear the back buffer and depth buffer.
-	//m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
-	//m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	//// Transition the depth/stencil buffer back to its original state.
-	//m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-	//	D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COMMON));
-
-
-
-
-	//// Specify the buffers we are going to render to.
-	//m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-	//m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
-	//// Set necessary state.
-	//m_CommandList->SetGraphicsRootSignature(m_RootSignature.Get());
-	//// Indicate a state transition on the resource usage.
-	//m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
-	//m_CommandList->DrawInstanced(3, 1, 0, 0);
-
-
 	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
 	m_CommandList->RSSetViewports(1, &m_ScreenViewport);
 	m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
@@ -154,7 +117,7 @@ void DeviceD3D12::OnUpdate()
 
 	//PopulateCommandList();
 	DrawElements(m_PipelineState,m_RootSignature);
-	//ImGui::Render();
+	ImGui::Render();
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
 
 
@@ -396,16 +359,9 @@ void DeviceD3D12::InitializeGui()
 		m_CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(),
 		m_CbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
 
-	FlushCommandQueue();
+	
 
-	ThrowIfFailed(m_DirectCmdListAlloc->Reset());
-
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
-	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
-
-	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
-
+	
 	// Help me create the pipeline state object.
 
 
@@ -685,18 +641,15 @@ void DeviceD3D12::OnResize()
 	assert(m_CommandList);
 
 
-
-	FlushCommandQueue();
-
-
 	//Allocator desc creation. 
 
-
+	auto& cmd = m_ImmediateCommands->acquire();
 
 	//Reuse the memory of the command list.
 	//Ensure the command list is in a clean state before recording new commands.
 	//Properly synchronize with the GPU to avoid overwriting commands that have not yet been executed.
-	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), m_PipelineState.Get()));
+	//ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), m_PipelineState.Get()));
+	cmd.commandList->SetPipelineState(m_PipelineState.Get());
 
 	UINT64 width, height;
 	//TODO : Check if the width and height are greater than 0.
@@ -826,14 +779,13 @@ void DeviceD3D12::OnResize()
 	  // Transition the resource from its initial state to be used as a depth buffer.
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	m_CommandList->ResourceBarrier(1, &barrier);
+	cmd.commandList->ResourceBarrier(1, &barrier);
 	// Execute the resize commands.
-	ThrowIfFailed(m_CommandList->Close());
+	/*ThrowIfFailed(m_CommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { m_CommandList.Get() };
-	m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);*/
+	m_ImmediateCommands->submit(cmd);
 
-	// Wait until resize is complete.
-	FlushCommandQueue();
 
 
 
@@ -847,6 +799,13 @@ void DeviceD3D12::OnResize()
 
 	m_ScissorRect = { 0, 0, static_cast<int>(width), static_cast<int>(height) };
 
+	//ThrowIfFailed(m_DirectCmdListAlloc->Reset());
+
+	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
+	// Reusing the command list reuses memory.
+	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
+
+	//m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
 
 
 
@@ -1018,7 +977,7 @@ void DeviceD3D12::BuildPipelineStage()
 		m_VertexBufferView.StrideInBytes = sizeof(Vertex);
 		m_VertexBufferView.SizeInBytes = vertexBufferSize;
 
-		FlushCommandQueue();
+		//FlushCommandQueue();
 
 	}
 }

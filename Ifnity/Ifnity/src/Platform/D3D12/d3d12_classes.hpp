@@ -4,12 +4,20 @@
 
 
 #include <pch.h>
-
+#include "Ifnity/Utils/SlotMap.hpp"
 
 IFNITY_NAMESPACE
 
+
 namespace D3D12
 {
+	//Using types
+	using TextureHandleSM = Handle<struct D3D12Image>;
+	
+
+
+
+
 
 	struct SubmitHandle
 	{

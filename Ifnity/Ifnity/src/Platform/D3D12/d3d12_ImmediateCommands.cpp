@@ -11,9 +11,9 @@ namespace D3D12
 	D3D12ImmediateCommands::~D3D12ImmediateCommands()
 	{
 		// 1. Wait for all command buffers to finish executing
-		for (auto& buf : buffers_)
+		for( auto& buf : buffers_ )
 		{
-			if (buf.fence && buf.fence->GetCompletedValue() < buf.fenceValue)
+			if( buf.fence && buf.fence->GetCompletedValue() < buf.fenceValue )
 			{
 				buf.fence->SetEventOnCompletion(buf.fenceValue, buf.fenceEvent);
 				WaitForSingleObject(buf.fenceEvent, INFINITE);
@@ -21,9 +21,9 @@ namespace D3D12
 		}
 
 		// 2. Destroy all per-buffer resources
-		for (auto& buf : buffers_)
+		for( auto& buf : buffers_ )
 		{
-			if (buf.fenceEvent)
+			if( buf.fenceEvent )
 			{
 				CloseHandle(buf.fenceEvent);
 				buf.fenceEvent = nullptr;
@@ -35,10 +35,10 @@ namespace D3D12
 		}
 
 		// 3. Optionally destroy the command queue if owned
-		
+
 	}
 
-	
+
 	D3D12ImmediateCommands::D3D12ImmediateCommands(ID3D12Device* device, ID3D12CommandQueue* queue, uint32_t numContexts): device_(device), queue_(queue), numAvailableCommandBuffers_(numContexts)
 	{
 		//Check if CommandQueue is valid
@@ -105,38 +105,216 @@ namespace D3D12
 
 	const D3D12ImmediateCommands::CommandListWrapper& D3D12ImmediateCommands::acquire()
 	{
-		// TODO: insert return statement here
-		return{};
+		if( !numAvailableCommandBuffers_ )
+		{
+			purge();
+		}
+
+		while( !numAvailableCommandBuffers_ )
+		{
+			// Optional logging like IFNITY_LOG
+			purge();
+		}
+
+		CommandListWrapper* current = nullptr;
+
+		// Find an available command list (i.e., not in use)
+		for( auto& buf : buffers_ )
+		{
+			if( !buf.isEncoding_ )
+			{
+				current = &buf;
+				break;
+			}
+		}
+
+		assert(current);
+		assert(numAvailableCommandBuffers_);
+
+		// Reset allocator and command list
+		current->allocator->Reset();
+		current->commandList->Reset(current->allocator.Get(), nullptr); // No PSO bound yet
+
+		current->handle_.submitId_ = fenceCounter_; // track which submission this belongs to
+		current->isEncoding_ = true;
+
+		nextSubmitHandle_ = current->handle_;
+
+
+		numAvailableCommandBuffers_--;
+
+		return *current;
 	}
 
 	SubmitHandle D3D12ImmediateCommands::submit(const CommandListWrapper& wrapper)
 	{
-		return SubmitHandle();
+		assert(wrapper.isEncoding_);
+		wrapper.commandList->Close();
+
+		ID3D12CommandList* commandLists[] = { wrapper.commandList.Get() };
+		queue_->ExecuteCommandLists(1, commandLists);
+
+		// Signal the fence with current fenceCounter_
+		queue_->Signal(wrapper.fence.Get(), fenceCounter_);
+
+		// Store current fence value in the wrapper for later checks
+		wrapper.fenceValue = fenceCounter_;
+
+		// Update handle and internal state
+		lastSubmitHandle_ = wrapper.handle_;
+		lastSubmitHandle_.submitId_ = fenceCounter_;
+
+		// Reset encoding state
+		const_cast<CommandListWrapper&>(wrapper).isEncoding_ = false;
+
+		// Advance fence counter
+		fenceCounter_++;
+		if( fenceCounter_ == 0 )
+		{
+			// skip 0 — reserved as "empty"
+			fenceCounter_++;
+		}
+
+		return lastSubmitHandle_;
 	}
 
 	SubmitHandle D3D12ImmediateCommands::getLastSubmitHandle() const
 	{
-		return SubmitHandle();
+		return lastSubmitHandle_;
 	}
 
 	SubmitHandle D3D12ImmediateCommands::getNextSubmitHandle() const
 	{
-		return SubmitHandle();
+		return nextSubmitHandle_;
 	}
 
-	bool D3D12ImmediateCommands::isReady(SubmitHandle handle, bool fastCheckD3D12) const
+	bool D3D12ImmediateCommands::isReady(SubmitHandle handle, bool fastCheckNoD3D12) const
 	{
+		assert(handle.bufferIndex_ < kMaxCommandBuffers);
+
+		if (handle.empty())
+		{
+			// A null handle
+			return true;
+		}
+
+		const CommandListWrapper& buf = buffers_[handle.bufferIndex_];
+
+		if (!buf.commandList)
+		{
+			// Already recycled and not yet reused
+			return true;
+		}
+
+		if (buf.handle_.submitId_ != handle.submitId_)
+		{
+			// Already recycled and reused by another command buffer
+			return true;
+		}
+
+		if (fastCheckNoD3D12)
+		{
+			// Don't ask the D3D12 fence, just wait until fenceValue changes
+			return false;
+		}
+
+		// Ask the fence if the GPU has completed that work
+		if (buf.fence->GetCompletedValue() >= buf.fenceValue)
+		{
+			return true;
+		}
+
 		return false;
 	}
 
 	void D3D12ImmediateCommands::wait(SubmitHandle handle)
-	{}
+	{
+		assert(handle.bufferIndex_ < kMaxCommandBuffers);
+		if( handle.empty() )
+		{
+			// A null handle
+			return;
+		}
+
+		if(isReady(handle))
+		{
+			return;
+		}
+
+		const CommandListWrapper& buf = buffers_[ handle.bufferIndex_ ];
+		if(!buf.isEncoding_)
+		{
+			// we are waiting for a buffer which has not been submitted - this is probably a logic error somewhere in the calling code
+			IFNITY_LOG(LogCore, ERROR, "Waiting for a buffer which has not been submitted , this is a probably logic error somewhere in the calling code");
+			return;
+		}
+		
+		if( buf.fence->GetCompletedValue() < buf.fenceValue )
+		{
+			buf.fence->SetEventOnCompletion(buf.fenceValue, buf.fenceEvent);
+			WaitForSingleObject(buf.fenceEvent, INFINITE);
+		}
+		purge();
+	
+	
+	
+	}
 
 	void D3D12ImmediateCommands::waitAll()
-	{}
+	{
+
+		for( auto& buf : buffers_ )
+		{
+			// Only wait on command buffers that were submitted and not currently recording
+			if( buf.commandList && !buf.isEncoding_ )
+			{
+				if( buf.fence->GetCompletedValue() < buf.fenceValue )
+				{
+					// Wait on this fence until it's complete
+					buf.fence->SetEventOnCompletion(buf.fenceValue, buf.fenceEvent);
+					WaitForSingleObject(buf.fenceEvent, INFINITE);
+				}
+			}
+		}
+
+		purge(); // Mark available buffers for reuse
+
+	}
 
 	void D3D12ImmediateCommands::purge()
-	{}
+	{
+
+		const uint32_t numBuffers = static_cast<uint32_t>(ARRAY_NUM_ELEMENTS(buffers_));
+
+		for( uint32_t i = 0; i < numBuffers; ++i )
+		{
+			// Same wrap-around index logic
+			CommandListWrapper& buf = buffers_[ (i + lastSubmitHandle_.bufferIndex_ + 1) % numBuffers ];
+
+			if( !buf.commandList || buf.isEncoding_ )
+				continue;
+
+			// Check if GPU has finished with this command list
+			if( buf.fence->GetCompletedValue() >= buf.fenceValue )
+			{
+				// Reset allocator and command list for reuse
+				buf.allocator->Reset();
+				buf.commandList->Reset(buf.allocator.Get(), nullptr); // no PSO bound at reset  we dont  know what we will do with it in the future can use SetPipelineState(); 
+
+				buf.isEncoding_ = false;
+				numAvailableCommandBuffers_++;
+			}
+			else
+			{
+				//Error handling 
+				IFNITY_LOG(LogCore, ERROR, "Error while purging command buffer");
+				return;
+			}
+
+		}
+
+
+	}
 
 }
 IFNITY_END_NAMESPACE
