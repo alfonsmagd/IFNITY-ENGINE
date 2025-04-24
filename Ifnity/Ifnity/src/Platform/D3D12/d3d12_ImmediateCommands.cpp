@@ -11,9 +11,9 @@ namespace D3D12
 	D3D12ImmediateCommands::~D3D12ImmediateCommands()
 	{
 		// 1. Wait for all command buffers to finish executing
-		for (auto& buf : buffers_)
+		for( auto& buf : buffers_ )
 		{
-			if (buf.fence && buf.fence->GetCompletedValue() < buf.fenceValue)
+			if( buf.fence && buf.fence->GetCompletedValue() < buf.fenceValue )
 			{
 				buf.fence->SetEventOnCompletion(buf.fenceValue, buf.fenceEvent);
 				WaitForSingleObject(buf.fenceEvent, INFINITE);
@@ -21,9 +21,9 @@ namespace D3D12
 		}
 
 		// 2. Destroy all per-buffer resources
-		for (auto& buf : buffers_)
+		for( auto& buf : buffers_ )
 		{
-			if (buf.fenceEvent)
+			if( buf.fenceEvent )
 			{
 				CloseHandle(buf.fenceEvent);
 				buf.fenceEvent = nullptr;
@@ -35,10 +35,10 @@ namespace D3D12
 		}
 
 		// 3. Optionally destroy the command queue if owned
-		
+
 	}
 
-	
+
 	D3D12ImmediateCommands::D3D12ImmediateCommands(ID3D12Device* device, ID3D12CommandQueue* queue, uint32_t numContexts): device_(device), queue_(queue), numAvailableCommandBuffers_(numContexts)
 	{
 		//Check if CommandQueue is valid
@@ -105,13 +105,77 @@ namespace D3D12
 
 	const D3D12ImmediateCommands::CommandListWrapper& D3D12ImmediateCommands::acquire()
 	{
-		// TODO: insert return statement here
-		return{};
+		if (!numAvailableCommandBuffers_)
+		{
+			purge();
+		}
+
+		while (!numAvailableCommandBuffers_)
+		{
+			// Optional logging like IFNITY_LOG
+			purge();
+		}
+
+		CommandListWrapper* current = nullptr;
+
+		// Find an available command list (i.e., not in use)
+		for (auto& buf : buffers_)
+		{
+			if (!buf.isEncoding_)
+			{
+				current = &buf;
+				break;
+			}
+		}
+
+		assert(current);
+		assert(numAvailableCommandBuffers_);
+
+		// Reset allocator and command list
+		current->allocator->Reset();
+		current->commandList->Reset(current->allocator.Get(), nullptr); // No PSO bound yet
+
+		current->handle_.submitId_ = fenceCounter_; // track which submission this belongs to
+		current->isEncoding_ = true;
+
+		nextSubmitHandle_ = current->handle_;
+	
+
+		numAvailableCommandBuffers_--;
+
+		return *current;
 	}
 
 	SubmitHandle D3D12ImmediateCommands::submit(const CommandListWrapper& wrapper)
 	{
-		return SubmitHandle();
+		assert(wrapper.isEncoding_);
+		wrapper.commandList->Close();
+
+		ID3D12CommandList* commandLists[] = { wrapper.commandList.Get() };
+		queue_->ExecuteCommandLists(1, commandLists);
+
+		// Signal the fence with current fenceCounter_
+		queue_->Signal(wrapper.fence.Get(), fenceCounter_);
+
+		// Store current fence value in the wrapper for later checks
+		wrapper.fenceValue = fenceCounter_;
+
+		// Update handle and internal state
+		lastSubmitHandle_ = wrapper.handle_;
+		lastSubmitHandle_.submitId_ = fenceCounter_;
+
+		// Reset encoding state
+		const_cast<CommandListWrapper&>(wrapper).isEncoding_ = false;
+
+		// Advance fence counter
+		fenceCounter_++;
+		if (fenceCounter_ == 0)
+		{
+			// skip 0 — reserved as "empty"
+			fenceCounter_++;
+		}
+
+		return lastSubmitHandle_;
 	}
 
 	SubmitHandle D3D12ImmediateCommands::getLastSubmitHandle() const
@@ -136,7 +200,39 @@ namespace D3D12
 	{}
 
 	void D3D12ImmediateCommands::purge()
-	{}
+	{
+
+		const uint32_t numBuffers = static_cast<uint32_t>(ARRAY_NUM_ELEMENTS(buffers_));
+
+		for( uint32_t i = 0; i < numBuffers; ++i )
+		{
+			// Same wrap-around index logic
+			CommandListWrapper& buf = buffers_[ (i + lastSubmitHandle_.bufferIndex_ + 1) % numBuffers ];
+
+			if( !buf.commandList || buf.isEncoding_ )
+				continue;
+
+			// Check if GPU has finished with this command list
+			if( buf.fence->GetCompletedValue() >= buf.fenceValue )
+			{
+				// Reset allocator and command list for reuse
+				buf.allocator->Reset();
+				buf.commandList->Reset(buf.allocator.Get(), nullptr); // no PSO bound at reset  we dont  know what we will do with it in the future can use SetPipelineState(); 
+
+				buf.isEncoding_ = false;
+				numAvailableCommandBuffers_++;
+			}
+			else
+			{
+				//Error handling 
+				IFNITY_LOG(LogCore, ERROR, "Error while purging command buffer");
+				return;
+			}
+
+		}
+
+
+	}
 
 }
 IFNITY_END_NAMESPACE
