@@ -176,9 +176,8 @@ namespace D3D12
 		}
 
 		return lastSubmitHandle_;
-	}
 
-		return lastSubmitHandle_;
+
 	}
 
 	SubmitHandle D3D12ImmediateCommands::getLastSubmitHandle() const
