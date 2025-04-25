@@ -10,7 +10,7 @@ IFNITY_NAMESPACE
 namespace D3D12
 {
 	using namespace Microsoft::WRL;
-	using namespace DirectX;
+
 
 	class D3D12ImmediateCommands final
 	{

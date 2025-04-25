@@ -11,6 +11,7 @@ IFNITY_NAMESPACE
 
 namespace D3D12
 {
+	using namespace Microsoft::WRL;
 
     struct D3D12Image final
     {
@@ -29,7 +30,7 @@ namespace D3D12
 	    static bool isDepthStencilFormat(DXGI_FORMAT format);
 
     public:
-        Microsoft::WRL::ComPtr<ID3D12Resource> resource_;
+        ComPtr<ID3D12Resource> resource_;
         D3D12_RESOURCE_FLAGS usageFlags_ = D3D12_RESOURCE_FLAG_NONE;
         D3D12_RESOURCE_STATES currentState_ = D3D12_RESOURCE_STATE_COMMON;
         DXGI_FORMAT format_ = DXGI_FORMAT_UNKNOWN;

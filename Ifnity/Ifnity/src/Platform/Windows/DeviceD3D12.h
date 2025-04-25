@@ -19,11 +19,11 @@ class DeviceD3D12 final : public GraphicsDeviceManager
 public:
 	//Pipeline Objects
 	ComPtr<ID3D12RootSignature> m_RootSignature = nullptr;
-	ComPtr<IDXGIFactory4> m_DxgiFactory = nullptr;
+	ComPtr<IDXGIFactory4> dxgiFactory4 = nullptr;
 	ComPtr<ID3D12Device>  m_Device = nullptr;
 	ComPtr<IDXGIAdapter>  m_DxgiAdapter = nullptr;
 	ComPtr<ID3D12Fence>   m_Fence = nullptr;
-	ComPtr<ID3D12CommandQueue> m_CommandQueue = nullptr;
+	ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
 	ComPtr<ID3D12CommandAllocator> m_DirectCmdListAlloc = nullptr;
 	ComPtr<ID3D12GraphicsCommandList> m_CommandList = nullptr;
 	ComPtr<IDXGISwapChain> m_SwapChain = nullptr;
@@ -84,6 +84,7 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView;
 
 	Color m_ClearColor = { 0.0f, 0.2f, 0.4f, 1.0f };
+	SlotMap<D3D12::D3D12Image> slotMapTextures_;
 
 public:
 	~DeviceD3D12() override;

@@ -11,6 +11,7 @@ IFNITY_NAMESPACE
 
 namespace D3D12
 {
+
 	//Using types
 	using TextureHandleSM = Handle<struct D3D12Image>;
 	

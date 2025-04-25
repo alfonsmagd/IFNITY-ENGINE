@@ -61,7 +61,7 @@ DeviceD3D12::~DeviceD3D12()
 	m_RootSignature.Reset();
 	CloseHandle(m_FenceEvent);
 	m_CommandList.Reset();
-	m_CommandQueue.Reset();
+	commandQueue.Reset();
 	m_CbvSrvUavHeap.Reset();
 	m_DsvHeap.Reset();
 	m_DepthStencilBuffer.Reset();
@@ -84,7 +84,7 @@ DeviceD3D12::~DeviceD3D12()
 	g_Allocator.Reset();
 	m_SwapChain.Reset();
 	m_DxgiAdapter.Reset();
-	m_DxgiFactory.Reset();
+	dxgiFactory4.Reset();
 	m_Device.Reset();
 	
 
@@ -129,7 +129,7 @@ void DeviceD3D12::OnUpdate()
 
 	// Add the command list to the queue for execution.
 	ID3D12CommandList* cmdsLists[] = { m_CommandList.Get() };
-	m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	commandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// swap the back and front buffers
 	ThrowIfFailed(m_SwapChain->Present(IsVSync() ? 1 : 0, 0));
@@ -201,9 +201,9 @@ bool DeviceD3D12::InitInternalInstance()
 	}
 
 	//Build the DXGI Factory
-	if (!m_DxgiFactory)
+	if (!dxgiFactory4)
 	{
-		HRESULT hres = CreateDXGIFactory2(debugFlags, IID_PPV_ARGS(OUT & m_DxgiFactory));
+		HRESULT hres = CreateDXGIFactory2(debugFlags, IID_PPV_ARGS(OUT & dxgiFactory4));
 		if (hres != S_OK)
 		{
 			IFNITY_LOG(LogCore, ERROR, "ERROR in CreateDXGIFactory2.\n"
@@ -227,7 +227,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	int adapterIndex = 0;
 	//Enumerate the adapters and select the first one, normally the primary adapter is Hardware Device.
-	if (FAILED(m_DxgiFactory->EnumAdapters(adapterIndex, OUT & m_DxgiAdapter)))
+	if (FAILED(dxgiFactory4->EnumAdapters(adapterIndex, OUT & m_DxgiAdapter)))
 	{
 		if (adapterIndex == 0)
 			IFNITY_LOG(LogCore, ERROR, "Cannot find any DXGI adapters in the system. D3D12");
@@ -255,7 +255,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	if (FAILED(result))
 	{
 		ComPtr<IDXGIAdapter> pWarpAdapter;
-		ThrowIfFailed(m_DxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
+		ThrowIfFailed(dxgiFactory4->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
 
 		ThrowIfFailed(D3D12CreateDevice(
 			IN pWarpAdapter.Get(),
@@ -374,7 +374,7 @@ void DeviceD3D12::LogAdaptersD3D12()
 	UINT i = 0;
 	IDXGIAdapter* adapter = nullptr;
 	std::vector<IDXGIAdapter*> adapterList;
-	while (m_DxgiFactory->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND)
+	while (dxgiFactory4->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND)
 	{
 		DXGI_ADAPTER_DESC desc;
 		adapter->GetDesc(&desc);
@@ -478,8 +478,8 @@ bool DeviceD3D12::CreateSwapChain()
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	ComPtr<IDXGISwapChain> swapChain;
-	ThrowIfFailed(m_DxgiFactory->CreateSwapChain(
-		m_CommandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+	ThrowIfFailed(dxgiFactory4->CreateSwapChain(
+		commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
 		&sd,
 		m_SwapChain.GetAddressOf()
 	));
@@ -498,7 +498,7 @@ void DeviceD3D12::CreateCommandQueue()
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;  // Direct command list can execute all grapchis commands.
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_CommandQueue)));
+	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)));
 
 	ThrowIfFailed(m_Device->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -517,10 +517,10 @@ void DeviceD3D12::CreateCommandQueue()
 
 void DeviceD3D12::CreateImmediateCommands()
 {
-	if( m_CommandQueue )
+	if( commandQueue )
 	{
 		//m_ImmediateCommands = std::make_unique<D3D12::D3D12ImmediateCommands>();
-		m_ImmediateCommands = std::make_unique<D3D12::D3D12ImmediateCommands>(m_Device.Get(), m_CommandQueue.Get());
+		m_ImmediateCommands = std::make_unique<D3D12::D3D12ImmediateCommands>(m_Device.Get(), commandQueue.Get());
 	}
 	else
 	{
@@ -819,7 +819,7 @@ void DeviceD3D12::FlushCommandQueue()
 	// Add an instruction to the command queue to set a new fence point.  Because we 
 	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
 	// processing all the commands prior to this Signal().
-	ThrowIfFailed(m_CommandQueue->Signal(m_Fence.Get(), m_CurrentFence));
+	ThrowIfFailed(commandQueue->Signal(m_Fence.Get(), m_CurrentFence));
 
 	// Wait until the GPU has completed commands up to this fence point.
 	if (m_Fence->GetCompletedValue() < m_CurrentFence)

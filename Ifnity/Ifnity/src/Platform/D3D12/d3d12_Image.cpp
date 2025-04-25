@@ -23,7 +23,7 @@ namespace D3D12
 	{
 		return D3D12_CPU_DESCRIPTOR_HANDLE();
 	}
-	static bool D3D12Image::isDepthFormat(DXGI_FORMAT format)
+	 bool D3D12Image::isDepthFormat(DXGI_FORMAT format)
 	{
 		switch( format )
 		{
@@ -37,7 +37,7 @@ namespace D3D12
 		}
 	}
 
-	static bool D3D12Image::isDepthStencilFormat(DXGI_FORMAT format)
+	 bool D3D12Image::isDepthStencilFormat(DXGI_FORMAT format)
 	{
 		return (format == DXGI_FORMAT_D24_UNORM_S8_UINT) ||
 			   (format == DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
