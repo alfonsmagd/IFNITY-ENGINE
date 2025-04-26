@@ -158,6 +158,19 @@ void DeviceD3D12::OnUpdate()
 
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::AllocateRTV()
+{
+	auto& rtvAlloc = descriptorAllocator_.rtv;
+	IFNITY_ASSERT(rtvAlloc.nextSlot < rtvAlloc.maxSlots && "RTV Heap overflow: No more RTV descriptors available.");
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
+	handle.Offset(rtvAlloc.nextSlot, rtvAlloc.rtvDescriptorSize);
+
+	++rtvAlloc.nextSlot;
+
+	return handle;
+}
+
 void DeviceD3D12::RenderDemo(int w, int h) const
 {
 }
@@ -409,6 +422,12 @@ void DeviceD3D12::CreateFenceAndDescriptorSizes()
 	m_DescritporSizes.Rtv = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	m_DescritporSizes.Dsv = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	m_DescritporSizes.CbvSrvUav = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	//Fill descritpor allocator
+	descriptorAllocator_.rtv.rtvDescriptorSize = m_DescritporSizes.Rtv;
+	descriptorAllocator_.dsv.dsvDescriptorSize = m_DescritporSizes.Dsv;
+	descriptorAllocator_.uav.uavDescriptorSize = m_DescritporSizes.CbvSrvUav;
+
 }
 
 UINT DeviceD3D12::CheckMSAAQualitySupport(UINT SampleCount, DXGI_FORMAT format)
@@ -606,12 +625,13 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 {
 
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
-	rtvHeapDesc.NumDescriptors = m_SwapChainBufferCount;
+	rtvHeapDesc.NumDescriptors = MAX_RTV_SWAPCHAIN_IMAGES + MAX_RTV_DEFFERED_IMAGES;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(m_Device->CreateDescriptorHeap(
-		&rtvHeapDesc, IID_PPV_ARGS(OUT m_RtvHeap.GetAddressOf())));
+		&rtvHeapDesc, 
+		IID_PPV_ARGS(OUT m_RtvHeap.GetAddressOf())));
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
@@ -620,7 +640,8 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(m_Device->CreateDescriptorHeap(
-		&dsvHeapDesc, IID_PPV_ARGS(OUT m_DsvHeap.GetAddressOf())));
+		&dsvHeapDesc, 
+		IID_PPV_ARGS(OUT m_DsvHeap.GetAddressOf())));
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};

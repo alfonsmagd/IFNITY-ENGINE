@@ -15,7 +15,8 @@ namespace D3D12
 
     class D3D12Swapchain final
     {
-        enum { MAX_SWAPCHAIN_IMAGES = 3 }; // https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-multiple-swap-chains?utm_source=chatgpt.com triplebuffering in d3d12. 
+        enum { MAX_SWAPCHAIN_IMAGES = 3 }; 
+        // https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/dxgi-multiple-swap-chains? triplebuffering in d3d12. 
 
     public:
         D3D12Swapchain(DeviceD3D12& ctx, HWND hwnd, uint32_t width, uint32_t height);
@@ -30,7 +31,7 @@ namespace D3D12
     private:
         void createSwapchain(HWND hwnd);
         void createBackbuffers();
-
+        bool checkVSyncEnabled() const;
     private:
         DeviceD3D12& ctx_;
         ComPtr<IDXGISwapChain3> swapchain_;
@@ -43,6 +44,8 @@ namespace D3D12
         uint32_t numSwapchainImages_ = 0;
         uint32_t currentBackBufferIndex_ = 0;
         DXGI_FORMAT surfaceFormat_ = DXGI_FORMAT_R8G8B8A8_UNORM; // Formato de color
+
+        bool forcevsync_ = false;
     };
 
 

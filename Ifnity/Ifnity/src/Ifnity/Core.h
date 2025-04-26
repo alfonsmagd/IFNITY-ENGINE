@@ -37,7 +37,7 @@
 
 
 #define IN      // This help you to understand that the variable is input in the function.
-#define OUT    // This help you to understand that the variable change in the function.
+#define OUT     // This help you to understand that the variable change in the function AND ITS OUTPUT
 
 
 #define ARRAY_NUM_ELEMENTS(array) (sizeof(array) / sizeof(array[0]))

@@ -55,13 +55,14 @@ namespace D3D12
         for (uint32_t i = 0; i < numSwapchainImages_; ++i)
         {
             ComPtr<ID3D12Resource> buffer;
-            hr = swapchain_->GetBuffer(i, IID_PPV_ARGS(&buffer));
+            hr = swapchain_->GetBuffer(i, IID_PPV_ARGS(OUT &buffer));
             assert(SUCCEEDED(hr));
 
+			// 5.1. Store the backbuffer in the array
             backBuffers_[i] = buffer;
             
             // 5.2. Allocate an RTV descriptor handle from the descriptor heap
-            //rtvHandles_[i] = ctx_.allocateRTV(); // <-- YOU MUST HAVE THIS FUNCTION IN YOUR DeviceD3D12
+            rtvHandles_[i] = ctx_.AllocateRTV(); 
 
             // 5.3. Create RTV for the backbuffer
             D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
@@ -94,28 +95,52 @@ namespace D3D12
 
             backBufferHandles_[i] = ctx_.slotMapTextures_.create(std::move(image));
         }
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	}
 
 
 	D3D12Swapchain::~D3D12Swapchain()
-	{}
+	{
+        // Free handles in slotmpa 
+        for (uint32_t i = 0; i < numSwapchainImages_; ++i)
+        {
+            if (backBufferHandles_[i].valid())
+            {
+                ctx_.slotMapTextures_.destroy(backBufferHandles_[i]);
+            }
+        }
+    
+        // Los ComPtr automatic free;
+        // - swapchain_
+        // - backBuffers_[i]
+    
+    }
 
 	void D3D12Swapchain::present()
-	{}
+	{
+    
+        // 1. Present the swapchain
+        HRESULT hr = swapchain_->Present(checkVSyncEnabled() ? 1 : 0, 0); // 1 = VSync ON, 0 = no special flags
+
+        if (FAILED(hr))
+        {
+            IFNITY_LOG(LogCore, ERROR, "Swapchain Present failed!");
+
+            if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
+            {
+                // Device lost, needs recreation
+                IFNITY_LOG(LogCore, ERROR, "Device lost! Need to recreate device and swapchain.");
+                // TODO: Señalar al motor que debe recrear device/swapchain.
+            }
+            else
+            {
+                assert(false && "Swapchain Present failed unexpectedly");
+            }
+        }
+
+        // 2. Update the current back buffer index
+        currentBackBufferIndex_ = swapchain_->GetCurrentBackBufferIndex();
+    
+    }
 
    
 
@@ -145,6 +170,11 @@ namespace D3D12
 
 	void D3D12Swapchain::createBackbuffers()
 	{}
+
+    bool D3D12Swapchain::checkVSyncEnabled() const
+    {
+		return forcevsync_;
+    }
 
 }
 

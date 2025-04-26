@@ -10,14 +10,30 @@
 #include "Platform/D3D12/d3d12_ImmediateCommands.hpp"
 #include "Platform/D3D12/d3d12_Image.hpp"
 #include "Platform/D3D12/d3d12_classes.hpp"
+//#include "Platform/D3D12/d3d12_SwapChain.hpp"
 
 IFNITY_NAMESPACE
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
 
-class DeviceD3D12 final : public GraphicsDeviceManager
+
+
+
+class DeviceD3D12 final: public GraphicsDeviceManager
 {
+
+	enum
+	{
+		MAX_RTV_SWAPCHAIN_IMAGES = 3,
+		MAX_RTV_DEFFERED_IMAGES = 12,
+		MAX_UAV_IMAGES = 16,
+		MAX_DSV_IMAGES = 1
+	};
+
+
+
+
 public:
 	//Pipeline Objects
 	ComPtr<ID3D12RootSignature> m_RootSignature = nullptr;
@@ -46,6 +62,33 @@ public:
 	ComPtr<ID3D12DescriptorHeap> m_RtvHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap> m_DsvHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavHeap = nullptr;
+
+
+	struct DescriptorAllocator
+	{
+		struct RTVSlots
+		{
+			size_t rtvDescriptorSize = 0; // Size of the RTV descriptor heap by default is 
+			uint32_t nextSlot = 0;
+			const uint32_t maxSlots = MAX_RTV_SWAPCHAIN_IMAGES + MAX_RTV_DEFFERED_IMAGES; // Deferred + swapchain
+		} rtv;
+
+		struct UAVSlots
+		{
+			size_t uavDescriptorSize = 0; // Size of the UAV descriptor heap
+			uint32_t nextSlot = 0;
+			const uint32_t maxSlots = MAX_UAV_IMAGES; //How many UAVs we can have in the system.
+		} uav;
+
+		struct DSVSlots
+		{
+			size_t dsvDescriptorSize = 0; // Size of the DSV descriptor heap
+			uint32_t nextSlot = 0;
+			const uint32_t maxSlots = MAX_DSV_IMAGES; // depthbuffer 
+		} dsv;
+	};
+
+	DescriptorAllocator descriptorAllocator_;
 
 	//Resources 
 	std::array<ID3D12Resource*, 2>        m_SwapChainBuffer;
@@ -94,7 +137,7 @@ public:
 	~DeviceD3D12() override;
 
 	void OnUpdate() override;
-
+	D3D12_CPU_DESCRIPTOR_HANDLE  AllocateRTV();
 	inline unsigned int GetWidth() const override { return m_Props.Width; }
 	inline unsigned int GetHeight() const override { return m_Props.Height; }
 	//change to private
@@ -148,7 +191,7 @@ private:
 
 
 
-
+	
 };
 
 
