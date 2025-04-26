@@ -10,7 +10,7 @@
 #include "Platform/D3D12/d3d12_ImmediateCommands.hpp"
 #include "Platform/D3D12/d3d12_Image.hpp"
 #include "Platform/D3D12/d3d12_classes.hpp"
-//#include "Platform/D3D12/d3d12_SwapChain.hpp"
+#include "Platform/D3D12/d3d12_SwapChain.hpp"
 
 IFNITY_NAMESPACE
 
@@ -44,12 +44,13 @@ public:
 	ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
 	ComPtr<ID3D12CommandAllocator> m_DirectCmdListAlloc = nullptr;
 	ComPtr<ID3D12GraphicsCommandList> m_CommandList = nullptr;
-	ComPtr<IDXGISwapChain> m_SwapChain = nullptr;
+	ComPtr<IDXGISwapChain3> m_SwapChain = nullptr;
 	HWND m_hWnd = nullptr;
 
 	ComPtr<D3D12MA::Allocator> g_Allocator;
 
 	std::unique_ptr<D3D12::D3D12ImmediateCommands> m_ImmediateCommands = nullptr;
+	std::unique_ptr<D3D12::D3D12Swapchain> swapchain_ = nullptr;
 
 	//States 
 	bool m_MsaaState = false;

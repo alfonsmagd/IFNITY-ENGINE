@@ -35,6 +35,8 @@ void CALLBACK DebugMessageCallback(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAG
 }
 
 
+
+
 DeviceD3D12::~DeviceD3D12()
 {
 
@@ -71,6 +73,7 @@ DeviceD3D12::~DeviceD3D12()
 		m_DepthStencilAllocation = nullptr;
 	}
 	m_RtvHeap.Reset();
+	swapchain_.reset();
 	for (int i = 0; i < m_SwapChainBufferCount; ++i)
 	{
 		if (m_SwapChainBuffer[i])
@@ -100,17 +103,23 @@ void DeviceD3D12::OnUpdate()
 	m_CommandList->RSSetViewports(1, &m_ScreenViewport);
 	m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
-	auto  barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	//Get Current BackBuffer
+	D3D12::D3D12Image* textback = slotMapTextures_.get(swapchain_->getCurrentTexture());
+	IFNITY_ASSERT(textback != nullptr, "Swapchain image is null");
+
+
+
+	auto  barrier = CD3DX12_RESOURCE_BARRIER::Transition(textback->resource_.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	m_CommandList->ResourceBarrier(1, &barrier);
 
 	// Set necessary state.
 	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
 
 	//Clear the back buffer and depth buffer.
-	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), m_ClearColor, 0, nullptr);
+	m_CommandList->ClearRenderTargetView(textback->getRTV(), m_ClearColor, 0, nullptr);
 	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = CurrentBackBufferView();
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = textback->getRTV();
 	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = DepthStencilView();
 	m_CommandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
 	
@@ -121,7 +130,7 @@ void DeviceD3D12::OnUpdate()
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
 
 
-	 barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	 barrier = CD3DX12_RESOURCE_BARRIER::Transition(textback->resource_.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	m_CommandList->ResourceBarrier(1, &barrier);
 	
 	// Done recording commands.
@@ -162,6 +171,12 @@ D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::AllocateRTV()
 {
 	auto& rtvAlloc = descriptorAllocator_.rtv;
 	IFNITY_ASSERT(rtvAlloc.nextSlot < rtvAlloc.maxSlots && "RTV Heap overflow: No more RTV descriptors available.");
+
+	//Check if m_RtvHeap is null
+	if( m_RtvHeap == nullptr )
+	{
+		IFNITY_LOG(LogCore, ERROR, "RTV Heap is null. Cannot allocate RTV descriptor.");
+	}
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
 	handle.Offset(rtvAlloc.nextSlot, rtvAlloc.rtvDescriptorSize);
@@ -340,9 +355,10 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	CreateCommandQueue();
 	//Create SwapChain
 	CreateImmediateCommands();
+	CreateRtvAndDsvDescriptorHeaps();
 	CreateSwapChain();
 	//Crate RTV and DSV Descriptor Heaps
-	CreateRtvAndDsvDescriptorHeaps();
+
 	LoadAssetDemo();
 
 	OnResize();
@@ -456,52 +472,63 @@ bool DeviceD3D12::CreateSwapChain()
 	// Obtener el handle de la ventana desde GLFW
 	m_hWnd = glfwGetWin32Window(m_Window);
 
-	// Liberar los recursos anteriores que vamos a recrear.
-	for (int i = 0; i < m_SwapChainBufferCount; ++i)
+	if( !m_hWnd )
 	{
-		if (m_SwapChainBuffer[i] != nullptr)
-		{
-			m_SwapChainBuffer[i]->Release();
-			m_SwapChainBuffer[i] = nullptr; // Asegúrate de establecer el puntero a nullptr después de liberar el recurso.
-		}
+		IFNITY_LOG(LogCore, ERROR, "Failed to get window handle from GLFW.");
+		return false;
 	}
+	//Create the swap chain.
+	swapchain_ = std::make_unique<D3D12::D3D12Swapchain>(*this, m_hWnd, GetWidth(), GetHeight());
+	
+	m_SwapChain = swapchain_->getSwapchain();
 
-	// Libera la swap chain anterior.
-	m_SwapChain.Reset();
 
-	FlushCommandQueue();
+	//// Liberar los recursos anteriores que vamos a recrear.
+	//for (int i = 0; i < m_SwapChainBufferCount; ++i)
+	//{
+	//	if (m_SwapChainBuffer[i] != nullptr)
+	//	{
+	//		m_SwapChainBuffer[i]->Release();
+	//		m_SwapChainBuffer[i] = nullptr; // Asegúrate de establecer el puntero a nullptr después de liberar el recurso.
+	//	}
+	//}
 
-	// Describe and create the swap chain.
-	DXGI_MODE_DESC bufferDesc = {};
-	bufferDesc.Width = GetWidth();
-	bufferDesc.Height = GetHeight();
-	bufferDesc.RefreshRate.Numerator = 60;
-	bufferDesc.RefreshRate.Denominator = 1;
-	bufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	bufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	bufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	//// Libera la swap chain anterior.
+	//m_SwapChain.Reset();
 
-	DXGI_SAMPLE_DESC sampleDesc = {};
-	sampleDesc.Count = m_MsaaState ? 4 : 1; // Activate MSSA 4X , by default is false. 												   
-	sampleDesc.Quality = CheckMSAAQualitySupport(sampleDesc.Count,
-		bufferDesc.Format) - 1; // Its importa													to substract 1 because the quality level is 0 based.
+	//FlushCommandQueue();
 
-	DXGI_SWAP_CHAIN_DESC sd = {};
-	sd.BufferDesc = bufferDesc;
-	sd.SampleDesc = sampleDesc;
-	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	sd.BufferCount = 2;
-	sd.OutputWindow = m_hWnd;
-	sd.Windowed = true;
-	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	//// Describe and create the swap chain.
+	//DXGI_MODE_DESC bufferDesc = {};
+	//bufferDesc.Width = GetWidth();
+	//bufferDesc.Height = GetHeight();
+	//bufferDesc.RefreshRate.Numerator = 60;
+	//bufferDesc.RefreshRate.Denominator = 1;
+	//bufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	//bufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	//bufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 
-	ComPtr<IDXGISwapChain> swapChain;
-	ThrowIfFailed(dxgiFactory4->CreateSwapChain(
-		commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-		&sd,
-		m_SwapChain.GetAddressOf()
-	));
+	//DXGI_SAMPLE_DESC sampleDesc = {};
+	//sampleDesc.Count = m_MsaaState ? 4 : 1; // Activate MSSA 4X , by default is false. 												   
+	//sampleDesc.Quality = CheckMSAAQualitySupport(sampleDesc.Count,
+	//	bufferDesc.Format) - 1; // Its importa													to substract 1 because the quality level is 0 based.
+
+	//DXGI_SWAP_CHAIN_DESC sd = {};
+	//sd.BufferDesc = bufferDesc;
+	//sd.SampleDesc = sampleDesc;
+	//sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	//sd.BufferCount = 2;
+	//sd.OutputWindow = m_hWnd;
+	//sd.Windowed = true;
+	//sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	//sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
+	//ComPtr<IDXGISwapChain> swapChain;
+	//ThrowIfFailed(dxgiFactory4->CreateSwapChain(
+	//	commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
+	//	&sd,
+	//	m_SwapChain.GetAddressOf()
+	//));
 
 
 
@@ -635,7 +662,7 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
-	dsvHeapDesc.NumDescriptors = 1;
+	dsvHeapDesc.NumDescriptors = MAX_DSV_IMAGES;
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask = 0;
@@ -679,14 +706,14 @@ void DeviceD3D12::OnResize()
 
 	// Release the previous resources we will be recreating.
 	// Liberar los recursos anteriores que vamos a recrear.
-	for (int i = 0; i < m_SwapChainBufferCount; ++i)
-	{
-		if (m_SwapChainBuffer[i] != nullptr)
-		{
-			m_SwapChainBuffer[i]->Release();
-			m_SwapChainBuffer[i] = nullptr; // Asegúrate de establecer el puntero a nullptr después de liberar el recurso.
-		}
-	}
+	//for (int i = 0; i < m_SwapChainBufferCount; ++i)
+	//{
+	//	if (m_SwapChainBuffer[i] != nullptr)
+	//	{
+	//		m_SwapChainBuffer[i]->Release();
+	//		m_SwapChainBuffer[i] = nullptr; // Asegúrate de establecer el puntero a nullptr después de liberar el recurso.
+	//	}
+	//}
 	if (m_DepthStencilBuffer)
 	{
 		m_DepthStencilBuffer->Release();
@@ -698,25 +725,25 @@ void DeviceD3D12::OnResize()
 
 
 	// Resize the swap chain.
-	ThrowIfFailed(m_SwapChain->ResizeBuffers(
-		m_SwapChainBufferCount,
-		width, height,
-		m_BackBufferFormat,
-		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
+	//ThrowIfFailed(m_SwapChain->ResizeBuffers(
+	//	m_SwapChainBufferCount,
+	//	width, height,
+	//	m_BackBufferFormat,
+	//	DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
 
-	m_CurrentBackBufferIndex = 0;
+	//m_CurrentBackBufferIndex = 0;
 
 
-	//Create RTV Descriptor Heap
-	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
-		for (UINT i = 0; i < m_SwapChainBufferCount; i++)
-		{
-			ThrowIfFailed(m_SwapChain->GetBuffer(i, IID_PPV_ARGS(&m_SwapChainBuffer[i])));
-			m_Device->CreateRenderTargetView(m_SwapChainBuffer[i], nullptr, rtvHeapHandle);
-			rtvHeapHandle.Offset(1, m_DescritporSizes.Rtv); //1 is the offset to the next descriptor in the heap.
-		}
-	}
+	////Create RTV Descriptor Heap
+	//{
+	//	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
+	//	for (UINT i = 0; i < m_SwapChainBufferCount; i++)
+	//	{
+	//		ThrowIfFailed(m_SwapChain->GetBuffer(i, IID_PPV_ARGS(&m_SwapChainBuffer[i])));
+	//		m_Device->CreateRenderTargetView(m_SwapChainBuffer[i], nullptr, rtvHeapHandle);
+	//		rtvHeapHandle.Offset(1, m_DescritporSizes.Rtv); //1 is the offset to the next descriptor in the heap.
+	//	}
+	//}
 	// Create the depth/stencil buffer and view.
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;

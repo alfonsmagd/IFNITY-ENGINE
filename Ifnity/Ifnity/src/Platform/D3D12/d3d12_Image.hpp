@@ -6,6 +6,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include "Ifnity/Utils/SlotMap.hpp"
+#include "d3d12_classes.hpp"
 
 IFNITY_NAMESPACE
 
@@ -38,10 +39,10 @@ namespace D3D12
         D3D12_RESOURCE_DESC desc_ = {};
 
         // Descriptors
-        D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_ = { 0 };
-        D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_ = { 0 };
-        D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_ = { 0 };
-		D3D12_CPU_DESCRIPTOR_HANDLE uavHandle_ = { 0 };
+        D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_ = D3D12InvalidHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_ = D3D12InvalidHandle;
+        D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_ = D3D12InvalidHandle;
+		D3D12_CPU_DESCRIPTOR_HANDLE uavHandle_ = D3D12InvalidHandle;
 
         bool isDepthFormat_ = false;
         bool isStencilFormat_ = false;

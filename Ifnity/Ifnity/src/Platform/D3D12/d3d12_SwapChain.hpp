@@ -28,6 +28,9 @@ namespace D3D12
         uint32_t getCurrentBackBufferIndex() const;
         DXGI_FORMAT getSurfaceFormat() const;
 
+        //For test purposes
+		inline IDXGISwapChain3* getSwapchain() const { return swapchain_.Get(); }
+
     private:
         void createSwapchain(HWND hwnd);
         void createBackbuffers();

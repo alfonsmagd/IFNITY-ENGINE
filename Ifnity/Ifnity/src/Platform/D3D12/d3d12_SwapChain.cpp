@@ -27,7 +27,7 @@ namespace D3D12
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
         swapChainDesc.SampleDesc.Count = 1;
         swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-        swapChainDesc.Scaling = DXGI_SCALING_ASPECT_RATIO_STRETCH;
+        swapChainDesc.Scaling = DXGI_SCALING_NONE;
         swapChainDesc.Stereo = FALSE;
 
         // 2. Create a temporary IDXGISwapChain1
@@ -95,6 +95,8 @@ namespace D3D12
 
             backBufferHandles_[i] = ctx_.slotMapTextures_.create(std::move(image));
         }
+        DumpDebugMessages();
+        
 	}
 
 

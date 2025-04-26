@@ -9,14 +9,47 @@
 IFNITY_NAMESPACE
 namespace D3D12
 {
+	//Variables constexpre 
+	constexpr D3D12_CPU_DESCRIPTOR_HANDLE D3D12InvalidHandle = { ~0ull };
+
+
+	static void DumpDebugMessages(bool enable = true)
+	{
+		using namespace Microsoft::WRL;
+
+		if( !enable )
+			return;
+
+		//ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
+		//if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiInfoQueue))))
+		//{
+		//	UINT64 messageCount = dxgiInfoQueue->GetNumStoredMessages(DXGI_DEBUG_ALL);
+
+		//	for (UINT64 i = 0; i < messageCount; ++i)
+		//	{
+		//		SIZE_T messageLength = 0;
+		//		dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, nullptr, &messageLength);
+
+		//		std::vector<char> messageData(messageLength);
+		//		DXGI_INFO_QUEUE_MESSAGE* message = reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(messageData.data());
+
+		//		dxgiInfoQueue->GetMessage(DXGI_DEBUG_ALL, i, message, &messageLength);
+
+		//		IFNITY_LOG(LogCore, TRACE, "DXGI Message: " + std::string(message->pDescription));
+		//		//std::cout << "DXGI DEBUG: " << message->pDescription << std::endl;
+		//	}
+
+		//	dxgiInfoQueue->ClearStoredMessages(DXGI_DEBUG_ALL); // clean 
+		//}
+	}
+
+
+
+
 
 	//Using types
 	using TextureHandleSM = Handle<struct D3D12Image>;
 	
-
-
-
-
 
 	struct SubmitHandle
 	{
