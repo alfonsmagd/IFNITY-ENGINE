@@ -59,7 +59,24 @@ namespace D3D12
             assert(SUCCEEDED(hr));
 
             backBuffers_[i] = buffer;
+            
+            // 5.2. Allocate an RTV descriptor handle from the descriptor heap
+            //rtvHandles_[i] = ctx_.allocateRTV(); // <-- YOU MUST HAVE THIS FUNCTION IN YOUR DeviceD3D12
 
+            // 5.3. Create RTV for the backbuffer
+            D3D12_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+            rtvDesc.Format = surfaceFormat_;
+            rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+            rtvDesc.Texture2D.MipSlice = 0;
+            rtvDesc.Texture2D.PlaneSlice = 0;
+
+            ctx_.m_Device->CreateRenderTargetView(
+                buffer.Get(),      // Resource
+                &rtvDesc,          // RTV description
+                rtvHandles_[i]     // Descriptor handle
+            );
+
+            // 5.4. Create and store D3D12Image
             D3D12Image image = {};
             image.resource_ = buffer;
             image.usageFlags_ = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
@@ -73,6 +90,7 @@ namespace D3D12
             image.isSwapchainImage_ = true;
             image.isDepthFormat_ = D3D12Image::isDepthFormat(surfaceFormat_);
             image.isStencilFormat_ = D3D12Image::isDepthStencilFormat(surfaceFormat_);
+            image.rtvHandle_ = rtvHandles_[i]; //store the RTV in the D3D12Image itself
 
             backBufferHandles_[i] = ctx_.slotMapTextures_.create(std::move(image));
         }
@@ -99,19 +117,27 @@ namespace D3D12
 	void D3D12Swapchain::present()
 	{}
 
+   
+
 	TextureHandleSM D3D12Swapchain::getCurrentTexture()
 	{
-		return TextureHandleSM();
+        currentBackBufferIndex_ = swapchain_->GetCurrentBackBufferIndex();
+        if (currentBackBufferIndex_ < numSwapchainImages_)
+        {
+            return backBufferHandles_[currentBackBufferIndex_];
+        }
+        return {}; // return invalid handle if something wrong
+    
 	}
 
 	uint32_t D3D12Swapchain::getCurrentBackBufferIndex() const
 	{
-		return 0;
+        return currentBackBufferIndex_;
 	}
 
 	DXGI_FORMAT D3D12Swapchain::getSurfaceFormat() const
 	{
-		return DXGI_FORMAT();
+		return surfaceFormat_;
 	}
 
 	void D3D12Swapchain::createSwapchain(HWND hwnd)

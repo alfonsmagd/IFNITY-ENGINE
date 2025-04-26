@@ -8,6 +8,8 @@
 #include <DirectXMath.h>
 
 #include "Platform/D3D12/d3d12_ImmediateCommands.hpp"
+#include "Platform/D3D12/d3d12_Image.hpp"
+#include "Platform/D3D12/d3d12_classes.hpp"
 
 IFNITY_NAMESPACE
 
@@ -84,6 +86,8 @@ public:
 	D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView;
 
 	Color m_ClearColor = { 0.0f, 0.2f, 0.4f, 1.0f };
+
+
 	SlotMap<D3D12::D3D12Image> slotMapTextures_;
 
 public:

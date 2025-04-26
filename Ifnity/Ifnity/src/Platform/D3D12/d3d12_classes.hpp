@@ -7,8 +7,6 @@
 #include "Ifnity/Utils/SlotMap.hpp"
 
 IFNITY_NAMESPACE
-
-
 namespace D3D12
 {
 
