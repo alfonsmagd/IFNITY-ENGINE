@@ -11,6 +11,7 @@
 #include "Platform/D3D12/d3d12_Image.hpp"
 #include "Platform/D3D12/d3d12_classes.hpp"
 #include "Platform/D3D12/d3d12_SwapChain.hpp"
+#include "Platform/D3D12/d3d12_CommandBuffer.hpp"
 
 IFNITY_NAMESPACE
 
@@ -48,16 +49,18 @@ public:
 	HWND m_hWnd = nullptr;
 
 	ComPtr<D3D12MA::Allocator> g_Allocator;
-
+	
+	//UniquePtrs
 	std::unique_ptr<D3D12::D3D12ImmediateCommands> m_ImmediateCommands = nullptr;
 	std::unique_ptr<D3D12::D3D12Swapchain> swapchain_ = nullptr;
-
+	
 	//States 
 	bool m_MsaaState = false;
 	UINT  m_SwapChainBufferCount = 2;    // Double buffering SwapChain move to DeviceManager TODO:
 	UINT m_CurrentBackBufferIndex = 0;
 	UINT m_CurrentFence = 0;
 	HANDLE m_FenceEvent = nullptr;
+	D3D12::CommandBuffer currentCommandBuffer_;
 
 	//Descriptor Heaps
 	ComPtr<ID3D12DescriptorHeap> m_RtvHeap = nullptr;
@@ -166,6 +169,7 @@ private:
 	bool CreateSwapChain();
 	void CreateCommandQueue();
 	void CreateImmediateCommands();
+	
 
 	void CaptureD3D12DebugMessages() const ;
 	ID3D12Resource* CurrentBackBuffer() const;
@@ -190,6 +194,10 @@ private:
 	void DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
 					  const ComPtr<ID3D12RootSignature>& rootSignature);
 
+	D3D12::CommandBuffer& acquireCommandBuffer();
+
+	D3D12::SubmitHandle submit(D3D12::CommandBuffer& commandBuffer, D3D12::TextureHandleSM present);
+	
 
 
 	

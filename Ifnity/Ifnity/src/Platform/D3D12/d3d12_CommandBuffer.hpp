@@ -1,3 +1,9 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-04-29 by alfonsmagd
+
+
 #pragma once
 
 #include <pch.h>
@@ -8,9 +14,9 @@
 
 IFNITY_NAMESPACE
 
-
-
 class DeviceD3D12;
+struct ScissorRect;
+struct ViewPortState;
 
 namespace D3D12
 {
@@ -26,7 +32,8 @@ namespace D3D12
 
 		CommandBuffer& operator=(CommandBuffer&& other) = default;
 
-
+		void cmdBindViewport(const ViewPortState& state);
+		void cmdBindScissorRect(const ScissorRect& rect);
 
 	private:
 		friend class DeviceD3D12;

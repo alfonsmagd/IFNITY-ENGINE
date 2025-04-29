@@ -6,7 +6,7 @@
 #include "GraphicsDeviceManager.hpp"
 #include "Platform\Windows\DeviceOpengl.h"
 #include "Platform\Windows\DeviceD3D11.h"
-#include "Platform\Windows\DeviceD3D12.h"
+#include "Platform\Windows\DeviceD3D12.hpp"
 #include "Platform\Windows\DeviceVulkan.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>

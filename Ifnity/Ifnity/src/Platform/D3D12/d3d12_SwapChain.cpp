@@ -4,8 +4,9 @@
 // Last modified: 2025-04-29 by alfonsmagd
 
 
+
 #include "d3d12_SwapChain.hpp"
-#include "../Windows/DeviceD3D12.h"
+#include "../Windows/DeviceD3D12.hpp"
 #include "d3d12_Image.hpp"
 
 IFNITY_NAMESPACE
