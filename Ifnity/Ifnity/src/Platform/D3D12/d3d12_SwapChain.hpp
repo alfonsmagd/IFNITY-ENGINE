@@ -1,3 +1,9 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-04-29 by alfonsmagd
+
+
 #pragma once
 
 #include <pch.h>
@@ -32,8 +38,6 @@ namespace D3D12
 		inline IDXGISwapChain3* getSwapchain() const { return swapchain_.Get(); }
 
     private:
-        void createSwapchain(HWND hwnd);
-        void createBackbuffers();
         bool checkVSyncEnabled() const;
     private:
         DeviceD3D12& ctx_;

@@ -1,4 +1,7 @@
-
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-04-29 by alfonsmagd
 
 
 #include "d3d12_SwapChain.hpp"
@@ -131,7 +134,7 @@ namespace D3D12
             {
                 // Device lost, needs recreation
                 IFNITY_LOG(LogCore, ERROR, "Device lost! Need to recreate device and swapchain.");
-                // TODO: Señalar al motor que debe recrear device/swapchain.
+                // TODO: Sealar al motor que debe recrear device/swapchain.
             }
             else
             {
@@ -167,11 +170,6 @@ namespace D3D12
 		return surfaceFormat_;
 	}
 
-	void D3D12Swapchain::createSwapchain(HWND hwnd)
-	{}
-
-	void D3D12Swapchain::createBackbuffers()
-	{}
 
     bool D3D12Swapchain::checkVSyncEnabled() const
     {
