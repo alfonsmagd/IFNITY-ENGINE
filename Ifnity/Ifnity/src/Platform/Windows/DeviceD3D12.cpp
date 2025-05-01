@@ -1,4 +1,12 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-01 by alfonsmagd
+
+
+
 #include "DeviceD3D12.hpp"
+#include  "../D3D12/d3d12_classes.hpp"
 
 
 #pragma comment(lib, "d3d12.lib")
@@ -8,7 +16,8 @@ IFNITY_NAMESPACE
 using namespace DirectX;
 void CaptureDXGIMessagesToConsole();
 
-// Definir el callback de depuración
+// depuration callbackn
+// depuration callbackn
 void CALLBACK DebugMessageCallback(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
 {
 	switch( Severity )
@@ -35,7 +44,7 @@ DeviceD3D12::~DeviceD3D12()
 {
 
 
-	// Asegúrate de que la cola de comandos esté vacía
+	// Check
 	FlushCommandQueue();
 
 	// Salir del modo de pantalla completa si es necesario
@@ -94,69 +103,18 @@ void DeviceD3D12::OnUpdate()
 {
 
 	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
-	m_CommandList->RSSetViewports(1, &m_ScreenViewport);
-	m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
 
-	//Get Current BackBuffer
-	D3D12::D3D12Image* textback = slotMapTextures_.get(swapchain_->getCurrentTexture());
-	IFNITY_ASSERT(textback != nullptr, "Swapchain image is null");
+	//acquiere commandbufferlist()
 
+	D3D12::CommandBuffer& cmdBuffer = acquireCommandBuffer();
+	D3D12::TextureHandleSM currentTexture = swapchain_->getCurrentTexture();
+	auto* textback = slotMapTextures_.get(currentTexture);
 
+	cmdBuffer.cmdBeginRendering(textback);
+	cmdBuffer.cmdRenderImgui(ImGui::GetDrawData(), m_CbvSrvUavHeap.Get());
 
-	auto  barrier = CD3DX12_RESOURCE_BARRIER::Transition(textback->resource_.Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	m_CommandList->ResourceBarrier(1, &barrier);
-
-	// Set necessary state.
-	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
-
-	//Clear the back buffer and depth buffer.
-	m_CommandList->ClearRenderTargetView(textback->getRTV(), m_ClearColor, 0, nullptr);
-	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = textback->getRTV();
-	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = DepthStencilView();
-	m_CommandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
-
-
-	//PopulateCommandList();
-	DrawElements(m_PipelineState, m_RootSignature);
-	ImGui::Render();
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), m_CommandList.Get());
-
-
-	barrier = CD3DX12_RESOURCE_BARRIER::Transition(textback->resource_.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	m_CommandList->ResourceBarrier(1, &barrier);
-
-	// Done recording commands.
-	ThrowIfFailed(m_CommandList->Close());
-
-	// Add the command list to the queue for execution.
-	ID3D12CommandList* cmdsLists[] = { m_CommandList.Get() };
-	commandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
-
-	// swap the back and front buffers
-	ThrowIfFailed(m_SwapChain->Present(IsVSync() ? 1 : 0, 0));
-	m_CurrentBackBufferIndex = (m_CurrentBackBufferIndex + 1) % m_SwapChainBufferCount;
-	FlushCommandQueue();
-
-	#ifdef RESIZE_D3D12 
-	CreateSwapChain();
-	OnResize();
-	#endif
-
-	// Command list allocators can only be reset when the associated 
-   // command lists have finished execution on the GPU; apps should use 
-   // fences to determine GPU execution progress.
-	ThrowIfFailed(m_DirectCmdListAlloc->Reset());
-
-	// However, when ExecuteCommandList() is called on a particular command 
-	// list, that command list can then be reset at any time and must be before 
-	// re-recording.
-	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), m_PipelineState.Get()));
-
-
-
-
+	cmdBuffer.cmdEndRendering();
+	submit(cmdBuffer, currentTexture);
 
 
 }
@@ -318,7 +276,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 			D3D12_MESSAGE_ID disableMessageIDs[] = {
 				D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE,
-				D3D12_MESSAGE_ID_COMMAND_LIST_STATIC_DESCRIPTOR_RESOURCE_DIMENSION_MISMATCH, // descriptor validation doesn't understand acceleration structures
+				D3D12_MESSAGE_ID_COMMAND_LIST_STATIC_DESCRIPTOR_RESOURCE_DIMENSION_MISMATCH, // descriptor validation doesnt understand acceleration structures
 			};
 
 			D3D12_INFO_QUEUE_FILTER filter = {};
@@ -479,7 +437,7 @@ bool DeviceD3D12::CreateSwapChain()
 	//	if (m_SwapChainBuffer[i] != nullptr)
 	//	{
 	//		m_SwapChainBuffer[i]->Release();
-	//		m_SwapChainBuffer[i] = nullptr; // Asegúrate de establecer el puntero a nullptr después de liberar el recurso.
+	//		m_SwapChainBuffer[i] = nullptr; // Asegrate de establecer el puntero a nullptr despus de liberar el recurso.
 	//	}
 	//}
 
@@ -616,7 +574,7 @@ ID3D12Resource* DeviceD3D12::CurrentBackBuffer()const
 }
 
 
-//The CurrentBackBufferView function returns a D3D12_CPU_DESCRIPTOR_HANDLE that points to the current back buffer's render target view (RTV) descriptor. This handle is essential for rendering operations, as it allows the graphics pipeline to know which back buffer to render to.
+//The CurrentBackBufferView function returns a D3D12_CPU_DESCRIPTOR_HANDLE that points to the current back buffers render target view (RTV) descriptor. This handle is essential for rendering operations, as it allows the graphics pipeline to know which back buffer to render to.
 D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::CurrentBackBufferView() const
 {
 	// Declare a handle of type D3D12_CPU_DESCRIPTOR_HANDLE
@@ -628,11 +586,11 @@ D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::CurrentBackBufferView() const
 	// m_DescritporSizes.Rtv: Size of each RTV descriptor in the heap
 	handle.ptr = m_RtvHeap->GetCPUDescriptorHandleForHeapStart().ptr + m_CurrentBackBufferIndex * m_DescritporSizes.Rtv;
 
-	// Return the handle to the current back buffer's RTV descriptor
+	// Return the handle to the current back buffers RTV descriptor
 	return handle;
 }
 
-//The DepthStencilView function returns a D3D12_CPU_DESCRIPTOR_HANDLE that points to the depth/stencil buffer's descriptor. This handle is used to bind the depth/stencil buffer to the graphics pipeline.
+//The DepthStencilView function returns a D3D12_CPU_DESCRIPTOR_HANDLE that points to the depth/stencil buffers descriptor. This handle is used to bind the depth/stencil buffer to the graphics pipeline.
 D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::DepthStencilView() const
 {
 	return m_DsvHeap->GetCPUDescriptorHandleForHeapStart(); // This is unique for the depth stencil view and not need calculate the offset. 
@@ -701,7 +659,7 @@ void DeviceD3D12::OnResize()
 	//	if (m_SwapChainBuffer[i] != nullptr)
 	//	{
 	//		m_SwapChainBuffer[i]->Release();
-	//		m_SwapChainBuffer[i] = nullptr; // Asegúrate de establecer el puntero a nullptr después de liberar el recurso.
+	//		m_SwapChainBuffer[i] = nullptr; // Asegrate de establecer el puntero a nullptr despus de liberar el recurso.
 	//	}
 	//}
 	if( m_DepthStencilBuffer )
@@ -855,7 +813,7 @@ void DeviceD3D12::FlushCommandQueue()
 	m_CurrentFence++;
 
 	// Add an instruction to the command queue to set a new fence point.  Because we 
-	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
+	// are on the GPU timeline, the new fence point wont be set until the GPU finishes
 	// processing all the commands prior to this Signal().
 	ThrowIfFailed(commandQueue->Signal(m_Fence.Get(), m_CurrentFence));
 
@@ -1019,40 +977,7 @@ void DeviceD3D12::BuildPipelineStage()
 
 	}
 }
-void DeviceD3D12::PopulateCommandList()
-{
 
-	m_CommandList->SetPipelineState(m_PipelineState.Get());
-	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
-	m_CommandList->RSSetViewports(1, &m_ScreenViewport);
-	m_CommandList->RSSetScissorRects(1, &m_ScissorRect);
-
-	auto  barrier = CD3DX12_RESOURCE_BARRIER::Transition(CurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	m_CommandList->ResourceBarrier(1, &barrier);
-
-	// Set necessary state.
-	m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
-	m_CommandList->SetGraphicsRootSignature(m_RootSignature.Get());
-
-	//Clear the back buffer and depth buffer.
-	m_CommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::CadetBlue, 0, nullptr);
-	m_CommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = CurrentBackBufferView();
-	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = DepthStencilView();
-	m_CommandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
-	//m_CommandList->OMSetRenderTargets(1, &CurrentBackBufferView(), true, &DepthStencilView());
-
-
-	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
-	m_CommandList->DrawInstanced(3, 1, 0, 0);
-
-
-
-
-
-}
 void DeviceD3D12::ReportLiveObjects() const
 {
 	ComPtr<IDXGIDebug> debugDXGI;
@@ -1067,6 +992,7 @@ void DeviceD3D12::ReportLiveObjects() const
 	ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(OUT & debugDXGI1)));
 	debugDXGI1->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
 }
+
 void DeviceD3D12::DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
 							   const ComPtr<ID3D12RootSignature>& rootSignature)
 {
@@ -1100,25 +1026,28 @@ D3D12::SubmitHandle DeviceD3D12::submit(D3D12::CommandBuffer& commandBuffer, D3D
 
 	if (present)
 	{
-		const D3D12::D3D12Image& tex = *slotMapTextures_.get(present);
+		 D3D12::D3D12Image& tex = *slotMapTextures_.get(present);
 		IFNITY_ASSERT_MSG(tex.isSwapchainImage_, "No SwapChainImage acquired for submission");
 
 		// Prepare image for presentation
 		D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			tex.resource_.Get(),
-			D3D12_RESOURCE_STATE_RENDER_TARGET,
+			tex.currentState_,
 			D3D12_RESOURCE_STATE_PRESENT
 		);
+		//TrackState
+		tex.currentState_ = D3D12_RESOURCE_STATE_PRESENT;
 		d3d12CmdBuffer->wrapper_->commandList->ResourceBarrier(1, &barrier);
 	}
 
-	// Submit command buffer to queue
-	ID3D12CommandList* cmdsLists[] = { d3d12CmdBuffer->wrapper_->commandList.Get() };
-	commandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+	//// Submit command buffer to queue
+	//ID3D12CommandList* cmdsLists[] = { d3d12CmdBuffer->wrapper_->commandList.Get() };
+	//commandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
 	// Present swapchain if needed
 	const bool shouldPresent = true;
 	d3d12CmdBuffer->lastSubmitHandle_ = m_ImmediateCommands->submit(*commandBuffer.wrapper_);
+	//Is
 	if (shouldPresent)
 	{
 		m_SwapChain->Present(IsVSync() ? 1 : 0,0);
@@ -1133,6 +1062,27 @@ D3D12::SubmitHandle DeviceD3D12::submit(D3D12::CommandBuffer& commandBuffer, D3D
 	currentCommandBuffer_ = {};
 
 	return handle;
+}
+
+D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture()
+{
+	if( !m_SwapChain )
+	{
+		return {};
+	}
+	// Get the current back buffer index
+	D3D12::TextureHandleSM tex = swapchain_->getCurrentTexture();
+
+	if( !tex.valid() )
+	{
+		IFNITY_LOG(LogCore, ERROR, "No swapchain image acquired");
+		return {};
+	}
+
+	auto* texptr = slotMapTextures_.get(tex);
+	IFNITY_ASSERT_MSG(texptr->format_ != DXGI_FORMAT_UNKNOWN , "Invalid swapchain d3d12 image format");
+
+	return tex;
 }
 
 

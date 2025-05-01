@@ -1,3 +1,10 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-01 by alfonsmagd
+
+
+
 
 
 #include "DeviceVulkan.h"
@@ -6,6 +13,7 @@
 #include "vk_mem_alloc.h"
 #include <spirv_cross\spirv_reflect.hpp>
 #include  "../Vulkan/vulkan_classes.hpp"
+
 //#define IMGUI_DEMO 
 
 IFNITY_NAMESPACE
@@ -51,32 +59,32 @@ static void PrintEnabledFeature(VkPhysicalDevice vkpd)
 
 	vkGetPhysicalDeviceFeatures2(vkpd, &deviceFeatures2);
 
-	// Imprimir características de VkPhysicalDeviceFeatures;
+	// Imprimir caractersticas de VkPhysicalDeviceFeatures;
 	IFNITY_LOG(LogCore, INFO, "RobustBufferAccess: {}", deviceFeatures2.features.robustBufferAccess ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "FullDrawIndexUint32: {}", deviceFeatures2.features.fullDrawIndexUint32 ? "Enabled" : "Disabled");
-	// Agrega más características según sea necesario...
+	// Agrega ms caractersticas segn sea necesario...
 
-	// Imprimir características de VkPhysicalDeviceVulkan11Features
+	// Imprimir caractersticas de VkPhysicalDeviceVulkan11Features
 	IFNITY_LOG(LogCore, INFO, "StorageBuffer16BitAccess: {}", vulkan11Features.storageBuffer16BitAccess ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "UniformAndStorageBuffer16BitAccess: {}", vulkan11Features.uniformAndStorageBuffer16BitAccess ? "Enabled" : "Disabled");
-	// Agrega más características según sea necesario...
+	// Agrega ms caractersticas segn sea necesario...
 
-	// Imprimir características de VkPhysicalDeviceVulkan12Features
+	// Imprimir caractersticas de VkPhysicalDeviceVulkan12Features
 	IFNITY_LOG(LogCore, INFO, "BufferDeviceAddress: {}", vulkan12Features.bufferDeviceAddress ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "BufferDeviceAddressCaptureReplay: {}", vulkan12Features.bufferDeviceAddressCaptureReplay ? "Enabled" : "Disabled");
-	// Agrega más características según sea necesario...
+	// Agrega ms caractersticas segn sea necesario...
 
-	// Imprimir características de VkPhysicalDeviceVulkan13Features
+	// Imprimir caractersticas de VkPhysicalDeviceVulkan13Features
 	IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", vulkan13Features.dynamicRendering ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "Synchronization2: {}", vulkan13Features.synchronization2 ? "Enabled" : "Disabled");
-	// Agrega más características según sea necesario...
+	// Agrega ms caractersticas segn sea necesario...
 
-	// Imprimir características de VkPhysicalDeviceDescriptorIndexingFeatures
+	// Imprimir caractersticas de VkPhysicalDeviceDescriptorIndexingFeatures
 	IFNITY_LOG(LogCore, INFO, "DescriptorBindingSampledImageUpdateAfterBind: {}", indexingFeatures.descriptorBindingSampledImageUpdateAfterBind ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "DescriptorBindingStorageImageUpdateAfterBind: {}", indexingFeatures.descriptorBindingStorageImageUpdateAfterBind ? "Enabled" : "Disabled");
-	// Agrega más características según sea necesario...
+	// Agrega ms caractersticas segn sea necesario...
 
-	// Imprimir características de VkPhysicalDeviceBufferDeviceAddressFeatures
+	// Imprimir caractersticas de VkPhysicalDeviceBufferDeviceAddressFeatures
 	IFNITY_LOG(LogCore, INFO, "BufferDeviceAddress: {}", bufferDeviceAddressFeatures.bufferDeviceAddress ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "BufferDeviceAddressCaptureReplay: {}", bufferDeviceAddressFeatures.bufferDeviceAddressCaptureReplay ? "Enabled" : "Disabled");
 
@@ -108,7 +116,7 @@ static void PrintEnabledFeature(VkPhysicalDevice vkpd)
 	IFNITY_LOG(LogCore, INFO, "DescriptorBindingInlineUniformBlockUpdateAfterBind: {}", vulkan13Features.descriptorBindingInlineUniformBlockUpdateAfterBind ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "PipelineCreationCacheControl: {}", vulkan13Features.pipelineCreationCacheControl ? "Enabled" : "Disabled");
 	IFNITY_LOG(LogCore, INFO, "PrivateData: {}", vulkan13Features.privateData ? "Enabled" : "Disabled");
-	// Imprimir características de VkPhysicalDeviceDynamicRenderingFeaturesKHR
+	// Imprimir caractersticas de VkPhysicalDeviceDynamicRenderingFeaturesKHR
 	IFNITY_LOG(LogCore, INFO, "DynamicRendering: {}", dynamicRenderingFeatures.dynamicRendering ? "Enabled" : "Disabled");
 
 
@@ -427,7 +435,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	bufferDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
 	bufferDeviceAddressFeatures.bufferDeviceAddressCaptureReplay = VK_TRUE;
 
-	// Estructura de características
+	// Estructura de caractersticas
 	VkPhysicalDeviceDynamicRenderingUnusedAttachmentsFeaturesEXT dynamicRenderingUnusedAttachmentsFeatures = {};
 	dynamicRenderingUnusedAttachmentsFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_UNUSED_ATTACHMENTS_FEATURES_EXT;
 	dynamicRenderingUnusedAttachmentsFeatures.dynamicRenderingUnusedAttachments = VK_TRUE;
@@ -481,7 +489,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 	VkPhysicalDeviceFeatures supportedFeatures;
 	vkGetPhysicalDeviceFeatures(m_PhysicalDevice.physical_device, &supportedFeatures);
 
-	// Enumerar extensiones soportadas por el dispositivo físico
+	// Enumerar extensiones soportadas por el dispositivo fsico
 	uint32_t extensionCount = 0;
 	vkEnumerateDeviceExtensionProperties(m_PhysicalDevice, nullptr, &extensionCount, nullptr);
 
@@ -493,7 +501,7 @@ bool DeviceVulkan::CreatePhysicalDevice()
 		IFNITY_LOG(LogCore, INFO, "Supported extension: {}", ext.extensionName);
 	}
 
-	// Verificar si VK_EXT_debug_marker está en la lista de extensiones soportadas
+	// Verificar si VK_EXT_debug_marker est en la lista de extensiones soportadas
 	bool debugMarkerSupported = false;
 	for( const auto& ext : extensions )
 	{
@@ -772,12 +780,12 @@ bool DeviceVulkan::CreateRenderPass()
 
 	// Color attachment
 	attachments[ 0 ].format = swapchainBootStraap_.image_format;								// Use the color format selected by the swapchain
-	attachments[ 0 ].samples = VK_SAMPLE_COUNT_1_BIT;                                 // We don't use multi sampling in this example
+	attachments[ 0 ].samples = VK_SAMPLE_COUNT_1_BIT;                                 // We dont use multi sampling in this example
 	attachments[ 0 ].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;                            // Clear this attachment at the start of the render pass
 	attachments[ 0 ].storeOp = VK_ATTACHMENT_STORE_OP_STORE;                          // Keep its contents after the render pass is finished (for displaying it)
-	attachments[ 0 ].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;                 // Similar to loadOp, but for stenciling (we don't use stencil here)
-	attachments[ 0 ].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;               // Similar to storeOp, but for stenciling (we don't use stencil here)
-	attachments[ 0 ].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                       // Layout at render pass start. Initial doesn't matter, so we use undefined
+	attachments[ 0 ].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;                 // Similar to loadOp, but for stenciling (we dont use stencil here)
+	attachments[ 0 ].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;               // Similar to storeOp, but for stenciling (we dont use stencil here)
+	attachments[ 0 ].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;                       // Layout at render pass start. Initial doesnt matter, so we use undefined
 	attachments[ 0 ].finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;                   // Layout to which the attachment is transitioned when the render pass is finished
 	// As we want to present the color attachment, we transition to PRESENT_KHR
 // Setup attachment references
@@ -1123,7 +1131,7 @@ bool DeviceVulkan::InitGui()
 	init_info.CheckVkResultFn = check_vk_result;
 	init_info.UseDynamicRendering = true;
 
-	// Asegúrate de que PipelineRenderingCreateInfo esté configurado correctamente
+	// Asegrate de que PipelineRenderingCreateInfo est configurado correctamente
 	VkPipelineRenderingCreateInfoKHR pipelineRenderingCreateInfo = {};
 	pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR;
 	pipelineRenderingCreateInfo.colorAttachmentCount = 1;

@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-01 by alfonsmagd
+
 #pragma once
 //Summary 
 
@@ -6,7 +11,24 @@
 #include <pch.h>
 #include "Ifnity/Utils/SlotMap.hpp"
 
+#define USE_PIX //THIS FLAG WILL BE ADDED IN CMAKE  CHECKING IF PIX HAS BEEN INSTALLED IN THE SYSTEM.
+#ifdef USE_PIX
+	#include <pix.h>
+	#define BEGIN_PIX_EVENT(cmdList, name) PIXBeginEvent(cmdList, name)
+	#define END_PIX_EVENT(cmdList)         PIXEndEvent(cmdList)
+#else
+	#define BEGIN_PIX_EVENT(cmdList, name) ((void)0)
+	#define END_PIX_EVENT(cmdList)         ((void)0)
+#endif
+
 IFNITY_NAMESPACE
+
+
+
+
+
+
+
 namespace D3D12
 {
 	//Variables constexpre 
@@ -49,7 +71,7 @@ namespace D3D12
 
 	//Using types
 	using TextureHandleSM = Handle<struct D3D12Image>;
-	
+
 
 	struct SubmitHandle
 	{

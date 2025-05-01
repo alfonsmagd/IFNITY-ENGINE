@@ -24,11 +24,8 @@ def get_modified_files():
         return []
 
 def clean_git_path(path):
-    """Remove extra folders until 'src/' is the root"""
     idx = path.lower().find("src/")
-    if idx != -1:
-        return path[idx:]
-    return path  # If not found, return as is
+    return path[idx:] if idx != -1 else path
 
 def update_header_in_file(full_path, username):
     if not os.path.isfile(full_path):
@@ -36,7 +33,7 @@ def update_header_in_file(full_path, username):
         return
 
     try:
-        with open(full_path, 'r', encoding='utf-8') as f:
+        with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
             lines = f.readlines()
     except Exception as e:
         print(f"[❌] Failed to read {full_path}: {e}")
@@ -58,7 +55,7 @@ def update_header_in_file(full_path, username):
     ]
 
     try:
-        with open(full_path, 'w', encoding='utf-8') as f:
+        with open(full_path, 'w', encoding='utf-8', errors='ignore') as f:
             f.writelines(header + lines)
         print(f"[✅] Header updated in: {full_path}")
     except Exception as e:
@@ -86,9 +83,7 @@ def process_changed_files():
             print(f"[🚫] Ignored: {path_from_src} (not .cpp/.hpp)")
             continue
 
-        # Final path
         full_path = os.path.abspath(path_from_src)
-
         update_header_in_file(full_path, username)
 
 if __name__ == "__main__":

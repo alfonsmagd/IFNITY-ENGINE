@@ -1,3 +1,9 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-01 by alfonsmagd
+
+
 #pragma once 
 
 #include "pch.h"
@@ -56,7 +62,8 @@ public:
 	
 	//States 
 	bool m_MsaaState = false;
-	UINT  m_SwapChainBufferCount = 2;    // Double buffering SwapChain move to DeviceManager TODO:
+	static constexpr size_t numSwapchainImages = 3;
+	UINT  m_SwapChainBufferCount = numSwapchainImages;    // Double buffering SwapChain move to DeviceManager TODO:
 	UINT m_CurrentBackBufferIndex = 0;
 	UINT m_CurrentFence = 0;
 	HANDLE m_FenceEvent = nullptr;
@@ -93,9 +100,9 @@ public:
 	};
 
 	DescriptorAllocator descriptorAllocator_;
-
+	
 	//Resources 
-	std::array<ID3D12Resource*, 2>        m_SwapChainBuffer;
+	std::array<ID3D12Resource*,numSwapchainImages>        m_SwapChainBuffer;
 	ComPtr<ID3D12Resource>				  m_DepthStencilBuffer;
 	ComPtr<ID3D12Resource>				  m_VertexBuffer;
 	D3D12MA::Allocation*				  m_DepthStencilAllocation;
@@ -186,9 +193,11 @@ private:
 	void BuildPipelineStage();
 	
 	
-	void PopulateCommandList();
-
+	//void PopulateCommandList();
 	void ReportLiveObjects() const;
+
+	//Render PIX 
+	
 
 	//void DrawElements(); 
 	void DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
@@ -197,10 +206,10 @@ private:
 	D3D12::CommandBuffer& acquireCommandBuffer();
 
 	D3D12::SubmitHandle submit(D3D12::CommandBuffer& commandBuffer, D3D12::TextureHandleSM present);
-	
+	D3D12::TextureHandleSM getCurrentSwapChainTexture();
 
 
-	
+	friend D3D12::CommandBuffer;
 };
 
 

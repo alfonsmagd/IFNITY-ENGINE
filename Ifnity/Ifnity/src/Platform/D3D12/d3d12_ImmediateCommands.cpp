@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-01 by alfonsmagd
+
 
 
 #include "d3d12_ImmediateCommands.hpp"
@@ -80,7 +85,8 @@ namespace D3D12
 
 			// D3D12 command lists are created in the recording state, so we must close them immediately
 			buf.commandList->Close();
-
+			// Reset allocator and command list
+		
 			// 3. Create a Fence (used for GPU synchronization)
 			hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&buf.fence));
 			assert(SUCCEEDED(hr) && "Failed to create Fence");
@@ -121,7 +127,7 @@ namespace D3D12
 		// Find an available command list (i.e., not in use)
 		for( auto& buf : buffers_ )
 		{
-			if( !buf.isEncoding_ )
+			if (!buf.isEncoding_ && buf.fenceValue == 0)
 			{
 				current = &buf;
 				break;
@@ -131,7 +137,7 @@ namespace D3D12
 		assert(current);
 		assert(numAvailableCommandBuffers_);
 
-		// Reset allocator and command list
+		
 		current->allocator->Reset();
 		current->commandList->Reset(current->allocator.Get(), nullptr); // No PSO bound yet
 
@@ -154,24 +160,23 @@ namespace D3D12
 		ID3D12CommandList* commandLists[] = { wrapper.commandList.Get() };
 		queue_->ExecuteCommandLists(1, commandLists);
 
+
 		// Signal the fence with current fenceCounter_
 		queue_->Signal(wrapper.fence.Get(), fenceCounter_);
+		
 
 		// Store current fence value in the wrapper for later checks
 		wrapper.fenceValue = fenceCounter_;
-
+		const_cast<CommandListWrapper&>(wrapper).isEncoding_ = false;
 		// Update handle and internal state
 		lastSubmitHandle_ = wrapper.handle_;
 		lastSubmitHandle_.submitId_ = fenceCounter_;
-
-		// Reset encoding state
-		const_cast<CommandListWrapper&>(wrapper).isEncoding_ = false;
 
 		// Advance fence counter
 		fenceCounter_++;
 		if( fenceCounter_ == 0 )
 		{
-			// skip 0 — reserved as "empty"
+			// skip 0  reserved as "empty"
 			fenceCounter_++;
 		}
 
@@ -299,11 +304,7 @@ namespace D3D12
 			// Check if GPU has finished with this command list
 			if( buf.fence->GetCompletedValue() >= buf.fenceValue )
 			{
-				// Reset allocator and command list for reuse
-				buf.allocator->Reset();
-				buf.commandList->Reset(buf.allocator.Get(), nullptr); // no PSO bound at reset  we dont  know what we will do with it in the future can use SetPipelineState(); 
-
-				buf.isEncoding_ = false;
+				buf.fenceValue = 0; // Reset fence value its completted.
 				numAvailableCommandBuffers_++;
 			}
 			else
