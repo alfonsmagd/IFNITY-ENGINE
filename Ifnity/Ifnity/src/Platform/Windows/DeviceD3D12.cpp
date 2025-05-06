@@ -331,7 +331,8 @@ void DeviceD3D12::InitializeGui()
 
 	//
 	//Initialize ImGui D3D12
-	ImGui_ImplDX12_Init(m_Device.Get(), m_SwapChainBufferCount,
+	ImGui_ImplDX12_Init(m_Device.Get(),
+						D3D12::D3D12ImmediateCommands::kMaxCommandBuffers,
 						m_BackBufferFormat,
 						m_CbvSrvUavHeap.Get(),
 						m_CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(),

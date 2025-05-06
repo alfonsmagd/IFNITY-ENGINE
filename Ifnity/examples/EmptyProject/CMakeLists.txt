@@ -97,3 +97,16 @@ endforeach()
 # Filter and show .exe 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_target_properties(${PROJECT_NAME} PROPERTIES FOLDER "Executables")
+
+#Copy DXC DLLs if they are defined
+if(DXC_DLLS_GLOBAL)
+    foreach(DLL_PATH IN LISTS DXC_DLLS_GLOBAL)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${DLL_PATH}
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        )
+    endforeach()
+else()
+    message(WARNING "No DXC DLLs found to copy for ${PROJECT_NAME}")
+endif()

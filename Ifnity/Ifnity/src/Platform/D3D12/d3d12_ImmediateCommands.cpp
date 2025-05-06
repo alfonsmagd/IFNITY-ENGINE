@@ -249,7 +249,7 @@ namespace D3D12
 		}
 
 		const CommandListWrapper& buf = buffers_[ handle.bufferIndex_ ];
-		if(!buf.isEncoding_)
+		if(buf.isEncoding_)
 		{
 			// we are waiting for a buffer which has not been submitted - this is probably a logic error somewhere in the calling code
 			IFNITY_LOG(LogCore, ERROR, "Waiting for a buffer which has not been submitted , this is a probably logic error somewhere in the calling code");
@@ -261,7 +261,7 @@ namespace D3D12
 			buf.fence->SetEventOnCompletion(buf.fenceValue, buf.fenceEvent);
 			WaitForSingleObject(buf.fenceEvent, INFINITE);
 		}
-		purge();
+		//purge();
 	
 	
 	
@@ -293,10 +293,14 @@ namespace D3D12
 
 		const uint32_t numBuffers = static_cast<uint32_t>(ARRAY_NUM_ELEMENTS(buffers_));
 
+
 		for( uint32_t i = 0; i < numBuffers; ++i )
 		{
 			// Same wrap-around index logic
 			CommandListWrapper& buf = buffers_[ (i + lastSubmitHandle_.bufferIndex_ + 1) % numBuffers ];
+
+			if (buf.fenceValue == 0)
+				continue; //not uses yet 
 
 			if( !buf.commandList || buf.isEncoding_ )
 				continue;
@@ -310,7 +314,10 @@ namespace D3D12
 			else
 			{
 				//Error handling 
-				IFNITY_LOG(LogCore, ERROR, "Error while purging command buffer");
+				IFNITY_LOG(LogCore, INFO, "not purgin buffer position {}",i);
+				IFNITY_LOG(LogCore, INFO, "Buffer {} is still in use by the GPU", buf.handle_.bufferIndex_);
+				this->wait(buf.handle_); // Wait for the GPU to finish with this command list
+				// This buffer is still in use by the GPU, so we can't recycle it yet
 				return;
 			}
 

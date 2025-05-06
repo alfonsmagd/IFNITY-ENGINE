@@ -1,14 +1,11 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.8)
 
 # Nombre del proyecto
-project(ShadersPipelines)
+project(ShadersPipeLine)
 
 # C++ 17 standar 
 set(CMAKE_CXX_STANDARD 20)
 
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_SUPPRESS_REGENERATION true)
 message("PROJECT_SOURCE_DIR: ${PROJECT_SOURCE_DIR}")
 
 
@@ -20,8 +17,8 @@ file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/src/*.hpp")
 
 # Incluye directories
 include_directories(
-    "${PROJECT_SOURCE_DIR}/../Ifnity/vendor/spdlog/include"
-    "${PROJECT_SOURCE_DIR}/../Ifnity/src"
+    "${PROJECT_SOURCE_DIR}/../../Ifnity/vendor/spdlog/include"
+    "${PROJECT_SOURCE_DIR}/../../Ifnity/src"
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -53,11 +50,20 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
 )
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/../data
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
-)
+
+if(DXC_DLLS_GLOBAL)
+    foreach(DLL_PATH IN LISTS DXC_DLLS_GLOBAL)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${DLL_PATH}
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        )
+    endforeach()
+else()
+    message(WARNING "No DXC DLLs found to copy for ${PROJECT_NAME}")
+endif()
+
+
 
 # Filtrar y mostrar solo los destinos que generan archivos .exe
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)

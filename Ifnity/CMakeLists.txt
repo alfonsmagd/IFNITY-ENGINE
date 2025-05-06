@@ -30,6 +30,7 @@ add_subdirectory(Ifnity)
 
 set(EXAMPLE_DIRS
     Sandbox
+    ShadersPipeLine
     #Simple_Texture
     #scene_materials
     #Geometry_Mesh

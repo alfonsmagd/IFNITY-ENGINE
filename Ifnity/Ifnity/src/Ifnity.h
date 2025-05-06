@@ -9,7 +9,7 @@
 #include "Ifnity/Layers/NVML_Layer.hpp"
 #include "Ifnity/Layers/ExampleLayer.h"
 #include "Ifnity/Camera/CameraLayer.h"
-#include "../ShaderBuilding/ShaderBuilder.hpp"
+#include "ShaderBuilding\ShaderBuilder.hpp"
 #include "BenchMark/FpsCounter.hpp"
 
 //Maths
