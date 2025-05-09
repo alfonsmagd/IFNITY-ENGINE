@@ -1,13 +1,14 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-01 by alfonsmagd
+// Last modified: 2025-05-09 by alfonsmagd
+
 
 
 
 #include "DeviceD3D12.hpp"
 #include  "../D3D12/d3d12_classes.hpp"
-
+#include "ShaderBuilding\ShaderBuilder.hpp"
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -110,8 +111,13 @@ void DeviceD3D12::OnUpdate()
 	D3D12::TextureHandleSM currentTexture = swapchain_->getCurrentTexture();
 	auto* textback = slotMapTextures_.get(currentTexture);
 
+	
 	cmdBuffer.cmdBeginRendering(textback);
+	//Demo 
+	DrawElements(cmdBuffer.wrapper_->commandList.Get(), m_PipelineState, m_RootSignature);
 	cmdBuffer.cmdRenderImgui(ImGui::GetDrawData(), m_CbvSrvUavHeap.Get());
+
+	
 
 	cmdBuffer.cmdEndRendering();
 	submit(cmdBuffer, currentTexture);
@@ -880,8 +886,16 @@ void DeviceD3D12::BuildShadersAndInputLayout()
 {
 	HRESULT hr = S_OK;
 
-	m_VsByteCode = CompileShader(L"Shaders\\shaders.hlsl", nullptr, "VSMain", "vs_5_0");
-	m_PsByteCode = CompileShader(L"Shaders\\shaders.hlsl", nullptr, "PSMain", "ps_5_0");
+
+	
+
+
+
+	/*m_VsByteCode = CompileShader(L"Shaders\\shaders.hlsl", nullptr, "VSMain", "vs_5_0");
+	m_PsByteCode = CompileShader(L"Shaders\\shaders.hlsl", nullptr, "PSMain", "ps_5_0");*/
+
+	m_VsByteCode = ShaderCompiler::GetBlobFromFile("Shaders\\d3d12\\triangle.hlsl_vs.cso");
+	m_PsByteCode = ShaderCompiler::GetBlobFromFile("Shaders\\d3d12\\triangle.hlsl_ps.cso");
 
 	m_InputLayout =
 	{
@@ -900,8 +914,8 @@ void DeviceD3D12::BuildPipelineStage()
 	psoDesc.pRootSignature = m_RootSignature.Get();
 	psoDesc.VS =
 	{
-		reinterpret_cast<BYTE*>(m_VsByteCode->GetBufferPointer()),
-		m_VsByteCode->GetBufferSize()
+		.pShaderBytecode = m_VsByteCode->GetBufferPointer(),
+		.BytecodeLength = m_VsByteCode->GetBufferSize(),
 	};
 	psoDesc.PS =
 	{
@@ -1006,6 +1020,21 @@ void DeviceD3D12::DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
 	m_CommandList->DrawInstanced(3, 1, 0, 0);
 
 }
+void DeviceD3D12::DrawElements(ID3D12GraphicsCommandList* commandList,
+							   const ComPtr<ID3D12PipelineState>& pipelineState,
+							   const ComPtr<ID3D12RootSignature>& rootSignature)
+{
+	commandList->SetPipelineState(pipelineState.Get());
+	commandList->SetGraphicsRootSignature(rootSignature.Get());
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+	commandList->DrawInstanced(3, 1, 0, 0);
+	//commandList->Close();
+	//ID3D12CommandList* cmdsLists[] = { commandList };
+	//m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+}
+
 D3D12::CommandBuffer& DeviceD3D12::acquireCommandBuffer()
 {
 	IFNITY_ASSERT_MSG(!currentCommandBuffer_.ctx_, "Cannot acquire more than 1 command buffer simultaneously");

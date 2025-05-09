@@ -1,7 +1,9 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-01 by alfonsmagd
+// Last modified: 2025-05-09 by alfonsmagd
+
+
 
 
 
@@ -316,7 +318,7 @@ namespace D3D12
 				//Error handling 
 				IFNITY_LOG(LogCore, INFO, "not purgin buffer position {}",i);
 				IFNITY_LOG(LogCore, INFO, "Buffer {} is still in use by the GPU", buf.handle_.bufferIndex_);
-				this->wait(buf.handle_); // Wait for the GPU to finish with this command list
+			    this->wait(buf.handle_); // Wait for the GPU to finish with this command list
 				// This buffer is still in use by the GPU, so we can't recycle it yet
 				return;
 			}

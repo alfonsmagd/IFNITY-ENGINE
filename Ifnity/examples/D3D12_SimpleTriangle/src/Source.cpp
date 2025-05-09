@@ -1,12 +1,10 @@
-
-
 // IFNITY.cp
 
 #include <Ifnity.h>
 
-
-
+using namespace IFNITY;
 using namespace IFNITY::rhi;
+
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
@@ -19,11 +17,11 @@ public:
 		IFNITY_LOG(LogApp, INFO, "Update App");
 	}
 
-
 	void onEventReceived(const IFNITY::WindowResize& event) override
 	{
 		IFNITY_LOG(LogApp, WARNING, event.ToString() + "Example Layer");
 	}
+
 	void ConnectToEventBusImpl(void* bus) override
 	{
 		auto eventBus = static_cast<IFNITY::GLFWEventSource*>(bus);
@@ -39,12 +37,10 @@ public:
 		}
 		else
 		{
-			//Manage conversion pointer error. 
+			// Manage conversion pointer error. 
 			IFNITY_LOG(LogApp, ERROR, "The pointer is not type IFNITY::GLFWEventSource*");
 		}
 	}
-
-
 };
 
 class NVMLLayer: public IFNITY::Layer
@@ -55,13 +51,13 @@ public:
 
 	void OnUpdate() override
 	{
-
 		monitor.refresh();
 		monitor.display();
 	}
 
 	void ConnectToEventBusImpl(void* bus) override
 	{}
+
 	void OnAttach() override
 	{
 		loggerDisplayMonitor = LoggerDisplayMonitor();
@@ -74,8 +70,6 @@ private:
 	NvmlMonitor monitor;
 	LoggerDisplayMonitor loggerDisplayMonitor;
 };
-
-
 
 class ImGuiTestLayer : public IFNITY::Layer
 {
@@ -101,115 +95,133 @@ public:
 		ChooseApi();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
-	// Heredado vía Layer
+
 	void ConnectToEventBusImpl(void* bus) override
-	{
-		
+	{}
 
-	}
 private:
-	// Una función que se llama al hacer clic en el botón
+	// A function that is called when the button is clicked
 	void AccionPorOpcion(int opcionSeleccionada) {
-
 		GraphicsAPI api = IFNITY::App::GetApp().GetGraphicsAPI();
 		switch (opcionSeleccionada) {
-		case 0:
-			// Acción para la opción 1
-			IFNITY_LOG(LogApp, INFO, "OPENGL");
-			
-
-			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::OPENGL,api != GraphicsAPI::OPENGL);
-			break;
-		case 1:
-			// Acción para la opción 2
-			IFNITY_LOG(LogApp, INFO, "D3D11");
-			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::D3D11, api != GraphicsAPI::D3D11);
-			break;
-
-		case 2:
-			// Acción para la opción 3
-			IFNITY_LOG(LogApp, INFO, "D3D12");
-			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::D3D12, api != GraphicsAPI::D3D12);
-			break;
-
-		case 3:
-			// Acción para la opción 3
-			IFNITY_LOG(LogApp, INFO, "VULKAN");
-			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::VULKAN, api != GraphicsAPI::VULKAN);
-			break;
-		default:
-		
-			break;
+			case 0:
+				IFNITY_LOG(LogApp, INFO, "OPENGL");
+				IFNITY::App::GetApp()
+					.SetGraphicsAPI(GraphicsAPI::OPENGL, api != GraphicsAPI::OPENGL);
+				break;
+			case 1:
+				IFNITY_LOG(LogApp, INFO, "D3D11");
+				IFNITY::App::GetApp()
+					.SetGraphicsAPI(GraphicsAPI::D3D11, api != GraphicsAPI::D3D11);
+				break;
+			case 2:
+				IFNITY_LOG(LogApp, INFO, "D3D12");
+				IFNITY::App::GetApp()
+					.SetGraphicsAPI(GraphicsAPI::D3D12, api != GraphicsAPI::D3D12);
+				break;
+			case 3:
+				IFNITY_LOG(LogApp, INFO, "VULKAN");
+				IFNITY::App::GetApp()
+					.SetGraphicsAPI(GraphicsAPI::VULKAN, api != GraphicsAPI::VULKAN);
+				break;
+			default:
+				break;
 		}
 	}
 
 	void ChooseApi() {
 		static int selectOption = 0;
-		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN"};
+		const char* options[] = { "OPENGL", "D3D11", "D3D12", "VULKAN" };
 
-		ImGui::Begin("API WINDOW");  // Comienza la creación de la ventana
+		ImGui::Begin("API WINDOW");
 
-		// Combo box con las opciones
+		// Combo box with the options
 		if (ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options))) {
-			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
+			// This block executes when a new option is selected
 		}
 
-		// Botón que ejecuta la función cuando se hace clic
+		// Button that triggers the selected action
 		if (ImGui::Button("OK")) {
 			AccionPorOpcion(selectOption);
 		}
 
-		ImGui::End();  // Termina la creación de la ventana
+		ImGui::End();
 	}
-
-
-
-
-
-
-	
 };
 
 class Source: public IFNITY::App
 {
+
+private:
+	std::shared_ptr<IShader> m_vs;
+	std::shared_ptr<IShader> m_ps;
+	GraphicsDeviceManager* m_ManagerDevice;
 public:
 	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
 	{
-		// Obtener el contexto de ImGui desde IFNITY  DLL
-		/*ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
-		{
-			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
-			return;
-		}*/
-
-		// Establecer el contexto de ImGui en la aplicación principal
-		//ImGui::SetCurrentContext(context);
-		PushLayer(new   IFNITY::NVML_Monitor());
+		// Push layers including monitoring and GUI
+		PushLayer(new IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
-		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
-		
-		
-
+		PushOverlay(new IFNITY::ImguiLayer()); // DLL-based ImGui overlay
 	}
 
 	void Initialize() override
 	{
+		//File System Instance get it 
+		auto& vfs = IFNITY::VFS::GetInstance();
+		ShaderCompiler::Initialize();
 
-	}
+		vfs.Mount("Shaders", "Shaders",         IFNITY::FolderType::SHADERS);
+		vfs.Mount("test", "Shaders/testShader", IFNITY::FolderType::NO_DEFINED);
+
+		//auto files = vfs.ListFilesInCurrentDirectory("test");
+		//auto* rdevice = m_ManagerDevice->GetRenderDevice();
+
+		IFNITY_LOG(LogApp, INFO, "START COMPILING INFO  ");
+
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
 	
+		ShaderCreateDescription descShader;
+		{
+			descShader.NoCompile = false;
+			descShader.FileName = "triangle.hlsl";
+			descShader.EntryPoint = L"VSMain";
+			descShader.Profile = L"vs_6_0";
+			descShader.Type = ShaderType::VERTEX_SHADER;
+			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
+			descShader.Flags = ShaderCompileFlagType::DEFAULT_HLSL;
+			m_vs->SetShaderDescription(descShader);
+		}
+		//ShaderCompiler::CompileShader(m_vs.get());
+		{
+			descShader.NoCompile = false;
+			descShader.EntryPoint = L"PSMain";
+			descShader.Profile = L"ps_6_0";
+			descShader.Type = ShaderType::PIXEL_SHADER;
+			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
+			descShader.Flags = ShaderCompileFlagType::DEFAULT_HLSL;
+			m_ps->SetShaderDescription(descShader);
+		}
+		//ShaderCompiler::CompileShader(m_ps.get());
+
+
+	
+	
+	
+	
+	}
+
 	void Render() override
 	{
-		//IFNITY_LOG(LogApp, INFO, "Render App");
+		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
+
 	void Animate() override
 	{
-		//IFNITY_LOG(LogApp, INFO, "Animate App");
+		IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
+
 	~Source() override {}
 };
 
@@ -221,17 +233,12 @@ public:
 		PushLayer(new ExampleLayer());
 	}
 	~Source_TestD3D12() override
-	{
-	}
+	{}
 };
-
 
 IFNITY::App* IFNITY::CreateApp()
 {
-
-
 	auto api = IFNITY::rhi::GraphicsAPI::D3D12;
-
 
 	//return new Source_TestD3D12(api);
 	return new Source(api);

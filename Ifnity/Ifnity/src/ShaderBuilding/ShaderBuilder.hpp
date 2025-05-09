@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-09 by alfonsmagd
+
 #pragma once 
 
 #include "pch.h"
@@ -95,6 +100,19 @@ public:
      * @return Complete shader file path.
      */
     static std::string GetShaderFilePath(const VFS& vfs, const std::string& virtualPath, const std::string& subdirectory, const std::string& fileName, const std::string& extension);
+
+
+	/**
+	 * @brief Saves a blob to a file.
+	 * @param filePath Path to the output file.
+	 * @param blob Blob to save.
+	 */
+	static void SaveBlobToFile(const std::string& filePath, IDxcBlob* blob);
+
+
+	
+    static IDxcBlob* GetBlobFromFile(const std::string& filePath);
+	
 
 private:
     /**

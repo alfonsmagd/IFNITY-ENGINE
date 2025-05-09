@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-01 by alfonsmagd
+// Last modified: 2025-05-09 by alfonsmagd
+
 
 
 #pragma once 
@@ -11,6 +12,7 @@
 #include "Platform/ImguiRender/ImguiD3D12Render.h"
 #include "D3D12MemAlloc.h"
 #include <d3dcompiler.h>
+#include <dxcapi.h>
 #include <DirectXMath.h>
 
 #include "Platform/D3D12/d3d12_ImmediateCommands.hpp"
@@ -19,11 +21,11 @@
 #include "Platform/D3D12/d3d12_SwapChain.hpp"
 #include "Platform/D3D12/d3d12_CommandBuffer.hpp"
 
+
 IFNITY_NAMESPACE
 
 using namespace Microsoft::WRL;
 using namespace DirectX;
-
 
 
 
@@ -110,8 +112,11 @@ public:
 	D3D12MA::Allocation* m_VertexBufferAllocation;
 
 	//Shaders
-	ComPtr<ID3DBlob> m_VsByteCode = nullptr;
-	ComPtr<ID3DBlob> m_PsByteCode = nullptr;
+	ComPtr<IDxcBlob> m_VsByteCode = nullptr;
+	ComPtr<IDxcBlob> m_PsByteCode = nullptr;
+
+	IDxcBlob* m_vsBlob = nullptr;
+	IDxcBlob* m_psBlob = nullptr;
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC> m_InputLayout;
 
@@ -201,6 +206,10 @@ private:
 
 	//void DrawElements(); 
 	void DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
+					  const ComPtr<ID3D12RootSignature>& rootSignature);
+
+	void DrawElements(ID3D12GraphicsCommandList* commandList,
+					  const ComPtr<ID3D12PipelineState>& pipelineState,
 					  const ComPtr<ID3D12RootSignature>& rootSignature);
 
 	D3D12::CommandBuffer& acquireCommandBuffer();
