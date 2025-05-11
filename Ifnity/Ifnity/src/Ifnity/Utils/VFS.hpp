@@ -89,6 +89,10 @@ public:
 
     std::vector<std::string> ListFilesInCurrentDirectory(const std::string& virtualPath, bool onlyfilename = false) const;
 
+
+    void RegisterFile(const std::string& virtualPath, const std::string& filePath);
+  
+
 private:
     VFS() = default;
     VFS(const std::string& physicalPath);

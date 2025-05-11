@@ -35,7 +35,7 @@ namespace D3D12
 		struct CommandListWrapper
 		{
 			ComPtr<ID3D12CommandAllocator> allocator;
-			ComPtr<ID3D12GraphicsCommandList> commandList;
+			ComPtr<ID3D12GraphicsCommandList4> commandList;
 			ComPtr<ID3D12Fence> fence;
 			SubmitHandle handle_{};
 			HANDLE fenceEvent = nullptr;

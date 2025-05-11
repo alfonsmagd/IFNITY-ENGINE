@@ -75,9 +75,9 @@ namespace D3D12
 	class IFNITY_API GraphicsPipeline final: public IGraphicsPipeline
 	{
 	public:
-		~GraphicsPipeline();
+		virtual ~GraphicsPipeline() {};
 
-		GraphicsPipeline(GraphicsPipelineDescription&& desc): m_Description(std::move(desc)) {}
+		GraphicsPipeline(GraphicsPipelineDescription&& desc);
 		GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceD3D12* dev);
 
 		const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
@@ -86,6 +86,7 @@ namespace D3D12
 		// Getters para uso interno
 		ID3D12PipelineState* getPipelineState() const { return m_PipelineState.Get(); }
 		ID3D12RootSignature* getRootSignature() const { return m_RootSignature.Get(); }
+		void  BindPipeline(struct IDevice* device) override {};
 
 		void setColorFormat(rhi::Format format) { colorFormat = format; }
 		void setDepthFormat(rhi::Format format) { depthFormat = format; }
@@ -121,6 +122,8 @@ namespace D3D12
 
 		DeviceD3D12* m_DeviceD3D12 = nullptr;
 
+
+		friend class Device;
 	};
 
 	//Please constructor are not safe if you dont create the construct function 

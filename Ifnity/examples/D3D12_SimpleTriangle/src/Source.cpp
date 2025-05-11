@@ -155,6 +155,7 @@ class Source: public IFNITY::App
 private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
+	GraphicsPipelineHandle m_pipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
 public:
 	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
@@ -211,8 +212,7 @@ public:
 			 .SetPixelShader(m_ps.get());
 
 		//Create the pipeline
-			 
-
+		m_pipeline = rdevice->CreateGraphicsPipeline(gdesc);
 
 
 	

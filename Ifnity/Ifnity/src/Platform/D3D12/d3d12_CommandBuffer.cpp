@@ -53,10 +53,10 @@ namespace D3D12
 
 	inline static void transitionToPresent(ID3D12GraphicsCommandList* cmdList, D3D12Image* image)
 	{
-		if (!image || !image->isSwapchainImage_)
+		if( !image || !image->isSwapchainImage_ )
 			return;
 
-		if (image->currentState_ != D3D12_RESOURCE_STATE_PRESENT)
+		if( image->currentState_ != D3D12_RESOURCE_STATE_PRESENT )
 		{
 			const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 				image->resource_.Get(),
@@ -99,47 +99,151 @@ namespace D3D12
 		ID3D12DescriptorHeap* heaps[] = { pCbvSrvHeap };
 		wrapper_->commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 		ImGui_ImplDX12_RenderDrawData(drawData, wrapper_->commandList.Get());
-	
-	
+
+
 	}
 	void CommandBuffer::cmdBeginRendering(D3D12Image* colorTex)
 	{
-		////1. Check if the rendering is already in progress
+		// 1. Check if rendering is already in progress
 		_ASSERT(!isRendering_);
 		isRendering_ = true;
-		//2. transition all the color attachments and depth-stencil attachment
 
-		transitionToColorAttachment(wrapper_->commandList.Get(), colorTex);
-	
-		//Clear RTV  AND DSV 
-		wrapper_->commandList->ClearRenderTargetView(colorTex->getRTV(), ctx_->m_ClearColor, 0, nullptr);
-		wrapper_->commandList->ClearDepthStencilView(ctx_->DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
-	
-		float width = colorTex->width_;
-		float height = colorTex->height_;
 
-		const ViewPortState viewport = { 0.0f, 0.0f, (float)width, (float)height, 0.0f, +1.0f };
-		const ScissorRect scissor = { 0, 0, width, height };
-		// Set Viewport and Scissor
-		cmdBindScissorRect(scissor);
+		ID3D12GraphicsCommandList4* cmdList = wrapper_->commandList.Get();
+
+		// 2. Transition to RENDER_TARGET
+		transitionToColorAttachment(cmdList, colorTex);
+
+		// 3. Setup render target description
+		D3D12_RENDER_PASS_RENDER_TARGET_DESC rtDesc = {};
+		rtDesc.cpuDescriptor = colorTex->getRTV();
+		rtDesc.BeginningAccess.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR;
+		rtDesc.BeginningAccess.Clear.ClearValue.Color[ 0 ] = ctx_->m_ClearColor[ 0 ];
+		rtDesc.BeginningAccess.Clear.ClearValue.Color[ 1 ] = ctx_->m_ClearColor[ 1 ];
+		rtDesc.BeginningAccess.Clear.ClearValue.Color[ 2 ] = ctx_->m_ClearColor[ 2 ];
+		rtDesc.BeginningAccess.Clear.ClearValue.Color[ 3 ] = ctx_->m_ClearColor[ 3 ];
+		rtDesc.EndingAccess.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE;
+
+		// 4. Setup depth-stencil
+		D3D12_RENDER_PASS_DEPTH_STENCIL_DESC dsDesc = {};
+		dsDesc.cpuDescriptor = ctx_->DepthStencilView();
+		dsDesc.DepthBeginningAccess.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR;
+		dsDesc.DepthBeginningAccess.Clear.ClearValue.DepthStencil.Depth = 1.0f;
+		dsDesc.DepthBeginningAccess.Clear.ClearValue.DepthStencil.Stencil = 0;
+		dsDesc.DepthEndingAccess.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE;
+		dsDesc.StencilBeginningAccess = dsDesc.DepthBeginningAccess;
+		dsDesc.StencilEndingAccess = dsDesc.DepthEndingAccess;
+
+		// 5. Begin render pass
+		cmdList->BeginRenderPass(1,
+								 &rtDesc,
+								 &dsDesc,
+								 D3D12_RENDER_PASS_FLAG_NONE);
+
+		// 6. Set viewport and scissor
+		ViewPortState viewport = { 0.0f, 0.0f, colorTex->width_, colorTex->height_, 0.0f, 1.0f };
+		ScissorRect scissor = { 0, 0, colorTex->width_, colorTex->height_ };
 		cmdBindViewport(viewport);
+		cmdBindScissorRect(scissor);
 
-		//Get CPU descriptor handle for the color attachment
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = colorTex->getRTV();
-		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = ctx_->DepthStencilView();
-		wrapper_->commandList->OMSetRenderTargets(1, &rtvHandle, true, &dsvHandle);
 
-		//tr
-	
-	
-	
+
+	}
+	void CommandBuffer::cmdBeginRendering(const RenderPass renderPass, Framebuffer& fb)
+	{
+		uint32_t width = 0;
+		uint32_t height = 0;
+
+		// 1. Check if rendering is already in progress
+		_ASSERT(!isRendering_);
+		isRendering_ = true;
+		ID3D12GraphicsCommandList4* cmdList = wrapper_->commandList.Get();
+
+		
+		const uint32_t numFbColorAttachments = fb.getNumColorAttachments();
+		const uint32_t numPassColorAttachments = renderPass.getNumColorAttachments();
+
+		_ASSERT(numPassColorAttachments == numFbColorAttachments);
+		
+		auto& colorAttachment = fb.color[ 0 ].texture;
+		if( colorAttachment )
+		{
+			D3D12Image* colorTex = ctx_->slotMapTextures_.get(colorAttachment);
+			width = colorTex->width_;
+			height = colorTex->height_;
+		}
+		
+
+		//3. New structures are used to define the attachments used in dynamic rendering
+		D3D12_RENDER_PASS_RENDER_TARGET_DESC colorAttachments[ _MAX_COLOR_ATACHMENT_ ] = {};
+
+		// 2. Transition to RENDER_TARGET // depthbuffer nots necessary the drive does for us. 
+		for( uint32_t i = 0; i != numFbColorAttachments; i++ )
+		{
+			if( const auto handle = fb.color[ i ].texture )
+			{
+				D3D12Image* colorTex = ctx_->slotMapTextures_.get(handle);
+
+				transitionToColorAttachment(cmdList, colorTex);
+
+
+
+				colorAttachments[ i ] = {
+				   .cpuDescriptor = colorTex->getRTV(),
+				   .BeginningAccess =
+					   {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+						 .Clear =
+							 {.ClearValue =
+								   {.Color =
+										 { ctx_->m_ClearColor[ 0 ],
+										   ctx_->m_ClearColor[ 1 ],
+										   ctx_->m_ClearColor[ 2 ],
+										   ctx_->m_ClearColor[ 3 ] } } } },
+				   .EndingAccess =
+					   {.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE } };
+			}
+
+		}
+		const D3D12_RENDER_PASS_DEPTH_STENCIL_DESC dsDesc = {
+			.cpuDescriptor = ctx_->DepthStencilView(),
+			 .DepthBeginningAccess =
+				 {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+				   .Clear =
+					   {.ClearValue =
+							 {.DepthStencil =
+								   { 1.0f, 0 } } } },
+			 .StencilBeginningAccess =
+				 {.Type = D3D12_RENDER_PASS_BEGINNING_ACCESS_TYPE_CLEAR,
+				   .Clear =
+					   {.ClearValue =
+							 {.DepthStencil =
+								   { 1.0f, 0 } } } },
+			.DepthEndingAccess =
+			{.Type = D3D12_RENDER_PASS_ENDING_ACCESS_TYPE_PRESERVE },
+			 .StencilEndingAccess = dsDesc.DepthEndingAccess };
+
+		// 5. Begin render pass
+
+		// 5. Begin render pass
+		cmdList->BeginRenderPass(numFbColorAttachments,
+								 &colorAttachments[ 0 ],      //if you put colorAttachments, warning C4244
+								 &dsDesc,
+								 D3D12_RENDER_PASS_FLAG_NONE);
+
+		// 6. Set viewport and scissor
+		ViewPortState viewport = { 0.0f, 0.0f, width, height, 0.0f, 1.0f };
+		ScissorRect scissor = { 0, 0, width, height };
+		cmdBindViewport(viewport);
+		cmdBindScissorRect(scissor);
+
+
 	}
 	void CommandBuffer::cmdEndRendering()
 	{
 		// Transition the color attachment to present state
 		// This will be load a frameatachment but now its test 
-
-		
+		ID3D12GraphicsCommandList4* cmdList = wrapper_->commandList.Get();
+		cmdList->EndRenderPass();
 		isRendering_ = false;
 	}
 	void CommandBuffer::cmdBindViewport(const ViewPortState& state)

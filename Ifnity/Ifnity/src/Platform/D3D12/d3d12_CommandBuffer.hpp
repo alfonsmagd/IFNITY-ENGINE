@@ -13,6 +13,7 @@
 #include "d3d12_ImmediateCommands.hpp"
 #include <d3d12.h>
 #include <wrl.h>
+#include "Ifnity/Graphics/ifrhi.h"
 
 IFNITY_NAMESPACE
 
@@ -24,6 +25,8 @@ class D3D12Image;
 namespace D3D12
 {
 	using namespace Microsoft::WRL;
+	using RenderPass = rhi::RenderPass;
+	using Framebuffer = rhi::Framebuffer<D3D12::TextureHandleSM>;
 
 	class CommandBuffer final
 	{
@@ -36,6 +39,7 @@ namespace D3D12
 		CommandBuffer& operator=(CommandBuffer&& other) = default;
 
 		void cmdBeginRendering(D3D12Image* colorTex);
+		void cmdBeginRendering(const RenderPass renderPass, Framebuffer& fb);
 		void cmdEndRendering();
 		void cmdBindViewport(const ViewPortState& state);
 		void cmdBindScissorRect(const ScissorRect& rect);

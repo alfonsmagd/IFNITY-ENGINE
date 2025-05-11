@@ -103,17 +103,34 @@ DeviceD3D12::~DeviceD3D12()
 
 void DeviceD3D12::OnUpdate()
 {
+	using namespace D3D12;
 
 	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
 
 	//acquiere commandbufferlist()
 
+	
+
+
+
+
 	D3D12::CommandBuffer& cmdBuffer = acquireCommandBuffer();
 	D3D12::TextureHandleSM currentTexture = swapchain_->getCurrentTexture();
-	auto* textback = slotMapTextures_.get(currentTexture);
+
+
+	RenderPass renderPass = {
+		.color = { {.loadOp = rhi::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+
+	Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
+
+
+
+
+	//auto* textback = slotMapTextures_.get(currentTexture);
 
 	
-	cmdBuffer.cmdBeginRendering(textback);
+	//cmdBuffer.cmdBeginRendering(textback);
+	cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
 	//Demo 
 	DrawElements(cmdBuffer.wrapper_->commandList.Get(), m_PipelineState, m_RootSignature);
 	cmdBuffer.cmdRenderImgui(ImGui::GetDrawData(), m_CbvSrvUavHeap.Get());
@@ -323,7 +340,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	CaptureD3D12DebugMessages();
 
 	//Ok try to create the DeviceHandle 
-	m_DeviceHandle = D3D12::CreateDevice(this);
+	m_RenderDevice = D3D12::CreateDevice(this);
 
 	return true;
 }

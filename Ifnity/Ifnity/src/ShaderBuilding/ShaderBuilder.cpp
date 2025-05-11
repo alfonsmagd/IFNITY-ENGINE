@@ -414,6 +414,8 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 		
 		//Trace
 		IFNITY_LOG(LogApp, INFO, "Shader compiled successfully and save in :  " + description.Filepath);
+		VFS& vfs = GetVFS();
+		vfs.RegisterFile(vfs.ResolvePath("Shaders","d3d12"), description.Filepath);
 
 		#ifdef _DEBUG
 		if( !GetBlobFromFile(description.Filepath) )IFNITY_LOG(LogCore, ERROR, "Fail get load blob from file < " + description.Filepath);

@@ -148,12 +148,13 @@ public:
 
 	Color m_ClearColor = { 0.0f, 0.2f, 0.4f, 1.0f };
 
-
+	//SlotMaps 
 	SlotMap<D3D12::D3D12Image> slotMapTextures_;
+	SlotMap<D3D12::ShaderModuleState> slotMapShaderModules_;
 
 public:
 	~DeviceD3D12() override;
-
+	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
 	void OnUpdate() override;
 	D3D12_CPU_DESCRIPTOR_HANDLE  AllocateRTV();
 	inline unsigned int GetWidth() const override { return m_Props.Width; }
@@ -214,7 +215,7 @@ private:
 					  const ComPtr<ID3D12PipelineState>& pipelineState,
 					  const ComPtr<ID3D12RootSignature>& rootSignature);
 private:
-	DeviceHandle m_DeviceHandle;
+	DeviceHandle m_RenderDevice;
 
 	D3D12::CommandBuffer& acquireCommandBuffer();
 

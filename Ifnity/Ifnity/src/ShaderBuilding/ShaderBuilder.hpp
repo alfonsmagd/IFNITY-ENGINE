@@ -113,19 +113,19 @@ public:
 	
     static IDxcBlob* GetBlobFromFile(const std::string& filePath);
 	
-
-private:
     /**
-     * @brief Gets a reference to the virtual file system.
-     * @return Reference to the virtual file system.
-     */
+    * @brief Gets a reference to the virtual file system.
+    * @return Reference to the virtual file system.
+    */
     static VFS& GetVFS();
 
     /**
-     * @brief Checks if the initialization was successful.
-     * @return true if initialization was successful, false otherwise.
-     */
+    * @brief Checks if the initialization was successful.
+    * @return true if initialization was successful, false otherwise.
+    */
     static bool CheckInitialization();
+private:
+    
 
     /// Shader compiler.
     static ComPtr<IDxcCompiler3> m_compiler;

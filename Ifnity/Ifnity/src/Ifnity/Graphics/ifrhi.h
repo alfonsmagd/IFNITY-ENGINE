@@ -54,7 +54,7 @@ struct Color
 
 namespace rhi
 {
-
+    #define _MAX_COLOR_ATACHMENT_ 8
     //-------------------------------------------------------------------------------------//
     //  VERTEX TYPES AND FORMTAS                                                           //
     //-------------------------------------------------------------------------------------//
@@ -307,14 +307,83 @@ namespace rhi
 		DEPTH_FORCE_INTERNAL_API = 1 << 3 /* Force the internal API to use depth and create internal depth buffer inside render device get the handler depth buffer in APIs like Vulkan - D3D12, Opengl not need it.*/
 	};
 
+    enum LoadOp: uint8_t
+    {
+        LoadOp_Invalid = 0,
+        LoadOp_DontCare,
+        LoadOp_Load,
+        LoadOp_Clear,
+        LoadOp_None,
+    };
+
+    enum StoreOp: uint8_t
+    {
+        StoreOp_DontCare = 0,
+        StoreOp_Store,
+        StoreOp_MsaaResolve,
+        StoreOp_None,
+    };
 
     //-------------------------------------------------------------------------------------//
 	//STRUCTURES
     //-------------------------------------------------------------------------------------//
 
+   
+    struct RenderPass final
+    {
+        struct AttachmentDesc final
+        {
+            LoadOp loadOp = LoadOp_Invalid;
+            StoreOp storeOp = StoreOp_Store;
+            uint8_t layer = 0;
+            uint8_t level = 0;
+            float clearColor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+            float clearDepth = 1.0f;
+            uint32_t clearStencil = 0;
+        };
 
-    
+        AttachmentDesc color[_MAX_COLOR_ATACHMENT_] = {};
+        AttachmentDesc depth = { .loadOp = LoadOp_DontCare, .storeOp = StoreOp_DontCare };
+        AttachmentDesc stencil = { .loadOp = LoadOp_Invalid, .storeOp = StoreOp_DontCare };
 
+        uint32_t getNumColorAttachments() const
+        {
+            uint32_t n = 0;
+            while (n < _MAX_COLOR_ATACHMENT_ && color[n].loadOp != LoadOp_Invalid)
+            {
+                n++;
+            }
+            return n;
+        }
+    };
+
+
+
+
+    template<typename Texture>
+    struct Framebuffer final
+    {
+        struct AttachmentDesc
+        {
+           Texture texture;
+           Texture resolveTexture;
+        };
+
+        AttachmentDesc color[_MAX_COLOR_ATACHMENT_] = {};
+        AttachmentDesc depthStencil;
+
+        const char* debugName = "";
+
+        uint32_t getNumColorAttachments() const
+        {
+            uint32_t n = 0;
+            while (n < _MAX_COLOR_ATACHMENT_ && color[n].texture)
+            {
+                n++;
+            }
+            return n;
+        }
+    };
 
 
 
