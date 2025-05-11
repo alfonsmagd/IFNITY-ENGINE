@@ -10,6 +10,7 @@
 #include  "../D3D12/d3d12_classes.hpp"
 #include "ShaderBuilding\ShaderBuilder.hpp"
 
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 IFNITY_NAMESPACE
@@ -321,7 +322,8 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	CaptureD3D12DebugMessages();
 
-
+	//Ok try to create the DeviceHandle 
+	m_DeviceHandle = D3D12::CreateDevice(this);
 
 	return true;
 }

@@ -25,6 +25,7 @@ enum IFNITY_API ShaderType: uint8_t
 };
 
 
+
 enum IFNITY_API ShaderCompileFlagType: uint32_t
 {
 	OPTIMIZE_SIZE = 0x1,

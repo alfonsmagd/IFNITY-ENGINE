@@ -10,6 +10,7 @@
 
 #include <pch.h>
 #include "Ifnity/Utils/SlotMap.hpp"
+#include "dxcapi.h"
 
 #define USE_PIX //THIS FLAG WILL BE ADDED IN CMAKE  CHECKING IF PIX HAS BEEN INSTALLED IN THE SYSTEM.
 #ifdef USE_PIX
@@ -31,8 +32,10 @@ IFNITY_NAMESPACE
 
 namespace D3D12
 {
+	using namespace Microsoft::WRL;
 	//Variables constexpre 
 	constexpr D3D12_CPU_DESCRIPTOR_HANDLE D3D12InvalidHandle = { ~0ull };
+
 
 
 	static void DumpDebugMessages(bool enable = true)
@@ -70,7 +73,24 @@ namespace D3D12
 
 
 	//Using types
-	using TextureHandleSM = Handle<struct D3D12Image>;
+	using TextureHandleSM        =  Handle<struct D3D12Image>;
+	using BufferHandleSM         =  Handle<struct D3D12Buffer>;
+	using ShaderModuleHandleSM   =  Handle<struct ShaderModuleState>;
+	using GraphicsPipelineHandleSM =  Handle<struct GraphicsPipeline>;
+
+
+	struct ShaderModuleState final 
+	{
+		ComPtr<IDxcBlob> bytecode;   //get the s
+		D3D12_SHADER_BYTECODE GetBytecode() const
+		{
+			return {
+				.pShaderBytecode = bytecode->GetBufferPointer(),
+				.BytecodeLength  = bytecode->GetBufferSize()
+			};
+		}
+		uint32_t rootConstantsSize = 0;
+	};
 
 
 	struct SubmitHandle

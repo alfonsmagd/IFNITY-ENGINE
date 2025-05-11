@@ -157,7 +157,7 @@ private:
 	std::shared_ptr<IShader> m_ps;
 	GraphicsDeviceManager* m_ManagerDevice;
 public:
-	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
 		// Push layers including monitoring and GUI
 		PushLayer(new IFNITY::NVML_Monitor());
@@ -175,7 +175,7 @@ public:
 		vfs.Mount("test", "Shaders/testShader", IFNITY::FolderType::NO_DEFINED);
 
 		//auto files = vfs.ListFilesInCurrentDirectory("test");
-		//auto* rdevice = m_ManagerDevice->GetRenderDevice();
+		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
 		IFNITY_LOG(LogApp, INFO, "START COMPILING INFO  ");
 
@@ -193,7 +193,7 @@ public:
 			descShader.Flags = ShaderCompileFlagType::DEFAULT_HLSL;
 			m_vs->SetShaderDescription(descShader);
 		}
-		//ShaderCompiler::CompileShader(m_vs.get());
+		ShaderCompiler::CompileShader(m_vs.get());
 		{
 			descShader.NoCompile = false;
 			descShader.EntryPoint = L"PSMain";
@@ -203,7 +203,16 @@ public:
 			descShader.Flags = ShaderCompileFlagType::DEFAULT_HLSL;
 			m_ps->SetShaderDescription(descShader);
 		}
-		//ShaderCompiler::CompileShader(m_ps.get());
+		ShaderCompiler::CompileShader(m_ps.get());
+
+		GraphicsPipelineDescription gdesc;
+
+		gdesc.SetVertexShader(m_vs.get())
+			 .SetPixelShader(m_ps.get());
+
+		//Create the pipeline
+			 
+
 
 
 	

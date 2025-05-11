@@ -1,0 +1,136 @@
+#pragma once
+
+#include "Ifnity\Graphics\ifrhi.h"
+#include "Ifnity\Graphics\Interfaces\IDevice.hpp"
+#include "Ifnity\Graphics\Interfaces\IBuffer.hpp"
+#include "Ifnity\Graphics\Interfaces\IGraphicsPipeline.hpp"
+#include "Platform\D3D12\d3d12_classes.hpp"
+
+IFNITY_NAMESPACE
+
+
+class DeviceD3D12;
+
+namespace D3D12
+{
+
+	
+	//------------------------------------------------------------------------------------//
+	//  DEVICE D3D12                                                                     //
+	//-------------------------------------------------------------------------------------//
+	class IFNITY_API Device final: public IDevice
+	{
+	public:
+		Device(DeviceD3D12* ptr );
+	
+
+	private:
+
+		void Draw(DrawDescription& desc)override {};
+		GraphicsPipelineHandle CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
+		void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0)override {};
+		void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size) override {};
+		void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf)override {}; //todo abstract
+		void BindingVertexAttributesBuffer(BufferHandle& bf)override {};
+		void BindingIndexBuffer(BufferHandle& bf)override {};
+		BufferHandle CreateBuffer(const BufferDescription& desc) override { return {}; };
+		TextureHandle CreateTexture(TextureDescription& desc) override { return {}; }; //TODO add TextureDescripton const
+		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override { return {}; };;
+		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) override { return {}; };
+		SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override { return {}; };
+		MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override { return {}; };
+		void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)override {}; //todo abstract 
+		void StartRecording() override {};
+		void StopRecording() override {};
+		void SetDepthTexture(TextureHandle texture)override {};
+		// Virtual destructor to ensure proper destruction of derived objects
+
+	private:
+
+		DeviceD3D12* m_DeviceD3D12 = nullptr; ///< Pointer to the DeviceD3D12 instance.
+
+
+		
+	};
+
+
+	class IFNITY_API Buffer final: public IBuffer
+	{
+	public:
+		Buffer(const BufferDescription& desc): m_Description(desc) {}
+
+		BufferDescription& GetBufferDescription() override { return m_Description; }
+		const uint32_t GetBufferID() const override { return m_BufferID; }
+		const uint64_t GetBufferGpuAddress() override { return 0; IFNITY_LOG(LogCore, WARNING, "GETBUFFERADDRES D3D12 NOT IMPLEMENTED"); };
+		void SetData(const void* data) override {};
+		const void* GetData() const { return nullptr; IFNITY_LOG(LogCore, WARNING, "GET DATA BUFFER D3D12 NOT IMPLEMENTED"); };
+
+	private:
+		uint32_t m_BufferID = 0; ///< The buffer ID.
+		mutable uint64_t m_BufferGpuAddress = 0; ///< The buffer GPU address.
+		BufferDescription m_Description; ///< The buffer description  m_holdBuffer;
+	};
+
+
+	class IFNITY_API GraphicsPipeline final: public IGraphicsPipeline
+	{
+	public:
+		~GraphicsPipeline();
+
+		GraphicsPipeline(GraphicsPipelineDescription&& desc): m_Description(std::move(desc)) {}
+		GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceD3D12* dev);
+
+		const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
+
+
+		// Getters para uso interno
+		ID3D12PipelineState* getPipelineState() const { return m_PipelineState.Get(); }
+		ID3D12RootSignature* getRootSignature() const { return m_RootSignature.Get(); }
+
+		void setColorFormat(rhi::Format format) { colorFormat = format; }
+		void setDepthFormat(rhi::Format format) { depthFormat = format; }
+
+		void SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = std::move(desc); }
+
+
+	private:
+		GraphicsPipelineDescription m_Description;
+
+		// Estado real de pipeline en D3D12
+		ComPtr<ID3D12PipelineState> m_PipelineState;
+		ComPtr<ID3D12RootSignature> m_RootSignature;
+
+
+		// Estado de rasterización, profundidad, etc.
+		rhi::Format colorFormat = rhi::Format::UNKNOWN;
+		rhi::Format depthFormat = rhi::Format::UNKNOWN;
+		rhi::Format stencilFormat = rhi::Format::UNKNOWN;
+
+		StencilState backFaceStencil = {};
+		StencilState frontFaceStencil = {};
+
+		uint32_t samplesCount = 1u;
+
+		ShaderModuleHandleSM m_shaderVert;
+		ShaderModuleHandleSM m_shaderPixel;
+		ShaderModuleHandleSM m_shaderGeometry;
+
+		bool destroy = false;
+
+		// Handle de slotmap (para manager de pipelines)
+
+		DeviceD3D12* m_DeviceD3D12 = nullptr;
+
+	};
+
+	//Please constructor are not safe if you dont create the construct function 
+	template<typename... Args>
+	inline DeviceHandle CreateDevice(Args&&... args)
+	{
+		return std::make_shared<Device>(std::forward<Args>(args)...);
+	}
+
+
+}
+
+IFNITY_END_NAMESPACE

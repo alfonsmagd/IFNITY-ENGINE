@@ -17,7 +17,7 @@ set(EXAMPLE_DIRS
     ShadersPipeLine
     D3D12_SimpleTriangle
     #Simple_Texture
-    scene_materials
+    #scene_materials
     #Geometry_Mesh
 	#glslang_vk_test
 	#bufferVulkan
