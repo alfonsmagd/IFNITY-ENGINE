@@ -77,7 +77,6 @@ namespace D3D12
 	public:
 		virtual ~GraphicsPipeline() {};
 
-		GraphicsPipeline(GraphicsPipelineDescription&& desc);
 		GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceD3D12* dev);
 
 		const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
@@ -86,20 +85,24 @@ namespace D3D12
 		// Getters para uso interno
 		ID3D12PipelineState* getPipelineState() const { return m_PipelineState.Get(); }
 		ID3D12RootSignature* getRootSignature() const { return m_RootSignature.Get(); }
-		void  BindPipeline(struct IDevice* device) override {};
+		void  BindPipeline(struct IDevice* device) override;
 
 		void setColorFormat(rhi::Format format) { colorFormat = format; }
 		void setDepthFormat(rhi::Format format) { depthFormat = format; }
 
 		void SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = std::move(desc); }
 
+	private:
+		void configureVertexAttributes();
+
 
 	private:
 		GraphicsPipelineDescription m_Description;
+		RenderPipelineState m_rD3D12PipelineState;
 
-		// Estado real de pipeline en D3D12
-		ComPtr<ID3D12PipelineState> m_PipelineState;
-		ComPtr<ID3D12RootSignature> m_RootSignature;
+		//Pipeline State Description.
+		ComPtr<ID3D12PipelineState> m_PipelineState = nullptr;
+		ComPtr<ID3D12RootSignature> m_RootSignature = nullptr;
 
 
 		// Estado de rasterización, profundidad, etc.

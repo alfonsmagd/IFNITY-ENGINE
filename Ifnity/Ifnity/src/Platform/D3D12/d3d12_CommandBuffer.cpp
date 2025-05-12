@@ -223,10 +223,8 @@ namespace D3D12
 			 .StencilEndingAccess = dsDesc.DepthEndingAccess };
 
 		// 5. Begin render pass
-
-		// 5. Begin render pass
 		cmdList->BeginRenderPass(numFbColorAttachments,
-								 &colorAttachments[ 0 ],      //if you put colorAttachments, warning C4244
+								 &colorAttachments[ 0 ],      //if you put colorAttachments, warning C6001
 								 &dsDesc,
 								 D3D12_RENDER_PASS_FLAG_NONE);
 

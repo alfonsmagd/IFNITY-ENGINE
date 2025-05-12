@@ -5,6 +5,8 @@
 using namespace IFNITY;
 using namespace IFNITY::rhi;
 
+using vec3 = glm::vec3;
+
 
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
@@ -25,7 +27,7 @@ public:
 	void ConnectToEventBusImpl(void* bus) override
 	{
 		auto eventBus = static_cast<IFNITY::GLFWEventSource*>(bus);
-		if(eventBus)
+		if( eventBus )
 		{
 			CONNECT_EVENT_LAYER(WindowResize, eventBus);
 			CONNECT_EVENT_LAYER(WindowClose, eventBus);
@@ -71,10 +73,10 @@ private:
 	LoggerDisplayMonitor loggerDisplayMonitor;
 };
 
-class ImGuiTestLayer : public IFNITY::Layer
+class ImGuiTestLayer: public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest") {}
+	ImGuiTestLayer(): Layer("ImGuiTest") {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
@@ -85,7 +87,7 @@ public:
 	void OnUpdate() override
 	{
 		ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
+		if( context == nullptr )
 		{
 			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
 			return;
@@ -101,9 +103,11 @@ public:
 
 private:
 	// A function that is called when the button is clicked
-	void AccionPorOpcion(int opcionSeleccionada) {
+	void AccionPorOpcion(int opcionSeleccionada)
+	{
 		GraphicsAPI api = IFNITY::App::GetApp().GetGraphicsAPI();
-		switch (opcionSeleccionada) {
+		switch( opcionSeleccionada )
+		{
 			case 0:
 				IFNITY_LOG(LogApp, INFO, "OPENGL");
 				IFNITY::App::GetApp()
@@ -129,19 +133,22 @@ private:
 		}
 	}
 
-	void ChooseApi() {
+	void ChooseApi()
+	{
 		static int selectOption = 0;
 		const char* options[] = { "OPENGL", "D3D11", "D3D12", "VULKAN" };
 
 		ImGui::Begin("API WINDOW");
 
 		// Combo box with the options
-		if (ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options))) {
+		if( ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options)) )
+		{
 			// This block executes when a new option is selected
 		}
 
 		// Button that triggers the selected action
-		if (ImGui::Button("OK")) {
+		if( ImGui::Button("OK") )
+		{
 			AccionPorOpcion(selectOption);
 		}
 
@@ -158,7 +165,7 @@ private:
 	GraphicsPipelineHandle m_pipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
 public:
-	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
 		// Push layers including monitoring and GUI
 		PushLayer(new IFNITY::NVML_Monitor());
@@ -172,7 +179,7 @@ public:
 		auto& vfs = IFNITY::VFS::GetInstance();
 		ShaderCompiler::Initialize();
 
-		vfs.Mount("Shaders", "Shaders",         IFNITY::FolderType::SHADERS);
+		vfs.Mount("Shaders", "Shaders", IFNITY::FolderType::SHADERS);
 		vfs.Mount("test", "Shaders/testShader", IFNITY::FolderType::NO_DEFINED);
 
 		//auto files = vfs.ListFilesInCurrentDirectory("test");
@@ -182,7 +189,7 @@ public:
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
-	
+
 		ShaderCreateDescription descShader;
 		{
 			descShader.NoCompile = false;
@@ -207,18 +214,47 @@ public:
 		ShaderCompiler::CompileShader(m_ps.get());
 
 		GraphicsPipelineDescription gdesc;
+		{
+			//Vertex struct initialization 
+			struct VertexData
+			{
+				vec3 pos;
+				vec3 color;
+			};
 
-		gdesc.SetVertexShader(m_vs.get())
-			 .SetPixelShader(m_ps.get());
+			//Vertex Attributes Configure 
+			rhi::VertexInput vertexInput;
+			uint8_t position = 0;
+			uint8_t color = 1;
+			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::POSITION, 
+										    .location = position,
+										   .binding = 0,
+										   .format = rhi::Format::R32G32B32_FLOAT,
+										   .offset = offsetof(VertexData,pos) }, position);
 
+			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::COLOR,
+											.location = color,
+										   .binding = 0,
+										   .format = rhi::Format::R32G32B32_FLOAT,
+										   .offset = offsetof(VertexData,color) }, color);
+			vertexInput.addVertexInputBinding({ .stride = sizeof(VertexData) }, position);
+
+
+
+
+			gdesc.SetVertexShader(m_vs.get())
+				.SetPixelShader(m_ps.get())
+				.SetVertexInput(vertexInput);
+
+		}//end of gdesc
 		//Create the pipeline
 		m_pipeline = rdevice->CreateGraphicsPipeline(gdesc);
 
+		m_pipeline->BindPipeline( rdevice );
 
-	
-	
-	
-	
+
+
+
 	}
 
 	void Render() override
@@ -234,10 +270,10 @@ public:
 	~Source() override {}
 };
 
-class Source_TestD3D12 : public IFNITY::App
+class Source_TestD3D12: public IFNITY::App
 {
 public:
-	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api)
 	{
 		PushLayer(new ExampleLayer());
 	}

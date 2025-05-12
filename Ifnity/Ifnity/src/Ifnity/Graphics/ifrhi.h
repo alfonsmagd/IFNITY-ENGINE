@@ -417,6 +417,35 @@ namespace rhi
         static constexpr uint16_t numElements = 3;
     };
 
+
+
+    enum class VertexSemantic : uint8_t
+    {
+        POSITION,
+        NORMAL,
+        TANGENT,
+        BITANGENT,
+        TEXCOORD,
+        COLOR,
+        CUSTOM, // OPTIONAL
+        COUNT
+    };
+
+    inline const char* getSemanticName(VertexSemantic s)
+    {
+        switch (s)
+        {
+            case VertexSemantic::POSITION:  return "POSITION";
+            case VertexSemantic::NORMAL:    return "NORMAL";
+            case VertexSemantic::TANGENT:   return "TANGENT";
+            case VertexSemantic::BITANGENT: return "BINORMAL"; // HLSL use BINORMAL
+            case VertexSemantic::TEXCOORD:  return "TEXCOORD";
+            case VertexSemantic::COLOR:     return "COLOR";
+            default:                        return "TEXCOORD"; // Fallback
+        }
+    }
+
+
     /**
     *
     * @brief Stuct use by the user in create pipeline, uses to VK, OR d3d12, now opengl not needit
@@ -430,6 +459,7 @@ namespace rhi
 
         struct VertexAttribute final
         {
+			VertexSemantic semantic = VertexSemantic::CUSTOM;
             uint32_t location = 0; // a buffer which contains this attribute stream
             uint32_t binding = 0;
             rhi::Format format = rhi::Format::UNKNOWN; // per-element format

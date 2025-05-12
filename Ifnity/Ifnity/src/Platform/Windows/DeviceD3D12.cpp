@@ -108,12 +108,6 @@ void DeviceD3D12::OnUpdate()
 	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
 
 	//acquiere commandbufferlist()
-
-	
-
-
-
-
 	D3D12::CommandBuffer& cmdBuffer = acquireCommandBuffer();
 	D3D12::TextureHandleSM currentTexture = swapchain_->getCurrentTexture();
 
@@ -123,19 +117,11 @@ void DeviceD3D12::OnUpdate()
 
 	Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
 
-
-
-
-	//auto* textback = slotMapTextures_.get(currentTexture);
-
-	
 	//cmdBuffer.cmdBeginRendering(textback);
 	cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
 	//Demo 
 	DrawElements(cmdBuffer.wrapper_->commandList.Get(), m_PipelineState, m_RootSignature);
 	cmdBuffer.cmdRenderImgui(ImGui::GetDrawData(), m_CbvSrvUavHeap.Get());
-
-	
 
 	cmdBuffer.cmdEndRendering();
 	submit(cmdBuffer, currentTexture);

@@ -93,7 +93,7 @@ namespace D3D12
 	};
 
 
-	struct SubmitHandle
+	struct SubmitHandle final
 	{
 		uint32_t bufferIndex_ = 0; // Index buffer
 		uint32_t submitId_ = 0;	// Submit ID
@@ -112,6 +112,24 @@ namespace D3D12
 		{
 			return (uint64_t(submitId_) << 32) + bufferIndex_;
 		}
+	};
+
+
+	struct RenderPipelineState 
+	{
+		uint32_t numBindings_ = 0;
+		uint32_t numAttributes_ = 0;
+		// Input Layout
+		uint32_t inputElementCount_ = 0;
+
+		// Input Layout (D3D12 needs a pointer to this structure)
+		D3D12_INPUT_ELEMENT_DESC inputElements_[rhi::VertexInput::VERTEX_ATTRIBUTES_MAX] = {};
+		// Input Layout (D3D12 necesita un puntero a esta estructura)
+		D3D12_INPUT_LAYOUT_DESC inputLayout_ = {};
+		// Rasterizer/Blend/Depth State 
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc_ = {};
+
+	
 	};
 
 }
