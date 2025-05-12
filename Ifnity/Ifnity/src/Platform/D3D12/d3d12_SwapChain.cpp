@@ -95,7 +95,7 @@ namespace D3D12
             image.isSwapchainImage_ = true;
             image.isDepthFormat_ = D3D12Image::isDepthFormat(surfaceFormat_);
             image.isStencilFormat_ = D3D12Image::isDepthStencilFormat(surfaceFormat_);
-            image.rtvHandle_ = rtvHandles_[i]; //store the RTV in the D3D12Image itself
+            image.descriptorHandle_.rtvHandle = rtvHandles_[i]; //store the RTV in the D3D12Image itself
 
             backBufferHandles_[i] = ctx_.slotMapTextures_.create(std::move(image));
         }

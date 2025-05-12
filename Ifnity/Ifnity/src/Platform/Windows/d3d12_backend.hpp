@@ -47,8 +47,8 @@ namespace D3D12
 
 	private:
 
-		DeviceD3D12* m_DeviceD3D12 = nullptr; ///< Pointer to the DeviceD3D12 instance.
-
+		DeviceD3D12* m_DeviceD3D12 = nullptr;       ///< Pointer to the DeviceD3D12 instance.
+		GraphicsPipelineHandleSM m_PipelineHandle; ///< Handle to the graphics pipeline.
 
 		
 	};

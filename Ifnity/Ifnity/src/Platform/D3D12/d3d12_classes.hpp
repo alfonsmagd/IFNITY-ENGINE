@@ -25,11 +25,6 @@
 IFNITY_NAMESPACE
 
 
-
-
-
-
-
 namespace D3D12
 {
 	using namespace Microsoft::WRL;
@@ -129,7 +124,12 @@ namespace D3D12
 		// Rasterizer/Blend/Depth State 
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc_ = {};
 
-	
+	};
+	struct D3D12Descriptor
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE cpu;
+		D3D12_GPU_DESCRIPTOR_HANDLE gpu;
+		uint32_t                    index;
 	};
 
 }

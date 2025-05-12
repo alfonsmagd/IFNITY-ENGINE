@@ -151,6 +151,8 @@ public:
 	//SlotMaps 
 	SlotMap<D3D12::D3D12Image> slotMapTextures_;
 	SlotMap<D3D12::ShaderModuleState> slotMapShaderModules_;
+	SlotMap<D3D12::GraphicsPipeline> slotMapRenderPipelines_;
+
 
 public:
 	~DeviceD3D12() override;

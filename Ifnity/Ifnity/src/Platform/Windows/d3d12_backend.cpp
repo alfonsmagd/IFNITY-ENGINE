@@ -45,7 +45,6 @@ namespace D3D12
 
 		}
 
-
 		//Get ShaderModuleState
 		ShaderModuleState* mvert = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderVert );
 		ShaderModuleState* mps = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderPixel );

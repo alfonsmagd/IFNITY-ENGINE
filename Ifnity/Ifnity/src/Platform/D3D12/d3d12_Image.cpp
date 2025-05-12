@@ -10,19 +10,19 @@ namespace D3D12
 	D3D12_CPU_DESCRIPTOR_HANDLE D3D12Image::getRTV() const
 	{
 		//Ternarie expression
-		return rtvHandle_;
+		return descriptorHandle_.rtvHandle;
 	}
 	D3D12_CPU_DESCRIPTOR_HANDLE D3D12Image::getDSV() const
 	{
-		return dsvHandle_;
+		return descriptorHandle_.dsvHandle;
 	}
 	D3D12_CPU_DESCRIPTOR_HANDLE D3D12Image::getSRV() const
 	{
-		return srvHandle_;
+		return descriptorHandle_.srvHandle;
 	}
 	D3D12_CPU_DESCRIPTOR_HANDLE D3D12Image::getUAV() const
 	{
-		return uavHandle_;
+		return descriptorHandle_.srvHandle;
 	}
 	 bool D3D12Image::isDepthFormat(DXGI_FORMAT format)
 	{

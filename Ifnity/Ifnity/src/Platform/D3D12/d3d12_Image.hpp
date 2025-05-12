@@ -39,10 +39,13 @@ namespace D3D12
 		D3D12_RESOURCE_DESC desc_ = {};
 
 		// Descriptors
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle_ = D3D12InvalidHandle;
-		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle_ = D3D12InvalidHandle;
-		D3D12_CPU_DESCRIPTOR_HANDLE srvHandle_ = D3D12InvalidHandle;
-		D3D12_CPU_DESCRIPTOR_HANDLE uavHandle_ = D3D12InvalidHandle;
+		union DescriptorHandleUnion
+		{
+			D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle;
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
+			D3D12_CPU_DESCRIPTOR_HANDLE srvHandle;
+			D3D12_CPU_DESCRIPTOR_HANDLE uavHandle;
+		}descriptorHandle_;
 
 		bool isDepthFormat_ = false;
 		bool isStencilFormat_ = false;

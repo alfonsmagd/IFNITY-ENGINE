@@ -44,7 +44,9 @@ enum IFNITY_API ShaderAPIflag: uint8_t
 {
 	DEFAULT_GLSL = 0x00,
 	SPIRV_BIN = 0x01,
-	ONLY_HLSL = 0x02
+	ONLY_HLSL = 0x02,
+
+	ALL_API = DEFAULT_GLSL | SPIRV_BIN | ONLY_HLSL
 };
 
 
