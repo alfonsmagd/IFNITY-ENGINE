@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-13 by alfonsmagd
+
 #pragma once
 
 #include "Ifnity\Graphics\ifrhi.h"
@@ -33,7 +38,7 @@ namespace D3D12
 		void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf)override {}; //todo abstract
 		void BindingVertexAttributesBuffer(BufferHandle& bf)override {};
 		void BindingIndexBuffer(BufferHandle& bf)override {};
-		BufferHandle CreateBuffer(const BufferDescription& desc) override { return {}; };
+		BufferHandle CreateBuffer( const BufferDescription& desc ) override;
 		TextureHandle CreateTexture(TextureDescription& desc) override { return {}; }; //TODO add TextureDescripton const
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override { return {}; };;
 		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) override { return {}; };
@@ -46,6 +51,13 @@ namespace D3D12
 		// Virtual destructor to ensure proper destruction of derived objects
 
 	private:
+	   BufferHandleSM CreateInternalD3D12Buffer( const BufferDescription& desc,
+												 D3D12_RESOURCE_FLAGS resourceFlags,
+												 D3D12_RESOURCE_STATES initialState,
+												 D3D12_HEAP_TYPE heapType,
+												 const char* debugName );
+
+
 
 		DeviceD3D12* m_DeviceD3D12 = nullptr;       ///< Pointer to the DeviceD3D12 instance.
 		GraphicsPipelineHandleSM m_PipelineHandle; ///< Handle to the graphics pipeline.
@@ -58,6 +70,11 @@ namespace D3D12
 	{
 	public:
 		Buffer(const BufferDescription& desc): m_Description(desc) {}
+		Buffer( const BufferDescription& desc, BufferHandleSM&& handle ): m_Description( desc ),
+			m_holdBuffer( std::move( handle ) )
+		{
+			m_BufferID = m_holdBuffer.index();
+		}
 
 		BufferDescription& GetBufferDescription() override { return m_Description; }
 		const uint32_t GetBufferID() const override { return m_BufferID; }
@@ -69,13 +86,14 @@ namespace D3D12
 		uint32_t m_BufferID = 0; ///< The buffer ID.
 		mutable uint64_t m_BufferGpuAddress = 0; ///< The buffer GPU address.
 		BufferDescription m_Description; ///< The buffer description  m_holdBuffer;
+		BufferHandleSM m_holdBuffer; ///< The buffer handle.
 	};
 
 
 	class IFNITY_API GraphicsPipeline final: public IGraphicsPipeline
 	{
 	public:
-		virtual ~GraphicsPipeline() {};
+		virtual ~GraphicsPipeline();
 
 		GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceD3D12* dev);
 
@@ -84,7 +102,6 @@ namespace D3D12
 
 		// Getters para uso interno
 		ID3D12PipelineState* getPipelineState() const { return m_PipelineState.Get(); }
-		ID3D12RootSignature* getRootSignature() const { return m_RootSignature.Get(); }
 		void  BindPipeline(struct IDevice* device) override;
 
 		void setColorFormat(rhi::Format format) { colorFormat = format; }
@@ -102,10 +119,9 @@ namespace D3D12
 
 		//Pipeline State Description.
 		ComPtr<ID3D12PipelineState> m_PipelineState = nullptr;
-		ComPtr<ID3D12RootSignature> m_RootSignature = nullptr;
 
 
-		// Estado de rasterización, profundidad, etc.
+		// Estado de rasterizacin, profundidad, etc.
 		rhi::Format colorFormat = rhi::Format::UNKNOWN;
 		rhi::Format depthFormat = rhi::Format::UNKNOWN;
 		rhi::Format stencilFormat = rhi::Format::UNKNOWN;

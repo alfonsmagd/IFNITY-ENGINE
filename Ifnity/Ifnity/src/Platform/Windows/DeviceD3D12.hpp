@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-09 by alfonsmagd
+// Last modified: 2025-05-13 by alfonsmagd
+
 
 
 
@@ -20,6 +21,7 @@
 #include "Platform/D3D12/d3d12_classes.hpp"
 #include "Platform/D3D12/d3d12_SwapChain.hpp"
 #include "Platform/D3D12/d3d12_CommandBuffer.hpp"
+#include "Platform/D3D12/d3d12_Buffer.hpp"
 
 #include "d3d12_backend.hpp"
 
@@ -77,6 +79,8 @@ public:
 	ComPtr<ID3D12DescriptorHeap> m_RtvHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap> m_DsvHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavHeap = nullptr;
+
+
 
 
 	struct DescriptorAllocator
@@ -152,6 +156,7 @@ public:
 	SlotMap<D3D12::D3D12Image> slotMapTextures_;
 	SlotMap<D3D12::ShaderModuleState> slotMapShaderModules_;
 	SlotMap<D3D12::GraphicsPipeline> slotMapRenderPipelines_;
+	SlotMap<D3D12::D3D12Buffer> slotMapBuffers_;
 
 
 public:
@@ -216,6 +221,8 @@ private:
 	void DrawElements(ID3D12GraphicsCommandList* commandList,
 					  const ComPtr<ID3D12PipelineState>& pipelineState,
 					  const ComPtr<ID3D12RootSignature>& rootSignature);
+
+	void destroy( SlotMap<D3D12::GraphicsPipeline> sm );
 private:
 	DeviceHandle m_RenderDevice;
 
@@ -232,8 +239,8 @@ private:
 
 struct Vertex
 {
-	XMFLOAT3 position;
-	XMFLOAT4 color;
+	glm::vec3 position;
+	glm::vec4 color;
 };
 
 //--------	D3D12 Utils. ---------------------------------------------------------------------------------------//

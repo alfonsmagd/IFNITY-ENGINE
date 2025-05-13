@@ -1,8 +1,13 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-13 by alfonsmagd
+
 #pragma once 
 
 #include <pch.h>
 #include <d3d12.h>
-
+#include "Ifnity/Graphics/Interfaces/IBuffer.hpp"
 
 
 IFNITY_NAMESPACE
@@ -20,9 +25,9 @@ namespace D3D12
 		DXGI_FORMAT dxgiFormat;
 	};
 
-	static const std::array<FormatMapping, size_t(rhi::Format::COUNT)> c_FormatMap = { {
-		{ rhi::Format::R8G8B8_UINT,           DXGI_FORMAT_UNKNOWN }, 
-		{ rhi::Format::R8G8B8,                DXGI_FORMAT_UNKNOWN }, 
+	static const std::array<FormatMapping, size_t( rhi::Format::COUNT )> c_FormatMap = { {
+		{ rhi::Format::R8G8B8_UINT,           DXGI_FORMAT_UNKNOWN },
+		{ rhi::Format::R8G8B8,                DXGI_FORMAT_UNKNOWN },
 		{ rhi::Format::R8G8B8A8,              DXGI_FORMAT_R8G8B8A8_UNORM },
 		{ rhi::Format::R32G32B32_FLOAT,       DXGI_FORMAT_R32G32B32_FLOAT },
 		{ rhi::Format::R8G8B8A8_UNORM,        DXGI_FORMAT_R8G8B8A8_UNORM },
@@ -61,11 +66,11 @@ namespace D3D12
 	* @param dxgiFormat The DXGI format.
 	* @return The corresponding RHI format, or rhi::Format::UNKNOWN if not found.
 	*/
-	inline rhi::Format getRHIFormat(DXGI_FORMAT dxgiFormat)
+	inline rhi::Format getRHIFormat( DXGI_FORMAT dxgiFormat )
 	{
-		for (const auto& mapping : c_FormatMap)
+		for( const auto& mapping : c_FormatMap )
 		{
-			if (mapping.dxgiFormat == dxgiFormat)
+			if( mapping.dxgiFormat == dxgiFormat )
 				return mapping.rhiFormat;
 		}
 		return rhi::Format::UNKNOWN;
@@ -74,18 +79,18 @@ namespace D3D12
 	/**
 	* @brief Converts RHI format to DXGI format.
 	*/
-	inline DXGI_FORMAT formatToDxgiFormat(rhi::Format format)
+	inline DXGI_FORMAT formatToDxgiFormat( rhi::Format format )
 	{
-		return static_cast<uint32_t>(format) < c_FormatMap.size()
-			? c_FormatMap[static_cast<size_t>(format)].dxgiFormat
+		return static_cast< uint32_t >(format) < c_FormatMap.size()
+			? c_FormatMap[ static_cast< size_t >(format) ].dxgiFormat
 			: DXGI_FORMAT_UNKNOWN;
 	}
 
 
 
-	inline BOOL convertToDxFrontCounterClockwise(rhi::FrontFaceType mode)
+	inline BOOL convertToDxFrontCounterClockwise( rhi::FrontFaceType mode )
 	{
-		switch (mode)
+		switch( mode )
 		{
 			case rhi::FrontFaceType::Clockwise: return FALSE;
 			case rhi::FrontFaceType::CounterClockwise: return TRUE;
@@ -94,9 +99,9 @@ namespace D3D12
 	}
 
 
-	inline D3D12_CULL_MODE convertToDxCullMode(rhi::CullModeType mode)
+	inline D3D12_CULL_MODE convertToDxCullMode( rhi::CullModeType mode )
 	{
-		switch (mode)
+		switch( mode )
 		{
 			case rhi::CullModeType::None: return D3D12_CULL_MODE_NONE;
 			case rhi::CullModeType::Front: return D3D12_CULL_MODE_FRONT;
@@ -105,7 +110,7 @@ namespace D3D12
 		}
 	}
 
-	inline D3D12_BLEND convertToDxBlend(rhi::BlendFactor factor)
+	inline D3D12_BLEND convertToDxBlend( rhi::BlendFactor factor )
 	{
 		switch( factor )
 		{
@@ -119,7 +124,7 @@ namespace D3D12
 		}
 	}
 
-	inline D3D12_PRIMITIVE_TOPOLOGY convertToDxTopology(rhi::PrimitiveType type)
+	inline D3D12_PRIMITIVE_TOPOLOGY convertToDxTopology( rhi::PrimitiveType type )
 	{
 		switch( type )
 		{
@@ -131,7 +136,7 @@ namespace D3D12
 		}
 	}
 
-	inline D3D12_COMPARISON_FUNC convertToDxCompareFunc(rhi::CompareOp op)
+	inline D3D12_COMPARISON_FUNC convertToDxCompareFunc( rhi::CompareOp op )
 	{
 		switch( op )
 		{
@@ -147,9 +152,9 @@ namespace D3D12
 		}
 	}
 
-	inline D3D12_STENCIL_OP convertToDxStencilOp(rhi::StencilOp op)
+	inline D3D12_STENCIL_OP convertToDxStencilOp( rhi::StencilOp op )
 	{
-		switch (op)
+		switch( op )
 		{
 			case rhi::StencilOp::StencilOp_Keep: return D3D12_STENCIL_OP_KEEP;
 			case rhi::StencilOp::StencilOp_Zero: return D3D12_STENCIL_OP_ZERO;
@@ -163,6 +168,60 @@ namespace D3D12
 		}
 	}
 
+
+	struct D3D12UsageMapping
+	{
+		BufferType type;
+		D3D12_RESOURCE_FLAGS resourceFlags;
+		D3D12_RESOURCE_STATES initialState;
+		D3D12_RESOURCE_STATES bindState;
+	};
+
+
+	constexpr D3D12UsageMapping d3d12UsageMappings[] = {
+
+		{ BufferType::INDEX_BUFFER, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_INDEX_BUFFER },
+		{ BufferType::VERTEX_BUFFER, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER },
+		{ BufferType::DEFAULT_BUFFER, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER },
+		{ BufferType::STORAGE_BUFFER, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_UNORDERED_ACCESS },
+		{ BufferType::INDIRECT_BUFFER, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT },
+		{ BufferType::UNIFORM_BUFFER, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER },
+		{ BufferType::CONSTANT_BUFFER, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER }
+
+	};
+
+	constexpr inline D3D12UsageMapping getD3D12UsageMapping( BufferType type )
+	{
+		for( const auto& mapping : d3d12UsageMappings )
+		{
+			if( mapping.type == type )
+				return mapping;
+		}
+		return { BufferType::NO_DEFINE_BUFFER, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COMMON };
+	}
+
+	inline D3D12_HEAP_TYPE storageTypeToD3D12HeapType( StorageType storage )
+	{
+		switch( storage )
+		{
+			case StorageType::DEVICE:
+				// GPU-only access, default heap
+				return D3D12_HEAP_TYPE_DEFAULT;
+
+			case StorageType::HOST_VISIBLE:
+				// CPU-writeable (for upload)
+				return D3D12_HEAP_TYPE_UPLOAD;
+
+			case StorageType::MEMORYLESS:
+				// Not really supported directly; fallback to DEFAULT
+				// You could use D3D12_HEAP_TYPE_DEFAULT and avoid persisting it
+				return D3D12_HEAP_TYPE_DEFAULT;
+
+			default:
+				IFNITY_LOG( LogCore, ERROR, "Invalid storage type" );
+				return D3D12_HEAP_TYPE_DEFAULT;
+		}
+	}
 
 
 

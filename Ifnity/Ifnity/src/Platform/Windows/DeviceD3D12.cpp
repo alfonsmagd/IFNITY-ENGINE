@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-09 by alfonsmagd
+// Last modified: 2025-05-13 by alfonsmagd
+
 
 
 
@@ -9,6 +10,7 @@
 #include "DeviceD3D12.hpp"
 #include  "../D3D12/d3d12_classes.hpp"
 #include "ShaderBuilding\ShaderBuilder.hpp"
+
 
 
 #pragma comment(lib, "d3d12.lib")
@@ -93,6 +95,9 @@ DeviceD3D12::~DeviceD3D12()
 	m_SwapChain.Reset();
 	m_DxgiAdapter.Reset();
 	dxgiFactory4.Reset();
+	destroy( slotMapRenderPipelines_ );
+	slotMapShaderModules_.clear();
+	slotMapTextures_.clear();
 	m_Device.Reset();
 
 
@@ -1037,6 +1042,13 @@ void DeviceD3D12::DrawElements(ID3D12GraphicsCommandList* commandList,
 	//commandList->Close();
 	//ID3D12CommandList* cmdsLists[] = { commandList };
 	//m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
+
+}
+
+void DeviceD3D12::destroy( SlotMap<D3D12::GraphicsPipeline> sm )
+{
+
+	sm.clear();
 
 }
 

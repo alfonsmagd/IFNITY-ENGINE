@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-01 by alfonsmagd
+// Last modified: 2025-05-13 by alfonsmagd
+
 
 
 
@@ -10,12 +11,19 @@
 
 #include <pch.h>
 #include "d3d12_classes.hpp"
+#include "Ifnity/Graphics/Interfaces/IBuffer.hpp"
+
+#include <optional>
+
+
+
+namespace D3D12MA { class Allocation; } //avoid namespace collision forward declaration
 
 IFNITY_NAMESPACE
 
 //Forward declaration
 class DeviceD3D12;
-namespace D3D12MA { class Allocation; }
+
 
 namespace D3D12
 {
@@ -30,15 +38,20 @@ namespace D3D12
 		void getBufferSubData( const DeviceD3D12& ctx, size_t offset, size_t size, void* data );
 		void flushMappedMemory( const DeviceD3D12& ctx, size_t offset, size_t size ) const;
 		void invalidateMappedMemory( const DeviceD3D12& ctx, size_t offset, size_t size ) const;
-
+		[[nodiscard]] D3D12_VERTEX_BUFFER_VIEW getVertexBufferView( uint32_t stride_ = 0  ) const;
+		
+		
 	public:
 		ComPtr<ID3D12Resource> resource_;
 		D3D12MA::Allocation* allocation_ = nullptr;
+		D3D12_GPU_VIRTUAL_ADDRESS gpuAddress_ = 0;
+
 
 		size_t bufferSize_ = 0;
 		D3D12_RESOURCE_STATES initialState_ = D3D12_RESOURCE_STATE_COMMON;
 		D3D12_RESOURCE_FLAGS resourceFlags_ = D3D12_RESOURCE_FLAG_NONE;
 		D3D12_RESOURCE_DESC desc_ = {};
+		BufferType bufferType_ = BufferType::NO_DEFINE_BUFFER;
 
 		void* mappedPtr_ = nullptr;
 		bool isCoherentMemory_ = false;

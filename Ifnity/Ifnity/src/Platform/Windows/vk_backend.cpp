@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-13 by alfonsmagd
+
 
 #include "vk_backend.hpp"
 #include "Ifnity\Graphics\Utils.hpp"
@@ -1431,7 +1436,7 @@ namespace Vulkan
 
 			uint32_t pushConstantSize = 0;
 
-			// Itera sobre las push constants y calcula el tamaño total
+			// Itera sobre las push constants y calcula el tamao total
 			for( const auto& pushConstant : resources.push_constant_buffers )
 			{
 				const spirv_cross::SPIRType& type = compiler->get_type(pushConstant.base_type_id);
@@ -1498,7 +1503,7 @@ namespace Vulkan
 
 	const VkPhysicalDeviceLimits& Device::getPhysicalDeviceLimits() const
 	{
-		// TODO: Insertar una instrucción "return" aquí
+		// TODO: Insertar una instruccin "return" aqu
 		IFNITY_ASSERT_MSG(m_DeviceVulkan != VK_NULL_HANDLE, "VkPhysicalDevice is null");
 		return m_DeviceVulkan->properties2.properties.limits;
 
@@ -1517,7 +1522,7 @@ namespace Vulkan
 	GraphicsPipeline::GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceVulkan* dev): m_Description(std::move(desc)), m_DeviceVulkan(dev)
 	{}
 
-	void GraphicsPipeline::BindPipeline(IDevice* device)
+	void GraphicsPipeline::BindPipeline (IDevice* device)
 	{
 		Device* vkDevice = dynamic_cast<Device*>(device);
 		IFNITY_ASSERT_MSG(vkDevice != nullptr, "Device is not a Vulkan Device");

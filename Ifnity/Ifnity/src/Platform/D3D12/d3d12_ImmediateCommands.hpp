@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-09 by alfonsmagd
+// Last modified: 2025-05-13 by alfonsmagd
+
 
 
 
@@ -24,7 +25,7 @@ namespace D3D12
 	public:
 		// the maximum number of command buffers which can similtaneously exist in the system; when we run out of buffers, we stall and wait until
 		// an existing buffer becomes available
-		static constexpr uint32_t kMaxCommandBuffers = 3;
+		static constexpr uint32_t kMaxCommandBuffers = 4;
 
 
 		D3D12ImmediateCommands(ID3D12Device* device, ID3D12CommandQueue* queue, uint32_t numContexts = kMaxCommandBuffers);

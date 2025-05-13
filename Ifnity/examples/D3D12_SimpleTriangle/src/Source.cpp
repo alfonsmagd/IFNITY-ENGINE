@@ -162,9 +162,14 @@ class Source: public IFNITY::App
 private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
+
+	BufferHandle m_vertexBuffer;
 	GraphicsPipelineHandle m_pipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
 public:
+
+
+
 	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
 		// Push layers including monitoring and GUI
@@ -172,6 +177,13 @@ public:
 		PushLayer(new ImGuiTestLayer());
 		PushOverlay(new IFNITY::ImguiLayer()); // DLL-based ImGui overlay
 	}
+
+	//Vertex struct initialization 
+	struct VertexData
+	{
+		vec3 pos;
+		vec4 color;
+	};
 
 	void Initialize() override
 	{
@@ -215,12 +227,7 @@ public:
 
 		GraphicsPipelineDescription gdesc;
 		{
-			//Vertex struct initialization 
-			struct VertexData
-			{
-				vec3 pos;
-				vec3 color;
-			};
+
 
 			//Vertex Attributes Configure 
 			rhi::VertexInput vertexInput;
@@ -255,6 +262,31 @@ public:
 
 
 
+		//Buffer Data 
+		VertexData triangleVertices[] =
+		{
+			{ { -0.5f, -0.5f , 0.0f}, { 1.0f, 0.0f, 0.0f, 1.0f } },
+			{ { 0.0f, 0.5f , 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+			{ { 0.5f, -0.5f , 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+		};
+
+
+
+
+		BufferDescription bufferDesc;
+		{
+			bufferDesc.SetDebugName( "Vertex Buffer" );
+			bufferDesc.SetBufferType( BufferType::VERTEX_BUFFER );
+			bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
+			bufferDesc.SetByteSize( sizeof(triangleVertices));
+			bufferDesc.SetData( triangleVertices );
+			bufferDesc.SetStrideSize( sizeof( VertexData ) );
+			
+		}
+		m_vertexBuffer = rdevice->CreateBuffer( bufferDesc );
+
+
+
 	}
 
 	void Render() override
@@ -267,7 +299,11 @@ public:
 		IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
 
-	~Source() override {}
+	~Source() override {
+	
+		
+	
+	}
 };
 
 class Source_TestD3D12: public IFNITY::App

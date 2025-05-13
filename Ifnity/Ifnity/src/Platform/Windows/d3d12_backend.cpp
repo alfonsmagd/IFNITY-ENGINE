@@ -1,12 +1,22 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-13 by alfonsmagd
+
 
 
 #include "d3d12_backend.hpp"
 #include "DeviceD3D12.hpp"
 #include "Platform/D3D12/d3d12_PipelineBuilder.hpp"
+#include "Platform/D3D12/d3d12_Buffer.hpp"
 #include "Ifnity/Graphics/Utils.hpp"
 
 #include "ShaderBuilding/ShaderBuilder.hpp"
 #include "Platform/D3D12/d3d12_constants.hpp"
+
+#include "D3D12MemAlloc.h"
+
+
 
 
 
@@ -24,8 +34,35 @@ namespace D3D12
 		//Check if m_DeviceD31D12 has been created well
 		IFNITY_ASSERT_MSG( m_DeviceD3D12 != nullptr, "DeviceD3D12 is null" );
 		IFNITY_ASSERT_MSG( m_DeviceD3D12->m_Device.Get() != nullptr, "ID3D12Device is null" );
-	
-	
+
+
+	}
+
+	GraphicsPipeline::~GraphicsPipeline()
+	{
+		//SlotMaps shader destroy 
+		ShaderModuleState* mvert = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderVert );
+		ShaderModuleState* mps = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderPixel );
+
+		if( mvert )
+		{
+			mvert->bytecode->Release();
+			m_DeviceD3D12->slotMapShaderModules_.destroy( m_shaderVert );
+		}
+		if( mps )
+		{
+			mps->bytecode->Release();
+			m_DeviceD3D12->slotMapShaderModules_.destroy( m_shaderPixel );
+		}
+
+		if( m_PipelineState )
+		{
+			m_PipelineState.Reset();
+			m_PipelineState = nullptr;
+		}
+
+
+
 	}
 
 
@@ -49,16 +86,16 @@ namespace D3D12
 		ShaderModuleState* mvert = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderVert );
 		ShaderModuleState* mps = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderPixel );
 
-		//FOr now to simplify this. 
-		auto pipeline = D3D12PipelineBuilder{}
-			.setVS( mvert->bytecode->GetBufferPointer(),
-					mvert->bytecode->GetBufferSize() )
-			.setPS( mps->bytecode->GetBufferPointer(),
-					mps->bytecode->GetBufferSize() )
-			.setRootSignature( m_DeviceD3D12->m_RootSignature.Get() )
-			.setInputLayout( m_rD3D12PipelineState.inputLayout_ )
-			.build( m_DeviceD3D12->m_Device.Get(),
-					OUT m_PipelineState.GetAddressOf() );
+		////FOr now to simplify this. 
+		//auto pipeline = D3D12PipelineBuilder{}
+		//	.setVS( mvert->bytecode->GetBufferPointer(),
+		//			mvert->bytecode->GetBufferSize() )
+		//	.setPS( mps->bytecode->GetBufferPointer(),
+		//			mps->bytecode->GetBufferSize() )
+		//	.setRootSignature( m_DeviceD3D12->m_RootSignature.Get() )
+		//	.setInputLayout( m_rD3D12PipelineState.inputLayout_ )
+		//	.build( m_DeviceD3D12->m_Device.Get(),
+		//			OUT m_PipelineState.GetAddressOf() );
 
 
 
@@ -116,7 +153,110 @@ namespace D3D12
 	}
 
 
+	BufferHandle Device::CreateBuffer( const BufferDescription& desc )
+	{
+		StorageType storage = desc.storage;
 
+		// Check if the storage type is valid
+		if( desc.type == BufferType::NO_DEFINE_BUFFER )
+		{
+			IFNITY_LOG( LogCore, WARNING, "No define buffer " ); return{};
+		}
+
+
+		// Get heap type. 
+		D3D12_HEAP_TYPE heapType = storageTypeToD3D12HeapType( storage );
+		D3D12_RESOURCE_STATES initialState = D3D12_RESOURCE_STATE_COMMON;
+
+		// Get flags and initial state based on buffer type.
+		const auto& usageInfo = getD3D12UsageMapping( desc.type );
+		D3D12_RESOURCE_FLAGS resourceFlags = usageInfo.resourceFlags;
+		initialState = usageInfo.initialState;
+
+		BufferHandleSM bufferHandle = CreateInternalD3D12Buffer( desc,
+																 resourceFlags,
+																 initialState,
+																 heapType,
+																 desc.debugName.c_str() );
+
+		//THIS IS ONLY FOR NOW BECAUSE ITS ONLY HOST VISIBLE UPLOAD BUFFER.  [MOVE TO FUNCTION UPLOAD) D3D12 NEXT. 
+		if( desc.data )
+		{
+			// Upload data if the buffer description has it
+			D3D12Buffer* buffer = m_DeviceD3D12->slotMapBuffers_.getByIndex( bufferHandle.index() );
+			if( !buffer )
+			{
+				IFNITY_LOG( LogCore, ERROR, "Buffer is null to write " );
+				return {};
+			}
+			buffer->bufferSubData( *m_DeviceD3D12, 0, desc.byteSize, desc.data );
+		}
+
+		Buffer* handle = new Buffer( desc, std::move( bufferHandle ) );
+
+		return BufferHandle(handle);
+	}
+
+	BufferHandleSM Device::CreateInternalD3D12Buffer( const BufferDescription& desc,
+													  D3D12_RESOURCE_FLAGS resourceFlags,
+													  D3D12_RESOURCE_STATES initialState,
+													  D3D12_HEAP_TYPE heapType,
+													  const char* debugName )
+	{
+		IFNITY_ASSERT_MSG( desc.byteSize > 0, "Buffer size is invalid" );
+
+		//Create the buffer
+
+		D3D12Buffer buffer = {
+			
+			.bufferSize_ = desc.byteSize,
+			.resourceFlags_ = resourceFlags,
+			.bufferType_ = desc.type
+		};
+
+		// Describe the buffer
+		D3D12_RESOURCE_DESC descbuff = D3D12Buffer::bufferDesc( desc.byteSize , resourceFlags, initialState );
+
+		if( D3D12VMA_ALLOCATOR )
+		{
+			D3D12MA::ALLOCATION_DESC allocDesc = {};
+			allocDesc.HeapType = heapType;
+
+			ThrowIfFailed( m_DeviceD3D12->g_Allocator->CreateResource(
+				&allocDesc,
+				&descbuff,
+				initialState,
+				nullptr, // No optimized clear value for buffers
+				&buffer.allocation_,
+				IID_PPV_ARGS( &buffer.resource_ )
+			) );
+
+			//Set the gpu address
+			buffer.gpuAddress_ = buffer.resource_->GetGPUVirtualAddress();
+
+			if( debugName )
+			{
+				std::wstring wdebugName( debugName, debugName + strlen( debugName ) );
+				buffer.resource_->SetName( wdebugName.c_str() );
+			}
+
+
+			if (heapType == D3D12_HEAP_TYPE_UPLOAD)
+			{
+				void* mapped = nullptr;
+				buffer.resource_->Map(0, nullptr, &mapped);
+				buffer.mappedPtr_ = mapped;
+			}
+
+		}
+
+		BufferHandleSM bufferHandle = m_DeviceD3D12->slotMapBuffers_.create( std::move( buffer ) );
+		IFNITY_ASSERT_MSG( bufferHandle.valid(), "Buffer handle is not valid");
+		IFNITY_LOG( LogCore, INFO, "Buffer created: " + std::to_string( bufferHandle.index() ) );
+
+		return bufferHandle;
+
+	}
 
 
 
@@ -167,7 +307,7 @@ namespace D3D12
 
 		//Set the ShaderModuleState with new GraphicsPipelineState
 
-		GraphicsPipeline* pipeline = new GraphicsPipeline( std::move( desc ),m_DeviceD3D12 );
+		GraphicsPipeline* pipeline = new GraphicsPipeline( std::move( desc ), m_DeviceD3D12 );
 
 		// Create the StateShaderModule 
 		ShaderModuleState vsState = { .bytecode = vsBlob };
