@@ -21,20 +21,20 @@ namespace D3D12
 
 
 	// Helper function to transition a color attachment
-	inline static void transitionToColorAttachment(ID3D12GraphicsCommandList* cmdList, D3D12Image* colorTex)
+	inline static void transitionToColorAttachment( ID3D12GraphicsCommandList* cmdList, D3D12Image* colorTex )
 	{
 		if( !colorTex )
 			return;
 
 		if( colorTex->isDepthFormat_ || colorTex->isStencilFormat_ )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Color attachments cannot have depth/stencil formats");
+			IFNITY_LOG( LogCore, ERROR, "Color attachments cannot have depth/stencil formats" );
 			return;
 		}
 
 		if( colorTex->format_ == DXGI_FORMAT_UNKNOWN )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Invalid color attachment format");
+			IFNITY_LOG( LogCore, ERROR, "Invalid color attachment format" );
 			return;
 		}
 
@@ -45,13 +45,13 @@ namespace D3D12
 			D3D12_RESOURCE_STATE_RENDER_TARGET
 		);
 
-		cmdList->ResourceBarrier(1, &barrier);
+		cmdList->ResourceBarrier( 1, &barrier );
 
 		// Update current state (si mantienes tracking)
 		colorTex->currentState_ = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	}
 
-	inline static void transitionToPresent(ID3D12GraphicsCommandList* cmdList, D3D12Image* image)
+	inline static void transitionToPresent( ID3D12GraphicsCommandList* cmdList, D3D12Image* image )
 	{
 		if( !image || !image->isSwapchainImage_ )
 			return;
@@ -63,56 +63,98 @@ namespace D3D12
 				image->currentState_,
 				D3D12_RESOURCE_STATE_PRESENT
 			);
-			cmdList->ResourceBarrier(1, &barrier);
+			cmdList->ResourceBarrier( 1, &barrier );
 			image->currentState_ = D3D12_RESOURCE_STATE_PRESENT;
 		}
 	}
 
 
 
-	CommandBuffer::CommandBuffer(DeviceD3D12* ctx): ctx_(ctx), wrapper_(&ctx->m_ImmediateCommands->acquire())
+	CommandBuffer::CommandBuffer( DeviceD3D12* ctx ): ctx_( ctx ), wrapper_( &ctx->m_ImmediateCommands->acquire() )
 	{}
 
 	CommandBuffer::~CommandBuffer()
 	{}
 
-	void CommandBuffer::cmdBindScissorRect(const ScissorRect& rect)
+	void CommandBuffer::cmdBindScissorRect( const ScissorRect& rect )
 	{
 		const D3D12_RECT scissor{
-				.left = static_cast<LONG>(rect.x),
-				.top = static_cast<LONG>(rect.y),
-				.right = static_cast<LONG>(rect.x + rect.width),
-				.bottom = static_cast<LONG>(rect.y + rect.height)
+				.left = static_cast< LONG >(rect.x),
+				.top = static_cast< LONG >(rect.y),
+				.right = static_cast< LONG >(rect.x + rect.width),
+				.bottom = static_cast< LONG >(rect.y + rect.height)
 		};
-		wrapper_->commandList->RSSetScissorRects(1, &scissor);
+		wrapper_->commandList->RSSetScissorRects( 1, &scissor );
 
 	}
 
-	void CommandBuffer::cmdRenderImgui(ImDrawData* drawData, ID3D12DescriptorHeap* pCbvSrvHeap)
+	void CommandBuffer::cmdRenderImgui( ImDrawData* drawData, ID3D12DescriptorHeap* pCbvSrvHeap )
 	{
 		if( !drawData )
 			return;
 		// Set the viewport and scissor rect.
-		wrapper_->commandList->RSSetViewports(1, &ctx_->m_ScreenViewport);
-		wrapper_->commandList->RSSetScissorRects(1, &ctx_->m_ScissorRect);
+		wrapper_->commandList->RSSetViewports( 1, &ctx_->m_ScreenViewport );
+		wrapper_->commandList->RSSetScissorRects( 1, &ctx_->m_ScissorRect );
 		// Bind the descriptor heap for ImGui
 		ID3D12DescriptorHeap* heaps[] = { pCbvSrvHeap };
-		wrapper_->commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-		ImGui_ImplDX12_RenderDrawData(drawData, wrapper_->commandList.Get());
+		wrapper_->commandList->SetDescriptorHeaps( _countof( heaps ), heaps );
+		ImGui_ImplDX12_RenderDrawData( drawData, wrapper_->commandList.Get() );
 
 
 	}
-	void CommandBuffer::cmdBeginRendering(D3D12Image* colorTex)
+	void CommandBuffer::cmdBindVertexBuffer( BufferHandleSM& bf, uint32_t stride, uint32_t offset )
+	{
+		if( !IFNITY_VERIFY( !bf.empty() ) )
+		{
+			return;
+		}
+
+		D3D12Buffer* buf = ctx_->slotMapBuffers_.get( bf );
+
+		IFNITY_ASSERT( buf->bufferType_ == BufferType::VERTEX_BUFFER, "Buffer is not a vertex buffer" );
+
+		//get vertexbufferview
+		D3D12_VERTEX_BUFFER_VIEW m_vbview = buf->getVertexBufferView( stride );
+
+		wrapper_->commandList->IASetVertexBuffers( 0, 1, &m_vbview );
+
+	}
+	void CommandBuffer::cmdBindRenderPipeline( GraphicsPipeline* pipeline )
+	{
+		if( !pipeline )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Pipeline is null" );
+			return;
+		}
+
+		ID3D12PipelineState* d3d12Pipeline = pipeline->getPipelineState();
+		if( !d3d12Pipeline )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Pipeline state is null after bind" );
+			return;
+		}
+
+		if( d3d12Pipeline != lastPipelineBound_ )
+		{
+			lastPipelineBound_ = d3d12Pipeline;
+			wrapper_->commandList->SetPipelineState( d3d12Pipeline );
+			wrapper_->commandList->SetGraphicsRootSignature( ctx_->m_RootSignature.Get() );
+
+		}
+
+	}
+
+	void CommandBuffer::cmdBeginRendering( D3D12Image* colorTex )
 	{
 		// 1. Check if rendering is already in progress
-		_ASSERT(!isRendering_);
+		_ASSERT( !isRendering_ );
 		isRendering_ = true;
 
 
 		ID3D12GraphicsCommandList4* cmdList = wrapper_->commandList.Get();
 
 		// 2. Transition to RENDER_TARGET
-		transitionToColorAttachment(cmdList, colorTex);
+		transitionToColorAttachment( cmdList, colorTex );
 
 		// 3. Setup render target description
 		D3D12_RENDER_PASS_RENDER_TARGET_DESC rtDesc = {};
@@ -135,44 +177,44 @@ namespace D3D12
 		dsDesc.StencilEndingAccess = dsDesc.DepthEndingAccess;
 
 		// 5. Begin render pass
-		cmdList->BeginRenderPass(1,
-								 &rtDesc,
-								 &dsDesc,
-								 D3D12_RENDER_PASS_FLAG_NONE);
+		cmdList->BeginRenderPass( 1,
+								  &rtDesc,
+								  &dsDesc,
+								  D3D12_RENDER_PASS_FLAG_NONE );
 
 		// 6. Set viewport and scissor
 		ViewPortState viewport = { 0.0f, 0.0f, colorTex->width_, colorTex->height_, 0.0f, 1.0f };
 		ScissorRect scissor = { 0, 0, colorTex->width_, colorTex->height_ };
-		cmdBindViewport(viewport);
-		cmdBindScissorRect(scissor);
+		cmdBindViewport( viewport );
+		cmdBindScissorRect( scissor );
 
 
 
 	}
-	void CommandBuffer::cmdBeginRendering(const RenderPass renderPass, Framebuffer& fb)
+	void CommandBuffer::cmdBeginRendering( const RenderPass renderPass, Framebuffer& fb )
 	{
 		uint32_t width = 0;
 		uint32_t height = 0;
 
 		// 1. Check if rendering is already in progress
-		_ASSERT(!isRendering_);
+		_ASSERT( !isRendering_ );
 		isRendering_ = true;
 		ID3D12GraphicsCommandList4* cmdList = wrapper_->commandList.Get();
 
-		
+
 		const uint32_t numFbColorAttachments = fb.getNumColorAttachments();
 		const uint32_t numPassColorAttachments = renderPass.getNumColorAttachments();
 
-		_ASSERT(numPassColorAttachments == numFbColorAttachments);
-		
+		_ASSERT( numPassColorAttachments == numFbColorAttachments );
+
 		auto& colorAttachment = fb.color[ 0 ].texture;
 		if( colorAttachment )
 		{
-			D3D12Image* colorTex = ctx_->slotMapTextures_.get(colorAttachment);
+			D3D12Image* colorTex = ctx_->slotMapTextures_.get( colorAttachment );
 			width = colorTex->width_;
 			height = colorTex->height_;
 		}
-		
+
 
 		//3. New structures are used to define the attachments used in dynamic rendering
 		D3D12_RENDER_PASS_RENDER_TARGET_DESC colorAttachments[ _MAX_COLOR_ATACHMENT_ ] = {};
@@ -182,12 +224,9 @@ namespace D3D12
 		{
 			if( const auto handle = fb.color[ i ].texture )
 			{
-				D3D12Image* colorTex = ctx_->slotMapTextures_.get(handle);
+				D3D12Image* colorTex = ctx_->slotMapTextures_.get( handle );
 
-				transitionToColorAttachment(cmdList, colorTex);
-
-
-
+				transitionToColorAttachment( cmdList, colorTex );
 				colorAttachments[ i ] = {
 				   .cpuDescriptor = colorTex->getRTV(),
 				   .BeginningAccess =
@@ -223,16 +262,16 @@ namespace D3D12
 			 .StencilEndingAccess = dsDesc.DepthEndingAccess };
 
 		// 5. Begin render pass
-		cmdList->BeginRenderPass(numFbColorAttachments,
-								 &colorAttachments[ 0 ],      //if you put colorAttachments, warning C6001
-								 &dsDesc,
-								 D3D12_RENDER_PASS_FLAG_NONE);
+		cmdList->BeginRenderPass( numFbColorAttachments,
+								  &colorAttachments[ 0 ],      //if you put colorAttachments, warning C6001
+								  &dsDesc,
+								  D3D12_RENDER_PASS_FLAG_NONE );
 
 		// 6. Set viewport and scissor
 		ViewPortState viewport = { 0.0f, 0.0f, width, height, 0.0f, 1.0f };
 		ScissorRect scissor = { 0, 0, width, height };
-		cmdBindViewport(viewport);
-		cmdBindScissorRect(scissor);
+		cmdBindViewport( viewport );
+		cmdBindScissorRect( scissor );
 
 
 	}
@@ -244,19 +283,19 @@ namespace D3D12
 		cmdList->EndRenderPass();
 		isRendering_ = false;
 	}
-	void CommandBuffer::cmdBindViewport(const ViewPortState& state)
+	void CommandBuffer::cmdBindViewport( const ViewPortState& state )
 	{
 
 		const  D3D12_VIEWPORT screenViewport{
-			 .TopLeftX = static_cast<float>(state.x),
-			 .TopLeftY = static_cast<float>(state.y),
-			 .Width = static_cast<float>(state.width),
-			 .Height = static_cast<float>(state.height),
-			 .MinDepth = static_cast<float>(state.minDepth),
-			 .MaxDepth = static_cast<float>(state.maxDepth)
+			 .TopLeftX = static_cast< float >(state.x),
+			 .TopLeftY = static_cast< float >(state.y),
+			 .Width = static_cast< float >(state.width),
+			 .Height = static_cast< float >(state.height),
+			 .MinDepth = static_cast< float >(state.minDepth),
+			 .MaxDepth = static_cast< float >(state.maxDepth)
 
 		};
-		wrapper_->commandList->RSSetViewports(1, &screenViewport);
+		wrapper_->commandList->RSSetViewports( 1, &screenViewport );
 
 	}
 

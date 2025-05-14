@@ -9,6 +9,7 @@
 #include "Ifnity\Graphics\Interfaces\IDevice.hpp"
 #include "Ifnity\Graphics\Interfaces\IBuffer.hpp"
 #include "Ifnity\Graphics\Interfaces\IGraphicsPipeline.hpp"
+#include "Platform\D3D12\d3d12_CommandBuffer.hpp"
 #include "Platform\D3D12\d3d12_classes.hpp"
 
 IFNITY_NAMESPACE
@@ -26,29 +27,29 @@ namespace D3D12
 	class IFNITY_API Device final: public IDevice
 	{
 	public:
-		Device(DeviceD3D12* ptr );
-	
+		Device( DeviceD3D12* ptr );
 
-	private:
 
-		void Draw(DrawDescription& desc)override {};
-		GraphicsPipelineHandle CreateGraphicsPipeline(GraphicsPipelineDescription& desc) override;
-		void WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0)override {};
-		void BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size) override {};
-		void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf)override {}; //todo abstract
-		void BindingVertexAttributesBuffer(BufferHandle& bf)override {};
-		void BindingIndexBuffer(BufferHandle& bf)override {};
+		void Draw( DrawDescription& desc )override {};
+		GraphicsPipelineHandle CreateGraphicsPipeline( GraphicsPipelineDescription& desc ) override;
+		void WriteBuffer( BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0 )override {};
+		void BindingVertexAttributes( const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size ) override {};
+		void BindingVertexIndexAttributes( const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf )override {}; //todo abstract
+		void BindingVertexAttributesBuffer( BufferHandle& bf )override;
+		void BindingIndexBuffer( BufferHandle& bf )override {};
 		BufferHandle CreateBuffer( const BufferDescription& desc ) override;
-		TextureHandle CreateTexture(TextureDescription& desc) override { return {}; }; //TODO add TextureDescripton const
-		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc) override { return {}; };;
-		MeshObjectHandle CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder) override { return {}; };
-		SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) override { return {}; };
-		MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) override { return {}; };
-		void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)override {}; //todo abstract 
-		void StartRecording() override {};
-		void StopRecording() override {};
-		void SetDepthTexture(TextureHandle texture)override {};
+		TextureHandle CreateTexture( TextureDescription& desc ) override { return {}; }; //TODO add TextureDescripton const
+		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc ) override { return {}; };;
+		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder ) override { return {}; };
+		SceneObjectHandler CreateSceneObject( const char* meshes, const char* scene, const char* materials ) override { return {}; };
+		MeshObjectHandle  CreateMeshObjectFromScene( const SceneObjectHandler& scene ) override { return {}; };
+		void DrawObject( GraphicsPipelineHandle& pipeline, DrawDescription& desc )override; //todo abstract 
+		void StartRecording() override;
+		void StopRecording() override;
+		void SetDepthTexture( TextureHandle texture )override {};
 		// Virtual destructor to ensure proper destruction of derived objects
+		void setActualPipeline( GraphicsPipeline* pipeline );
+
 
 	private:
 	   BufferHandleSM CreateInternalD3D12Buffer( const BufferDescription& desc,
@@ -60,8 +61,13 @@ namespace D3D12
 
 
 		DeviceD3D12* m_DeviceD3D12 = nullptr;       ///< Pointer to the DeviceD3D12 instance.
-		GraphicsPipelineHandleSM m_PipelineHandle; ///< Handle to the graphics pipeline.
+		GraphicsPipelineHandleSM m_PipelineHandle;	///< Handle to the graphics pipeline.
+		CommandBuffer cmdBuffer;					///< Command buffer for recording commands.
 
+		//handles
+		TextureHandleSM currentTexture_;		  ///< Handle to the current texture.
+		BufferHandleSM currentVertexBuffer_;	  ///< Handle to the current vertex buffer.
+		BufferHandleSM currentIndexBuffer_;	      ///< Handle to the current index buffer.
 		
 	};
 
@@ -78,6 +84,7 @@ namespace D3D12
 
 		BufferDescription& GetBufferDescription() override { return m_Description; }
 		const uint32_t GetBufferID() const override { return m_BufferID; }
+		const BufferHandleSM& getBufferHandleSM() const  { return m_holdBuffer; }
 		const uint64_t GetBufferGpuAddress() override { return 0; IFNITY_LOG(LogCore, WARNING, "GETBUFFERADDRES D3D12 NOT IMPLEMENTED"); };
 		void SetData(const void* data) override {};
 		const void* GetData() const { return nullptr; IFNITY_LOG(LogCore, WARNING, "GET DATA BUFFER D3D12 NOT IMPLEMENTED"); };
@@ -100,7 +107,6 @@ namespace D3D12
 		const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
 
 
-		// Getters para uso interno
 		ID3D12PipelineState* getPipelineState() const { return m_PipelineState.Get(); }
 		void  BindPipeline(struct IDevice* device) override;
 
@@ -143,6 +149,8 @@ namespace D3D12
 
 
 		friend class Device;
+		friend class DeviceD3D12;
+		friend class CommandBuffer;
 	};
 
 	//Please constructor are not safe if you dont create the construct function 

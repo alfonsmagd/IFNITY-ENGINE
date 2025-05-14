@@ -71,31 +71,31 @@ namespace D3D12
 
 	void GraphicsPipeline::BindPipeline( IDevice* device )
 	{
-		Device* vkDevice = dynamic_cast< Device* >(device);
-		IFNITY_ASSERT_MSG( vkDevice != nullptr, "Device is not a D3D12 Device" );
+		Device* d3Device = dynamic_cast< Device* >(device);
+		IFNITY_ASSERT_MSG( d3Device != nullptr, "Device is not a D3D12 Device" );
 
-		//Create the pipeline 
+		// If the pipeline state already exists, set the actual pipeline and return
 		if( m_PipelineState )
 		{
-			IFNITY_LOG( LogApp, INFO, "Pipeline craetor" );
+			IFNITY_LOG( LogApp, INFO, "Pipeline creator" );
+			d3Device->setActualPipeline( this );
 			return;
-
 		}
 
-		//Get ShaderModuleState
+		// Retrieve shader module states
 		ShaderModuleState* mvert = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderVert );
 		ShaderModuleState* mps = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderPixel );
+		IFNITY_ASSERT_MSG( mvert && mps, "Shader modules are not valid" );
 
-		////FOr now to simplify this. 
-		//auto pipeline = D3D12PipelineBuilder{}
-		//	.setVS( mvert->bytecode->GetBufferPointer(),
-		//			mvert->bytecode->GetBufferSize() )
-		//	.setPS( mps->bytecode->GetBufferPointer(),
-		//			mps->bytecode->GetBufferSize() )
-		//	.setRootSignature( m_DeviceD3D12->m_RootSignature.Get() )
-		//	.setInputLayout( m_rD3D12PipelineState.inputLayout_ )
-		//	.build( m_DeviceD3D12->m_Device.Get(),
-		//			OUT m_PipelineState.GetAddressOf() );
+		// Build the pipeline state
+		D3D12PipelineBuilder builder;
+		builder.setVS( mvert->bytecode->GetBufferPointer(), mvert->bytecode->GetBufferSize() )
+			.setPS( mps->bytecode->GetBufferPointer(), mps->bytecode->GetBufferSize() )
+			.setRootSignature( m_DeviceD3D12->m_RootSignature.Get() )
+			.setInputLayout( m_rD3D12PipelineState.inputLayout_ )
+			.build( m_DeviceD3D12->m_Device.Get(), OUT m_PipelineState.GetAddressOf() );
+
+		d3Device->setActualPipeline( this );
 
 
 
@@ -153,6 +153,77 @@ namespace D3D12
 	}
 
 
+
+	void Device::setActualPipeline( GraphicsPipeline* pipeline )
+	{
+		m_DeviceD3D12->actualPipeline_ = pipeline;
+	}
+
+
+
+	void Device::StartRecording()
+	{
+
+		D3D12::CommandBuffer& cmdb = m_DeviceD3D12->acquireCommandBuffer();
+		cmdBuffer = std::move( cmdb );
+
+		currentTexture_ = m_DeviceD3D12->getCurrentSwapChainTexture();
+
+
+		RenderPass renderPass = {
+			.color = { {.loadOp = rhi::LoadOp_Clear, .clearColor = { 1.0f, 1.0f, 1.0f, 1.0f } } } };
+
+		Framebuffer framebuffer = { .color = { {.texture = currentTexture_ } } };
+
+		//cmdBuffer.cmdBeginRendering(textback);
+		cmdBuffer.cmdBeginRendering( renderPass, framebuffer );
+
+
+	}
+
+	void Device::StopRecording()
+	{
+		cmdBuffer.cmdRenderImgui( ImGui::GetDrawData(), m_DeviceD3D12->m_CbvSrvUavHeap.Get() );
+		cmdBuffer.cmdEndRendering();
+		m_DeviceD3D12->submit( cmdBuffer, currentTexture_ );
+
+
+	}
+
+	void Device::BindingVertexAttributesBuffer( BufferHandle& bf )
+	{
+		Buffer* vBuffer = DCAST_BUFFER( bf.get() );
+		if( !vBuffer )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Failed to get D3D12 dynamic cast" );
+			return;
+		}
+
+		currentVertexBuffer_ = vBuffer->getBufferHandleSM();
+
+	}
+
+
+
+	void Device::DrawObject( GraphicsPipelineHandle& pipeline, DrawDescription& desc )
+	{
+		////Get cmdlist 
+		auto& cmdlist = cmdBuffer.wrapper_->commandList;
+
+		pipeline->BindPipeline( this );
+		//cmdlist->SetPipelineState();
+		//cmdlist->SetGraphicsRootSignature(rootSignature.Get());
+		//cmdlist->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		//cmdlist->IASetVertexBuffers(0, 1, &m_VertexBufferView);
+		//cmdlist->DrawInstanced(3, 1, 0, 0);
+
+	}
+
+
+
+
+
+
 	BufferHandle Device::CreateBuffer( const BufferDescription& desc )
 	{
 		StorageType storage = desc.storage;
@@ -194,7 +265,7 @@ namespace D3D12
 
 		Buffer* handle = new Buffer( desc, std::move( bufferHandle ) );
 
-		return BufferHandle(handle);
+		return BufferHandle( handle );
 	}
 
 	BufferHandleSM Device::CreateInternalD3D12Buffer( const BufferDescription& desc,
@@ -208,14 +279,14 @@ namespace D3D12
 		//Create the buffer
 
 		D3D12Buffer buffer = {
-			
+
 			.bufferSize_ = desc.byteSize,
 			.resourceFlags_ = resourceFlags,
 			.bufferType_ = desc.type
 		};
 
 		// Describe the buffer
-		D3D12_RESOURCE_DESC descbuff = D3D12Buffer::bufferDesc( desc.byteSize , resourceFlags, initialState );
+		D3D12_RESOURCE_DESC descbuff = D3D12Buffer::bufferDesc( desc.byteSize, resourceFlags, initialState );
 
 		if( D3D12VMA_ALLOCATOR )
 		{
@@ -241,17 +312,17 @@ namespace D3D12
 			}
 
 
-			if (heapType == D3D12_HEAP_TYPE_UPLOAD)
+			if( heapType == D3D12_HEAP_TYPE_UPLOAD )
 			{
 				void* mapped = nullptr;
-				buffer.resource_->Map(0, nullptr, &mapped);
+				buffer.resource_->Map( 0, nullptr, &mapped );
 				buffer.mappedPtr_ = mapped;
 			}
 
 		}
 
 		BufferHandleSM bufferHandle = m_DeviceD3D12->slotMapBuffers_.create( std::move( buffer ) );
-		IFNITY_ASSERT_MSG( bufferHandle.valid(), "Buffer handle is not valid");
+		IFNITY_ASSERT_MSG( bufferHandle.valid(), "Buffer handle is not valid" );
 		IFNITY_LOG( LogCore, INFO, "Buffer created: " + std::to_string( bufferHandle.index() ) );
 
 		return bufferHandle;

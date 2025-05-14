@@ -44,15 +44,21 @@ namespace D3D12
 		void cmdBindViewport(const ViewPortState& state);
 		void cmdBindScissorRect(const ScissorRect& rect);
 		void cmdRenderImgui(ImDrawData* drawData, ID3D12DescriptorHeap* pCbvSrvHeap);
+		void cmdBindVertexBuffer( BufferHandleSM& bf, uint32_t stride = 0, uint32_t offset = 0 );
+		void cmdBindRenderPipeline( GraphicsPipeline* pipeline );
 
 	private:
 		friend class DeviceD3D12;
+		friend class Device;
 
 		DeviceD3D12* ctx_ = nullptr;
 		const D3D12ImmediateCommands::CommandListWrapper* wrapper_;
 
 		SubmitHandle lastSubmitHandle_ = {};
 		//Framebuffer framebuffer_ = {};
+
+		ID3D12PipelineState* lastPipelineBound_ = nullptr;
+		GraphicsPipelineHandleSM currentPipelineGraphics_;
 
 		bool isRendering_ = false;
 

@@ -75,6 +75,8 @@ public:
 	HANDLE m_FenceEvent = nullptr;
 	D3D12::CommandBuffer currentCommandBuffer_;
 
+	D3D12::GraphicsPipeline* actualPipeline_ = nullptr;
+
 	//Descriptor Heaps
 	ComPtr<ID3D12DescriptorHeap> m_RtvHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap> m_DsvHeap = nullptr;
@@ -171,8 +173,11 @@ public:
 
 	void* Wrapper_ptr_data() override;
 	float GetAspectRatio() { return static_cast<float>(GetWidth() / GetHeight()); }
-
 	void ClearBackBuffer(float* color) override;
+
+	D3D12::TextureHandleSM getCurrentSwapChainTexture() const;
+	
+
 protected:
 	// Window attributes
 	void SetVSync(bool enabled) override;

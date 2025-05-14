@@ -257,10 +257,6 @@ public:
 		//Create the pipeline
 		m_pipeline = rdevice->CreateGraphicsPipeline(gdesc);
 
-		m_pipeline->BindPipeline( rdevice );
-
-
-
 
 		//Buffer Data 
 		VertexData triangleVertices[] =
@@ -281,22 +277,37 @@ public:
 			bufferDesc.SetByteSize( sizeof(triangleVertices));
 			bufferDesc.SetData( triangleVertices );
 			bufferDesc.SetStrideSize( sizeof( VertexData ) );
-			
+
 		}
 		m_vertexBuffer = rdevice->CreateBuffer( bufferDesc );
 
+		rdevice->BindingVertexAttributesBuffer(m_vertexBuffer);
+
+		m_pipeline->BindPipeline( rdevice );
+
+
+
+
+		
 
 
 	}
 
 	void Render() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Render App");
+		auto* rdevice = m_ManagerDevice->GetRenderDevice();
+
+
+
+
+
+
+		
 	}
 
 	void Animate() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Animate App");
+		
 	}
 
 	~Source() override {

@@ -53,11 +53,13 @@ namespace D3D12
 
 	D3D12_VERTEX_BUFFER_VIEW D3D12Buffer::getVertexBufferView(uint32_t stride_ ) const
 	{
+
+
 		IFNITY_ASSERT_MSG(bufferType_ == BufferType::VERTEX_BUFFER,"this buffer its not a vertexbuffer view");
 		return D3D12_VERTEX_BUFFER_VIEW{
 			.BufferLocation = gpuAddress_,
 			.SizeInBytes = static_cast<UINT>(bufferSize_),
-			.StrideInBytes = stride_
+			.StrideInBytes = stride_ ? stride_ : static_cast< UINT >(bufferStride_),
 		};
 
 	}

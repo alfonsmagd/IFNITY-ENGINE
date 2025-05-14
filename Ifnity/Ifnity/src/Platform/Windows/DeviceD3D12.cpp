@@ -166,6 +166,29 @@ void DeviceD3D12::ClearBackBuffer(float* color)
 	m_ClearColor = color;
 }
 
+D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture() const
+{
+	//Verify that have swapchain
+	if( !swapchain_ )
+	{
+		return {};
+	}
+	
+	D3D12::TextureHandleSM tex = swapchain_->getCurrentTexture();
+
+	if( !tex.valid() )
+	{
+		IFNITY_LOG( LogCore, ERROR, "No swapchain image acquired" );
+		return {};
+	}
+
+	auto* texptr = slotMapTextures_.get( tex );
+	IFNITY_ASSERT_MSG( texptr->format_ != DXGI_FORMAT_UNKNOWN, "Invalid image format" );
+
+	return tex;
+
+}
+
 void DeviceD3D12::SetVSync(bool enabled)
 {}
 
