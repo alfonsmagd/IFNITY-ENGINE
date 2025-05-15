@@ -9,8 +9,10 @@
 
 
 #include <pch.h>
-#include "Ifnity/Utils/SlotMap.hpp"
 #include "dxcapi.h"
+#include "Ifnity/Utils/SlotMap.hpp"
+#include "Ifnity/Utils/HolderUtils.hpp"
+
 
 #define USE_PIX //THIS FLAG WILL BE ADDED IN CMAKE  CHECKING IF PIX HAS BEEN INSTALLED IN THE SYSTEM.
 #ifdef USE_PIX
@@ -24,6 +26,8 @@
 
 IFNITY_NAMESPACE
 
+class DeviceD3D12;
+
 
 namespace D3D12
 {
@@ -31,6 +35,9 @@ namespace D3D12
 	//Variables constexpre 
 	constexpr D3D12_CPU_DESCRIPTOR_HANDLE D3D12InvalidHandle = { ~0ull };
 
+
+	template<typename Handle>
+	void destroy(DeviceD3D12* ctx, Handle handle);
 
 
 	static void DumpDebugMessages(bool enable = true)
@@ -64,14 +71,17 @@ namespace D3D12
 	}
 
 
-
-
-
 	//Using types
 	using TextureHandleSM        =  Handle<struct D3D12Image>;
 	using BufferHandleSM         =  Handle<struct D3D12Buffer>;
 	using ShaderModuleHandleSM   =  Handle<struct ShaderModuleState>;
 	using GraphicsPipelineHandleSM =  Handle<struct GraphicsPipeline>;
+
+
+
+	//Using HolderUtils 
+	using HolderBufferSM = Holder<D3D12Buffer>;
+
 
 
 	struct ShaderModuleState final 
@@ -131,6 +141,8 @@ namespace D3D12
 		D3D12_GPU_DESCRIPTOR_HANDLE gpu;
 		uint32_t                    index;
 	};
+
+	
 
 }
 IFNITY_END_NAMESPACE

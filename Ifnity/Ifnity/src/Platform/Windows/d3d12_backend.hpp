@@ -20,7 +20,7 @@ class DeviceD3D12;
 namespace D3D12
 {
 
-	
+
 	//------------------------------------------------------------------------------------//
 	//  DEVICE D3D12                                                                     //
 	//-------------------------------------------------------------------------------------//
@@ -53,11 +53,11 @@ namespace D3D12
 
 
 	private:
-	   BufferHandleSM CreateInternalD3D12Buffer( const BufferDescription& desc,
-												 D3D12_RESOURCE_FLAGS resourceFlags,
-												 D3D12_RESOURCE_STATES initialState,
-												 D3D12_HEAP_TYPE heapType,
-												 const char* debugName );
+		HolderBufferSM CreateInternalD3D12Buffer( const BufferDescription& desc,
+												  D3D12_RESOURCE_FLAGS resourceFlags,
+												  D3D12_RESOURCE_STATES initialState,
+												  D3D12_HEAP_TYPE heapType,
+												  const char* debugName );
 
 
 
@@ -69,32 +69,32 @@ namespace D3D12
 		TextureHandleSM currentTexture_;		  ///< Handle to the current texture.
 		BufferHandleSM currentVertexBuffer_;	  ///< Handle to the current vertex buffer.
 		BufferHandleSM currentIndexBuffer_;	      ///< Handle to the current index buffer.
-		
+
 	};
 
 
 	class IFNITY_API Buffer final: public IBuffer
 	{
 	public:
-		Buffer(const BufferDescription& desc): m_Description(desc) {}
-		Buffer( const BufferDescription& desc, BufferHandleSM&& handle ): m_Description( desc ),
+		Buffer( const BufferDescription& desc ): m_Description( desc ) {}
+		Buffer( const BufferDescription& desc, HolderBufferSM&& handle ): m_Description( desc ),
 			m_holdBuffer( std::move( handle ) )
 		{
-			m_BufferID = m_holdBuffer.index();
+			m_BufferID = m_holdBuffer.get()->index();
 		}
 		BufferDescription& GetBufferDescription() override { return m_Description; }
 		const uint32_t GetBufferID() const override { return m_BufferID; }
-		const BufferHandleSM& getBufferHandleSM() const  { return m_holdBuffer; }
-		BufferHandleSM& getBufferHandleSM() { return m_holdBuffer; }
-		const uint64_t GetBufferGpuAddress() override { return 0; IFNITY_LOG(LogCore, WARNING, "GETBUFFERADDRES D3D12 NOT IMPLEMENTED"); };
-		void SetData(const void* data) override {};
-		const void* GetData() const { return nullptr; IFNITY_LOG(LogCore, WARNING, "GET DATA BUFFER D3D12 NOT IMPLEMENTED"); };
+		const BufferHandleSM& getBufferHandleSM() const { return *m_holdBuffer; }
+		BufferHandleSM& getBufferHandleSM() { return *m_holdBuffer; }
+		const uint64_t GetBufferGpuAddress() override { return 0; IFNITY_LOG( LogCore, WARNING, "GETBUFFERADDRES D3D12 NOT IMPLEMENTED" ); };
+		void SetData( const void* data ) override {};
+		const void* GetData() const { return nullptr; IFNITY_LOG( LogCore, WARNING, "GET DATA BUFFER D3D12 NOT IMPLEMENTED" ); };
 
 	private:
 		uint32_t m_BufferID = 0; ///< The buffer ID.
 		mutable uint64_t m_BufferGpuAddress = 0; ///< The buffer GPU address.
 		BufferDescription m_Description; ///< The buffer description  m_holdBuffer;
-		BufferHandleSM m_holdBuffer; ///< The buffer handle.
+		HolderBufferSM m_holdBuffer; ///< The buffer handle.
 	};
 
 
@@ -103,18 +103,18 @@ namespace D3D12
 	public:
 		virtual ~GraphicsPipeline();
 
-		GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceD3D12* dev);
+		GraphicsPipeline( GraphicsPipelineDescription&& desc, DeviceD3D12* dev );
 
 		const GraphicsPipelineDescription& GetGraphicsPipelineDesc() const override { return m_Description; }
 
 
 		ID3D12PipelineState* getPipelineState() const { return m_PipelineState.Get(); }
-		void  BindPipeline(struct IDevice* device) override;
+		void  BindPipeline( struct IDevice* device ) override;
 
-		void setColorFormat(rhi::Format format) { colorFormat = format; }
-		void setDepthFormat(rhi::Format format) { depthFormat = format; }
+		void setColorFormat( rhi::Format format ) { colorFormat = format; }
+		void setDepthFormat( rhi::Format format ) { depthFormat = format; }
 
-		void SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = std::move(desc); }
+		void SetGraphicsPipelineDesc( GraphicsPipelineDescription desc ) { m_Description = std::move( desc ); }
 
 	private:
 		void configureVertexAttributes();
@@ -156,9 +156,9 @@ namespace D3D12
 
 	//Please constructor are not safe if you dont create the construct function 
 	template<typename... Args>
-	inline DeviceHandle CreateDevice(Args&&... args)
+	inline DeviceHandle CreateDevice( Args&&... args )
 	{
-		return std::make_shared<Device>(std::forward<Args>(args)...);
+		return std::make_shared<Device>( std::forward<Args>( args )... );
 	}
 
 

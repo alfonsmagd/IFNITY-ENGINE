@@ -18,11 +18,12 @@
 
 #include "Platform/D3D12/d3d12_ImmediateCommands.hpp"
 #include "Platform/D3D12/d3d12_Image.hpp"
+#include "Platform/D3D12/d3d12_Buffer.hpp"
 #include "Platform/D3D12/d3d12_classes.hpp"
 #include "Platform/D3D12/d3d12_SwapChain.hpp"
 #include "Platform/D3D12/d3d12_CommandBuffer.hpp"
-#include "Platform/D3D12/d3d12_Buffer.hpp"
 
+#include "Platform/D3D12/d3d12_classes.hpp"
 #include "d3d12_backend.hpp"
 
 
@@ -175,8 +176,12 @@ public:
 	float GetAspectRatio() { return static_cast<float>(GetWidth() / GetHeight()); }
 	void ClearBackBuffer(float* color) override;
 
+
 	D3D12::TextureHandleSM getCurrentSwapChainTexture() const;
 	
+
+	void destroy( D3D12::BufferHandleSM bufferHandle );
+
 
 protected:
 	// Window attributes

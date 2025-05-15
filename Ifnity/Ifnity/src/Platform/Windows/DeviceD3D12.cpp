@@ -13,6 +13,7 @@
 
 
 
+
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")
 IFNITY_NAMESPACE
@@ -91,7 +92,7 @@ DeviceD3D12::~DeviceD3D12()
 	}
 	m_DirectCmdListAlloc.Reset();
 	m_Fence.Reset();
-	destroy( slotMapBuffers_ );
+	//destroy( slotMapBuffers_ );
 	g_Allocator.Reset();
 	m_SwapChain.Reset();
 	m_DxgiAdapter.Reset();
@@ -190,6 +191,33 @@ D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture() const
 	IFNITY_ASSERT_MSG( texptr->format_ != DXGI_FORMAT_UNKNOWN, "Invalid image format" );
 
 	return tex;
+
+}
+
+void DeviceD3D12::destroy( D3D12::BufferHandleSM bufferHandle )
+{
+	//Check if the buffer handle is valid
+	if( !bufferHandle.valid() )
+	{
+		IFNITY_LOG( LogCore, ERROR, "Buffer handle is not valid" );
+		return;
+	}
+	//Get the buffer from the slotmap
+	D3D12::D3D12Buffer* buffer = slotMapBuffers_.getByIndex( bufferHandle.index() );
+	if( buffer->resource_ )
+	{
+		buffer->resource_->Release();
+		buffer->resource_ = nullptr;
+	}
+	if( buffer->allocation_ )
+	{
+		buffer->allocation_->Release();
+		buffer->allocation_ = nullptr;
+	}
+	//Destroy the slot 
+	slotMapBuffers_.destroy( bufferHandle );
+
+
 
 }
 

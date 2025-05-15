@@ -14,7 +14,9 @@
 #include "ShaderBuilding/ShaderBuilder.hpp"
 #include "Platform/D3D12/d3d12_constants.hpp"
 
+
 #include "D3D12MemAlloc.h"
+
 
 
 
@@ -28,7 +30,7 @@ namespace D3D12
 	//------------------------------------------------------------------------------------//
 	//  BUFFER  D3D12                                                          //
 	//-------------------------------------------------------------------------------------//
-
+	
 
 
 	//------------------------------------------------------------------------------------//
@@ -226,10 +228,10 @@ namespace D3D12
 		const RasterizationState& rasterState = pipeline->GetGraphicsPipelineDesc().rasterizationState;
 
 		pipeline->BindPipeline( this );
-		cmdBuffer.cmdBindRenderPipeline(pi);
+		cmdBuffer.cmdBindRenderPipeline( pi );
 
 		cmdBuffer.cmdSetPrimitiveTopology( rasterState.primitiveType );
-		
+
 		cmdBuffer.cmdBindVertexBuffer( currentVertexBuffer_ );
 
 		cmdBuffer.cmdDraw( desc.drawMode, 3, 1 );
@@ -261,7 +263,7 @@ namespace D3D12
 		D3D12_RESOURCE_FLAGS resourceFlags = usageInfo.resourceFlags;
 		initialState = usageInfo.initialState;
 
-		BufferHandleSM bufferHandle = CreateInternalD3D12Buffer( desc,
+		HolderBufferSM bufferHandle = CreateInternalD3D12Buffer( desc,
 																 resourceFlags,
 																 initialState,
 																 heapType,
@@ -271,7 +273,7 @@ namespace D3D12
 		if( desc.data )
 		{
 			// Upload data if the buffer description has it
-			D3D12Buffer* buffer = m_DeviceD3D12->slotMapBuffers_.getByIndex( bufferHandle.index() );
+			D3D12Buffer* buffer = m_DeviceD3D12->slotMapBuffers_.getByIndex( bufferHandle.get()->index() );
 			if( !buffer )
 			{
 				IFNITY_LOG( LogCore, ERROR, "Buffer is null to write " );
@@ -285,7 +287,7 @@ namespace D3D12
 		return BufferHandle( handle );
 	}
 
-	BufferHandleSM Device::CreateInternalD3D12Buffer( const BufferDescription& desc,
+	HolderBufferSM Device::CreateInternalD3D12Buffer( const BufferDescription& desc,
 													  D3D12_RESOURCE_FLAGS resourceFlags,
 													  D3D12_RESOURCE_STATES initialState,
 													  D3D12_HEAP_TYPE heapType,
@@ -343,7 +345,7 @@ namespace D3D12
 		IFNITY_ASSERT_MSG( bufferHandle.valid(), "Buffer handle is not valid" );
 		IFNITY_LOG( LogCore, INFO, "Buffer created: " + std::to_string( bufferHandle.index() ) );
 
-		return bufferHandle;
+		return makeHolder( m_DeviceD3D12, bufferHandle );
 
 	}
 
@@ -425,7 +427,8 @@ namespace D3D12
 
 
 
-
 }
 
 IFNITY_END_NAMESPACE
+
+
