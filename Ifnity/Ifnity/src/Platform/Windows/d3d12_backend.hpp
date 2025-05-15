@@ -28,6 +28,7 @@ namespace D3D12
 	{
 	public:
 		Device( DeviceD3D12* ptr );
+		virtual ~Device() = default;
 
 
 		void Draw( DrawDescription& desc )override {};
@@ -81,10 +82,10 @@ namespace D3D12
 		{
 			m_BufferID = m_holdBuffer.index();
 		}
-
 		BufferDescription& GetBufferDescription() override { return m_Description; }
 		const uint32_t GetBufferID() const override { return m_BufferID; }
 		const BufferHandleSM& getBufferHandleSM() const  { return m_holdBuffer; }
+		BufferHandleSM& getBufferHandleSM() { return m_holdBuffer; }
 		const uint64_t GetBufferGpuAddress() override { return 0; IFNITY_LOG(LogCore, WARNING, "GETBUFFERADDRES D3D12 NOT IMPLEMENTED"); };
 		void SetData(const void* data) override {};
 		const void* GetData() const { return nullptr; IFNITY_LOG(LogCore, WARNING, "GET DATA BUFFER D3D12 NOT IMPLEMENTED"); };

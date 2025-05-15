@@ -16,6 +16,11 @@ namespace D3D12
 
 
 
+	D3D12Buffer::~D3D12Buffer()
+	{
+		
+	}
+
 	void D3D12Buffer::bufferSubData( const DeviceD3D12& ctx, size_t offset, size_t size, const void* data )
 	{
 		// only host-visible buffers can be uploaded this way

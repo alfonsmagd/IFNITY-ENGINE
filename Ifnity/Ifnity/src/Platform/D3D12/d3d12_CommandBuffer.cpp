@@ -12,6 +12,7 @@
 
 #include "../Windows/DeviceD3D12.hpp"
 
+
 #include "Ifnity/Graphics/Interfaces/IGraphicsPipeline.hpp"
 
 IFNITY_NAMESPACE
@@ -142,6 +143,49 @@ namespace D3D12
 
 		}
 
+	}
+
+	void CommandBuffer::cmdSetPrimitiveTopology( rhi::PrimitiveType primitiveType )
+	{
+		D3D_PRIMITIVE_TOPOLOGY topology = D3D_PRIMITIVE_TOPOLOGY_UNDEFINED;
+		switch( primitiveType )
+		{
+			case rhi::PrimitiveType::TriangleList:
+				topology = D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+				break;
+			case rhi::PrimitiveType::LineList:
+				topology = D3D_PRIMITIVE_TOPOLOGY_LINELIST;
+				break;
+			case rhi::PrimitiveType::PointList:
+				topology = D3D_PRIMITIVE_TOPOLOGY_POINTLIST;
+				break;
+			default:
+				IFNITY_LOG( LogCore, ERROR, "Unsupported primitive type" );
+				break;
+		}
+		wrapper_->commandList->IASetPrimitiveTopology( topology );
+
+	}
+
+
+	void CommandBuffer::cmdDraw( DrawModeUse drawMode,
+								 uint32_t vertexCount,
+								 uint32_t instanceCount,
+								 uint32_t firstVertex,
+								 uint32_t baseInstance )
+	{
+		if( vertexCount == 0 ) return;
+
+		if( drawMode == DRAW )
+		{
+			// Dibujo sin índice
+			wrapper_->commandList->DrawInstanced(
+				vertexCount,     // VertexCountPerInstance
+				instanceCount,   // InstanceCount
+				firstVertex,     // StartVertexLocation
+				baseInstance     // StartInstanceLocation
+			);
+		}
 	}
 
 	void CommandBuffer::cmdBeginRendering( D3D12Image* colorTex )

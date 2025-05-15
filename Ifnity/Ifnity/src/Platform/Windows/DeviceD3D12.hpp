@@ -228,6 +228,7 @@ private:
 					  const ComPtr<ID3D12RootSignature>& rootSignature);
 
 	void destroy( SlotMap<D3D12::GraphicsPipeline> sm );
+	void destroy( SlotMap<D3D12::D3D12Buffer> sm );
 private:
 	DeviceHandle m_RenderDevice;
 

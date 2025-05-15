@@ -29,6 +29,10 @@ namespace D3D12
 {
 	struct D3D12Buffer final : public D3D12Descriptor
 	{
+		//Destructor
+		
+		~D3D12Buffer();
+		
 		// clang-format off
 		[[nodiscard]] inline uint8_t* getMappedPtr() const { return static_cast< uint8_t* >(mappedPtr_); }
 		[[nodiscard]] inline bool isMapped() const { return mappedPtr_ != nullptr; }

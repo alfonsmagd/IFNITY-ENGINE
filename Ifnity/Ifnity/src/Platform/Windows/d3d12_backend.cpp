@@ -25,6 +25,11 @@ IFNITY_NAMESPACE
 namespace D3D12
 {
 
+	//------------------------------------------------------------------------------------//
+	//  BUFFER  D3D12                                                          //
+	//-------------------------------------------------------------------------------------//
+
+
 
 	//------------------------------------------------------------------------------------//
 	//  GRAPHICS PIPELINE D3D12                                                          //
@@ -87,7 +92,7 @@ namespace D3D12
 		ShaderModuleState* mps = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderPixel );
 		IFNITY_ASSERT_MSG( mvert && mps, "Shader modules are not valid" );
 
-		// Build the pipeline state
+		// Build the pipeline state // for now its simple. 
 		D3D12PipelineBuilder builder;
 		builder.setVS( mvert->bytecode->GetBufferPointer(), mvert->bytecode->GetBufferSize() )
 			.setPS( mps->bytecode->GetBufferPointer(), mps->bytecode->GetBufferSize() )
@@ -124,7 +129,7 @@ namespace D3D12
 			element.InputSlot = attr.binding;
 			element.AlignedByteOffset = static_cast< UINT >(attr.offset);
 			element.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-			element.InstanceDataStepRate = 0;
+			element.InstanceDataStepRate = 0; // not supported yet.
 
 		}
 
@@ -207,15 +212,27 @@ namespace D3D12
 
 	void Device::DrawObject( GraphicsPipelineHandle& pipeline, DrawDescription& desc )
 	{
+		//Changes the DepthState like vulkan en runtime its not posible in D3D12
+		// the solution its to create differents pipelines state and only changin the PSO in runtime.
 		////Get cmdlist 
-		auto& cmdlist = cmdBuffer.wrapper_->commandList;
+		GraphicsPipeline* pi = dynamic_cast< GraphicsPipeline* >(pipeline.get());
+		if( !pi )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Failed to get D3D12 dynamic cast" );
+			return;
+		}
+
+		//Get Rasterize state 
+		const RasterizationState& rasterState = pipeline->GetGraphicsPipelineDesc().rasterizationState;
 
 		pipeline->BindPipeline( this );
-		//cmdlist->SetPipelineState();
-		//cmdlist->SetGraphicsRootSignature(rootSignature.Get());
-		//cmdlist->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		//cmdlist->IASetVertexBuffers(0, 1, &m_VertexBufferView);
-		//cmdlist->DrawInstanced(3, 1, 0, 0);
+		cmdBuffer.cmdBindRenderPipeline(pi);
+
+		cmdBuffer.cmdSetPrimitiveTopology( rasterState.primitiveType );
+		
+		cmdBuffer.cmdBindVertexBuffer( currentVertexBuffer_ );
+
+		cmdBuffer.cmdDraw( desc.drawMode, 3, 1 );
 
 	}
 
@@ -281,6 +298,7 @@ namespace D3D12
 		D3D12Buffer buffer = {
 
 			.bufferSize_ = desc.byteSize,
+			.bufferStride_ = desc.strideSize,
 			.resourceFlags_ = resourceFlags,
 			.bufferType_ = desc.type
 		};

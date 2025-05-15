@@ -297,7 +297,15 @@ public:
 	{
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
+		rdevice->StartRecording();
 
+		DrawDescription desc;
+		desc.drawMode = DRAW;
+		desc.size = 3;
+
+		rdevice->DrawObject( m_pipeline, desc );
+
+		rdevice->StopRecording();
 
 
 

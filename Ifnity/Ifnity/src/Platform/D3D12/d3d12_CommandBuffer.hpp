@@ -14,6 +14,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include "Ifnity/Graphics/ifrhi.h"
+#include "Ifnity/Graphics/Interfaces/IDevice.hpp"
 
 IFNITY_NAMESPACE
 
@@ -46,6 +47,9 @@ namespace D3D12
 		void cmdRenderImgui(ImDrawData* drawData, ID3D12DescriptorHeap* pCbvSrvHeap);
 		void cmdBindVertexBuffer( BufferHandleSM& bf, uint32_t stride = 0, uint32_t offset = 0 );
 		void cmdBindRenderPipeline( GraphicsPipeline* pipeline );
+		void cmdSetPrimitiveTopology( rhi::PrimitiveType primitiveType );
+
+		void cmdDraw(DrawModeUse drawMode, uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t baseInstance = 0);
 
 	private:
 		friend class DeviceD3D12;

@@ -91,6 +91,7 @@ DeviceD3D12::~DeviceD3D12()
 	}
 	m_DirectCmdListAlloc.Reset();
 	m_Fence.Reset();
+	destroy( slotMapBuffers_ );
 	g_Allocator.Reset();
 	m_SwapChain.Reset();
 	m_DxgiAdapter.Reset();
@@ -108,6 +109,8 @@ DeviceD3D12::~DeviceD3D12()
 
 void DeviceD3D12::OnUpdate()
 {
+	#define IFNITY_DEBUG 1
+	#ifdef IFNITY_DEBUG
 	using namespace D3D12;
 
 	// Set the viewport and scissor rect.  This needs to be reset whenever the command list is reset.
@@ -131,6 +134,7 @@ void DeviceD3D12::OnUpdate()
 	cmdBuffer.cmdEndRendering();
 	submit(cmdBuffer, currentTexture);
 
+	#endif
 
 }
 
@@ -1072,6 +1076,31 @@ void DeviceD3D12::destroy( SlotMap<D3D12::GraphicsPipeline> sm )
 {
 
 	sm.clear();
+
+}
+
+void DeviceD3D12::destroy( SlotMap<D3D12::D3D12Buffer> sm )
+{
+
+	auto ptrBuffers = sm.getAll();
+
+	//I got al ptrBuffers, ok lest destroy Buffers. 
+
+	for( auto& buffer : ptrBuffers )
+	{
+		if( buffer->resource_ )
+		{
+			buffer->resource_.Reset();
+			buffer->resource_ = nullptr;
+		}
+		if( buffer->allocation_ )
+		{
+			buffer->allocation_->Release();
+			buffer->allocation_ = nullptr;
+		}
+	}
+	sm.clear();
+	
 
 }
 

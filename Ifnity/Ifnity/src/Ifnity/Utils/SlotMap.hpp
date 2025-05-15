@@ -150,6 +150,21 @@ public:
 		freeList.clear();
 	}
 
+	std::vector<ObjectType*> getAll()
+	{
+		std::vector<ObjectType*> result;
+		result.reserve(slots.size());
+
+		for (auto& slot : slots)
+		{
+			if (slot.gen != 0)
+				result.push_back(&slot.obj);
+		}
+		return result;
+	}
+
+
+
 	uint32_t size() const { return static_cast<uint32_t>(slots.size() - freeList.size()); }
 };
 
