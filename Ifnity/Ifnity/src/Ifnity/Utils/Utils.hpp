@@ -115,3 +115,20 @@ bool compareVectors(const std::vector<T>& vec1, const std::vector<T>& vec2)
     { \
         vkDestroyDescriptorPool(device, descriptorPool, nullptr); \
     })
+
+
+
+
+
+
+#define DESTROY_D3D12_BUFFER_DEFERRED_MA(resource, allocation) \
+    std::packaged_task<void()>([resource, allocation]() mutable { \
+        if (resource) resource.Reset(); \
+        if (allocation) allocation->Release(); \
+    })
+
+
+#define DESTROY_D3D12_BUFFER_DEFERRED(resource) \
+    std::packaged_task<void()>([resource]() mutable { \
+        if (resource) resource.Reset(); \
+    })
