@@ -83,7 +83,8 @@ public:
 	ComPtr<ID3D12DescriptorHeap> m_DsvHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavHeap = nullptr;
 
-
+	//Vector Deferred Task
+	std::deque<DeferredTask<D3D12::SubmitHandle>> deferredTasks_;
 
 
 	struct DescriptorAllocator
@@ -178,8 +179,15 @@ public:
 
 
 	D3D12::TextureHandleSM getCurrentSwapChainTexture() const;
-	
 
+
+	//DeferredTask
+	void processDeferredTasks();
+	void waitDeferredTasks();
+	void addDeferredTask(std::packaged_task<void()>&& task, D3D12::SubmitHandle handle = D3D12::SubmitHandle());
+
+	
+	//Destroy Operations
 	void destroy( D3D12::BufferHandleSM bufferHandle );
 
 

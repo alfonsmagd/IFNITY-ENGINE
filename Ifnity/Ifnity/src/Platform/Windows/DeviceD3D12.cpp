@@ -23,24 +23,24 @@ void CaptureDXGIMessagesToConsole();
 
 // depuration callbackn
 // depuration callbackn
-void CALLBACK DebugMessageCallback(D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext)
+void CALLBACK DebugMessageCallback( D3D12_MESSAGE_CATEGORY Category, D3D12_MESSAGE_SEVERITY Severity, D3D12_MESSAGE_ID ID, LPCSTR pDescription, void* pContext )
 {
 	switch( Severity )
 	{
 		case D3D12_MESSAGE_SEVERITY_INFO:
-			IFNITY_LOG(LogCore, INFO, "D3D12 INFO: " + std::string(pDescription));
+			IFNITY_LOG( LogCore, INFO, "D3D12 INFO: " + std::string( pDescription ) );
 			break;
 		case D3D12_MESSAGE_SEVERITY_WARNING:
-			IFNITY_LOG(LogCore, WARNING, "D3D12 WARNING: " + std::string(pDescription));
+			IFNITY_LOG( LogCore, WARNING, "D3D12 WARNING: " + std::string( pDescription ) );
 			break;
 		case D3D12_MESSAGE_SEVERITY_ERROR:
-			IFNITY_LOG(LogCore, ERROR, "D3D12 ERROR: " + std::string(pDescription));
+			IFNITY_LOG( LogCore, ERROR, "D3D12 ERROR: " + std::string( pDescription ) );
 			break;
 		case D3D12_MESSAGE_SEVERITY_CORRUPTION:
-			IFNITY_LOG(LogCore, ERROR, "D3D12 CORRUPTION: " + std::string(pDescription));
+			IFNITY_LOG( LogCore, ERROR, "D3D12 CORRUPTION: " + std::string( pDescription ) );
 			break;
 		default:
-			IFNITY_LOG(LogCore, TRACE, "D3D12 Message: " + std::string(pDescription));
+			IFNITY_LOG( LogCore, TRACE, "D3D12 Message: " + std::string( pDescription ) );
 			break;
 	}
 }
@@ -54,9 +54,9 @@ DeviceD3D12::~DeviceD3D12()
 
 	// Salir del modo de pantalla completa si es necesario
 	BOOL fs = false;
-	ThrowIfFailed(m_SwapChain->GetFullscreenState(&fs, NULL));
+	ThrowIfFailed( m_SwapChain->GetFullscreenState( &fs, NULL ) );
 	if( fs )
-		m_SwapChain->SetFullscreenState(false, NULL);
+		m_SwapChain->SetFullscreenState( false, NULL );
 
 	// Liberar recursos en el orden correcto
 	m_VsByteCode.Reset();
@@ -69,7 +69,7 @@ DeviceD3D12::~DeviceD3D12()
 	}
 	m_PipelineState.Reset();
 	m_RootSignature.Reset();
-	CloseHandle(m_FenceEvent);
+	CloseHandle( m_FenceEvent );
 	m_CommandList.Reset();
 	commandQueue.Reset();
 	m_CbvSrvUavHeap.Reset();
@@ -92,7 +92,11 @@ DeviceD3D12::~DeviceD3D12()
 	}
 	m_DirectCmdListAlloc.Reset();
 	m_Fence.Reset();
-	//destroy( slotMapBuffers_ );
+	destroy( slotMapBuffers_ );
+
+	waitDeferredTasks();
+
+
 	g_Allocator.Reset();
 	m_SwapChain.Reset();
 	m_DxgiAdapter.Reset();
@@ -127,13 +131,13 @@ void DeviceD3D12::OnUpdate()
 	Framebuffer framebuffer = { .color = { {.texture = currentTexture } } };
 
 	//cmdBuffer.cmdBeginRendering(textback);
-	cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+	cmdBuffer.cmdBeginRendering( renderPass, framebuffer );
 	//Demo 
-	DrawElements(cmdBuffer.wrapper_->commandList.Get(), m_PipelineState, m_RootSignature);
-	cmdBuffer.cmdRenderImgui(ImGui::GetDrawData(), m_CbvSrvUavHeap.Get());
+	DrawElements( cmdBuffer.wrapper_->commandList.Get(), m_PipelineState, m_RootSignature );
+	cmdBuffer.cmdRenderImgui( ImGui::GetDrawData(), m_CbvSrvUavHeap.Get() );
 
 	cmdBuffer.cmdEndRendering();
-	submit(cmdBuffer, currentTexture);
+	submit( cmdBuffer, currentTexture );
 
 	#endif
 
@@ -142,31 +146,31 @@ void DeviceD3D12::OnUpdate()
 D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::AllocateRTV()
 {
 	auto& rtvAlloc = descriptorAllocator_.rtv;
-	IFNITY_ASSERT(rtvAlloc.nextSlot < rtvAlloc.maxSlots && "RTV Heap overflow: No more RTV descriptors available.");
+	IFNITY_ASSERT( rtvAlloc.nextSlot < rtvAlloc.maxSlots && "RTV Heap overflow: No more RTV descriptors available." );
 
 	//Check if m_RtvHeap is null
 	if( m_RtvHeap == nullptr )
 	{
-		IFNITY_LOG(LogCore, ERROR, "RTV Heap is null. Cannot allocate RTV descriptor.");
+		IFNITY_LOG( LogCore, ERROR, "RTV Heap is null. Cannot allocate RTV descriptor." );
 	}
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
-	handle.Offset(rtvAlloc.nextSlot, rtvAlloc.rtvDescriptorSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle( m_RtvHeap->GetCPUDescriptorHandleForHeapStart() );
+	handle.Offset( rtvAlloc.nextSlot, rtvAlloc.rtvDescriptorSize );
 
 	++rtvAlloc.nextSlot;
 
 	return handle;
 }
 
-void DeviceD3D12::RenderDemo(int w, int h) const
+void DeviceD3D12::RenderDemo( int w, int h ) const
 {}
 
 void* DeviceD3D12::Wrapper_ptr_data()
 {
-	return reinterpret_cast<void*>(m_CommandList.GetAddressOf());
+	return reinterpret_cast< void* >(m_CommandList.GetAddressOf());
 }
 
-void DeviceD3D12::ClearBackBuffer(float* color)
+void DeviceD3D12::ClearBackBuffer( float* color )
 {
 	m_ClearColor = color;
 }
@@ -178,7 +182,7 @@ D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture() const
 	{
 		return {};
 	}
-	
+
 	D3D12::TextureHandleSM tex = swapchain_->getCurrentTexture();
 
 	if( !tex.valid() )
@@ -194,6 +198,37 @@ D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture() const
 
 }
 
+void DeviceD3D12::processDeferredTasks()
+{
+	while( !deferredTasks_.empty() && m_ImmediateCommands->isReady( deferredTasks_.front().handle_, true ) )
+	{
+		deferredTasks_.front().task_();
+		deferredTasks_.pop_front();
+	}
+}
+
+void DeviceD3D12::waitDeferredTasks()
+{
+	for( auto& task : deferredTasks_ )
+	{
+		m_ImmediateCommands->wait( task.handle_ );
+		task.task_();
+	}
+	deferredTasks_.clear();
+}
+
+void DeviceD3D12::addDeferredTask( std::packaged_task<void()>&& task, D3D12::SubmitHandle handle )
+{
+
+	if( handle.empty() )
+	{
+		handle = m_ImmediateCommands->getNextSubmitHandle();
+
+	}
+	deferredTasks_.emplace_back( std::move( task ), handle );
+
+}
+
 void DeviceD3D12::destroy( D3D12::BufferHandleSM bufferHandle )
 {
 	//Check if the buffer handle is valid
@@ -204,24 +239,37 @@ void DeviceD3D12::destroy( D3D12::BufferHandleSM bufferHandle )
 	}
 	//Get the buffer from the slotmap
 	D3D12::D3D12Buffer* buffer = slotMapBuffers_.getByIndex( bufferHandle.index() );
-	if( buffer->resource_ )
-	{
-		buffer->resource_->Release();
-		buffer->resource_ = nullptr;
-	}
-	if( buffer->allocation_ )
-	{
-		buffer->allocation_->Release();
-		buffer->allocation_ = nullptr;
-	}
-	//Destroy the slot 
-	slotMapBuffers_.destroy( bufferHandle );
 
+	//GET last handle 
+	D3D12::SubmitHandle handle = m_ImmediateCommands->getLastSubmitHandle();
+
+	// Copias para el lambda
+	auto resource = buffer->resource_; // ComPtr, copia segura
+	auto allocation = buffer->allocation_;
+
+	if( resource || allocation )
+	{
+		addDeferredTask(
+			std::packaged_task<void()>( [ resource, allocation ]() mutable
+										{
+											if( resource ) resource.Reset();
+											if( allocation ) allocation->Release();
+										} ),
+			handle
+		);
+	}
+
+	// Invalida internamente
+	buffer->resource_.Reset();
+	buffer->allocation_ = nullptr;
+
+	// Elimina del slotmap
+	slotMapBuffers_.destroy( bufferHandle );
 
 
 }
 
-void DeviceD3D12::SetVSync(bool enabled)
+void DeviceD3D12::SetVSync( bool enabled )
 {}
 
 bool DeviceD3D12::IsVSync() const
@@ -237,10 +285,10 @@ bool DeviceD3D12::InitInternalInstance()
 	if( m_DeviceParams.enableDebugRuntime )
 	{
 		ComPtr<ID3D12Debug> debugController;
-		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(OUT & debugController)));
+		ThrowIfFailed( D3D12GetDebugInterface( IID_PPV_ARGS( OUT & debugController ) ) );
 		debugController->EnableDebugLayer();
 		debugFlags = DXGI_CREATE_FACTORY_DEBUG;
-		IFNITY_LOG(LogCore, TRACE, "Enable Debug Layer D3D12");
+		IFNITY_LOG( LogCore, TRACE, "Enable Debug Layer D3D12" );
 
 		ReportLiveObjects();
 		#if defined(_DEBUG)
@@ -251,11 +299,11 @@ bool DeviceD3D12::InitInternalInstance()
 	//Build the DXGI Factory
 	if( !dxgiFactory4 )
 	{
-		HRESULT hres = CreateDXGIFactory2(debugFlags, IID_PPV_ARGS(OUT & dxgiFactory4));
+		HRESULT hres = CreateDXGIFactory2( debugFlags, IID_PPV_ARGS( OUT & dxgiFactory4 ) );
 		if( hres != S_OK )
 		{
-			IFNITY_LOG(LogCore, ERROR, "ERROR in CreateDXGIFactory2.\n"
-					   "For more info, get log from debug D3D runtime: (1) Install DX SDK, and enable Debug D3D from DX Control Panel Utility. (2) Install and start DbgView. (3) Try running the program again.\n");
+			IFNITY_LOG( LogCore, ERROR, "ERROR in CreateDXGIFactory2.\n"
+						"For more info, get log from debug D3D runtime: (1) Install DX SDK, and enable Debug D3D from DX Control Panel Utility. (2) Install and start DbgView. (3) Try running the program again.\n" );
 			return false;
 		}
 	}
@@ -264,7 +312,7 @@ bool DeviceD3D12::InitInternalInstance()
 }
 bool DeviceD3D12::ConfigureSpecificHintsGLFW() const
 {
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	glfwWindowHint( GLFW_CLIENT_API, GLFW_NO_API );
 
 	return true;
 
@@ -275,10 +323,10 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	int adapterIndex = 0;
 	//Enumerate the adapters and select the first one, normally the primary adapter is Hardware Device.
-	if( FAILED(dxgiFactory4->EnumAdapters(adapterIndex, OUT & m_DxgiAdapter)) )
+	if( FAILED( dxgiFactory4->EnumAdapters( adapterIndex, OUT & m_DxgiAdapter ) ) )
 	{
 		if( adapterIndex == 0 )
-			IFNITY_LOG(LogCore, ERROR, "Cannot find any DXGI adapters in the system. D3D12");
+			IFNITY_LOG( LogCore, ERROR, "Cannot find any DXGI adapters in the system. D3D12" );
 		else
 			//IFNITY_LOG(LogCore, ERROR, "The specified DXGI adapter %d does not exist. D3D12", adapterIndex);
 
@@ -287,28 +335,28 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	{
 		DXGI_ADAPTER_DESC aDesc;
-		m_DxgiAdapter->GetDesc(&aDesc);
-		m_IsNvidia = rhi::IsNvDeviceID(aDesc.VendorId);
+		m_DxgiAdapter->GetDesc( &aDesc );
+		m_IsNvidia = rhi::IsNvDeviceID( aDesc.VendorId );
 	}
 
 	//Create the D3D12 device
 	HRESULT result = D3D12CreateDevice(
 		IN m_DxgiAdapter.Get(),
 		IN m_DeviceParams.featureLevel,
-		IID_PPV_ARGS(OUT & m_Device));
+		IID_PPV_ARGS( OUT & m_Device ) );
 
 
 
 	// Fallback to WARP device.
-	if( FAILED(result) )
+	if( FAILED( result ) )
 	{
 		ComPtr<IDXGIAdapter> pWarpAdapter;
-		ThrowIfFailed(dxgiFactory4->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
+		ThrowIfFailed( dxgiFactory4->EnumWarpAdapter( IID_PPV_ARGS( &pWarpAdapter ) ) );
 
-		ThrowIfFailed(D3D12CreateDevice(
+		ThrowIfFailed( D3D12CreateDevice(
 			IN pWarpAdapter.Get(),
 			IN D3D_FEATURE_LEVEL_11_0,
-			IID_PPV_ARGS(OUT & m_Device)));
+			IID_PPV_ARGS( OUT & m_Device ) ) );
 	}
 
 	{
@@ -325,22 +373,22 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 			 desc.pAllocationCallbacks = &g_AllocationCallbacks;
 		 }*/
 
-		ThrowIfFailed(D3D12MA::CreateAllocator(&desc, &g_Allocator));
+		ThrowIfFailed( D3D12MA::CreateAllocator( &desc, &g_Allocator ) );
 	}
 
 	//Check if the debug layer when is enabled
 	if( m_DeviceParams.enableDebugRuntime )
 	{
 		ComPtr<ID3D12InfoQueue> pInfoQueue;
-		m_Device->QueryInterface(IID_PPV_ARGS(OUT & pInfoQueue));
+		m_Device->QueryInterface( IID_PPV_ARGS( OUT & pInfoQueue ) );
 
 		if( pInfoQueue )
 		{
 			#ifdef _DEBUG
-			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, true);
-			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, true);
-			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
-			pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_INFO, true);
+			pInfoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_CORRUPTION, true );
+			pInfoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_ERROR, true );
+			pInfoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_WARNING, true );
+			pInfoQueue->SetBreakOnSeverity( D3D12_MESSAGE_SEVERITY_INFO, true );
 
 			#endif
 
@@ -351,17 +399,17 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 			D3D12_INFO_QUEUE_FILTER filter = {};
 			filter.DenyList.pIDList = disableMessageIDs;
-			filter.DenyList.NumIDs = sizeof(disableMessageIDs) / sizeof(disableMessageIDs[ 0 ]);
-			pInfoQueue->AddStorageFilterEntries(&filter);
+			filter.DenyList.NumIDs = sizeof( disableMessageIDs ) / sizeof( disableMessageIDs[ 0 ] );
+			pInfoQueue->AddStorageFilterEntries( &filter );
 		}
 
 
 		ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
-		if( SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiInfoQueue))) )
+		if( SUCCEEDED( DXGIGetDebugInterface1( 0, IID_PPV_ARGS( &dxgiInfoQueue ) ) ) )
 		{
-			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE);
-			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, TRUE);
-			dxgiInfoQueue->SetBreakOnSeverity(DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING, TRUE);
+			dxgiInfoQueue->SetBreakOnSeverity( DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR, TRUE );
+			dxgiInfoQueue->SetBreakOnSeverity( DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION, TRUE );
+			dxgiInfoQueue->SetBreakOnSeverity( DXGI_DEBUG_ALL, DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING, TRUE );
 		}
 
 	}
@@ -386,7 +434,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	CaptureD3D12DebugMessages();
 
 	//Ok try to create the DeviceHandle 
-	m_RenderDevice = D3D12::CreateDevice(this);
+	m_RenderDevice = D3D12::CreateDevice( this );
 
 	return true;
 }
@@ -402,12 +450,12 @@ void DeviceD3D12::InitializeGui()
 
 	//
 	//Initialize ImGui D3D12
-	ImGui_ImplDX12_Init(m_Device.Get(),
-						D3D12::D3D12ImmediateCommands::kMaxCommandBuffers,
-						m_BackBufferFormat,
-						m_CbvSrvUavHeap.Get(),
-						m_CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(),
-						m_CbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart());
+	ImGui_ImplDX12_Init( m_Device.Get(),
+						 D3D12::D3D12ImmediateCommands::kMaxCommandBuffers,
+						 m_BackBufferFormat,
+						 m_CbvSrvUavHeap.Get(),
+						 m_CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(),
+						 m_CbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart() );
 
 
 
@@ -423,27 +471,27 @@ void DeviceD3D12::LogAdaptersD3D12()
 	UINT i = 0;
 	IDXGIAdapter* adapter = nullptr;
 	std::vector<IDXGIAdapter*> adapterList;
-	while( dxgiFactory4->EnumAdapters(i, &adapter) != DXGI_ERROR_NOT_FOUND )
+	while( dxgiFactory4->EnumAdapters( i, &adapter ) != DXGI_ERROR_NOT_FOUND )
 	{
 		DXGI_ADAPTER_DESC desc;
-		adapter->GetDesc(&desc);
+		adapter->GetDesc( &desc );
 		std::wstring text = L"Adapter: ";
 		text += desc.Description;
 		text += L"\n";
-		OutputDebugString(text.c_str());
-		adapterList.push_back(adapter);
+		OutputDebugString( text.c_str() );
+		adapterList.push_back( adapter );
 		++i;
 	}
 	for( size_t i = 0; i < adapterList.size(); ++i )
 	{
 		DXGI_ADAPTER_DESC desc;
-		adapterList[ i ]->GetDesc(&desc);
+		adapterList[ i ]->GetDesc( &desc );
 		std::wstring adapterDescription = desc.Description;
 		//Transform wstrint to string. Fix non void pointer error.
-		std::string adapterDescriptionStr(adapterDescription.begin(), adapterDescription.end());
-		m_IsNvidia = rhi::IsNvDeviceID(desc.VendorId);
+		std::string adapterDescriptionStr( adapterDescription.begin(), adapterDescription.end() );
+		m_IsNvidia = rhi::IsNvDeviceID( desc.VendorId );
 
-		IFNITY_LOG(LogCore, INFO, "Adapter Description  " + adapterDescriptionStr + "  N Adapter :  " + std::to_string(i));
+		IFNITY_LOG( LogCore, INFO, "Adapter Description  " + adapterDescriptionStr + "  N Adapter :  " + std::to_string( i ) );
 		adapterList[ i ]->Release();
 	}
 
@@ -453,11 +501,11 @@ void DeviceD3D12::LogAdaptersD3D12()
 void DeviceD3D12::CreateFenceAndDescriptorSizes()
 {
 	// Create Fence.
-	ThrowIfFailed(m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(OUT & m_Fence)));
+	ThrowIfFailed( m_Device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS( OUT & m_Fence ) ) );
 
-	m_DescritporSizes.Rtv = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	m_DescritporSizes.Dsv = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-	m_DescritporSizes.CbvSrvUav = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_DescritporSizes.Rtv = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
+	m_DescritporSizes.Dsv = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_DSV );
+	m_DescritporSizes.CbvSrvUav = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
 	//Fill descritpor allocator
 	descriptorAllocator_.rtv.rtvDescriptorSize = m_DescritporSizes.Rtv;
@@ -466,7 +514,7 @@ void DeviceD3D12::CreateFenceAndDescriptorSizes()
 
 }
 
-UINT DeviceD3D12::CheckMSAAQualitySupport(UINT SampleCount, DXGI_FORMAT format)
+UINT DeviceD3D12::CheckMSAAQualitySupport( UINT SampleCount, DXGI_FORMAT format )
 {
 	// Check SampleCountX MSAA quality support for our back buffer format.
 	// All Direct3D 11 capable devices support 4X MSAA for all render 
@@ -477,28 +525,28 @@ UINT DeviceD3D12::CheckMSAAQualitySupport(UINT SampleCount, DXGI_FORMAT format)
 	msQualityLevels.SampleCount = SampleCount;
 	msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
 	msQualityLevels.NumQualityLevels = 0;
-	ThrowIfFailed(m_Device->CheckFeatureSupport(
+	ThrowIfFailed( m_Device->CheckFeatureSupport(
 		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
 		OUT & msQualityLevels,
-		sizeof(msQualityLevels)));
+		sizeof( msQualityLevels ) ) );
 
-	assert(msQualityLevels.NumQualityLevels > 0 && "Unexpected MSAA quality level.");
-	IFNITY_LOG(LogCore, INFO, "MSAA Quality Level: " + std::to_string(msQualityLevels.NumQualityLevels));
+	assert( msQualityLevels.NumQualityLevels > 0 && "Unexpected MSAA quality level." );
+	IFNITY_LOG( LogCore, INFO, "MSAA Quality Level: " + std::to_string( msQualityLevels.NumQualityLevels ) );
 
 	return msQualityLevels.NumQualityLevels;
 }
 bool DeviceD3D12::CreateSwapChain()
 {
 	// Obtener el handle de la ventana desde GLFW
-	m_hWnd = glfwGetWin32Window(m_Window);
+	m_hWnd = glfwGetWin32Window( m_Window );
 
 	if( !m_hWnd )
 	{
-		IFNITY_LOG(LogCore, ERROR, "Failed to get window handle from GLFW.");
+		IFNITY_LOG( LogCore, ERROR, "Failed to get window handle from GLFW." );
 		return false;
 	}
 	//Create the swap chain.
-	swapchain_ = std::make_unique<D3D12::D3D12Swapchain>(*this, m_hWnd, GetWidth(), GetHeight());
+	swapchain_ = std::make_unique<D3D12::D3D12Swapchain>( *this, m_hWnd, GetWidth(), GetHeight() );
 
 	m_SwapChain = swapchain_->getSwapchain();
 
@@ -552,7 +600,7 @@ bool DeviceD3D12::CreateSwapChain()
 
 
 
-	OutputDebugString(L"SwapChain Created\n");
+	OutputDebugString( L"SwapChain Created\n" );
 	return true;
 
 
@@ -564,18 +612,18 @@ void DeviceD3D12::CreateCommandQueue()
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;  // Direct command list can execute all grapchis commands.
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	ThrowIfFailed(m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&commandQueue)));
+	ThrowIfFailed( m_Device->CreateCommandQueue( &queueDesc, IID_PPV_ARGS( &commandQueue ) ) );
 
-	ThrowIfFailed(m_Device->CreateCommandAllocator(
+	ThrowIfFailed( m_Device->CreateCommandAllocator(
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
-		IID_PPV_ARGS(m_DirectCmdListAlloc.GetAddressOf())));
+		IID_PPV_ARGS( m_DirectCmdListAlloc.GetAddressOf() ) ) );
 
-	ThrowIfFailed(m_Device->CreateCommandList(
+	ThrowIfFailed( m_Device->CreateCommandList(
 		0,
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		m_DirectCmdListAlloc.Get(),
 		nullptr,
-		IID_PPV_ARGS(m_CommandList.GetAddressOf())));
+		IID_PPV_ARGS( m_CommandList.GetAddressOf() ) ) );
 
 	m_CommandList->Close();
 
@@ -586,11 +634,11 @@ void DeviceD3D12::CreateImmediateCommands()
 	if( commandQueue )
 	{
 		//m_ImmediateCommands = std::make_unique<D3D12::D3D12ImmediateCommands>();
-		m_ImmediateCommands = std::make_unique<D3D12::D3D12ImmediateCommands>(m_Device.Get(), commandQueue.Get());
+		m_ImmediateCommands = std::make_unique<D3D12::D3D12ImmediateCommands>( m_Device.Get(), commandQueue.Get() );
 	}
 	else
 	{
-		IFNITY_LOG(LogCore, ERROR, "Command Queue is not created yet.");
+		IFNITY_LOG( LogCore, ERROR, "Command Queue is not created yet." );
 	}
 
 
@@ -603,33 +651,33 @@ void DeviceD3D12::CaptureD3D12DebugMessages() const
 	if( m_DeviceParams.enableDebugRuntime )
 	{
 		ComPtr<ID3D12InfoQueue> pInfoQueue;
-		if( SUCCEEDED(m_Device->QueryInterface(IID_PPV_ARGS(&pInfoQueue))) )
+		if( SUCCEEDED( m_Device->QueryInterface( IID_PPV_ARGS( &pInfoQueue ) ) ) )
 		{
 			UINT64 messageCount = pInfoQueue->GetNumStoredMessagesAllowedByRetrievalFilter();
 			for( UINT64 i = 0; i < messageCount; ++i )
 			{
 				SIZE_T messageLength = 0;
-				pInfoQueue->GetMessage(i, nullptr, &messageLength);
-				std::vector<char> messageData(messageLength);
-				D3D12_MESSAGE* pMessage = reinterpret_cast<D3D12_MESSAGE*>(messageData.data());
-				pInfoQueue->GetMessage(i, pMessage, &messageLength);
+				pInfoQueue->GetMessage( i, nullptr, &messageLength );
+				std::vector<char> messageData( messageLength );
+				D3D12_MESSAGE* pMessage = reinterpret_cast< D3D12_MESSAGE* >( messageData.data() );
+				pInfoQueue->GetMessage( i, pMessage, &messageLength );
 
 				switch( pMessage->Severity )
 				{
 					case D3D12_MESSAGE_SEVERITY_INFO:
-						IFNITY_LOG(LogCore, INFO, "D3D12 INFO: " + std::string(pMessage->pDescription));
+						IFNITY_LOG( LogCore, INFO, "D3D12 INFO: " + std::string( pMessage->pDescription ) );
 						break;
 					case D3D12_MESSAGE_SEVERITY_WARNING:
-						IFNITY_LOG(LogCore, WARNING, "D3D12 WARNING: " + std::string(pMessage->pDescription));
+						IFNITY_LOG( LogCore, WARNING, "D3D12 WARNING: " + std::string( pMessage->pDescription ) );
 						break;
 					case D3D12_MESSAGE_SEVERITY_ERROR:
-						IFNITY_LOG(LogCore, ERROR, "D3D12 ERROR: " + std::string(pMessage->pDescription));
+						IFNITY_LOG( LogCore, ERROR, "D3D12 ERROR: " + std::string( pMessage->pDescription ) );
 						break;
 					case D3D12_MESSAGE_SEVERITY_CORRUPTION:
-						IFNITY_LOG(LogCore, ERROR, "D3D12 CORRUPTION: " + std::string(pMessage->pDescription));
+						IFNITY_LOG( LogCore, ERROR, "D3D12 CORRUPTION: " + std::string( pMessage->pDescription ) );
 						break;
 					default:
-						IFNITY_LOG(LogCore, TRACE, "D3D12 Message: " + std::string(pMessage->pDescription));
+						IFNITY_LOG( LogCore, TRACE, "D3D12 Message: " + std::string( pMessage->pDescription ) );
 						break;
 				}
 			}
@@ -676,9 +724,9 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
-	ThrowIfFailed(m_Device->CreateDescriptorHeap(
+	ThrowIfFailed( m_Device->CreateDescriptorHeap(
 		&rtvHeapDesc,
-		IID_PPV_ARGS(OUT m_RtvHeap.GetAddressOf())));
+		IID_PPV_ARGS( OUT m_RtvHeap.GetAddressOf() ) ) );
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
@@ -686,9 +734,9 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask = 0;
-	ThrowIfFailed(m_Device->CreateDescriptorHeap(
+	ThrowIfFailed( m_Device->CreateDescriptorHeap(
 		&dsvHeapDesc,
-		IID_PPV_ARGS(OUT m_DsvHeap.GetAddressOf())));
+		IID_PPV_ARGS( OUT m_DsvHeap.GetAddressOf() ) ) );
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
@@ -696,7 +744,7 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	desc.NumDescriptors = 1;
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	desc.NodeMask = 0;
-	ThrowIfFailed(m_Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(OUT m_CbvSrvUavHeap.GetAddressOf())));
+	ThrowIfFailed( m_Device->CreateDescriptorHeap( &desc, IID_PPV_ARGS( OUT m_CbvSrvUavHeap.GetAddressOf() ) ) );
 
 
 }
@@ -704,9 +752,9 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 void DeviceD3D12::OnResize()
 {
 	//Asserts differents conditions about members in D3D12Device.
-	assert(m_Device);
-	assert(m_SwapChain);
-	assert(m_CommandList);
+	assert( m_Device );
+	assert( m_SwapChain );
+	assert( m_CommandList );
 
 
 	//Allocator desc creation. 
@@ -717,7 +765,7 @@ void DeviceD3D12::OnResize()
 	//Ensure the command list is in a clean state before recording new commands.
 	//Properly synchronize with the GPU to avoid overwriting commands that have not yet been executed.
 	//ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), m_PipelineState.Get()));
-	cmd.commandList->SetPipelineState(m_PipelineState.Get());
+	cmd.commandList->SetPipelineState( m_PipelineState.Get() );
 
 	UINT64 width, height;
 	//TODO : Check if the width and height are greater than 0.
@@ -810,14 +858,14 @@ void DeviceD3D12::OnResize()
 
 
 
-	ThrowIfFailed(g_Allocator->CreateResource(
+	ThrowIfFailed( g_Allocator->CreateResource(
 		&depthStencilAllocDesc,
 		&depthStencilResourceDesc,
 		D3D12_RESOURCE_STATE_COMMON,
 		&optClear,
 		&m_DepthStencilAllocation,
-		IID_PPV_ARGS(m_DepthStencilBuffer.GetAddressOf())
-	));
+		IID_PPV_ARGS( m_DepthStencilBuffer.GetAddressOf() )
+	) );
 
 
 
@@ -837,7 +885,7 @@ void DeviceD3D12::OnResize()
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Format = m_DepthStencilFormat;
 	dsvDesc.Texture2D.MipSlice = 0;
-	m_Device->CreateDepthStencilView(m_DepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
+	m_Device->CreateDepthStencilView( m_DepthStencilBuffer.Get(), &dsvDesc, DepthStencilView() );
 
 
 	//// Transition the resource from its initial state to be used as a depth buffer.
@@ -845,14 +893,14 @@ void DeviceD3D12::OnResize()
 	//	D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
 	  // Transition the resource from its initial state to be used as a depth buffer.
-	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-														D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
-	cmd.commandList->ResourceBarrier(1, &barrier);
+	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition( m_DepthStencilBuffer.Get(),
+														 D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE );
+	cmd.commandList->ResourceBarrier( 1, &barrier );
 	// Execute the resize commands.
 	/*ThrowIfFailed(m_CommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { m_CommandList.Get() };
 	m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);*/
-	m_ImmediateCommands->submit(cmd);
+	m_ImmediateCommands->submit( cmd );
 
 
 
@@ -860,18 +908,18 @@ void DeviceD3D12::OnResize()
 	// Update the viewport transform to cover the client area.
 	m_ScreenViewport.TopLeftX = 0;
 	m_ScreenViewport.TopLeftY = 0;
-	m_ScreenViewport.Width = static_cast<float>(width);
-	m_ScreenViewport.Height = static_cast<float>(height);
+	m_ScreenViewport.Width = static_cast< float >(width);
+	m_ScreenViewport.Height = static_cast< float >(height);
 	m_ScreenViewport.MinDepth = 0.0f;
 	m_ScreenViewport.MaxDepth = 1.0f;
 
-	m_ScissorRect = { 0, 0, static_cast<int>(width), static_cast<int>(height) };
+	m_ScissorRect = { 0, 0, static_cast< int >(width), static_cast< int >(height) };
 
 	//ThrowIfFailed(m_DirectCmdListAlloc->Reset());
 
 	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
 	// Reusing the command list reuses memory.
-	ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), nullptr));
+	ThrowIfFailed( m_CommandList->Reset( m_DirectCmdListAlloc.Get(), nullptr ) );
 
 	//m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
 
@@ -887,19 +935,19 @@ void DeviceD3D12::FlushCommandQueue()
 	// Add an instruction to the command queue to set a new fence point.  Because we 
 	// are on the GPU timeline, the new fence point wont be set until the GPU finishes
 	// processing all the commands prior to this Signal().
-	ThrowIfFailed(commandQueue->Signal(m_Fence.Get(), m_CurrentFence));
+	ThrowIfFailed( commandQueue->Signal( m_Fence.Get(), m_CurrentFence ) );
 
 	// Wait until the GPU has completed commands up to this fence point.
 	if( m_Fence->GetCompletedValue() < m_CurrentFence )
 	{
-		HANDLE eventHandle = CreateEventEx(nullptr, nullptr, false, EVENT_ALL_ACCESS);
+		HANDLE eventHandle = CreateEventEx( nullptr, nullptr, false, EVENT_ALL_ACCESS );
 
 		// Fire event when GPU hits current fence.  
-		ThrowIfFailed(m_Fence->SetEventOnCompletion(m_CurrentFence, eventHandle));
+		ThrowIfFailed( m_Fence->SetEventOnCompletion( m_CurrentFence, eventHandle ) );
 
 		// Wait until the GPU hits current fence event is fired.
-		WaitForSingleObject(eventHandle, INFINITE);
-		CloseHandle(eventHandle);
+		WaitForSingleObject( eventHandle, INFINITE );
+		CloseHandle( eventHandle );
 	}
 }
 
@@ -915,23 +963,23 @@ void DeviceD3D12::BuildRootSignature()
 		//Describe and create a root signature. The root signature describes the data an HLSL shader expects. AND
 		//D3D12_ROOT_SIGNATURE_DESC: can use input shader layout .
 		CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-		rootSignatureDesc.Init(0,
-							   nullptr,
-							   0,
-							   nullptr,
-							   D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+		rootSignatureDesc.Init( 0,
+								nullptr,
+								0,
+								nullptr,
+								D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT );
 
 		ComPtr<ID3DBlob> signature;
 		ComPtr<ID3DBlob> error;
 
-		ThrowIfFailed(D3D12SerializeRootSignature(IN & rootSignatureDesc,
-												  D3D_ROOT_SIGNATURE_VERSION_1,
-												  OUT & signature, OUT & error));
+		ThrowIfFailed( D3D12SerializeRootSignature( IN & rootSignatureDesc,
+													D3D_ROOT_SIGNATURE_VERSION_1,
+													OUT & signature, OUT & error ) );
 
-		ThrowIfFailed(m_Device->CreateRootSignature(0,
-													signature->GetBufferPointer(),
-													signature->GetBufferSize(),
-													IID_PPV_ARGS(OUT & m_RootSignature)));
+		ThrowIfFailed( m_Device->CreateRootSignature( 0,
+													  signature->GetBufferPointer(),
+													  signature->GetBufferSize(),
+													  IID_PPV_ARGS( OUT & m_RootSignature ) ) );
 
 
 
@@ -952,15 +1000,15 @@ void DeviceD3D12::BuildShadersAndInputLayout()
 	HRESULT hr = S_OK;
 
 
-	
+
 
 
 
 	/*m_VsByteCode = CompileShader(L"Shaders\\shaders.hlsl", nullptr, "VSMain", "vs_5_0");
 	m_PsByteCode = CompileShader(L"Shaders\\shaders.hlsl", nullptr, "PSMain", "ps_5_0");*/
 
-	m_VsByteCode = ShaderCompiler::GetBlobFromFile("Shaders\\d3d12\\triangle.hlsl_vs.cso");
-	m_PsByteCode = ShaderCompiler::GetBlobFromFile("Shaders\\d3d12\\triangle.hlsl_ps.cso");
+	m_VsByteCode = ShaderCompiler::GetBlobFromFile( "Shaders\\d3d12\\triangle.hlsl_vs.cso" );
+	m_PsByteCode = ShaderCompiler::GetBlobFromFile( "Shaders\\d3d12\\triangle.hlsl_ps.cso" );
 
 	m_InputLayout =
 	{
@@ -974,8 +1022,8 @@ void DeviceD3D12::BuildShadersAndInputLayout()
 void DeviceD3D12::BuildPipelineStage()
 {
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc;
-	ZeroMemory(&psoDesc, sizeof(D3D12_GRAPHICS_PIPELINE_STATE_DESC));
-	psoDesc.InputLayout = { m_InputLayout.data(), (UINT)m_InputLayout.size() };
+	ZeroMemory( &psoDesc, sizeof( D3D12_GRAPHICS_PIPELINE_STATE_DESC ) );
+	psoDesc.InputLayout = { m_InputLayout.data(), ( UINT )m_InputLayout.size() };
 	psoDesc.pRootSignature = m_RootSignature.Get();
 	psoDesc.VS =
 	{
@@ -984,21 +1032,21 @@ void DeviceD3D12::BuildPipelineStage()
 	};
 	psoDesc.PS =
 	{
-		reinterpret_cast<BYTE*>(m_PsByteCode->GetBufferPointer()),
+		reinterpret_cast< BYTE* >(m_PsByteCode->GetBufferPointer()),
 		m_PsByteCode->GetBufferSize()
 	};
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC( D3D12_DEFAULT );
+	psoDesc.BlendState = CD3DX12_BLEND_DESC( D3D12_DEFAULT );
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC( D3D12_DEFAULT );
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[ 0 ] = m_BackBufferFormat;
 	psoDesc.DSVFormat = m_DepthStencilFormat;
 	psoDesc.SampleDesc.Count = m_MsaaState ? 4 : 1; // Activate MSSA 4X , by default is false. 												   
-	psoDesc.SampleDesc.Quality = CheckMSAAQualitySupport(psoDesc.SampleDesc.Count,
-														 m_BackBufferFormat) - 1; // Its importa													to substract 1 because the quality level is 0 based.
-	ThrowIfFailed(m_Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_PipelineState)));
+	psoDesc.SampleDesc.Quality = CheckMSAAQualitySupport( psoDesc.SampleDesc.Count,
+														  m_BackBufferFormat ) - 1; // Its importa													to substract 1 because the quality level is 0 based.
+	ThrowIfFailed( m_Device->CreateGraphicsPipelineState( &psoDesc, IID_PPV_ARGS( &m_PipelineState ) ) );
 
 
 	// Create the vertex buffer.
@@ -1011,7 +1059,7 @@ void DeviceD3D12::BuildPipelineStage()
 			{ { 0.5f, -0.5f , 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
 		};
 
-		const UINT vertexBufferSize = sizeof(triangleVertices);
+		const UINT vertexBufferSize = sizeof( triangleVertices );
 
 		// Note: using upload heaps to transfer static data like vert buffers is not 
 		// recommended. Every time the GPU needs it, the upload heap will be marshalled 
@@ -1027,30 +1075,30 @@ void DeviceD3D12::BuildPipelineStage()
 		D3D12MA::ALLOCATION_DESC vertexBufferAllocDesc = {};
 		vertexBufferAllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
 
-		D3D12_RESOURCE_DESC vertexBufferResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize);
+		D3D12_RESOURCE_DESC vertexBufferResourceDesc = CD3DX12_RESOURCE_DESC::Buffer( vertexBufferSize );
 
-		ThrowIfFailed(g_Allocator->CreateResource(
+		ThrowIfFailed( g_Allocator->CreateResource(
 			&vertexBufferAllocDesc,
 			&vertexBufferResourceDesc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
 			&m_VertexBufferAllocation,
-			IID_PPV_ARGS(m_VertexBuffer.GetAddressOf())
-		));
+			IID_PPV_ARGS( m_VertexBuffer.GetAddressOf() )
+		) );
 
-		ThrowIfFailed(m_VertexBuffer->SetName(L"Vertex Buffer Resource Heap"));
-		m_VertexBufferAllocation->SetName(L"Vertex Buffer Allocation");
+		ThrowIfFailed( m_VertexBuffer->SetName( L"Vertex Buffer Resource Heap" ) );
+		m_VertexBufferAllocation->SetName( L"Vertex Buffer Allocation" );
 
 		// Copy the triangle data to the vertex buffer.
 		UINT8* pVertexDataBegin;
-		CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-		ThrowIfFailed(m_VertexBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pVertexDataBegin)));
-		memcpy(pVertexDataBegin, triangleVertices, sizeof(triangleVertices));
-		m_VertexBuffer->Unmap(0, nullptr);
+		CD3DX12_RANGE readRange( 0, 0 );        // We do not intend to read from this resource on the CPU.
+		ThrowIfFailed( m_VertexBuffer->Map( 0, &readRange, reinterpret_cast< void** >(&pVertexDataBegin) ) );
+		memcpy( pVertexDataBegin, triangleVertices, sizeof( triangleVertices ) );
+		m_VertexBuffer->Unmap( 0, nullptr );
 
 		// Initialize the vertex buffer view.
 		m_VertexBufferView.BufferLocation = m_VertexBuffer->GetGPUVirtualAddress();
-		m_VertexBufferView.StrideInBytes = sizeof(Vertex);
+		m_VertexBufferView.StrideInBytes = sizeof( Vertex );
 		m_VertexBufferView.SizeInBytes = vertexBufferSize;
 
 		//FlushCommandQueue();
@@ -1063,37 +1111,37 @@ void DeviceD3D12::ReportLiveObjects() const
 	ComPtr<IDXGIDebug> debugDXGI;
 	ComPtr<IDXGIDebug1> debugDXGI1;
 	// Debug DXGI
-	ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(OUT & debugDXGI)));
-	debugDXGI->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+	ThrowIfFailed( DXGIGetDebugInterface1( 0, IID_PPV_ARGS( OUT & debugDXGI ) ) );
+	debugDXGI->ReportLiveObjects( DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY );
 
-	IFNITY_LOG(LogCore, TRACE, "Enable Debug Layer DXGI");
+	IFNITY_LOG( LogCore, TRACE, "Enable Debug Layer DXGI" );
 
 	// Debug DXGI 1
-	ThrowIfFailed(DXGIGetDebugInterface1(0, IID_PPV_ARGS(OUT & debugDXGI1)));
-	debugDXGI1->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY);
+	ThrowIfFailed( DXGIGetDebugInterface1( 0, IID_PPV_ARGS( OUT & debugDXGI1 ) ) );
+	debugDXGI1->ReportLiveObjects( DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_SUMMARY );
 }
 
-void DeviceD3D12::DrawElements(const ComPtr<ID3D12PipelineState>& pipelineState,
-							   const ComPtr<ID3D12RootSignature>& rootSignature)
+void DeviceD3D12::DrawElements( const ComPtr<ID3D12PipelineState>& pipelineState,
+								const ComPtr<ID3D12RootSignature>& rootSignature )
 {
-	m_CommandList->SetPipelineState(pipelineState.Get());
-	m_CommandList->SetGraphicsRootSignature(rootSignature.Get());
+	m_CommandList->SetPipelineState( pipelineState.Get() );
+	m_CommandList->SetGraphicsRootSignature( rootSignature.Get() );
 
 
-	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_CommandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
-	m_CommandList->DrawInstanced(3, 1, 0, 0);
+	m_CommandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	m_CommandList->IASetVertexBuffers( 0, 1, &m_VertexBufferView );
+	m_CommandList->DrawInstanced( 3, 1, 0, 0 );
 
 }
-void DeviceD3D12::DrawElements(ID3D12GraphicsCommandList* commandList,
-							   const ComPtr<ID3D12PipelineState>& pipelineState,
-							   const ComPtr<ID3D12RootSignature>& rootSignature)
+void DeviceD3D12::DrawElements( ID3D12GraphicsCommandList* commandList,
+								const ComPtr<ID3D12PipelineState>& pipelineState,
+								const ComPtr<ID3D12RootSignature>& rootSignature )
 {
-	commandList->SetPipelineState(pipelineState.Get());
-	commandList->SetGraphicsRootSignature(rootSignature.Get());
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->IASetVertexBuffers(0, 1, &m_VertexBufferView);
-	commandList->DrawInstanced(3, 1, 0, 0);
+	commandList->SetPipelineState( pipelineState.Get() );
+	commandList->SetGraphicsRootSignature( rootSignature.Get() );
+	commandList->IASetPrimitiveTopology( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
+	commandList->IASetVertexBuffers( 0, 1, &m_VertexBufferView );
+	commandList->DrawInstanced( 3, 1, 0, 0 );
 	//commandList->Close();
 	//ID3D12CommandList* cmdsLists[] = { commandList };
 	//m_CommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
@@ -1128,33 +1176,33 @@ void DeviceD3D12::destroy( SlotMap<D3D12::D3D12Buffer> sm )
 		}
 	}
 	sm.clear();
-	
+
 
 }
 
 D3D12::CommandBuffer& DeviceD3D12::acquireCommandBuffer()
 {
-	IFNITY_ASSERT_MSG(!currentCommandBuffer_.ctx_, "Cannot acquire more than 1 command buffer simultaneously");
+	IFNITY_ASSERT_MSG( !currentCommandBuffer_.ctx_, "Cannot acquire more than 1 command buffer simultaneously" );
 
-	currentCommandBuffer_ = D3D12::CommandBuffer(this);
+	currentCommandBuffer_ = D3D12::CommandBuffer( this );
 
 	return currentCommandBuffer_;
 }
 
 
-D3D12::SubmitHandle DeviceD3D12::submit(D3D12::CommandBuffer& commandBuffer, D3D12::TextureHandleSM present)
+D3D12::SubmitHandle DeviceD3D12::submit( D3D12::CommandBuffer& commandBuffer, D3D12::TextureHandleSM present )
 {
 	//Using static_cast to convert and avoid the const in submit 
-	auto d3d12CmdBuffer = static_cast<D3D12::CommandBuffer*>(&commandBuffer);
+	auto d3d12CmdBuffer = static_cast< D3D12::CommandBuffer* >(&commandBuffer);
 
-	IFNITY_ASSERT_MSG(d3d12CmdBuffer, "Not d3d12 command buffer");
-	IFNITY_ASSERT_MSG(d3d12CmdBuffer->ctx_, "Commandbuffer has no D3D12 context assigned.");
-	IFNITY_ASSERT_MSG(d3d12CmdBuffer->wrapper_, "Commandbuffer has no wrapper assigned.");
+	IFNITY_ASSERT_MSG( d3d12CmdBuffer, "Not d3d12 command buffer" );
+	IFNITY_ASSERT_MSG( d3d12CmdBuffer->ctx_, "Commandbuffer has no D3D12 context assigned." );
+	IFNITY_ASSERT_MSG( d3d12CmdBuffer->wrapper_, "Commandbuffer has no wrapper assigned." );
 
-	if (present)
+	if( present )
 	{
-		 D3D12::D3D12Image& tex = *slotMapTextures_.get(present);
-		IFNITY_ASSERT_MSG(tex.isSwapchainImage_, "No SwapChainImage acquired for submission");
+		D3D12::D3D12Image& tex = *slotMapTextures_.get( present );
+		IFNITY_ASSERT_MSG( tex.isSwapchainImage_, "No SwapChainImage acquired for submission" );
 
 		// Prepare image for presentation
 		D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -1164,7 +1212,7 @@ D3D12::SubmitHandle DeviceD3D12::submit(D3D12::CommandBuffer& commandBuffer, D3D
 		);
 		//TrackState
 		tex.currentState_ = D3D12_RESOURCE_STATE_PRESENT;
-		d3d12CmdBuffer->wrapper_->commandList->ResourceBarrier(1, &barrier);
+		d3d12CmdBuffer->wrapper_->commandList->ResourceBarrier( 1, &barrier );
 	}
 
 	//// Submit command buffer to queue
@@ -1173,18 +1221,18 @@ D3D12::SubmitHandle DeviceD3D12::submit(D3D12::CommandBuffer& commandBuffer, D3D
 
 	// Present swapchain if needed
 	const bool shouldPresent = true;
-	d3d12CmdBuffer->lastSubmitHandle_ = m_ImmediateCommands->submit(*commandBuffer.wrapper_);
+	d3d12CmdBuffer->lastSubmitHandle_ = m_ImmediateCommands->submit( *commandBuffer.wrapper_ );
 	//Is
-	if (shouldPresent)
+	if( shouldPresent )
 	{
-		m_SwapChain->Present(IsVSync() ? 1 : 0,0);
+		m_SwapChain->Present( IsVSync() ? 1 : 0, 0 );
 	}
 
 	// Optionally process deferred tasks (resource deletion, etc.)
 	//processDeferredTasks();
-
+	processDeferredTasks();
 	// Fence signal for tracking GPU work
-	D3D12::SubmitHandle handle = d3d12CmdBuffer->lastSubmitHandle_; 
+	D3D12::SubmitHandle handle = d3d12CmdBuffer->lastSubmitHandle_;
 	// Reset current command buffer for next frame
 	currentCommandBuffer_ = {};
 
@@ -1202,12 +1250,12 @@ D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture()
 
 	if( !tex.valid() )
 	{
-		IFNITY_LOG(LogCore, ERROR, "No swapchain image acquired");
+		IFNITY_LOG( LogCore, ERROR, "No swapchain image acquired" );
 		return {};
 	}
 
-	auto* texptr = slotMapTextures_.get(tex);
-	IFNITY_ASSERT_MSG(texptr->format_ != DXGI_FORMAT_UNKNOWN , "Invalid swapchain d3d12 image format");
+	auto* texptr = slotMapTextures_.get( tex );
+	IFNITY_ASSERT_MSG( texptr->format_ != DXGI_FORMAT_UNKNOWN, "Invalid swapchain d3d12 image format" );
 
 	return tex;
 }
