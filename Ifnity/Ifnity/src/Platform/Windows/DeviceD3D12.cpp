@@ -438,6 +438,8 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	stagingDevice_ = std::make_unique<D3D12::D3D12StagingDevice>(*this);
 
+	//
+
 	return true;
 }
 
