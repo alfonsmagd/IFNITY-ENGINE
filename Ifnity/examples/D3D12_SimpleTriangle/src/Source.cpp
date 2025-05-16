@@ -273,7 +273,7 @@ public:
 		{
 			bufferDesc.SetDebugName( "Vertex Buffer" );
 			bufferDesc.SetBufferType( BufferType::VERTEX_BUFFER );
-			bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
 			bufferDesc.SetByteSize( sizeof(triangleVertices));
 			bufferDesc.SetData( triangleVertices );
 			bufferDesc.SetStrideSize( sizeof( VertexData ) );

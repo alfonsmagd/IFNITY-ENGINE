@@ -22,6 +22,7 @@
 #include "Platform/D3D12/d3d12_classes.hpp"
 #include "Platform/D3D12/d3d12_SwapChain.hpp"
 #include "Platform/D3D12/d3d12_CommandBuffer.hpp"
+#include "Platform/D3D12/d3d12_StaginDevice.hpp"
 
 #include "Platform/D3D12/d3d12_classes.hpp"
 #include "d3d12_backend.hpp"
@@ -65,7 +66,8 @@ public:
 
 	//UniquePtrs
 	std::unique_ptr<D3D12::D3D12ImmediateCommands> m_ImmediateCommands = nullptr;
-	std::unique_ptr<D3D12::D3D12Swapchain> swapchain_ = nullptr;
+	std::unique_ptr<D3D12::D3D12Swapchain> swapchain_                  = nullptr;
+	std::unique_ptr<D3D12::D3D12StagingDevice> stagingDevice_          = nullptr;
 
 	//States 
 	bool m_MsaaState = false;

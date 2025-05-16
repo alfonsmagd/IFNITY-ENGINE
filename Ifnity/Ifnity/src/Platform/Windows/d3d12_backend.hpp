@@ -49,7 +49,8 @@ namespace D3D12
 		void SetDepthTexture( TextureHandle texture )override {};
 		// Virtual destructor to ensure proper destruction of derived objects
 		void setActualPipeline( GraphicsPipeline* pipeline );
-
+		void upload( BufferHandleSM&     buffer, const void* data, size_t size, uint32_t offset = 0 );
+		void upload( D3D12::D3D12Buffer* buffer, const void* data, size_t size, uint32_t offset = 0 );
 
 	private:
 		HolderBufferSM CreateInternalD3D12Buffer( const BufferDescription& desc,

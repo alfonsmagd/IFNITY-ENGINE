@@ -436,6 +436,8 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	//Ok try to create the DeviceHandle 
 	m_RenderDevice = D3D12::CreateDevice( this );
 
+	stagingDevice_ = std::make_unique<D3D12::D3D12StagingDevice>(*this);
+
 	return true;
 }
 

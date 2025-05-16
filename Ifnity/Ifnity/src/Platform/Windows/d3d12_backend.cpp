@@ -263,7 +263,7 @@ namespace D3D12
 		D3D12_RESOURCE_FLAGS resourceFlags = usageInfo.resourceFlags;
 		initialState = usageInfo.initialState;
 
-		HolderBufferSM bufferHandle = CreateInternalD3D12Buffer( desc,
+		HolderBufferSM buffer = CreateInternalD3D12Buffer( desc,
 																 resourceFlags,
 																 initialState,
 																 heapType,
@@ -272,17 +272,10 @@ namespace D3D12
 		//THIS IS ONLY FOR NOW BECAUSE ITS ONLY HOST VISIBLE UPLOAD BUFFER.  [MOVE TO FUNCTION UPLOAD) D3D12 NEXT. 
 		if( desc.data )
 		{
-			// Upload data if the buffer description has it
-			D3D12Buffer* buffer = m_DeviceD3D12->slotMapBuffers_.getByIndex( bufferHandle.get()->index() );
-			if( !buffer )
-			{
-				IFNITY_LOG( LogCore, ERROR, "Buffer is null to write " );
-				return {};
-			}
-			buffer->bufferSubData( *m_DeviceD3D12, 0, desc.byteSize, desc.data );
+			upload(*buffer, desc.data, desc.byteSize, desc.offset);
 		}
 
-		Buffer* handle = new Buffer( desc, std::move( bufferHandle ) );
+		Buffer* handle = new Buffer( desc, std::move( buffer ) );
 
 		return BufferHandle( handle );
 	}
@@ -350,7 +343,75 @@ namespace D3D12
 	}
 
 
+	void Device::upload( D3D12Buffer* buffer, const void* data, size_t size, uint32_t offset )
+	{
 
+		//Previos check if the buffer is null and check it 
+		if( !data )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Data is null to upload ");
+			return;
+		}
+
+		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
+
+
+		if( !buffer )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Buffer is null to upload ");
+			return;
+		}
+
+		if( !IFNITY_VERIFY(offset + size <= buffer->bufferSize_) )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Buffer is enough size ");
+			return;
+		}
+
+		//Lets to staginDevice to upload data 
+		m_DeviceD3D12->stagingDevice_->bufferSubData(*buffer, offset, size, data);
+		
+
+	}
+
+
+	void Device::upload( BufferHandleSM&  buffer, const void* data, size_t size, uint32_t offset )
+	{
+
+		//Previos check if the buffer is null and check it 
+		if( !data )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Data is null to upload ");
+			return;
+		}
+
+		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
+
+		D3D12Buffer* buf = m_DeviceD3D12->slotMapBuffers_.get(buffer);
+
+		if( !buf )
+		{
+			IFNITY_LOG(LogCore, ERROR, "Buffer is null to upload ");
+			return;
+		}
+
+		if( !IFNITY_VERIFY(offset + size <= buf->bufferSize_) )
+		{
+			return;
+		}
+
+
+
+		//Lets to staginDevice to upload data 
+		m_DeviceD3D12->stagingDevice_->bufferSubData(*buf, offset, size, data);
+
+
+	}
+
+
+
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 
