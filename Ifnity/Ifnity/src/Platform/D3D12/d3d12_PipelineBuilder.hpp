@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-17 by alfonsmagd
+
 #pragma once 
 
 #include <pch.h>
@@ -18,6 +23,9 @@ namespace D3D12
 		D3D12PipelineBuilder& setPS(const void* bytecode, SIZE_T size);
 		D3D12PipelineBuilder& setGS(const void* bytecode, SIZE_T size);
 		D3D12PipelineBuilder& setRasterizer(const D3D12_RASTERIZER_DESC& desc);
+		D3D12PipelineBuilder& setFillMode( D3D12_FILL_MODE mode );
+		D3D12PipelineBuilder& setCullMode( D3D12_CULL_MODE mode );
+		D3D12PipelineBuilder& setFrontCounterClockwise( BOOL frontCCW );
 		D3D12PipelineBuilder& setBlend(const D3D12_BLEND_DESC& desc);
 		D3D12PipelineBuilder& setDepthStencil(const D3D12_DEPTH_STENCIL_DESC& desc);
 		D3D12PipelineBuilder& setInputLayout(const D3D12_INPUT_LAYOUT_DESC& layout);

@@ -164,6 +164,7 @@ private:
 	std::shared_ptr<IShader> m_ps;
 
 	BufferHandle m_vertexBuffer;
+	BufferHandle m_indexBuffer;
 	GraphicsPipelineHandle m_pipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
 public:
@@ -253,6 +254,13 @@ public:
 				.SetPixelShader(m_ps.get())
 				.SetVertexInput(vertexInput);
 
+			RasterizationState rasterizationState;
+			rasterizationState.cullMode = rhi::CullModeType::None;
+	
+			
+			gdesc.SetRasterizationState( rasterizationState );
+
+
 		}//end of gdesc
 		//Create the pipeline
 		m_pipeline = rdevice->CreateGraphicsPipeline(gdesc);
@@ -263,9 +271,16 @@ public:
 		{
 			{ { -0.5f, -0.5f , 0.0f}, { 1.0f, 0.0f, 0.0f, 1.0f } },
 			{ { 0.0f, 0.5f , 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-			{ { 0.5f, -0.5f , 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+			{ { 0.5f, -0.5f , 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
+			{ { 0.5f, 0.5f , 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }
+			
 		};
 
+		//IndexBuffer
+		uint32_t indices[] = {
+			0, 1, 2,  // triángulo inferior izquierdo
+			2, 1, 3   // triángulo superior derecho
+		};
 
 
 
@@ -281,9 +296,28 @@ public:
 		}
 		m_vertexBuffer = rdevice->CreateBuffer( bufferDesc );
 
+		{
+			bufferDesc.SetDebugName( "Index Buffer" );
+			bufferDesc.SetBufferType( BufferType::INDEX_BUFFER );
+			bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
+			bufferDesc.SetByteSize( sizeof( uint32_t ) * 6 );
+			bufferDesc.SetData( indices );
+			bufferDesc.SetStrideSize( sizeof( uint32_t ) );
+		}
+		m_indexBuffer = rdevice->CreateBuffer( bufferDesc );
+		
+		//Binding the buffer
+		rdevice->BindingIndexBuffer( m_indexBuffer );
 		rdevice->BindingVertexAttributesBuffer(m_vertexBuffer);
 
+		//BindPipeline
 		m_pipeline->BindPipeline( rdevice );
+
+
+
+
+
+
 
 
 
@@ -300,8 +334,8 @@ public:
 		rdevice->StartRecording();
 
 		DrawDescription desc;
-		desc.drawMode = DRAW;
-		desc.size = 3;
+		desc.drawMode = DRAW_INDEXED;
+		desc.size = 6;
 
 		rdevice->DrawObject( m_pipeline, desc );
 

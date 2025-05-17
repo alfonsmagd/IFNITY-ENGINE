@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-13 by alfonsmagd
+// Last modified: 2025-05-17 by alfonsmagd
+
 
 #pragma once 
 
@@ -110,6 +111,16 @@ namespace D3D12
 		}
 	}
 
+	inline D3D12_FILL_MODE convertToDxFillMode( rhi::PolygonModeType mode )
+	{
+		switch( mode )
+		{
+			case rhi::PolygonModeType::Fill: return D3D12_FILL_MODE_SOLID;
+			case rhi::PolygonModeType::Line: return D3D12_FILL_MODE_WIREFRAME;
+			default: return D3D12_FILL_MODE_SOLID;
+		}
+	}
+
 	inline D3D12_BLEND convertToDxBlend( rhi::BlendFactor factor )
 	{
 		switch( factor )
@@ -168,6 +179,25 @@ namespace D3D12
 		}
 	}
 
+
+	inline D3D12_BLEND ConvertToD3D12Blend(rhi::BlendFactor factor) {
+		switch (factor) {
+			case rhi::BlendFactor::ZERO: return D3D12_BLEND_ZERO;
+			case rhi::BlendFactor::ONE: return D3D12_BLEND_ONE;
+			case rhi::BlendFactor::SRC_COLOR: return D3D12_BLEND_SRC_COLOR;
+			case rhi::BlendFactor::ONE_MINUS_SRC_COLOR: return D3D12_BLEND_INV_SRC_COLOR;
+			case rhi::BlendFactor::SRC_ALPHA: return D3D12_BLEND_SRC_ALPHA;
+			case rhi::BlendFactor::ONE_MINUS_SRC_ALPHA: return D3D12_BLEND_INV_SRC_ALPHA;
+			default: return D3D12_BLEND_ONE;
+		}
+	}
+
+	inline D3D12_BLEND_OP ConvertToD3D12BlendOp(rhi::BlendFactor op) {
+		switch (op) {
+			case rhi::BlendFactor::OPERATION_ADD: return D3D12_BLEND_OP_ADD;
+			default: return D3D12_BLEND_OP_ADD;
+		}
+	}
 
 	struct D3D12UsageMapping
 	{

@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-01 by alfonsmagd
+// Last modified: 2025-05-17 by alfonsmagd
+
 
 
 
@@ -120,6 +121,28 @@ namespace D3D12
 		wrapper_->commandList->IASetVertexBuffers( 0, 1, &m_vbview );
 
 	}
+	void CommandBuffer::cmdBindIndexBuffer( BufferHandleSM& bf, uint32_t offset )
+	{
+		if( !IFNITY_VERIFY( !bf.empty() ) )
+		{
+			return;
+		}
+		D3D12Buffer* buf = ctx_->slotMapBuffers_.get( bf );
+		IFNITY_ASSERT( buf->bufferType_ == BufferType::INDEX_BUFFER, "Buffer is not a index buffer d3d12" );
+
+		D3D12_INDEX_BUFFER_VIEW m_ibview = buf->getIndexBufferView();
+
+		wrapper_->commandList->IASetIndexBuffer( &m_ibview );
+
+
+
+
+
+
+
+
+
+	}
 	void CommandBuffer::cmdBindRenderPipeline( GraphicsPipeline* pipeline )
 	{
 		if( !pipeline )
@@ -178,13 +201,29 @@ namespace D3D12
 
 		if( drawMode == DRAW )
 		{
-			// Dibujo sin índice
+			// Dibujo sin ndice
 			wrapper_->commandList->DrawInstanced(
 				vertexCount,     // VertexCountPerInstance
 				instanceCount,   // InstanceCount
 				firstVertex,     // StartVertexLocation
 				baseInstance     // StartInstanceLocation
 			);
+		}
+		else if( drawMode == DRAW_INDEXED )
+		{
+			// Dibujo con ndice
+			wrapper_->commandList->DrawIndexedInstanced(
+				vertexCount,     // IndexCountPerInstance
+				instanceCount,   // InstanceCount
+				firstVertex,     // StartIndexLocation
+				baseInstance,    // BaseVertexLocation
+				0                // StartInstanceLocation
+			);
+		}
+		else
+		{
+			IFNITY_LOG( LogCore, ERROR, "Unsupported draw mode" );
+			return;
 		}
 	}
 

@@ -1,6 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-13 by alfonsmagd]
+// Last modified: 2025-05-17 by alfonsmagd
+
 //
 
 
@@ -44,7 +46,7 @@ namespace D3D12
 		void BindingVertexAttributes( const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size ) override {};
 		void BindingVertexIndexAttributes( const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf )override {}; //todo abstract
 		void BindingVertexAttributesBuffer( BufferHandle& bf )override;
-		void BindingIndexBuffer( BufferHandle& bf )override {};
+		void BindingIndexBuffer( BufferHandle& bf )override;
 		BufferHandle CreateBuffer( const BufferDescription& desc ) override;
 		TextureHandle CreateTexture( TextureDescription& desc ) override { return {}; }; //TODO add TextureDescripton const
 		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc ) override { return {}; };;

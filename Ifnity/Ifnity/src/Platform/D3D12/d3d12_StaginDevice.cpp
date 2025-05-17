@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-17 by alfonsmagd
+
 
 
 #include "d3d12_StaginDevice.hpp"
@@ -56,6 +61,10 @@ namespace D3D12
 
         auto& cmd = ctx_.m_ImmediateCommands->acquire();
         cmd.commandList->CopyBufferRegion( buffer.resource_.Get(), dstOffset, stagingBuffer.Get(), 0, size );
+
+		//Transition the buffer to the appropriate state
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition( buffer.resource_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER );
+		cmd.commandList->ResourceBarrier( 1, &barrier );
 
         SubmitHandle handle = ctx_.m_ImmediateCommands->submit( cmd );
 

@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-13 by alfonsmagd
+// Last modified: 2025-05-17 by alfonsmagd
+
 
 
 
@@ -67,6 +68,15 @@ namespace D3D12
 			.StrideInBytes = stride_ ? stride_ : static_cast< UINT >(bufferStride_),
 		};
 
+	}
+
+	D3D12_INDEX_BUFFER_VIEW D3D12Buffer::getIndexBufferView() const
+	{
+		return D3D12_INDEX_BUFFER_VIEW{
+			.BufferLocation = gpuAddress_,
+			.SizeInBytes = static_cast< UINT >(bufferSize_),
+			.Format = DXGI_FORMAT_R32_UINT,
+		};
 	}
 
 

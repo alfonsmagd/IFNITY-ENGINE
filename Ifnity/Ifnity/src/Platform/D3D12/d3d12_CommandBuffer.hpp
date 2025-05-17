@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-01 by alfonsmagd
+// Last modified: 2025-05-17 by alfonsmagd
+
 
 
 
@@ -46,6 +47,7 @@ namespace D3D12
 		void cmdBindScissorRect(const ScissorRect& rect);
 		void cmdRenderImgui(ImDrawData* drawData, ID3D12DescriptorHeap* pCbvSrvHeap);
 		void cmdBindVertexBuffer( BufferHandleSM& bf, uint32_t stride = 0, uint32_t offset = 0 );
+		void cmdBindIndexBuffer( BufferHandleSM& bf, uint32_t offset = 0 );
 		void cmdBindRenderPipeline( GraphicsPipeline* pipeline );
 		void cmdSetPrimitiveTopology( rhi::PrimitiveType primitiveType );
 

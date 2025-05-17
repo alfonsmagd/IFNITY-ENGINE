@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-13 by alfonsmagd
+// Last modified: 2025-05-17 by alfonsmagd
+
 
 
 
@@ -114,7 +115,7 @@ DeviceD3D12::~DeviceD3D12()
 
 void DeviceD3D12::OnUpdate()
 {
-	#define IFNITY_DEBUG 1
+	//#define IFNITY_DEBUG 0
 	#ifdef IFNITY_DEBUG
 	using namespace D3D12;
 

@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-13 by alfonsmagd
+// Last modified: 2025-05-17 by alfonsmagd
+
 
 
 
@@ -43,6 +44,7 @@ namespace D3D12
 		void flushMappedMemory( const DeviceD3D12& ctx, size_t offset, size_t size ) const;
 		void invalidateMappedMemory( const DeviceD3D12& ctx, size_t offset, size_t size ) const;
 		[[nodiscard]] D3D12_VERTEX_BUFFER_VIEW getVertexBufferView( uint32_t stride_ = 0  ) const;
+		[[nodiscard]] D3D12_INDEX_BUFFER_VIEW  getIndexBufferView() const;
 		
 		
 	public:

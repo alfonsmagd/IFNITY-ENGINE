@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-13 by alfonsmagd
+// Last modified: 2025-05-17 by alfonsmagd
+
 
 
 
@@ -30,7 +31,7 @@ namespace D3D12
 	//------------------------------------------------------------------------------------//
 	//  BUFFER  D3D12                                                          //
 	//-------------------------------------------------------------------------------------//
-	
+
 
 
 	//------------------------------------------------------------------------------------//
@@ -93,11 +94,49 @@ namespace D3D12
 		ShaderModuleState* mvert = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderVert );
 		ShaderModuleState* mps = m_DeviceD3D12->slotMapShaderModules_.get( m_shaderPixel );
 		IFNITY_ASSERT_MSG( mvert && mps, "Shader modules are not valid" );
+		const auto& rasterState = m_Description.rasterizationState;
+		const auto& depthState = m_Description.renderState;
+		const BlendState& blendstate = depthState.blendState;
+
+
+		D3D12_RENDER_TARGET_BLEND_DESC descRenderTarget{};
+
+		if( !blendstate.blendEnable )
+		{
+			descRenderTarget.BlendEnable = FALSE;
+			descRenderTarget.SrcBlend = D3D12_BLEND_ONE;
+			descRenderTarget.DestBlend = D3D12_BLEND_ZERO;
+			descRenderTarget.BlendOp = D3D12_BLEND_OP_ADD;
+			descRenderTarget.SrcBlendAlpha = D3D12_BLEND_ONE;
+			descRenderTarget.DestBlendAlpha = D3D12_BLEND_ZERO;
+			descRenderTarget.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+		}
+		else
+		{
+			descRenderTarget.BlendEnable = TRUE;
+			descRenderTarget.SrcBlend        = ConvertToD3D12Blend(blendstate.srcColorBlendFactor);
+			descRenderTarget.DestBlend       = ConvertToD3D12Blend(blendstate.dstColorBlendFactor);
+			descRenderTarget.BlendOp         = ConvertToD3D12BlendOp(blendstate.colorBlendOp);
+			descRenderTarget.SrcBlendAlpha   = ConvertToD3D12Blend(blendstate.srcAlphaBlendFactor);
+			descRenderTarget.DestBlendAlpha  = ConvertToD3D12Blend(blendstate.dstAlphaBlendFactor);
+			descRenderTarget.BlendOpAlpha    = ConvertToD3D12BlendOp(blendstate.alphaBlendOp);
+		}
+		descRenderTarget.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+		D3D12_BLEND_DESC blendDesc = {};
+		blendDesc.AlphaToCoverageEnable = FALSE;
+		blendDesc.IndependentBlendEnable = FALSE;
+		blendDesc.RenderTarget[ 0 ] = descRenderTarget;
+
 
 		// Build the pipeline state // for now its simple. 
-		D3D12PipelineBuilder builder;
+		D3D12PipelineBuilder builder{};
 		builder.setVS( mvert->bytecode->GetBufferPointer(), mvert->bytecode->GetBufferSize() )
 			.setPS( mps->bytecode->GetBufferPointer(), mps->bytecode->GetBufferSize() )
+			.setBlend( blendDesc )
+			.setCullMode( convertToDxCullMode( rasterState.cullMode ) )
+			.setFillMode( convertToDxFillMode( rasterState.polygonMode ) )
+			.setFrontCounterClockwise( convertToDxFrontCounterClockwise(rasterState.frontFace) )
 			.setRootSignature( m_DeviceD3D12->m_RootSignature.Get() )
 			.setInputLayout( m_rD3D12PipelineState.inputLayout_ )
 			.build( m_DeviceD3D12->m_Device.Get(), OUT m_PipelineState.GetAddressOf() );
@@ -210,6 +249,17 @@ namespace D3D12
 
 	}
 
+	void Device::BindingIndexBuffer( BufferHandle& bf )
+	{
+		Buffer* iBuffer = DCAST_BUFFER( bf.get() );
+		if( !iBuffer )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Failed to get D3D12 dynamic cast" );
+			return;
+		}
+		currentIndexBuffer_ = iBuffer->getBufferHandleSM();
+	}
+
 
 
 	void Device::DrawObject( GraphicsPipelineHandle& pipeline, DrawDescription& desc )
@@ -232,9 +282,16 @@ namespace D3D12
 
 		cmdBuffer.cmdSetPrimitiveTopology( rasterState.primitiveType );
 
-		cmdBuffer.cmdBindVertexBuffer( currentVertexBuffer_ );
+		if( currentIndexBuffer_ )
+		{
+			cmdBuffer.cmdBindIndexBuffer( currentIndexBuffer_ );
+		}
+		if( currentVertexBuffer_ )
+		{
+			cmdBuffer.cmdBindVertexBuffer( currentVertexBuffer_ );
+		}
 
-		cmdBuffer.cmdDraw( desc.drawMode, 3, 1 );
+		cmdBuffer.cmdDraw( desc.drawMode, desc.size, 1 );
 
 	}
 
@@ -264,15 +321,15 @@ namespace D3D12
 		initialState = usageInfo.initialState;
 
 		HolderBufferSM buffer = CreateInternalD3D12Buffer( desc,
-																 resourceFlags,
-																 initialState,
-																 heapType,
-																 desc.debugName.c_str() );
+														   resourceFlags,
+														   initialState,
+														   heapType,
+														   desc.debugName.c_str() );
 
 		//THIS IS ONLY FOR NOW BECAUSE ITS ONLY HOST VISIBLE UPLOAD BUFFER.  [MOVE TO FUNCTION UPLOAD) D3D12 NEXT. 
 		if( desc.data )
 		{
-			upload(*buffer, desc.data, desc.byteSize, desc.offset);
+			upload( *buffer, desc.data, desc.byteSize, desc.offset );
 		}
 
 		Buffer* handle = new Buffer( desc, std::move( buffer ) );
@@ -349,53 +406,53 @@ namespace D3D12
 		//Previos check if the buffer is null and check it 
 		if( !data )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Data is null to upload ");
+			IFNITY_LOG( LogCore, ERROR, "Data is null to upload " );
 			return;
 		}
 
-		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
+		IFNITY_ASSERT_MSG( size, "Data size should be non-zero" );
 
 
 		if( !buffer )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Buffer is null to upload ");
+			IFNITY_LOG( LogCore, ERROR, "Buffer is null to upload " );
 			return;
 		}
 
-		if( !IFNITY_VERIFY(offset + size <= buffer->bufferSize_) )
+		if( !IFNITY_VERIFY( offset + size <= buffer->bufferSize_ ) )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Buffer is enough size ");
+			IFNITY_LOG( LogCore, ERROR, "Buffer is enough size " );
 			return;
 		}
 
 		//Lets to staginDevice to upload data 
-		m_DeviceD3D12->stagingDevice_->bufferSubData(*buffer, offset, size, data);
-		
+		m_DeviceD3D12->stagingDevice_->bufferSubData( *buffer, offset, size, data );
+
 
 	}
 
 
-	void Device::upload( BufferHandleSM&  buffer, const void* data, size_t size, uint32_t offset )
+	void Device::upload( BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset )
 	{
 
 		//Previos check if the buffer is null and check it 
 		if( !data )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Data is null to upload ");
+			IFNITY_LOG( LogCore, ERROR, "Data is null to upload " );
 			return;
 		}
 
-		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
+		IFNITY_ASSERT_MSG( size, "Data size should be non-zero" );
 
-		D3D12Buffer* buf = m_DeviceD3D12->slotMapBuffers_.get(buffer);
+		D3D12Buffer* buf = m_DeviceD3D12->slotMapBuffers_.get( buffer );
 
 		if( !buf )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Buffer is null to upload ");
+			IFNITY_LOG( LogCore, ERROR, "Buffer is null to upload " );
 			return;
 		}
 
-		if( !IFNITY_VERIFY(offset + size <= buf->bufferSize_) )
+		if( !IFNITY_VERIFY( offset + size <= buf->bufferSize_ ) )
 		{
 			return;
 		}
@@ -403,7 +460,7 @@ namespace D3D12
 
 
 		//Lets to staginDevice to upload data 
-		m_DeviceD3D12->stagingDevice_->bufferSubData(*buf, offset, size, data);
+		m_DeviceD3D12->stagingDevice_->bufferSubData( *buf, offset, size, data );
 
 
 	}
