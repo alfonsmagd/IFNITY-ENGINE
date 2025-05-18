@@ -229,7 +229,7 @@ namespace D3D12
 
 	void Device::StopRecording()
 	{
-		cmdBuffer.cmdRenderImgui( ImGui::GetDrawData(), m_DeviceD3D12->m_CbvSrvUavHeap.Get() );
+		cmdBuffer.cmdRenderImgui( ImGui::GetDrawData(), m_DeviceD3D12->m_ImguiHeap.Get() );
 		cmdBuffer.cmdEndRendering();
 		m_DeviceD3D12->submit( cmdBuffer, currentTexture_ );
 

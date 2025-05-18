@@ -21,6 +21,9 @@ IFNITY_NAMESPACE
 
 using namespace DirectX;
 void CaptureDXGIMessagesToConsole();
+void static LogD3D12DeviceCapabilities( ID3D12Device* device );
+
+
 
 // depuration callbackn
 // depuration callbackn
@@ -73,8 +76,9 @@ DeviceD3D12::~DeviceD3D12()
 	CloseHandle( m_FenceEvent );
 	m_CommandList.Reset();
 	commandQueue.Reset();
-	m_CbvSrvUavHeap.Reset();
+	m_ImguiHeap.Reset();
 	m_DsvHeap.Reset();
+	m_BindlessHeap.Reset();
 	m_DepthStencilBuffer.Reset();
 	if( m_DepthStencilAllocation )
 	{
@@ -135,7 +139,7 @@ void DeviceD3D12::OnUpdate()
 	cmdBuffer.cmdBeginRendering( renderPass, framebuffer );
 	//Demo 
 	DrawElements( cmdBuffer.wrapper_->commandList.Get(), m_PipelineState, m_RootSignature );
-	cmdBuffer.cmdRenderImgui( ImGui::GetDrawData(), m_CbvSrvUavHeap.Get() );
+	cmdBuffer.cmdRenderImgui( ImGui::GetDrawData(), m_ImguiHeap.Get() );
 
 	cmdBuffer.cmdEndRendering();
 	submit( cmdBuffer, currentTexture );
@@ -161,6 +165,73 @@ D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::AllocateRTV()
 	++rtvAlloc.nextSlot;
 
 	return handle;
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::AllocateFreeSRV()
+{
+	//Try to iterate over the free slots 
+	auto& srvAlloc = descriptorAllocator_.srv;
+
+	uint32_t start = START_SLOT_TEXTURES;
+	uint32_t end = srvAlloc.maxSlots;
+
+	for (uint32_t i = start; i < end; ++i)
+	{
+		if (srvAlloc.usedIndex.count(i) == 0)
+		{
+			// Found a free slot
+			srvAlloc.usedIndex.insert(i);
+
+			CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_BindlessHeap->GetCPUDescriptorHandleForHeapStart());
+			handle.Offset(i, srvAlloc.srvDescriptorSize);
+			++srvAlloc.nextSlot;
+			return handle;
+		}
+	}
+	//Not index enough using dummy texture
+	IFNITY_LOG(LogCore, WARNING, "SRV Heap overflow: No more SRV descriptors available. Using dummy texture.");
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_BindlessHeap->GetCPUDescriptorHandleForHeapStart());
+	handle.Offset(START_SLOT_TEXTURES, srvAlloc.srvDescriptorSize); // dummy texture slot
+	return handle;
+
+
+
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::AllocateSRV( uint32_t index )
+{
+	if( index == 0 )
+	{
+		return AllocateFreeSRV();
+	}
+
+	auto& srvAlloc = descriptorAllocator_.srv;
+
+	//Its normal that we excedded numbers srv its scene contains amount of textures. For this case
+	// we selected a dummytexture that its the first SRV marked as used, and give the user first SRV -> texture10
+	if( srvAlloc.nextSlot >= srvAlloc.maxSlots )
+	{
+		IFNITY_LOG( LogCore, WARNING, "SRV Heap overflow: No more SRV descriptors available. Using dummy texture." );
+		//Return first slot
+		CD3DX12_CPU_DESCRIPTOR_HANDLE handle( m_BindlessHeap->GetCPUDescriptorHandleForHeapStart() );
+		handle.Offset( START_SLOT_TEXTURES, srvAlloc.srvDescriptorSize );
+	}
+
+	//Try to put the index in set 
+	if( srvAlloc.usedIndex.insert( index ).second == false )
+	{
+		IFNITY_LOG( LogCore, WARNING, "SRV Heap overflow: No more SRV descriptors available. Using dummy texture." );
+		//Return first slot
+		CD3DX12_CPU_DESCRIPTOR_HANDLE handle( m_BindlessHeap->GetCPUDescriptorHandleForHeapStart() );
+		handle.Offset( START_SLOT_TEXTURES, srvAlloc.srvDescriptorSize );
+	}
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle( m_BindlessHeap->GetCPUDescriptorHandleForHeapStart() );
+	handle.Offset( index, srvAlloc.srvDescriptorSize );
+	++srvAlloc.nextSlot;
+
+	return handle;
+
 }
 
 void DeviceD3D12::RenderDemo( int w, int h ) const
@@ -360,6 +431,8 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 			IID_PPV_ARGS( OUT & m_Device ) ) );
 	}
 
+	LogD3D12DeviceCapabilities( m_Device.Get() );
+
 	{
 		D3D12MA::ALLOCATOR_DESC desc = {};
 		desc.Flags = D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED | D3D12MA::ALLOCATOR_FLAGS::ALLOCATOR_FLAG_SINGLETHREADED;
@@ -417,6 +490,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	#ifdef _DEBUG
 	LogAdaptersD3D12();
+
 	#endif
 	// Create Fence and obtain descriptor sizes.
 	CreateFenceAndDescriptorSizes();
@@ -437,7 +511,7 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	//Ok try to create the DeviceHandle 
 	m_RenderDevice = D3D12::CreateDevice( this );
 
-	stagingDevice_ = std::make_unique<D3D12::D3D12StagingDevice>(*this);
+	stagingDevice_ = std::make_unique<D3D12::D3D12StagingDevice>( *this );
 
 	//
 
@@ -458,9 +532,9 @@ void DeviceD3D12::InitializeGui()
 	ImGui_ImplDX12_Init( m_Device.Get(),
 						 D3D12::D3D12ImmediateCommands::kMaxCommandBuffers,
 						 m_BackBufferFormat,
-						 m_CbvSrvUavHeap.Get(),
-						 m_CbvSrvUavHeap->GetCPUDescriptorHandleForHeapStart(),
-						 m_CbvSrvUavHeap->GetGPUDescriptorHandleForHeapStart() );
+						 m_ImguiHeap.Get(),
+						 m_ImguiHeap->GetCPUDescriptorHandleForHeapStart(),
+						 m_ImguiHeap->GetGPUDescriptorHandleForHeapStart() );
 
 
 
@@ -511,11 +585,13 @@ void DeviceD3D12::CreateFenceAndDescriptorSizes()
 	m_DescritporSizes.Rtv = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 	m_DescritporSizes.Dsv = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_DSV );
 	m_DescritporSizes.CbvSrvUav = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+	
 
 	//Fill descritpor allocator
 	descriptorAllocator_.rtv.rtvDescriptorSize = m_DescritporSizes.Rtv;
 	descriptorAllocator_.dsv.dsvDescriptorSize = m_DescritporSizes.Dsv;
 	descriptorAllocator_.uav.uavDescriptorSize = m_DescritporSizes.CbvSrvUav;
+	descriptorAllocator_.srv.srvDescriptorSize = m_DescritporSizes.CbvSrvUav;
 
 }
 
@@ -554,56 +630,6 @@ bool DeviceD3D12::CreateSwapChain()
 	swapchain_ = std::make_unique<D3D12::D3D12Swapchain>( *this, m_hWnd, GetWidth(), GetHeight() );
 
 	m_SwapChain = swapchain_->getSwapchain();
-
-
-	//// Liberar los recursos anteriores que vamos a recrear.
-	//for (int i = 0; i < m_SwapChainBufferCount; ++i)
-	//{
-	//	if (m_SwapChainBuffer[i] != nullptr)
-	//	{
-	//		m_SwapChainBuffer[i]->Release();
-	//		m_SwapChainBuffer[i] = nullptr; // Asegrate de establecer el puntero a nullptr despus de liberar el recurso.
-	//	}
-	//}
-
-	//// Libera la swap chain anterior.
-	//m_SwapChain.Reset();
-
-	//FlushCommandQueue();
-
-	//// Describe and create the swap chain.
-	//DXGI_MODE_DESC bufferDesc = {};
-	//bufferDesc.Width = GetWidth();
-	//bufferDesc.Height = GetHeight();
-	//bufferDesc.RefreshRate.Numerator = 60;
-	//bufferDesc.RefreshRate.Denominator = 1;
-	//bufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	//bufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	//bufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-
-	//DXGI_SAMPLE_DESC sampleDesc = {};
-	//sampleDesc.Count = m_MsaaState ? 4 : 1; // Activate MSSA 4X , by default is false. 												   
-	//sampleDesc.Quality = CheckMSAAQualitySupport(sampleDesc.Count,
-	//	bufferDesc.Format) - 1; // Its importa													to substract 1 because the quality level is 0 based.
-
-	//DXGI_SWAP_CHAIN_DESC sd = {};
-	//sd.BufferDesc = bufferDesc;
-	//sd.SampleDesc = sampleDesc;
-	//sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	//sd.BufferCount = 2;
-	//sd.OutputWindow = m_hWnd;
-	//sd.Windowed = true;
-	//sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	//sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-
-	//ComPtr<IDXGISwapChain> swapChain;
-	//ThrowIfFailed(dxgiFactory4->CreateSwapChain(
-	//	commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-	//	&sd,
-	//	m_SwapChain.GetAddressOf()
-	//));
-
-
 
 	OutputDebugString( L"SwapChain Created\n" );
 	return true;
@@ -725,7 +751,7 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 {
 
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
-	rtvHeapDesc.NumDescriptors = MAX_RTV_SWAPCHAIN_IMAGES + MAX_RTV_DEFFERED_IMAGES;
+	rtvHeapDesc.NumDescriptors = (MAX_RTV_SWAPCHAIN_IMAGES + MAX_RTV_DEFFERED_IMAGES);
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
@@ -746,10 +772,18 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	desc.NumDescriptors = 1;
+	desc.NumDescriptors = 2;
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	desc.NodeMask = 0;
-	ThrowIfFailed( m_Device->CreateDescriptorHeap( &desc, IID_PPV_ARGS( OUT m_CbvSrvUavHeap.GetAddressOf() ) ) );
+	ThrowIfFailed( m_Device->CreateDescriptorHeap( &desc, IID_PPV_ARGS( OUT m_ImguiHeap.GetAddressOf() ) ) );
+
+
+	D3D12_DESCRIPTOR_HEAP_DESC descBindles = {};
+	descBindles.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	descBindles.NumDescriptors = MAX_SRV_IMAGES;
+	descBindles.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descBindles.NodeMask = 0;
+	ThrowIfFailed( m_Device->CreateDescriptorHeap( &descBindles, IID_PPV_ARGS( OUT m_BindlessHeap.GetAddressOf() ) ) );
 
 
 }
@@ -926,7 +960,7 @@ void DeviceD3D12::OnResize()
 	// Reusing the command list reuses memory.
 	ThrowIfFailed( m_CommandList->Reset( m_DirectCmdListAlloc.Get(), nullptr ) );
 
-	//m_CommandList->SetDescriptorHeaps(1, m_CbvSrvUavHeap.GetAddressOf());
+	//m_CommandList->SetDescriptorHeaps(1, m_ImguiHeap.GetAddressOf());
 
 
 
@@ -965,8 +999,13 @@ void DeviceD3D12::BuildRootSignature()
 	// thought of as defining the function signature. 
 	// Create an empty root signature. that shader will use to access resources in D3D12.
 	{
-		//Describe and create a root signature. The root signature describes the data an HLSL shader expects. AND
-		//D3D12_ROOT_SIGNATURE_DESC: can use input shader layout .
+		//Describe RootConstant, this idea its similar like vulkan , want a 256 bytes ifts its ok 
+
+
+
+
+
+
 		CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
 		rootSignatureDesc.Init( 0,
 								nullptr,
@@ -1268,13 +1307,6 @@ D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture()
 
 
 
-
-
-
-
-
-
-
 void DeviceD3D12::LoadAssetDemo()
 {
 	BuildRootSignature();
@@ -1283,7 +1315,103 @@ void DeviceD3D12::LoadAssetDemo()
 }
 
 
+void  LogD3D12DeviceCapabilities( ID3D12Device* device )
+{
+	// 1. Feature Level
+	D3D12_FEATURE_DATA_FEATURE_LEVELS featureLevels = {};
+	D3D_FEATURE_LEVEL levelsToCheck[] = {
+		D3D_FEATURE_LEVEL_12_2,
+		D3D_FEATURE_LEVEL_12_1,
+		D3D_FEATURE_LEVEL_12_0,
+		D3D_FEATURE_LEVEL_11_1,
+		D3D_FEATURE_LEVEL_11_0
+	};
+	featureLevels.NumFeatureLevels = _countof( levelsToCheck );
+	featureLevels.pFeatureLevelsRequested = levelsToCheck;
 
+	if( SUCCEEDED( device->CheckFeatureSupport( D3D12_FEATURE_FEATURE_LEVELS, &featureLevels, sizeof( featureLevels ) ) ) )
+	{
+		const char* levelStr = "Unknown";
+		switch( featureLevels.MaxSupportedFeatureLevel )
+		{
+			case D3D_FEATURE_LEVEL_12_2: levelStr = "12.2"; break;
+			case D3D_FEATURE_LEVEL_12_1: levelStr = "12.1"; break;
+			case D3D_FEATURE_LEVEL_12_0: levelStr = "12.0"; break;
+			case D3D_FEATURE_LEVEL_11_1: levelStr = "11.1"; break;
+			case D3D_FEATURE_LEVEL_11_0: levelStr = "11.0"; break;
+		}
+		IFNITY_LOG( LogCore, INFO, "Feature Level Supported: {}", levelStr );
+	}
+
+	// 2. Shader Model
+	D3D12_FEATURE_DATA_SHADER_MODEL shaderModel = { D3D_SHADER_MODEL_6_7 };
+	if( SUCCEEDED( device->CheckFeatureSupport( D3D12_FEATURE_SHADER_MODEL, &shaderModel, sizeof( shaderModel ) ) ) )
+	{
+		IFNITY_LOG( LogCore, INFO, "Highest Shader Model supported: 6.{}", shaderModel.HighestShaderModel & 0xF );
+	}
+	else
+	{
+		IFNITY_LOG( LogCore, WARNING, "Shader Model 6.6 or above not supported" );
+	}
+
+	// 3. D3D12 Options (Bindless incluido)
+	D3D12_FEATURE_DATA_D3D12_OPTIONS options = {};
+	if( SUCCEEDED( device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS, &options, sizeof( options ) ) ) )
+	{
+		IFNITY_LOG( LogCore, INFO, "Resource Binding Tier: {}", static_cast< int >(options.ResourceBindingTier) );
+		IFNITY_LOG( LogCore, INFO, "Resource Heap Tier: {}", static_cast< int >(options.ResourceHeapTier) );
+		IFNITY_LOG( LogCore, INFO, "TiledResourcesTier: {}", static_cast< int >(options.TiledResourcesTier) );
+		IFNITY_LOG( LogCore, INFO, "StandardSwizzle64KB: {}", options.StandardSwizzle64KBSupported ? "Yes" : "No" );
+
+		if( options.ResourceBindingTier >= D3D12_RESOURCE_BINDING_TIER_2 )
+		{
+			IFNITY_LOG( LogCore, INFO, "Bindless is supported" );
+
+		}
+		else
+		{
+			IFNITY_LOG( LogCore, WARNING, "Bindless NOT supported. ResourceBindingTier = {}", static_cast< int >(options.ResourceBindingTier) );
+		}
+	}
+	else
+	{
+		IFNITY_LOG( LogCore, ERROR, "Failed to query D3D12_FEATURE_D3D12_OPTIONS" );
+	}
+
+	// 4. Root Signature Version
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE rootSig = { D3D_ROOT_SIGNATURE_VERSION_1_1 };
+	if( FAILED( device->CheckFeatureSupport( D3D12_FEATURE_ROOT_SIGNATURE, &rootSig, sizeof( rootSig ) ) ) )
+	{
+		rootSig.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+	}
+	IFNITY_LOG( LogCore, INFO, "Root Signature Supported: {}", rootSig.HighestVersion == D3D_ROOT_SIGNATURE_VERSION_1_1 ? "1.1" : "1.0" );
+
+	// 5. Opcional: Raytracing
+	D3D12_FEATURE_DATA_D3D12_OPTIONS5 options5 = {};
+	if( SUCCEEDED( device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS5, &options5, sizeof( options5 ) ) ) )
+	{
+		IFNITY_LOG( LogCore, INFO, "Raytracing Tier: {}", static_cast< int >(options5.RaytracingTier) );
+	}
+
+	// 6. Opcional: Sampler Feedback
+	D3D12_FEATURE_DATA_D3D12_OPTIONS7 options7 = {};
+	if( SUCCEEDED( device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS7, &options7, sizeof( options7 ) ) ) )
+	{
+		IFNITY_LOG( LogCore, INFO, "Sampler Feedback Tier: {}", static_cast< int >(options7.SamplerFeedbackTier) );
+	}
+
+	//7. Work Graphs
+	// Check for device support for work graphs.
+	D3D12_FEATURE_DATA_D3D12_OPTIONS21 options21 = {};
+	if( SUCCEEDED( device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS21, &options21, sizeof( options21 ) ) ) )
+	{
+		IFNITY_LOG( LogCore, INFO, "Work Graphs Supported" );
+	}
+	else
+	{
+		IFNITY_LOG( LogCore, ERROR, "Failed to query D3D12_FEATURE_D3D12_OPTIONS21" );
+	}
+}
 
 
 IFNITY_END_NAMESPACE

@@ -48,14 +48,22 @@ class DeviceD3D12 final: public GraphicsDeviceManager
 	{
 		MAX_RTV_SWAPCHAIN_IMAGES = 3,
 		MAX_RTV_DEFFERED_IMAGES = 12,
+		MAX_SRV_IMAGES =  562,
 		MAX_UAV_IMAGES = 16,
-		MAX_DSV_IMAGES = 1
+		MAX_DSV_IMAGES = 1,
+		START_SLOT_TEXTURES = 10
 	};
 
 
 
 
 public:
+
+	D3D12_VIEWPORT m_ScreenViewport;
+	D3D12_RECT m_ScissorRect;
+	D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView;
+
+
 	//Pipeline Objects
 	ComPtr<ID3D12RootSignature> m_RootSignature = nullptr;
 	ComPtr<IDXGIFactory4> dxgiFactory4			= nullptr;
@@ -75,6 +83,12 @@ public:
 	std::unique_ptr<D3D12::D3D12Swapchain> swapchain_                  = nullptr;
 	std::unique_ptr<D3D12::D3D12StagingDevice> stagingDevice_          = nullptr;
 
+	//SlotMaps 
+	SlotMap<D3D12::D3D12Image> slotMapTextures_;
+	SlotMap<D3D12::ShaderModuleState> slotMapShaderModules_;
+	SlotMap<D3D12::GraphicsPipeline> slotMapRenderPipelines_;
+	SlotMap<D3D12::D3D12Buffer> slotMapBuffers_;
+
 	//States 
 	bool m_MsaaState = false;
 	static constexpr size_t numSwapchainImages = 3;
@@ -82,14 +96,21 @@ public:
 	UINT m_CurrentBackBufferIndex = 0;
 	UINT m_CurrentFence = 0;
 	HANDLE m_FenceEvent = nullptr;
-	D3D12::CommandBuffer currentCommandBuffer_;
 
+
+	D3D12::CommandBuffer currentCommandBuffer_;
 	D3D12::GraphicsPipeline* actualPipeline_ = nullptr;
 
 	//Descriptor Heaps
 	ComPtr<ID3D12DescriptorHeap> m_RtvHeap = nullptr;
 	ComPtr<ID3D12DescriptorHeap> m_DsvHeap = nullptr;
-	ComPtr<ID3D12DescriptorHeap> m_CbvSrvUavHeap = nullptr;
+	ComPtr<ID3D12DescriptorHeap> m_BindlessHeap = nullptr; //Bindless heap for SRV and UAV
+	ComPtr<ID3D12DescriptorHeap> m_ImguiHeap = nullptr;
+
+	//D3D12MA
+	D3D12MA::Allocation* m_DepthStencilAllocation;
+	D3D12MA::Allocation* m_VertexBufferAllocation;
+
 
 	//Vector Deferred Task
 	std::deque<DeferredTask<D3D12::SubmitHandle>> deferredTasks_;
@@ -111,6 +132,14 @@ public:
 			const uint32_t maxSlots = MAX_UAV_IMAGES; //How many UAVs we can have in the system.
 		} uav;
 
+		struct SRVSlots
+		{
+			size_t srvDescriptorSize = 0; // Size of the SRV descriptor heap
+			uint32_t nextSlot = 0;
+			const uint32_t maxSlots = MAX_SRV_IMAGES; //How many SRVs we can have in the system.
+			std::set<uint32_t> usedIndex; //Used slots in the heap.
+		} srv;
+
 		struct DSVSlots
 		{
 			size_t dsvDescriptorSize = 0; // Size of the DSV descriptor heap
@@ -125,9 +154,7 @@ public:
 	std::array<ID3D12Resource*, numSwapchainImages>        m_SwapChainBuffer;
 	ComPtr<ID3D12Resource>				  m_DepthStencilBuffer;
 	ComPtr<ID3D12Resource>				  m_VertexBuffer;
-	D3D12MA::Allocation* m_DepthStencilAllocation;
 
-	D3D12MA::Allocation* m_VertexBufferAllocation;
 
 	//Shaders
 	ComPtr<IDxcBlob> m_VsByteCode = nullptr;
@@ -149,6 +176,7 @@ public:
 		UINT Rtv = 0;
 		UINT Dsv = 0;
 		UINT CbvSrvUav = 0;
+		UINT Bindless = 0;
 	} m_DescritporSizes;
 
 
@@ -158,17 +186,11 @@ public:
 		bool enableDebugRuntime = true;
 	} m_DeviceParams;
 
-	D3D12_VIEWPORT m_ScreenViewport;
-	D3D12_RECT m_ScissorRect;
-	D3D12_VERTEX_BUFFER_VIEW m_VertexBufferView;
+
 
 	Color m_ClearColor = { 0.0f, 0.2f, 0.4f, 1.0f };
 
-	//SlotMaps 
-	SlotMap<D3D12::D3D12Image> slotMapTextures_;
-	SlotMap<D3D12::ShaderModuleState> slotMapShaderModules_;
-	SlotMap<D3D12::GraphicsPipeline> slotMapRenderPipelines_;
-	SlotMap<D3D12::D3D12Buffer> slotMapBuffers_;
+
 
 
 public:
@@ -176,6 +198,10 @@ public:
 	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
 	void OnUpdate() override;
 	D3D12_CPU_DESCRIPTOR_HANDLE  AllocateRTV();
+	D3D12_CPU_DESCRIPTOR_HANDLE  AllocateFreeSRV();
+	D3D12_CPU_DESCRIPTOR_HANDLE  AllocateSRV(uint32_t index = 0);
+	void                         FreeSRV( uint32_t index = 0 );
+
 	inline unsigned int GetWidth() const override { return m_Props.Width; }
 	inline unsigned int GetHeight() const override { return m_Props.Height; }
 	//change to private
