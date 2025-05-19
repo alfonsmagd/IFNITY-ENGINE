@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-01 by alfonsmagd
+// Last modified: 2025-05-19 by alfonsmagd
+
 
 #pragma once
 //Summary 
@@ -16,12 +17,12 @@
 
 #define USE_PIX //THIS FLAG WILL BE ADDED IN CMAKE  CHECKING IF PIX HAS BEEN INSTALLED IN THE SYSTEM.
 #ifdef USE_PIX
-	#include <pix.h>
-	#define BEGIN_PIX_EVENT(cmdList, name) PIXBeginEvent(cmdList, name)
-	#define END_PIX_EVENT(cmdList)         PIXEndEvent(cmdList)
+#include <pix.h>
+#define BEGIN_PIX_EVENT(cmdList, name) PIXBeginEvent(cmdList, name)
+#define END_PIX_EVENT(cmdList)         PIXEndEvent(cmdList)
 #else
-	#define BEGIN_PIX_EVENT(cmdList, name) ((void)0)
-	#define END_PIX_EVENT(cmdList)         ((void)0)
+#define BEGIN_PIX_EVENT(cmdList, name) ((void)0)
+#define END_PIX_EVENT(cmdList)         ((void)0)
 #endif
 
 IFNITY_NAMESPACE
@@ -37,10 +38,10 @@ namespace D3D12
 
 
 	template<typename Handle>
-	void destroy(DeviceD3D12* ctx, Handle handle);
+	void destroy( DeviceD3D12* ctx, Handle handle );
 
 
-	static void DumpDebugMessages(bool enable = true)
+	static void DumpDebugMessages( bool enable = true )
 	{
 		using namespace Microsoft::WRL;
 
@@ -72,10 +73,11 @@ namespace D3D12
 
 
 	//Using types
-	using TextureHandleSM        =  Handle<struct D3D12Image>;
-	using BufferHandleSM         =  Handle<struct D3D12Buffer>;
-	using ShaderModuleHandleSM   =  Handle<struct ShaderModuleState>;
-	using GraphicsPipelineHandleSM =  Handle<struct GraphicsPipeline>;
+	using TextureHandleSM =                       Handle<struct D3D12Image>;
+	using BufferHandleSM =                        Handle<struct D3D12Buffer>;
+	using ShaderModuleHandleSM =				  Handle<struct ShaderModuleState>;
+	using GraphicsPipelineHandleSM =			  Handle<struct GraphicsPipeline>;
+	using SamplerHandleSM =						  Handle<struct D3D12_STATIC_SAMPLER_DESC>;
 
 
 
@@ -84,14 +86,14 @@ namespace D3D12
 
 
 
-	struct ShaderModuleState final 
+	struct ShaderModuleState final
 	{
 		ComPtr<IDxcBlob> bytecode;   //get the s
 		D3D12_SHADER_BYTECODE GetBytecode() const
 		{
 			return {
 				.pShaderBytecode = bytecode->GetBufferPointer(),
-				.BytecodeLength  = bytecode->GetBufferSize()
+				.BytecodeLength = bytecode->GetBufferSize()
 			};
 		}
 		uint32_t rootConstantsSize = 0;
@@ -103,10 +105,10 @@ namespace D3D12
 		uint32_t bufferIndex_ = 0; // Index buffer
 		uint32_t submitId_ = 0;	// Submit ID
 		SubmitHandle() = default;
-		explicit SubmitHandle(uint64_t handle): bufferIndex_(uint32_t(handle & 0xffffffff)),
-			submitId_(uint32_t(handle >> 32))
+		explicit SubmitHandle( uint64_t handle ): bufferIndex_( uint32_t( handle & 0xffffffff ) ),
+			submitId_( uint32_t( handle >> 32 ) )
 		{
-			assert(submitId_);
+			assert( submitId_ );
 		}
 		bool empty() const
 		{
@@ -115,12 +117,12 @@ namespace D3D12
 		//Return handle in 64 bit with information about buffer index and submit ID
 		uint64_t handle() const
 		{
-			return (uint64_t(submitId_) << 32) + bufferIndex_;
+			return (uint64_t( submitId_ ) << 32) + bufferIndex_;
 		}
 	};
 
 
-	struct RenderPipelineState 
+	struct RenderPipelineState
 	{
 		uint32_t numBindings_ = 0;
 		uint32_t numAttributes_ = 0;
@@ -128,7 +130,7 @@ namespace D3D12
 		uint32_t inputElementCount_ = 0;
 
 		// Input Layout (D3D12 needs a pointer to this structure)
-		D3D12_INPUT_ELEMENT_DESC inputElements_[rhi::VertexInput::VERTEX_ATTRIBUTES_MAX] = {};
+		D3D12_INPUT_ELEMENT_DESC inputElements_[ rhi::VertexInput::VERTEX_ATTRIBUTES_MAX ] = {};
 		// Input Layout (D3D12 necesita un puntero a esta estructura)
 		D3D12_INPUT_LAYOUT_DESC inputLayout_ = {};
 		// Rasterizer/Blend/Depth State 
@@ -142,7 +144,7 @@ namespace D3D12
 		uint32_t                    index;
 	};
 
-	
+
 
 }
 IFNITY_END_NAMESPACE

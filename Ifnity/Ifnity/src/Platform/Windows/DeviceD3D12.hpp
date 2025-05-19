@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-18 by alfonsmagd
+// Last modified: 2025-05-19 by alfonsmagd
+
 
 
 // 
@@ -48,12 +49,22 @@ class DeviceD3D12 final: public GraphicsDeviceManager
 
 	enum
 	{
+		MAX_NUMBER_SAMPLERS = 8,
 		MAX_RTV_SWAPCHAIN_IMAGES = 3,
 		MAX_RTV_DEFFERED_IMAGES = 12,
-		MAX_SRV_IMAGES =  562,
+		MAX_SRV_IMAGES = 562,
 		MAX_UAV_IMAGES = 16,
 		MAX_DSV_IMAGES = 1,
 		START_SLOT_TEXTURES = 10
+	};
+
+	enum
+	{
+		kBinding_RootConstant = 0,
+
+
+
+		kMAX_ROOT_DESCRIPTORS 
 	};
 
 
@@ -90,6 +101,7 @@ public:
 	SlotMap<D3D12::ShaderModuleState> slotMapShaderModules_;
 	SlotMap<D3D12::GraphicsPipeline> slotMapRenderPipelines_;
 	SlotMap<D3D12::D3D12Buffer> slotMapBuffers_;
+	SlotMap<D3D12_STATIC_SAMPLER_DESC> slotMapSamplers_;
 
 	//States 
 	bool m_MsaaState = false;
@@ -252,6 +264,8 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE CurrentBackBufferView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView() const;
 	void CreateRtvAndDsvDescriptorHeaps();
+	void CreateDefaultSampler();
+	void CreateDummyTexture();
 	void OnResize();                         //Todo: Move to Protected. 
 	void FlushCommandQueue();
 

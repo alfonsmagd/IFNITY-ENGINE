@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-18 by alfonsmagd
+// Last modified: 2025-05-19 by alfonsmagd
+
 
 
 
@@ -54,6 +55,7 @@ DeviceD3D12::~DeviceD3D12()
 {
 
 
+	waitDeferredTasks();
 	// Check
 	FlushCommandQueue();
 
@@ -100,7 +102,6 @@ DeviceD3D12::~DeviceD3D12()
 	m_Fence.Reset();
 	destroy( slotMapBuffers_ );
 
-	waitDeferredTasks();
 
 
 	g_Allocator.Reset();
@@ -176,23 +177,23 @@ D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::AllocateFreeSRV()
 	uint32_t start = START_SLOT_TEXTURES;
 	uint32_t end = srvAlloc.maxSlots;
 
-	for (uint32_t i = start; i < end; ++i)
+	for( uint32_t i = start; i < end; ++i )
 	{
-		if (srvAlloc.usedIndex.count(i) == 0)
+		if( srvAlloc.usedIndex.count( i ) == 0 )
 		{
 			// Found a free slot
-			srvAlloc.usedIndex.insert(i);
+			srvAlloc.usedIndex.insert( i );
 
-			CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_BindlessHeap->GetCPUDescriptorHandleForHeapStart());
-			handle.Offset(i, srvAlloc.srvDescriptorSize);
+			CD3DX12_CPU_DESCRIPTOR_HANDLE handle( m_BindlessHeap->GetCPUDescriptorHandleForHeapStart() );
+			handle.Offset( i, srvAlloc.srvDescriptorSize );
 			++srvAlloc.nextSlot;
 			return handle;
 		}
 	}
 	//Not index enough using dummy texture
-	IFNITY_LOG(LogCore, WARNING, "SRV Heap overflow: No more SRV descriptors available. Using dummy texture.");
-	CD3DX12_CPU_DESCRIPTOR_HANDLE handle(m_BindlessHeap->GetCPUDescriptorHandleForHeapStart());
-	handle.Offset(START_SLOT_TEXTURES, srvAlloc.srvDescriptorSize); // dummy texture slot
+	IFNITY_LOG( LogCore, WARNING, "SRV Heap overflow: No more SRV descriptors available. Using dummy texture." );
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handle( m_BindlessHeap->GetCPUDescriptorHandleForHeapStart() );
+	handle.Offset( START_SLOT_TEXTURES, srvAlloc.srvDescriptorSize ); // dummy texture slot
 	return handle;
 
 
@@ -232,6 +233,23 @@ D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::AllocateSRV( uint32_t index )
 	++srvAlloc.nextSlot;
 
 	return handle;
+
+}
+
+void DeviceD3D12::FreeSRV( uint32_t index )
+{
+
+	auto& srvAlloc = descriptorAllocator_.srv;
+	//Check if the index is in the set 
+	if( !srvAlloc.usedIndex.erase( index ) )
+	{
+		IFNITY_LOG( LogCore, WARNING, "Not index found to erase in SRVHeap : index {}", index );
+		return;
+	}
+
+	--srvAlloc.nextSlot;
+
+
 
 }
 
@@ -319,22 +337,23 @@ void DeviceD3D12::destroy( D3D12::BufferHandleSM bufferHandle )
 	// Copias para el lambda
 	auto resource = buffer->resource_; // ComPtr, copia segura
 	auto allocation = buffer->allocation_;
-
 	if( resource || allocation )
 	{
 		addDeferredTask(
-			std::packaged_task<void()>( [ resource, allocation ]() mutable
+			std::packaged_task<void()>( [ res = std::move( buffer->resource_ ), alloc = buffer->allocation_ ]() mutable
 										{
-											if( resource ) resource.Reset();
-											if( allocation ) allocation->Release();
+											if( res ) res.Reset();
+											if( alloc )
+											{
+												alloc->Release();
+												alloc = nullptr;
+											}
 										} ),
 			handle
 		);
 	}
 
-	// Invalida internamente
-	buffer->resource_.Reset();
-	buffer->allocation_ = nullptr;
+	//buffer->allocation_ = nullptr; //becaue the resource will be desto
 
 	// Elimina del slotmap
 	slotMapBuffers_.destroy( bufferHandle );
@@ -502,6 +521,8 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	CreateRtvAndDsvDescriptorHeaps();
 	CreateSwapChain();
 	//Crate RTV and DSV Descriptor Heaps
+	CreateDefaultSampler();
+
 
 	LoadAssetDemo();
 
@@ -586,7 +607,7 @@ void DeviceD3D12::CreateFenceAndDescriptorSizes()
 	m_DescritporSizes.Rtv = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
 	m_DescritporSizes.Dsv = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_DSV );
 	m_DescritporSizes.CbvSrvUav = m_Device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-	
+
 
 	//Fill descritpor allocator
 	descriptorAllocator_.rtv.rtvDescriptorSize = m_DescritporSizes.Rtv;
@@ -786,6 +807,33 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	descBindles.NodeMask = 0;
 	ThrowIfFailed( m_Device->CreateDescriptorHeap( &descBindles, IID_PPV_ARGS( OUT m_BindlessHeap.GetAddressOf() ) ) );
 
+
+}
+
+void DeviceD3D12::CreateDefaultSampler()
+{
+	D3D12_STATIC_SAMPLER_DESC samplerDefault =
+	{
+		.Filter = D3D12_FILTER_MIN_MAG_POINT_MIP_LINEAR,
+		.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP,
+		.MipLODBias = 0.0f,
+		.MinLOD = 0.0f,
+		.MaxLOD = D3D12_FLOAT32_MAX,
+		.ShaderRegister = 0,   //s0
+		.RegisterSpace = 0,	   //space0
+		.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL,
+	};
+
+	if( slotMapSamplers_.create( std::move( samplerDefault ) ).valid() )
+	{
+		IFNITY_LOG( LogCore, INFO, "Default sampler created" );
+	}
+	else
+	{
+		IFNITY_LOG( LogCore, ERROR, "Default sampler not created" );
+	}
 
 }
 
@@ -1000,32 +1048,47 @@ void DeviceD3D12::BuildRootSignature()
 	// thought of as defining the function signature. 
 	// Create an empty root signature. that shader will use to access resources in D3D12.
 	{
-		//Describe RootConstant, this idea its similar like vulkan , want a 256 bytes ifts its ok 
+		//Samplers span 
+		const auto& samplers = slotMapSamplers_.getSlotsSpan();
 
 
+		//Filling Parameters and Descriptors Root.
+		D3D12_ROOT_PARAMETER1 parameters[ kMAX_ROOT_DESCRIPTORS ] = {};
+
+		parameters[ kBinding_RootConstant ] = {
+			.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
+			.Constants = {
+				.ShaderRegister = 0,
+				.RegisterSpace = 0,
+				.Num32BitValues = 64, // 58 because each root cbv takes 2 uints, and the max is 64
+		},
+		};
 
 
+		D3D12_VERSIONED_ROOT_SIGNATURE_DESC desc = {
+			.Version = D3D_ROOT_SIGNATURE_VERSION_1_1,
+			.Desc_1_1 = {
+				.NumParameters = ARRAY_NUM_ELEMENTS( parameters ),
+				.pParameters = parameters,
+				.NumStaticSamplers = static_cast< UINT >(samplers.size()),
+				.pStaticSamplers = samplers.data(),
+				.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+						  D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
+						  D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED
+			},
+		};
 
+		ID3DBlob* serialized_desc = nullptr;
 
-		CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
-		rootSignatureDesc.Init( 0,
-								nullptr,
-								0,
-								nullptr,
-								D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT );
+		ThrowIfFailed( D3D12SerializeVersionedRootSignature( IN & desc, OUT & serialized_desc, nullptr ) );
 
-		ComPtr<ID3DBlob> signature;
-		ComPtr<ID3DBlob> error;
-
-		ThrowIfFailed( D3D12SerializeRootSignature( IN & rootSignatureDesc,
-													D3D_ROOT_SIGNATURE_VERSION_1,
-													OUT & signature, OUT & error ) );
+		/*	ComPtr<ID3DBlob> signature;
+			ComPtr<ID3DBlob> error;*/
 
 		ThrowIfFailed( m_Device->CreateRootSignature( 0,
-													  signature->GetBufferPointer(),
-													  signature->GetBufferSize(),
+													  serialized_desc->GetBufferPointer(),
+													  serialized_desc->GetBufferSize(),
 													  IID_PPV_ARGS( OUT & m_RootSignature ) ) );
-
 
 
 		#if defined(_DEBUG)
@@ -1214,11 +1277,7 @@ void DeviceD3D12::destroy( SlotMap<D3D12::D3D12Buffer> sm )
 			buffer->resource_.Reset();
 			buffer->resource_ = nullptr;
 		}
-		if( buffer->allocation_ )
-		{
-			buffer->allocation_->Release();
-			buffer->allocation_ = nullptr;
-		}
+		
 	}
 	sm.clear();
 

@@ -1,6 +1,12 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-19 by alfonsmagd
+
 #pragma once
 
 #include <pch.h>
+#include <span>
 
 IFNITY_NAMESPACE
 
@@ -64,7 +70,7 @@ class SlotMap final
 	};
 
 	
-	std::vector<uint32_t> freeList; // Pila de índices libres
+	std::vector<uint32_t> freeList; // Pila de ndices libres
 
 public:
 	std::vector<Slot> slots;
@@ -74,7 +80,7 @@ public:
 		uint32_t index;
 		if( !freeList.empty() )
 		{
-			index = freeList.back(); // Reutiliza índice
+			index = freeList.back(); // Reutiliza ndice
 			freeList.pop_back();
 			slots[ index ].obj = std::move(obj);
 		}
@@ -86,6 +92,24 @@ public:
 		return Handle<ObjectType>(index, slots[ index ].gen);
 	}
 
+	std::span<const ObjectType> getSlotsSpan() const
+	{
+		//This mechanism is not thread safe, but we are using a thread local buffer
+	
+		static thread_local std::vector<ObjectType> buffer;
+		buffer.clear();
+		buffer.reserve(slots.size());
+
+		for (const auto& slot : slots)
+		{
+			if (slot.gen != 0)
+				buffer.push_back(slot.obj);
+		}
+
+		return std::span<const ObjectType>(buffer.data(), buffer.size());
+	}
+
+
 	void destroy(Handle<ObjectType> handle)
 	{
 		if( !handle.valid() ) return;
@@ -93,7 +117,7 @@ public:
 		assert(index < slots.size() && handle.gen() == slots[ index ].gen);
 
 		slots[ index ].gen++; // Invalida el handle viejo
-		freeList.push_back(index); // Añade el índice a la free list
+		freeList.push_back(index); // Aade el ndice a la free list
 	}
 
 	ObjectType* get(Handle<ObjectType> handle)
@@ -113,17 +137,17 @@ public:
 	}
 	ObjectType* getByIndex(uint32_t index)
 	{
-		if( index >= slots.size() ) return nullptr;  // Verifica si el índice está fuera de rango
+		if( index >= slots.size() ) return nullptr;  // Verifica si el ndice est fuera de rango
 		auto& slot = slots[ index ];
-		if( slot.gen == 0 ) return nullptr;  // Verifica que la generación no sea 0, lo que indica un objeto inválido
+		if( slot.gen == 0 ) return nullptr;  // Verifica que la generacin no sea 0, lo que indica un objeto invlido
 		return &slot.obj;
 	}
 
 	const ObjectType* getByIndex(uint32_t index) const
 	{
-		if( index >= slots.size() ) return nullptr;  // Verifica si el índice está fuera de rango
+		if( index >= slots.size() ) return nullptr;  // Verifica si el ndice est fuera de rango
 		const auto& slot = slots[ index ];
-		if( slot.gen == 0 ) return nullptr;  // Verifica que la generación no sea 0
+		if( slot.gen == 0 ) return nullptr;  // Verifica que la generacin no sea 0
 		return &slot.obj;
 	}
 
