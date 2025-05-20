@@ -1,7 +1,7 @@
 
 
 #include "d3d12_Image.hpp"
-
+#include <D3D12MemAlloc.h>
 
 IFNITY_NAMESPACE
 
@@ -43,16 +43,6 @@ namespace D3D12
 		return (format == DXGI_FORMAT_D24_UNORM_S8_UINT) ||
 			   (format == DXGI_FORMAT_D32_FLOAT_S8X24_UINT);
 	}
-
-
-
-
-
-
-
-
-
-
 
 
 

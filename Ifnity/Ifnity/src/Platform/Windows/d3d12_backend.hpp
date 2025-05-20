@@ -17,6 +17,7 @@
 #include "Ifnity\Graphics\ifrhi.h"
 #include "Ifnity\Graphics\Interfaces\IDevice.hpp"
 #include "Ifnity\Graphics\Interfaces\IBuffer.hpp"
+#include "Ifnity\Graphics\Interfaces\ITexture.hpp"
 #include "Ifnity\Graphics\Interfaces\IGraphicsPipeline.hpp"
 #include "Platform\D3D12\d3d12_CommandBuffer.hpp"
 #include "Platform\D3D12\d3d12_classes.hpp"
@@ -29,6 +30,17 @@ class DeviceD3D12;
 namespace D3D12
 {
 
+
+	class IFNITY_API Texture final: public ITexture
+	{
+	public:
+		virtual ~Texture() = default;
+
+		TextureDescription GetTextureDescription() override { return {}; }
+		//Todo: GetTextureFormatProperties
+		uint32_t GetTextureID() override { return {}; }
+
+	};
 
 	//------------------------------------------------------------------------------------//
 	//  DEVICE D3D12                                                                     //
@@ -48,7 +60,7 @@ namespace D3D12
 		void BindingVertexAttributesBuffer( BufferHandle& bf )override;
 		void BindingIndexBuffer( BufferHandle& bf )override;
 		BufferHandle CreateBuffer( const BufferDescription& desc ) override;
-		TextureHandle CreateTexture( TextureDescription& desc ) override { return {}; }; //TODO add TextureDescripton const
+		TextureHandle CreateTexture( TextureDescription& desc ) override; //TODO add TextureDescripton const
 		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc ) override { return {}; };;
 		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder ) override { return {}; };
 		SceneObjectHandler CreateSceneObject( const char* meshes, const char* scene, const char* materials ) override { return {}; };
@@ -59,10 +71,13 @@ namespace D3D12
 		void SetDepthTexture( TextureHandle texture )override {};
 		// Virtual destructor to ensure proper destruction of derived objects
 		void setActualPipeline( GraphicsPipeline* pipeline );
-		void upload( BufferHandleSM&     buffer, const void* data, size_t size, uint32_t offset = 0 );
+		void upload( BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0 );
 		void upload( D3D12::D3D12Buffer* buffer, const void* data, size_t size, uint32_t offset = 0 );
 
 	private:
+		bool validateTextureDescription(TextureDescription& texdesc);
+		D3D12_RESOURCE_FLAGS getImageUsageFlags( const TextureDescription& texdesc );
+
 		HolderBufferSM CreateInternalD3D12Buffer( const BufferDescription& desc,
 												  D3D12_RESOURCE_FLAGS resourceFlags,
 												  D3D12_RESOURCE_STATES initialState,

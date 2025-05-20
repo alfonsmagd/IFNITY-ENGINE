@@ -248,7 +248,7 @@ void DeviceD3D12::FreeSRV( uint32_t index )
 	}
 
 	--srvAlloc.nextSlot;
-
+	
 
 
 }
@@ -942,8 +942,9 @@ void DeviceD3D12::OnResize()
 	depthStencilResourceDesc.SampleDesc.Count = 1;
 	depthStencilResourceDesc.SampleDesc.Quality = 0;
 	depthStencilResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+	depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
 
+	//These depth/stencil resources weren't used as shader resources during this capture, but the resources didn't have the D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE flag set on them at creation time. If the application doesn't use these resources as shader resources, then consider adding DENY_SHADER_RESOURCE to their creation flags to improve performance on some hardware. It will be particularly beneficial on AMD GCN 1.2+ hardware that supports "Delta Color Compression" (DCC).
 
 
 	ThrowIfFailed( g_Allocator->CreateResource(
@@ -954,6 +955,9 @@ void DeviceD3D12::OnResize()
 		&m_DepthStencilAllocation,
 		IID_PPV_ARGS( m_DepthStencilBuffer.GetAddressOf() )
 	) );
+
+	m_DepthStencilBuffer->SetName(L"Depth/Stencil Resource");
+	m_DepthStencilAllocation->SetName( L"Depth/Stencil Allocation" );
 
 
 
@@ -1048,7 +1052,7 @@ void DeviceD3D12::BuildRootSignature()
 	// thought of as defining the function signature. 
 	// Create an empty root signature. that shader will use to access resources in D3D12.
 	{
-		//Samplers span 
+		//Samplers span valid.
 		const auto& samplers = slotMapSamplers_.getSlotsSpan();
 
 
@@ -1060,7 +1064,7 @@ void DeviceD3D12::BuildRootSignature()
 			.Constants = {
 				.ShaderRegister = 0,
 				.RegisterSpace = 0,
-				.Num32BitValues = 64, // 58 because each root cbv takes 2 uints, and the max is 64
+				.Num32BitValues = 64, // 64 because each root cbv takes 2 uints, and the max is 64
 		},
 		};
 
@@ -1082,21 +1086,14 @@ void DeviceD3D12::BuildRootSignature()
 
 		ThrowIfFailed( D3D12SerializeVersionedRootSignature( IN & desc, OUT & serialized_desc, nullptr ) );
 
-		/*	ComPtr<ID3DBlob> signature;
-			ComPtr<ID3DBlob> error;*/
 
 		ThrowIfFailed( m_Device->CreateRootSignature( 0,
 													  serialized_desc->GetBufferPointer(),
 													  serialized_desc->GetBufferSize(),
 													  IID_PPV_ARGS( OUT & m_RootSignature ) ) );
 
+		IFNITY_LOG( LogCore, INFO, "Root signature  Default created" );
 
-		#if defined(_DEBUG)
-		// Enable better shader debugging with the graphics debugging tools.
-		UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-		#else
-		UINT compileFlags = 0;
-		#endif
 
 
 

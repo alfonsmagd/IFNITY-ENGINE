@@ -253,7 +253,29 @@ namespace D3D12
 		}
 	}
 
+	inline DXGI_SAMPLE_DESC getD3D12SampleDesc(uint32_t numSamples, UINT maxSupportedSamples = D3D12_MAX_MULTISAMPLE_SAMPLE_COUNT )
+	{
+		DXGI_SAMPLE_DESC sampleDesc = { 1, 0 }; // Default: no MSAA
 
+		if (numSamples <= 1 || !(maxSupportedSamples & D3D12_MAX_MULTISAMPLE_SAMPLE_COUNT))
+			return sampleDesc;
+
+		if (numSamples <= 2 && (maxSupportedSamples & 2)) {
+			sampleDesc.Count = 2;
+		}
+		else if (numSamples <= 4 && (maxSupportedSamples & 4)) {
+			sampleDesc.Count = 4;
+		}
+		else if (numSamples <= 8 && (maxSupportedSamples & 8)) {
+			sampleDesc.Count = 8;
+		}
+		else if (numSamples <= 16 && (maxSupportedSamples & 16)) {
+			sampleDesc.Count = 16;
+		}
+		// D3D12 usually doesn’t support 32 or 64 samples — skip for safety.
+
+		return sampleDesc;
+	}
 
 
 }//end namespace D3D12

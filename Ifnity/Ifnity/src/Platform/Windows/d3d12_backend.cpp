@@ -29,6 +29,54 @@ IFNITY_NAMESPACE
 namespace D3D12
 {
 
+	bool validateImageLimits( D3D12_RESOURCE_DIMENSION dimension,
+							  UINT sampleCount,
+							  UINT width,
+							  UINT height,
+							  UINT depth )
+	{
+		// MSAA solo válido en 2D
+		if( sampleCount > 1 && dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Sample count > 1 only supported for 2D textures" );
+			return false;
+		}
+
+		if( dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D )
+		{
+			if( !(width <= D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION &&
+				   height <= D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION) )
+			{
+				IFNITY_LOG( LogCore, ERROR, "2D texture size exceeded" );
+				return false;
+			}
+		}
+		else if( dimension == D3D12_RESOURCE_DIMENSION_TEXTURE3D )
+		{
+			if( !(width <= D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION &&
+				   height <= D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION &&
+				   depth <= D3D12_REQ_TEXTURE3D_U_V_OR_W_DIMENSION) )
+			{
+				IFNITY_LOG( LogCore, ERROR, "3D texture size exceeded" );
+				return false;
+			}
+			if( sampleCount > 1 )
+			{
+				IFNITY_LOG( LogCore, ERROR, "MSAA is not supported for 3D textures" );
+				return false;
+			}
+		}
+		else
+		{
+			IFNITY_LOG( LogCore, ERROR, "Unsupported texture type" );
+			return false;
+		}
+
+		return true;
+	}
+
+
+
 	//------------------------------------------------------------------------------------//
 	//  BUFFER  D3D12                                                          //
 	//-------------------------------------------------------------------------------------//
@@ -115,12 +163,12 @@ namespace D3D12
 		else
 		{
 			descRenderTarget.BlendEnable = TRUE;
-			descRenderTarget.SrcBlend        = ConvertToD3D12Blend(blendstate.srcColorBlendFactor);
-			descRenderTarget.DestBlend       = ConvertToD3D12Blend(blendstate.dstColorBlendFactor);
-			descRenderTarget.BlendOp         = ConvertToD3D12BlendOp(blendstate.colorBlendOp);
-			descRenderTarget.SrcBlendAlpha   = ConvertToD3D12Blend(blendstate.srcAlphaBlendFactor);
-			descRenderTarget.DestBlendAlpha  = ConvertToD3D12Blend(blendstate.dstAlphaBlendFactor);
-			descRenderTarget.BlendOpAlpha    = ConvertToD3D12BlendOp(blendstate.alphaBlendOp);
+			descRenderTarget.SrcBlend = ConvertToD3D12Blend( blendstate.srcColorBlendFactor );
+			descRenderTarget.DestBlend = ConvertToD3D12Blend( blendstate.dstColorBlendFactor );
+			descRenderTarget.BlendOp = ConvertToD3D12BlendOp( blendstate.colorBlendOp );
+			descRenderTarget.SrcBlendAlpha = ConvertToD3D12Blend( blendstate.srcAlphaBlendFactor );
+			descRenderTarget.DestBlendAlpha = ConvertToD3D12Blend( blendstate.dstAlphaBlendFactor );
+			descRenderTarget.BlendOpAlpha = ConvertToD3D12BlendOp( blendstate.alphaBlendOp );
 		}
 		descRenderTarget.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
@@ -137,7 +185,7 @@ namespace D3D12
 			.setBlend( blendDesc )
 			.setCullMode( convertToDxCullMode( rasterState.cullMode ) )
 			.setFillMode( convertToDxFillMode( rasterState.polygonMode ) )
-			.setFrontCounterClockwise( convertToDxFrontCounterClockwise(rasterState.frontFace) )
+			.setFrontCounterClockwise( convertToDxFrontCounterClockwise( rasterState.frontFace ) )
 			.setRootSignature( m_DeviceD3D12->m_RootSignature.Get() )
 			.setInputLayout( m_rD3D12PipelineState.inputLayout_ )
 			.build( m_DeviceD3D12->m_Device.Get(), OUT m_PipelineState.GetAddressOf() );
@@ -297,7 +345,127 @@ namespace D3D12
 	}
 
 
+	TextureHandle Device::CreateTexture( TextureDescription& desc )
+	{
 
+		using namespace rhi;
+
+		//For simplify 
+		TextureDescription texdesc( desc );
+		const auto& dD312 = *m_DeviceD3D12;
+
+		//Get the format value in this case will check only if the format is valid or depthformat 
+		if( !validateTextureDescription( texdesc ) )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Texture description is invalid" );
+			return {};
+		}
+
+		DXGI_FORMAT format = formatToDxgiFormat( texdesc.format );
+
+		D3D12_RESOURCE_FLAGS usageFlags = getImageUsageFlags( texdesc );
+
+
+		const bool hasDebugName = texdesc.debugName.size() > 0;
+
+		char debugNameImage[ 256 ] = { 0 };
+		char debugNameImageView[ 256 ] = { 0 };
+
+		if( hasDebugName )
+		{
+			snprintf( debugNameImage, sizeof( debugNameImage ) - 1, "Image: %s", texdesc.debugName );
+			snprintf( debugNameImageView, sizeof( debugNameImageView ) - 1, "Image View: %s", texdesc.debugName );
+		}
+
+		//For now we force numLayers to 1 
+		D3D12_RESOURCE_DIMENSION resourceDim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+		D3D12_SRV_DIMENSION srvDim = D3D12_SRV_DIMENSION_TEXTURE2D;
+		DXGI_SAMPLE_DESC sampleDesc = {};
+		UINT sampleCount = 1;
+		UINT arraySize = 1;
+		uint32_t numLayers = 1;
+
+
+		if( !IFNITY_VERIFY( validateImageLimits( resourceDim,
+												 sampleCount,
+												 texdesc.dimensions.width,
+												 texdesc.dimensions.height,
+												 texdesc.dimensions.depth ) ) )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Texture dimension is invalidate checking after validate Image limits." );
+			return {};
+		}
+		const auto texdim = texdesc.dimensions;
+
+		IFNITY_ASSERT_MSG( texdesc.mipLevels > 0, "The image must contain at least one mip-level" );
+		IFNITY_ASSERT_MSG( numLayers > 0, "The image must contain at least one layer" );
+		IFNITY_ASSERT_MSG( numLayers > 0, "The image must contain at least one sample" );
+		IFNITY_ASSERT( texdim.width > 0 );
+		IFNITY_ASSERT( texdim.height > 0 );
+		IFNITY_ASSERT( texdim.depth > 0 );
+
+		D3D12_RESOURCE_DESC textureDesc = {};
+
+		switch( texdesc.dimension )
+		{
+			case TextureType::TEXTURE2D:
+				resourceDim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+				srvDim = D3D12_SRV_DIMENSION_TEXTURE2D;
+				sampleDesc = getD3D12SampleDesc( sampleCount );
+				arraySize = 1;
+				textureDesc = CD3DX12_RESOURCE_DESC::Tex2D(
+					format,
+					static_cast< UINT64 >(texdim.width),
+					static_cast< UINT >(texdim.height),
+					static_cast< UINT16 >(arraySize),
+					texdesc.mipLevels,
+					sampleDesc.Count,
+					sampleDesc.Quality,
+					usageFlags );
+				break;
+
+			case TextureType::TEXTURECUBE:
+				IFNITY_LOG( LogCore, ERROR, "Cubemaps are not supported yet" );
+				break;
+			case TextureType::TEXTURE3D:
+				IFNITY_LOG( LogCore, ERROR, "3D textures are not supported yet" );
+				break;
+
+
+			default:
+				IFNITY_LOG( LogCore, ERROR, "Unsupported texture type" );
+
+		}
+
+		//Create D3D12Image after validation 
+		D3D12Image image = {};
+		image.usageFlags_ = usageFlags;
+		image.type_ = resourceDim;
+		image.width_ = texdim.width;
+		image.height_ = texdim.height;
+		image.isDepthFormat_ = D3D12Image::isDepthFormat( format );
+		image.format_ = format;
+		image.desc_ = textureDesc;
+
+
+		// 2. allocateDesc D3D12MA and create resource. 
+		D3D12MA::ALLOCATION_DESC allocDesc = {};
+		allocDesc.HeapType = D3D12_HEAP_TYPE_DEFAULT;
+
+		ThrowIfFailed( m_DeviceD3D12->g_Allocator->CreateResource(
+			&allocDesc,
+			&image.desc_,
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			nullptr, // No optimized clear value for buffers
+			&image.allocation_,
+			IID_PPV_ARGS( OUT image.resource_.GetAddressOf() )
+		) );
+
+
+
+
+		return {};
+	}
 
 
 
@@ -380,6 +548,8 @@ namespace D3D12
 			{
 				std::wstring wdebugName( debugName, debugName + strlen( debugName ) );
 				buffer.resource_->SetName( wdebugName.c_str() );
+
+				buffer.allocation_->SetName( wdebugName.c_str() );
 			}
 
 
@@ -399,6 +569,9 @@ namespace D3D12
 		return makeHolder( m_DeviceD3D12, bufferHandle );
 
 	}
+
+
+
 
 
 	void Device::upload( D3D12Buffer* buffer, const void* data, size_t size, uint32_t offset )
@@ -467,9 +640,83 @@ namespace D3D12
 	}
 
 
+	D3D12_RESOURCE_FLAGS Device::getImageUsageFlags( const TextureDescription& texdesc )
+	{
+		D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE;
 
+		if( static_cast< uint8_t >(texdesc.usage) & static_cast< uint8_t >(rhi::TextureUsageBits::STORAGE) )
+		{
+			IFNITY_ASSERT_MSG( texdesc.sampleCount <= 1, "Unordered Access (storage image) not allowed on multisampled textures" );
+			flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+		}
+
+		if( static_cast< uint8_t >(texdesc.usage) & static_cast< uint8_t >(rhi::TextureUsageBits::ATTACHMENT) )
+		{
+			if( isDepthFormat( texdesc.format ) )
+			{
+				flags |= D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+			}
+			else
+			{
+				flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+			}
+		}
+
+		return flags;
+	}
+
+	bool Device::validateTextureDescription( TextureDescription& texdesc )
+	{
+		const rhi::TextureType type = texdesc.dimension;
+
+		if( texdesc.width <= 0 && texdesc.height <= 0 && texdesc.depth <= 0 )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Texture dimension is invalid" );
+			return false;
+		}
+		if( !(type == TextureType::TEXTURE2D || type == TextureType::TEXTURECUBE || type == TextureType::TEXTURE3D) )
+		{
+			IFNITY_ASSERT( false, "Only 2D, 3D and Cube textures are supported" );
+			return false;
+		}
+
+		if( texdesc.mipLevels == 0 )
+		{
+			IFNITY_LOG( LogCore, WARNING, "The number of mip-levels is 0. Setting it to 1." );
+			texdesc.mipLevels = 1;
+		}
+
+		if( texdesc.sampleCount > 1 && texdesc.mipLevels != 1 )
+		{
+			IFNITY_LOG( LogCore, WARNING, "Multisampled textures must have only one mip-level. Setting it to 1." );
+			return false;
+		}
+
+		if( texdesc.sampleCount > 1 && type == rhi::TextureType::TEXTURE3D )
+		{
+			IFNITY_LOG( LogCore, WARNING, "Multisampled 3D textures are not supported. Setting it to 1." );
+			texdesc.sampleCount = 1;
+			return false;
+		}
+
+		if( !(texdesc.mipLevels <= Utils::getNumMipMapLevels2D( texdesc.dimensions.width, texdesc.dimensions.height )) )
+		{
+			IFNITY_LOG( LogCore, WARNING, "The number of mip-levels is too high. Setting it to the maximum possible value." );
+			texdesc.mipLevels = Utils::getNumMipMapLevels2D( texdesc.dimensions.width, texdesc.dimensions.height );
+		}
+
+		if( texdesc.usage == rhi::TextureUsageBits::UNKNOW )
+		{
+			IFNITY_LOG( LogCore, WARNING, "Texture usage is not set. Setting it to sampled." );
+			texdesc.usage = rhi::TextureUsageBits::SAMPLED;
+		}
+
+		return true;
+	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 
