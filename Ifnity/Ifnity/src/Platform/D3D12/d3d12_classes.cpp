@@ -25,6 +25,7 @@ namespace D3D12
 
 	//Make linker happy =) 
 	template void destroy<BufferHandleSM>(DeviceD3D12*, BufferHandleSM);
+	template void destroy<TextureHandleSM>( DeviceD3D12*, TextureHandleSM );
 
 
 

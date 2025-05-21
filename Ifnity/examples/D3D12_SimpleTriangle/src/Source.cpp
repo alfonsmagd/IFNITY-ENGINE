@@ -1,6 +1,7 @@
 // IFNITY.cp
 
 #include <Ifnity.h>
+#include <stb_image.h>
 
 using namespace IFNITY;
 using namespace IFNITY::rhi;
@@ -163,6 +164,7 @@ private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 
+	TextureHandle m_texture;
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
 	GraphicsPipelineHandle m_pipeline;
@@ -305,6 +307,38 @@ public:
 			bufferDesc.SetStrideSize( sizeof( uint32_t ) );
 		}
 		m_indexBuffer = rdevice->CreateBuffer( bufferDesc );
+
+		{
+			int w, h, comp;
+			const uint8_t* img = stbi_load("data/diffuse_madera.jpg", &w, &h, &comp, 4);
+
+			if( !img )
+			{
+				IFNITY_LOG(LogApp, ERROR, "Failed to load image");
+				assert(false);
+			}
+
+			//DepthText texture
+			TextureDescription descTexture;
+			descTexture.dimensions = {(uint32_t)w, (uint32_t)h};
+			descTexture.format = Format::RGBA_UNORM8;
+			descTexture.usage = TextureUsageBits::SAMPLED;
+			descTexture.isDepth = false;
+			descTexture.debugName = "Depth buffer";
+			descTexture.data = img;
+
+			//DepthStencil texture
+			m_texture = rdevice->CreateTexture(descTexture);
+
+			auto value = m_texture.get()->GetTextureID();
+		}
+
+
+
+
+
+
+
 		
 		//Binding the buffer
 		rdevice->BindingIndexBuffer( m_indexBuffer );

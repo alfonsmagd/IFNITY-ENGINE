@@ -8,7 +8,7 @@
 
 
 #include "d3d12_ImmediateCommands.hpp"
-
+#include "d3d12_constants.hpp"
 
 
 IFNITY_NAMESPACE
@@ -59,15 +59,7 @@ namespace D3D12
 		{
 			auto& buf = buffers_[ i ];
 
-			// Optional: generate debug names for each resource
-			char fenceName[ 256 ] = {};
-			char eventName[ 256 ] = {};
-			if( debugName_ )
-			{
-				snprintf(fenceName, sizeof(fenceName), "Fence: %s (cmdbuf %u)", debugName_, i);
-				snprintf(eventName, sizeof(eventName), "Event: %s (cmdbuf %u)", debugName_, i);
-			}
-
+			
 			// 1. Create a Command Allocator (equivalent to VkCommandPool)
 			HRESULT hr = device->CreateCommandAllocator(
 				D3D12_COMMAND_LIST_TYPE_DIRECT, // You can use COMPUTE or COPY if needed
@@ -84,6 +76,10 @@ namespace D3D12
 				IID_PPV_ARGS(&buf.commandList)
 			);
 			assert(SUCCEEDED(hr) && "Failed to create CommandList");
+			// Set debug name for the command list
+			std::string name = "CommandList: " + std::to_string( i );
+			DEBUG_D3D12_NAME( name, buf.commandList );
+			
 
 			// D3D12 command lists are created in the recording state, so we must close them immediately
 			buf.commandList->Close();
@@ -92,6 +88,9 @@ namespace D3D12
 			// 3. Create a Fence (used for GPU synchronization)
 			hr = device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&buf.fence));
 			assert(SUCCEEDED(hr) && "Failed to create Fence");
+			std::string fenceName = "Fence: " + std::to_string( i );
+			
+			DEBUG_D3D12_NAME( fenceName, buf.fence );
 
 			// 4. Create an Event to wait on the fence from CPU side
 			buf.fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);

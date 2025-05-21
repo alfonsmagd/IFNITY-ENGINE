@@ -13,6 +13,7 @@
 #include "DeviceD3D12.hpp"
 #include  "../D3D12/d3d12_classes.hpp"
 #include "ShaderBuilding\ShaderBuilder.hpp"
+#include "Platform\D3D12\d3d12_constants.hpp";
 
 
 
@@ -361,6 +362,49 @@ void DeviceD3D12::destroy( D3D12::BufferHandleSM bufferHandle )
 
 }
 
+void DeviceD3D12::destroy( D3D12::TextureHandleSM textureHandle )
+{
+	//Check if the buffer handle is valid
+	if( !textureHandle.valid() )
+	{
+		IFNITY_LOG( LogCore, ERROR, "Buffer handle is not valid" );
+		return;
+	}
+	//Get the buffer from the slotmap
+	D3D12::D3D12Image* image = slotMapTextures_.getByIndex( textureHandle.index() );
+
+	//GET last handle 
+	D3D12::SubmitHandle handle = m_ImmediateCommands->getLastSubmitHandle();
+
+	// Copias para el lambda
+	auto resource = image->resource_; // ComPtr, copia segura
+	auto allocation = image->allocation_;
+	if( resource || allocation )
+	{
+		addDeferredTask(
+			std::packaged_task<void()>( [ res = std::move( image->resource_ ), alloc = image->allocation_ ]() mutable
+										{
+											if( res ) res.Reset();
+											if( alloc )
+											{
+												alloc->Release();
+												alloc = nullptr;
+											}
+										} ),
+			handle
+		);
+	}
+
+	//buffer->allocation_ = nullptr; //becaue the resource will be desto
+
+	// Elimina del slotmap
+	slotMapTextures_.destroy( textureHandle );
+
+
+
+
+}
+
 void DeviceD3D12::SetVSync( bool enabled )
 {}
 
@@ -468,6 +512,8 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 		 }*/
 
 		ThrowIfFailed( D3D12MA::CreateAllocator( &desc, &g_Allocator ) );
+		
+		
 	}
 
 	//Check if the debug layer when is enabled
@@ -772,6 +818,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::DepthStencilView() const
 void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 {
 
+	
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
 	rtvHeapDesc.NumDescriptors = (MAX_RTV_SWAPCHAIN_IMAGES + MAX_RTV_DEFFERED_IMAGES);
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -780,6 +827,9 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	ThrowIfFailed( m_Device->CreateDescriptorHeap(
 		&rtvHeapDesc,
 		IID_PPV_ARGS( OUT m_RtvHeap.GetAddressOf() ) ) );
+	std::string name = "RTV Heap";
+
+	m_RtvHeap->SetName( L"RTV Heap" );
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
@@ -791,6 +841,10 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 		&dsvHeapDesc,
 		IID_PPV_ARGS( OUT m_DsvHeap.GetAddressOf() ) ) );
 
+	name = "DSV Heap";
+	
+	m_DsvHeap->SetName( L"DSV Heap" );
+
 
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -798,6 +852,8 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	desc.NodeMask = 0;
 	ThrowIfFailed( m_Device->CreateDescriptorHeap( &desc, IID_PPV_ARGS( OUT m_ImguiHeap.GetAddressOf() ) ) );
+	name = "Imgui Heap";
+	DEBUG_D3D12_NAME( name, m_ImguiHeap );
 
 
 	D3D12_DESCRIPTOR_HEAP_DESC descBindles = {};
@@ -806,6 +862,11 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	descBindles.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	descBindles.NodeMask = 0;
 	ThrowIfFailed( m_Device->CreateDescriptorHeap( &descBindles, IID_PPV_ARGS( OUT m_BindlessHeap.GetAddressOf() ) ) );
+
+	name = "Bindless Heap";
+	
+	m_BindlessHeap->SetName( L"Bindless Heap" );
+
 
 
 }
@@ -1091,6 +1152,9 @@ void DeviceD3D12::BuildRootSignature()
 													  serialized_desc->GetBufferPointer(),
 													  serialized_desc->GetBufferSize(),
 													  IID_PPV_ARGS( OUT & m_RootSignature ) ) );
+
+		std::string name  = "Root 1Constant-1StaticSampler-Bindless";
+		DEBUG_D3D12_NAME( name, m_RootSignature );
 
 		IFNITY_LOG( LogCore, INFO, "Root signature  Default created" );
 

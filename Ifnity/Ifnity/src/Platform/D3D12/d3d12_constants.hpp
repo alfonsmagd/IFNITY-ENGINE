@@ -277,6 +277,13 @@ namespace D3D12
 		return sampleDesc;
 	}
 
+	#define DEBUG_D3D12_NAME(name, resource) \
+    { \
+        std::wstring wdebugName((name).begin(), (name).end()); \
+        (resource)->SetName(wdebugName.c_str()); \
+    }
+	
+
 
 }//end namespace D3D12
 

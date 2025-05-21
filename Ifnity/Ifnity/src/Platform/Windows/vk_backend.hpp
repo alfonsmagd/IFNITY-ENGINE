@@ -44,8 +44,8 @@ namespace Vulkan
 	class IFNITY_API Texture final: public ITexture
 	{
 	public:
-		virtual TextureDescription GetTextureDescription() override { return m_TextureDescription; }
-		virtual uint32_t           GetTextureID() override { return m_TextureID; }
+		 TextureDescription GetTextureDescription() override { return m_TextureDescription; }
+		 uint32_t           GetTextureID() override { return m_TextureID; }
 
 		//Constructor 
 		Texture() = default;

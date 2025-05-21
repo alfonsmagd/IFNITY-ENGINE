@@ -83,6 +83,7 @@ namespace D3D12
 
 	//Using HolderUtils 
 	using HolderBufferSM = Holder<D3D12Buffer>;
+	using HolderTextureSM = Holder<D3D12Image>;
 
 
 

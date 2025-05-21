@@ -36,10 +36,21 @@ namespace D3D12
 	public:
 		virtual ~Texture() = default;
 
-		TextureDescription GetTextureDescription() override { return {}; }
+		Texture() = default;
+		Texture( const TextureDescription& desc, HolderTextureSM&& texture ): m_TextureDescription( desc ), m_holdTexture( std::move( texture ) )
+		{
+			m_TextureID = *m_holdTexture;
+		}
+		TextureDescription GetTextureDescription() override { return m_TextureDescription; }
 		//Todo: GetTextureFormatProperties
-		uint32_t GetTextureID() override { return {}; }
+		uint32_t GetTextureID() override { return m_TextureID; }
 
+
+
+	private:
+		uint32_t m_TextureID = 0; ///< The texture ID.
+		TextureDescription m_TextureDescription; ///< The texture description.
+		HolderTextureSM m_holdTexture; ///< The texture handle.
 	};
 
 	//------------------------------------------------------------------------------------//
@@ -73,9 +84,10 @@ namespace D3D12
 		void setActualPipeline( GraphicsPipeline* pipeline );
 		void upload( BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0 );
 		void upload( D3D12::D3D12Buffer* buffer, const void* data, size_t size, uint32_t offset = 0 );
+		void upload( TextureHandleSM handle, uint32_t miplevel, const void* data );
 
 	private:
-		bool validateTextureDescription(TextureDescription& texdesc);
+		bool validateTextureDescription( TextureDescription& texdesc );
 		D3D12_RESOURCE_FLAGS getImageUsageFlags( const TextureDescription& texdesc );
 
 		HolderBufferSM CreateInternalD3D12Buffer( const BufferDescription& desc,

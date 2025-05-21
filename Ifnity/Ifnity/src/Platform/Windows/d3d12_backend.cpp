@@ -352,7 +352,7 @@ namespace D3D12
 
 		//For simplify 
 		TextureDescription texdesc( desc );
-		const auto& dD312 = *m_DeviceD3D12;
+		 auto& ctx_ = *m_DeviceD3D12;
 
 		//Get the format value in this case will check only if the format is valid or depthformat 
 		if( !validateTextureDescription( texdesc ) )
@@ -367,15 +367,6 @@ namespace D3D12
 
 
 		const bool hasDebugName = texdesc.debugName.size() > 0;
-
-		char debugNameImage[ 256 ] = { 0 };
-		char debugNameImageView[ 256 ] = { 0 };
-
-		if( hasDebugName )
-		{
-			snprintf( debugNameImage, sizeof( debugNameImage ) - 1, "Image: %s", texdesc.debugName );
-			snprintf( debugNameImageView, sizeof( debugNameImageView ) - 1, "Image View: %s", texdesc.debugName );
-		}
 
 		//For now we force numLayers to 1 
 		D3D12_RESOURCE_DIMENSION resourceDim = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -461,10 +452,50 @@ namespace D3D12
 			IID_PPV_ARGS( OUT image.resource_.GetAddressOf() )
 		) );
 
+		std::string debugNameImage = "Image: " + texdesc.debugName;
+		DEBUG_D3D12_NAME( debugNameImage, image.resource_ );
+
+
+		TextureHandleSM textHanlde = ctx_.slotMapTextures_.create( std::move( image ) );
+		HolderTextureSM holder = makeHolder(&ctx_, textHanlde);
+
+		uint32_t index = textHanlde.index();
+
+		//This process is only for get SRV offset based in bindless. Its important ensure that SRV has offset based in index bindless. 
+		//Get again the image.
+
+		D3D12Image* imageHandle = ctx_.slotMapTextures_.get( textHanlde );
+		IFNITY_ASSERT_MSG( imageHandle != nullptr, "Image handle is null error ?? stranger please call me" );
+
+		//Descriptor preparer.
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = format;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = texdesc.mipLevels;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
+		imageHandle->descriptorHandle_.srvHandle = ctx_.AllocateSRV( index );
+
+
+		ctx_.m_Device->CreateShaderResourceView( imageHandle->resource_.Get(), 
+												 &srvDesc,
+												 imageHandle->descriptorHandle_.srvHandle);
 
 
 
-		return {};
+		TextureHandle texture = std::make_shared<Texture>( texdesc, std::move( holder ) );
+
+		if( texdesc.data )
+		{
+			upload( textHanlde, texdesc.mipLevels , desc.data );
+		}
+		 
+
+		return texture;
+	
+
 	}
 
 
@@ -548,7 +579,6 @@ namespace D3D12
 			{
 				std::wstring wdebugName( debugName, debugName + strlen( debugName ) );
 				buffer.resource_->SetName( wdebugName.c_str() );
-
 				buffer.allocation_->SetName( wdebugName.c_str() );
 			}
 
@@ -602,6 +632,109 @@ namespace D3D12
 		//Lets to staginDevice to upload data 
 		m_DeviceD3D12->stagingDevice_->bufferSubData( *buffer, offset, size, data );
 
+
+	}
+
+	void Device::upload( TextureHandleSM handle,  uint32_t miplevel, const void* data )
+	{
+	
+		auto& ctx_ = *m_DeviceD3D12;
+
+		//Previos check if the buffer is null and check it 
+		if( !data )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Data is null to upload " );
+			return;
+		}
+		IFNITY_ASSERT_MSG( data, "Data size should be non-zero" );
+
+		//Get the image from the slotmap
+		D3D12Image* image = m_DeviceD3D12->slotMapTextures_.get( handle );
+		if( !image )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Buffer is null to upload " );
+			return;
+		}
+
+		
+		// 4. Calcular el layout de subrecursos
+		UINT64 uploadBufferSize = 0;
+		std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts(miplevel);
+		std::vector<UINT> numRows(miplevel);
+		std::vector<UINT64> rowSizes(miplevel);
+
+		ctx_.m_Device->GetCopyableFootprints(
+			&image->desc_,
+			0,
+			1,
+			0,
+			layouts.data(),
+			numRows.data(),
+			rowSizes.data(),
+			&uploadBufferSize );
+
+		// 5. Crear buffer intermedio
+		CD3DX12_RESOURCE_DESC uploadDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+
+		D3D12MA::ALLOCATION_DESC uploadAllocDesc = {};
+		uploadAllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
+
+		ComPtr<ID3D12Resource> uploadBuffer;
+		D3D12MA::Allocation* uploadAlloc = nullptr;
+		ctx_.g_Allocator->CreateResource(&uploadAllocDesc, 
+										  &uploadDesc,
+										  D3D12_RESOURCE_STATE_GENERIC_READ,
+										  nullptr, 
+										  &uploadAlloc, 
+										  IID_PPV_ARGS(OUT &uploadBuffer));
+
+		// 6. Preparar estructura para UpdateSubresources
+		std::vector<D3D12_SUBRESOURCE_DATA> subresources(miplevel);
+		const uint8_t* basePtr = reinterpret_cast<const uint8_t*>(data); // only chunk memory for now 
+		UINT offset = 0;
+		for (UINT i = 0; i < miplevel; ++i)
+		{
+			subresources[i].pData = basePtr + offset;
+			subresources[i].RowPitch = rowSizes[i];
+			subresources[i].SlicePitch = rowSizes[i] * numRows[i];
+
+			offset += static_cast<UINT>(subresources[i].SlicePitch);
+		}
+
+		D3D12ImmediateCommands::CommandListWrapper  wrapper  = ctx_.m_ImmediateCommands->acquire();
+
+
+		UpdateSubresources( wrapper.commandList.Get(), 
+							image->resource_.Get(), 
+							uploadBuffer.Get(),
+							0,
+							0,
+							static_cast< UINT >(miplevel), 
+							subresources.data());
+
+		// 7. Transition the image to the appropriate state
+		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			image->resource_.Get(),
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+
+		wrapper.commandList->ResourceBarrier( 1, &barrier );
+
+		//Submit the command list
+
+		SubmitHandle submithandle = ctx_.m_ImmediateCommands->submit(  wrapper);
+		//Defer the destruction of the staging buffer
+		ctx_.addDeferredTask( 
+			std::packaged_task<void()>( [ res = std::move( uploadBuffer), alloc = std::move(uploadAlloc)]() mutable
+										{
+											if( res ) res.Reset();
+											if( alloc )
+											{
+												alloc->Release();
+												alloc = nullptr;
+											}
+										} ),
+		 submithandle );
 
 	}
 

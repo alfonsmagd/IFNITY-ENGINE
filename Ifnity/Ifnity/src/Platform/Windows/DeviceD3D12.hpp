@@ -91,6 +91,7 @@ public:
 
 	ComPtr<D3D12MA::Allocator> g_Allocator;
 
+
 	//UniquePtrs
 	std::unique_ptr<D3D12::D3D12ImmediateCommands> m_ImmediateCommands = nullptr;
 	std::unique_ptr<D3D12::D3D12Swapchain> swapchain_                  = nullptr;
@@ -110,7 +111,7 @@ public:
 	UINT m_CurrentBackBufferIndex = 0;
 	UINT m_CurrentFence = 0;
 	HANDLE m_FenceEvent = nullptr;
-
+	 
 
 	D3D12::CommandBuffer currentCommandBuffer_;
 	D3D12::GraphicsPipeline* actualPipeline_ = nullptr;
@@ -237,7 +238,7 @@ public:
 	
 	//Destroy Operations
 	void destroy( D3D12::BufferHandleSM bufferHandle );
-
+	void destroy( D3D12::TextureHandleSM textureHandle );
 
 protected:
 	// Window attributes
