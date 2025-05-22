@@ -191,6 +191,9 @@ namespace D3D12
 	}
 
 
+
+
+
 	void CommandBuffer::cmdDraw( DrawModeUse drawMode,
 								 uint32_t vertexCount,
 								 uint32_t instanceCount,
@@ -380,6 +383,26 @@ namespace D3D12
 		};
 		wrapper_->commandList->RSSetViewports( 1, &screenViewport );
 
+	}
+
+
+	void CommandBuffer::cmdPushConstants( const void* data, size_t size, size_t offset)
+	{
+		//Check size multiple x4 
+
+		if( !data || size == 0 )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Invalid push constant data" );
+			return;
+		}
+		//Check in compiletime with consteval size ==4 
+
+		IFNITY_ASSERT( size % sizeof( uint32_t ) == 0, "Push constant size must be multiple of 4" );
+
+		wrapper_->commandList->SetGraphicsRoot32BitConstants( DeviceD3D12::kBinding_RootConstant,
+															  static_cast< UINT >(size / sizeof( uint32_t )),
+															  data,
+															  static_cast< UINT >(offset) );
 	}
 
 }

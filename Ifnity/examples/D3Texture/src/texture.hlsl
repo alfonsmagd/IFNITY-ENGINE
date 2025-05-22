@@ -1,36 +1,47 @@
-// Input structure for the vertex shader
+//VERTEX SHADER SM6.6 BINDLESS//
+//Only draw triangle with a texture 
+#if defined(__INTELLISENSE__) || defined(__SHADER_API_RESOURCE_DESCRIPTOR_HEAP)
+Texture2D<float4> ResourceDescriptorHeap[] : register(t0, space0);
+#endif
+
 struct VSInput
 {
     float4 position : POSITION;
     float4 color : COLOR;
-    float2 texcoord : TEXCOORD0;
+    float2 uv : TEXCOORD0;
 };
 
-// Output structure from the vertex shader / input to the pixel shader
 struct PSInput
 {
     float4 position : SV_POSITION;
     float4 color : COLOR;
-    float2 texcoord : TEXCOORD0;
+    float2 uv : TEXCOORD0;
 };
 
-// Vertex Shader
 PSInput VSMain(VSInput input)
 {
-    PSInput result;
-    result.position = input.position;
-    result.color = input.color;
-    result.texcoord = input.texcoord;
-    return result;
+    PSInput output;
+    output.position = input.position;
+    output.color = input.color;
+    output.uv = input.uv;
+    return output;
 }
 
-// Texture and sampler declaration
-Texture2D myTexture : register(t0);
-SamplerState mySampler : register(s0);
+//---PIXEL---//
 
-// Pixel Shader
+// SM 6.6 bindless + root constants
+
+struct RootConstants
+{
+    uint texIndex;
+};
+
+ConstantBuffer<RootConstants> root : register(b0);
+SamplerState g_sampler : register(s0); // Sampler declarado en root signature
+
+
 float4 PSMain(PSInput input) : SV_TARGET
 {
-    float4 texColor = myTexture.Sample(mySampler, input.texcoord);
-    return texColor * input.color; // You can adjust blending here
+    Texture2D<float4> tex = ResourceDescriptorHeap[root.texIndex];
+    return tex.Sample(g_sampler, input.uv);
 }

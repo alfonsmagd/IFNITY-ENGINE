@@ -285,6 +285,8 @@ namespace D3D12
 
 	}
 
+
+
 	void Device::BindingVertexAttributesBuffer( BufferHandle& bf )
 	{
 		Buffer* vBuffer = DCAST_BUFFER( bf.get() );
@@ -476,7 +478,7 @@ namespace D3D12
 		srvDesc.Texture2D.MipLevels = texdesc.mipLevels;
 		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-		imageHandle->descriptorHandle_.srvHandle = ctx_.AllocateSRV( index );
+		imageHandle->descriptorHandle_.srvHandle = ctx_.AllocateSRV( index + DeviceD3D12::START_SLOT_TEXTURES );
 
 
 		ctx_.m_Device->CreateShaderResourceView( imageHandle->resource_.Get(), 
@@ -503,6 +505,15 @@ namespace D3D12
 	BufferHandle Device::CreateBuffer( const BufferDescription& desc )
 	{
 		StorageType storage = desc.storage;
+
+
+		if( desc.type == BufferType::CONSTANT_BUFFER )
+		{
+			IFNITY_LOG(LogCore, INFO, "Constant buffer is managed inside D3D12. ");
+			Buffer* buff = new Buffer(desc);
+			return BufferHandle(buff);
+
+		}
 
 		// Check if the storage type is valid
 		if( desc.type == BufferType::NO_DEFINE_BUFFER )
@@ -845,6 +856,32 @@ namespace D3D12
 		}
 
 		return true;
+	}
+
+
+	void Device::WriteBuffer( BufferHandle& buffer, const void* data, size_t size, uint32_t offset )
+	{
+		if( buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER )
+		{
+			cmdBuffer.cmdPushConstants(  data, size, offset );
+		}
+
+		//Write other options and getting the buffer 
+		if( buffer->GetBufferDescription().type == BufferType::UNIFORM_BUFFER )
+		{
+			//Get the BufferHandleSM by index  to avoid dynamic_cast. 
+			D3D12::D3D12Buffer* buf = m_DeviceD3D12->slotMapBuffers_.getByIndex(buffer->GetBufferID());
+			if( !buf )
+			{
+				IFNITY_LOG(LogCore, ERROR, "Buffer is null to write ");
+				return;
+			}
+			upload(buf, data, size, offset);
+
+		}
+		
+	
+		
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

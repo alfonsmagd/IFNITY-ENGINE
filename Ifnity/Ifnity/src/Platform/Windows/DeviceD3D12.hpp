@@ -63,7 +63,6 @@ class DeviceD3D12 final: public GraphicsDeviceManager
 		kBinding_RootConstant = 0,
 
 
-
 		kMAX_ROOT_DESCRIPTORS 
 	};
 

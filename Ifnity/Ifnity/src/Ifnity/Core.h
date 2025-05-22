@@ -54,3 +54,10 @@
 //Templates Concepts
 template<typename T>
 concept PushConstentImpl = requires { sizeof(T); };
+
+//Concepts multiple 4 T
+template<typename T>
+concept Multiple4 = requires { sizeof( T ) % 4 == 0; };
+
+template<typename T>
+concept PushConstentD3D12 = PushConstentImpl<T> && Multiple4<T>;

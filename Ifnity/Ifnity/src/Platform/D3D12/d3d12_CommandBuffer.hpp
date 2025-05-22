@@ -53,6 +53,14 @@ namespace D3D12
 
 		void cmdDraw(DrawModeUse drawMode, uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t baseInstance = 0);
 
+		template<PushConstentD3D12 Struct>
+		void cmdPushConstants(const Struct& data, size_t offset = 0)
+		{
+			this->cmdPushConstants(&data, sizeof(Struct), offset);
+		}
+	
+		void cmdPushConstants(const void* data, size_t size, size_t offset = 0);
+
 	private:
 		friend class DeviceD3D12;
 		friend class Device;

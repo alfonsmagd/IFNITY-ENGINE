@@ -16,6 +16,7 @@ set(EXAMPLE_DIRS
     Sandbox
     ShadersPipeLine
     D3D12_SimpleTriangle
+    D3Texture
     #Simple_Texture
     #scene_materials
     #Geometry_Mesh

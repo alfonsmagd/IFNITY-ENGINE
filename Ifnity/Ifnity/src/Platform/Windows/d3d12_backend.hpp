@@ -65,7 +65,7 @@ namespace D3D12
 
 		void Draw( DrawDescription& desc )override {};
 		GraphicsPipelineHandle CreateGraphicsPipeline( GraphicsPipelineDescription& desc ) override;
-		void WriteBuffer( BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0 )override {};
+		void WriteBuffer( BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0 ) override;
 		void BindingVertexAttributes( const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size ) override {};
 		void BindingVertexIndexAttributes( const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf )override {}; //todo abstract
 		void BindingVertexAttributesBuffer( BufferHandle& bf )override;
@@ -85,6 +85,8 @@ namespace D3D12
 		void upload( BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0 );
 		void upload( D3D12::D3D12Buffer* buffer, const void* data, size_t size, uint32_t offset = 0 );
 		void upload( TextureHandleSM handle, uint32_t miplevel, const void* data );
+
+
 
 	private:
 		bool validateTextureDescription( TextureDescription& texdesc );
