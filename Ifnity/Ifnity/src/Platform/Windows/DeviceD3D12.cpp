@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-19 by alfonsmagd
+// Last modified: 2025-05-24 by alfonsmagd
+
 
 
 
@@ -1138,8 +1139,8 @@ void DeviceD3D12::BuildRootSignature()
 				.NumStaticSamplers = static_cast< UINT >(samplers.size()),
 				.pStaticSamplers = samplers.data(),
 				.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-						  D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
-						  D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED
+						  D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED 
+						  
 			},
 		};
 

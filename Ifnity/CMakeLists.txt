@@ -17,6 +17,7 @@ set(EXAMPLE_DIRS
     ShadersPipeLine
     D3D12_SimpleTriangle
     D3Texture
+	D3D12_Cube_MVP
     #Simple_Texture
     #scene_materials
     #Geometry_Mesh

@@ -213,7 +213,7 @@ public:
 			descShader.Profile = L"vs_6_0";
 			descShader.Type = ShaderType::VERTEX_SHADER;
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
-			descShader.Flags = ShaderCompileFlagType::DEFAULT_HLSL;
+			descShader.Flags = ShaderCompileFlagType::OPTIMIZE_SIZE;
 			m_vs->SetShaderDescription(descShader);
 		}
 		ShaderCompiler::CompileShader(m_vs.get());
@@ -223,7 +223,7 @@ public:
 			descShader.Profile = L"ps_6_0";
 			descShader.Type = ShaderType::PIXEL_SHADER;
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
-			descShader.Flags = ShaderCompileFlagType::DEFAULT_HLSL;
+			descShader.Flags = ShaderCompileFlagType::OPTIMIZE_SIZE;
 			m_ps->SetShaderDescription(descShader);
 		}
 		ShaderCompiler::CompileShader(m_ps.get());

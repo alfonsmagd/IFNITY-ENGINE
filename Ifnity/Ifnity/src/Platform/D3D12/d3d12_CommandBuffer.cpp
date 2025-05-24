@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-17 by alfonsmagd
+// Last modified: 2025-05-24 by alfonsmagd
+
 
 
 
@@ -160,6 +161,11 @@ namespace D3D12
 
 		if( d3d12Pipeline != lastPipelineBound_ )
 		{
+
+			
+			ID3D12DescriptorHeap* heaps[] = { ctx_->m_BindlessHeap.Get() };
+
+			wrapper_->commandList->SetDescriptorHeaps(ARRAY_NUM_ELEMENTS(heaps), heaps);
 			lastPipelineBound_ = d3d12Pipeline;
 			wrapper_->commandList->SetPipelineState( d3d12Pipeline );
 			wrapper_->commandList->SetGraphicsRootSignature( ctx_->m_RootSignature.Get() );

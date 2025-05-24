@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-18 by alfonsmagd
+// Last modified: 2025-05-24 by alfonsmagd
+
 
 
 
@@ -35,7 +36,7 @@ namespace D3D12
 							  UINT height,
 							  UINT depth )
 	{
-		// MSAA solo válido en 2D
+		// MSAA solo vlido en 2D
 		if( sampleCount > 1 && dimension != D3D12_RESOURCE_DIMENSION_TEXTURE2D )
 		{
 			IFNITY_LOG( LogCore, ERROR, "Sample count > 1 only supported for 2D textures" );
@@ -273,7 +274,22 @@ namespace D3D12
 		//cmdBuffer.cmdBeginRendering(textback);
 		cmdBuffer.cmdBeginRendering( renderPass, framebuffer );
 
+		//Set own pipeline
+		if( m_DeviceD3D12->actualPipeline_ )
+		{
+			ID3D12PipelineState* d3d12Pipeline = m_DeviceD3D12->actualPipeline_->getPipelineState();
 
+			if( d3d12Pipeline )
+			{
+				cmdBuffer.cmdBindRenderPipeline( m_DeviceD3D12->actualPipeline_ );
+			}
+			else
+			{
+				IFNITY_LOG( LogCore, ERROR, "Pipeline state is null" );
+				return;
+			}
+		}
+		
 	}
 
 	void Device::StopRecording()
@@ -470,24 +486,19 @@ namespace D3D12
 		IFNITY_ASSERT_MSG( imageHandle != nullptr, "Image handle is null error ?? stranger please call me" );
 
 		//Descriptor preparer.
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.Format = format;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MostDetailedMip = 0;
-		srvDesc.Texture2D.MipLevels = texdesc.mipLevels;
-		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	
 
 		imageHandle->descriptorHandle_.srvHandle = ctx_.AllocateSRV( index + DeviceD3D12::START_SLOT_TEXTURES );
 
 
 		ctx_.m_Device->CreateShaderResourceView( imageHandle->resource_.Get(), 
-												 &srvDesc,
+												 nullptr,
 												 imageHandle->descriptorHandle_.srvHandle);
 
 
 
 		TextureHandle texture = std::make_shared<Texture>( texdesc, std::move( holder ) );
+		
 
 		if( texdesc.data )
 		{
@@ -945,6 +956,10 @@ namespace D3D12
 		pipeline->m_shaderVert = m_DeviceD3D12->slotMapShaderModules_.create( std::move( vsState ) );
 		pipeline->m_shaderPixel = m_DeviceD3D12->slotMapShaderModules_.create( std::move( fsState ) );
 		pipeline->configureVertexAttributes();
+
+
+
+
 
 
 

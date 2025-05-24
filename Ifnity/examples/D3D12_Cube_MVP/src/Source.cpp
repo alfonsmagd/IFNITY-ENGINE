@@ -2,7 +2,16 @@
 
 #include <Ifnity.h>
 #include <stb_image.h>
+#include <DirectXMath.h>
+using Microsoft::WRL::ComPtr;
+using namespace DirectX;
 
+
+struct Vertex
+{
+	XMFLOAT3 Pos;
+	XMFLOAT4 Color;
+};
 using namespace IFNITY;
 using namespace IFNITY::rhi;
 
@@ -167,10 +176,9 @@ private:
 	TextureHandle m_texture;
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
-	BufferHandle m_PushConnstant;
+	BufferHandle m_PushConnstant; // For D3D12 and Vulkan, used for push constants or similar functionality
 	GraphicsPipelineHandle m_pipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
-
 public:
 
 
@@ -188,7 +196,6 @@ public:
 	{
 		vec3 pos;
 		vec4 color;
-		vec2 texCoord;
 	};
 
 	void Initialize() override
@@ -211,24 +218,26 @@ public:
 		ShaderCreateDescription descShader;
 		{
 			descShader.NoCompile = false;
-			descShader.FileName = "texture.hlsl";
+			descShader.FileName = "cube_color.hlsl";
 			descShader.EntryPoint = L"VSMain";
-			descShader.Profile = L"vs_6_6";
+			descShader.Profile = L"vs_6_0";
 			descShader.Type = ShaderType::VERTEX_SHADER;
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
-			descShader.Flags = ShaderCompileFlagType::COMPATIBE_GLSL;
+			descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
 			m_vs->SetShaderDescription(descShader);
 		}
+
 		ShaderCompiler::CompileShader(m_vs.get());
 		{
 			descShader.NoCompile = false;
 			descShader.EntryPoint = L"PSMain";
-			descShader.Profile = L"ps_6_6";
+			descShader.Profile = L"ps_6_0";
 			descShader.Type = ShaderType::PIXEL_SHADER;
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
-			descShader.Flags = ShaderCompileFlagType::COMPATIBE_GLSL;
+			descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
 			m_ps->SetShaderDescription(descShader);
 		}
+
 		ShaderCompiler::CompileShader(m_ps.get());
 
 		GraphicsPipelineDescription gdesc;
@@ -239,26 +248,18 @@ public:
 			rhi::VertexInput vertexInput;
 			uint8_t position = 0;
 			uint8_t color = 1;
-			uint8_t texcoord = 2;
 			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::POSITION, 
 											.location = position,
 											.binding = 0,
 											.format = rhi::Format::R32G32B32_FLOAT,
-											.offset = offsetof(VertexData,pos) }, position);
+											.offset = offsetof(Vertex,Pos) }, position);
 
 			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::COLOR,
 											.location = color,
 											.binding = 0,
 											.format = rhi::Format::RGBA_FLOAT32,
-											.offset = offsetof(VertexData,color) }, color);
-
-			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::TEXCOORD,
-											.location = texcoord,
-											.binding = 0,
-											.format = rhi::Format:: R32G32_FLOAT,
-											.offset = offsetof(VertexData,texCoord) }, texcoord);
-
-			vertexInput.addVertexInputBinding({ .stride = sizeof(VertexData) }, position);
+											.offset = offsetof(Vertex,Color) }, color);
+			vertexInput.addVertexInputBinding({ .stride = sizeof(Vertex) }, position);
 
 
 
@@ -269,8 +270,7 @@ public:
 
 			RasterizationState rasterizationState;
 			rasterizationState.cullMode = rhi::CullModeType::Back;
-			rasterizationState.frontFace = rhi::FrontFaceType::Clockwise;
-
+			
 
 
 			gdesc.SetRasterizationState( rasterizationState );
@@ -281,21 +281,77 @@ public:
 		m_pipeline = rdevice->CreateGraphicsPipeline(gdesc);
 
 
-		//Buffer Data 
-		VertexData triangleVertices[] =
+		//VertexData triangleVertices[] =
+		//{
+		//	// Posición                     // Color (opcional)
+		//	{ { -0.5f, -0.5f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }, // 0: Inferior Izquierda
+		//	{ { -0.5f,  0.5f, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } }, // 1: Superior Izquierda
+		//	{ {  0.5f, -0.5f, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }, // 2: Inferior Derecha
+		//	{ {  0.5f,  0.5f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
+
+		//};
+
+		////IndexBuffer
+		//uint32_t indices[] = {
+		//	0, 1, 2,  // triángulo inferior izquierdo
+		//	2, 1, 3   // triángulo superior derecho
+		//};
+
+		VertexData cubeVertices[] =
 		{
-			
-			{ { -0.5f, -0.5f, 0.0f }, { 1, 0, 0, 1 }, { 0.0f, 1.0f } },  // v0
-			{ {  0.0f,  0.5f, 0.0f }, { 0, 1, 0, 1 }, { 0.0f, 0.0f } },  // v1
-			{ {  0.5f, -0.5f, 0.0f }, { 0, 0, 1, 1 }, { 1.0f, 1.0f } },  // v2
-		
+			// +X (Derecha) - Rojo
+			{ { 0.5f, -0.5f, -0.5f }, { 1, 0, 0, 1 } },
+			{ { 0.5f,  0.5f, -0.5f }, { 1, 0, 0, 1 } },
+			{ { 0.5f, -0.5f,  0.5f }, { 1, 0, 0, 1 } },
+			{ { 0.5f,  0.5f,  0.5f }, { 1, 0, 0, 1 } },
+
+			// -X (Izquierda) - Verde
+			{ { -0.5f, -0.5f,  0.5f }, { 0, 1, 0, 1 } },
+			{ { -0.5f,  0.5f,  0.5f }, { 0, 1, 0, 1 } },
+			{ { -0.5f, -0.5f, -0.5f }, { 0, 1, 0, 1 } },
+			{ { -0.5f,  0.5f, -0.5f }, { 0, 1, 0, 1 } },
+
+			// +Y (Arriba) - Azul
+			{ { -0.5f,  0.5f, -0.5f }, { 0, 0, 1, 1 } },
+			{ { -0.5f,  0.5f,  0.5f }, { 0, 0, 1, 1 } },
+			{ {  0.5f,  0.5f, -0.5f }, { 0, 0, 1, 1 } },
+			{ {  0.5f,  0.5f,  0.5f }, { 0, 0, 1, 1 } },
+
+			// -Y (Abajo) - Amarillo
+			{ { -0.5f, -0.5f,  0.5f }, { 1, 1, 0, 1 } },
+			{ { -0.5f, -0.5f, -0.5f }, { 1, 1, 0, 1 } },
+			{ {  0.5f, -0.5f,  0.5f }, { 1, 1, 0, 1 } },
+			{ {  0.5f, -0.5f, -0.5f }, { 1, 1, 0, 1 } },
+
+			// +Z (Frontal) - Magenta
+			{ { -0.5f, -0.5f,  0.5f }, { 1, 0, 1, 1 } },
+			{ {  0.5f, -0.5f,  0.5f }, { 1, 0, 1, 1 } },
+			{ { -0.5f,  0.5f,  0.5f }, { 1, 0, 1, 1 } },
+			{ {  0.5f,  0.5f,  0.5f }, { 1, 0, 1, 1 } },
+
+			// -Z (Trasera) - Cyan
+			{ {  0.5f, -0.5f, -0.5f }, { 0, 1, 1, 1 } },
+			{ { -0.5f, -0.5f, -0.5f }, { 0, 1, 1, 1 } },
+			{ {  0.5f,  0.5f, -0.5f }, { 0, 1, 1, 1 } },
+			{ { -0.5f,  0.5f, -0.5f }, { 0, 1, 1, 1 } },
 		};
 
-		//IndexBuffer
-		uint32_t indices[] = {
-			0, 1, 2,  // triángulo inferior izquierdo
-			
+		uint32_t cubeIndices[] =
+		{
+			// +X
+			0, 1, 2,  2, 1, 3,
+			// -X
+			4, 5, 6,  6, 5, 7,
+			// +Y
+			8, 9,10, 10, 9,11,
+			// -Y
+			12,13,14, 14,13,15,
+			// +Z
+			16,17,18, 18,17,19,
+			// -Z
+			20,21,22, 22,21,23,
 		};
+
 
 
 
@@ -304,8 +360,9 @@ public:
 			bufferDesc.SetDebugName( "Vertex Buffer" );
 			bufferDesc.SetBufferType( BufferType::VERTEX_BUFFER );
 			bufferDesc.SetStorageType( StorageType::DEVICE );
-			bufferDesc.SetByteSize( sizeof(triangleVertices));
-			bufferDesc.SetData( triangleVertices );
+			//bufferDesc.SetByteSize( sizeof(triangleVertices));
+			bufferDesc.SetByteSize( sizeof( cubeVertices ) );
+			bufferDesc.SetData( cubeVertices );
 			bufferDesc.SetStrideSize( sizeof( VertexData ) );
 
 		}
@@ -315,48 +372,25 @@ public:
 			bufferDesc.SetDebugName( "Index Buffer" );
 			bufferDesc.SetBufferType( BufferType::INDEX_BUFFER );
 			bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
-			bufferDesc.SetByteSize( sizeof( uint32_t ) * 6 );
-			bufferDesc.SetData( indices );
-			bufferDesc.SetStrideSize( sizeof( uint32_t ) );
+			//bufferDesc.SetByteSize( sizeof(indices));
+			bufferDesc.SetByteSize( sizeof( uint32_t ) * 36 ); // 6 faces * 2 triangles * 3 indices per triangle
+			bufferDesc.SetData( cubeIndices );
+			bufferDesc.SetStrideSize( sizeof( uint32_t )  );
 		}
 		m_indexBuffer = rdevice->CreateBuffer( bufferDesc );
-
 
 		{
 			bufferDesc.SetDebugName( "PushConstant Buffer" );
 			bufferDesc.SetBufferType( BufferType::CONSTANT_BUFFER );
 			bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
-			bufferDesc.SetByteSize(  sizeof(glm::vec4) + sizeof(uint32_t) );
+			bufferDesc.SetByteSize(  sizeof(glm::vec4));
 			bufferDesc.SetData( nullptr );
 
 		}
 
 		m_PushConnstant = rdevice->CreateBuffer(bufferDesc);
 
-		{
-			int w, h, comp;
-			const uint8_t* img = stbi_load("data/diffuse_madera.jpg", &w, &h, &comp, 4);
-
-			if( !img )
-			{
-				IFNITY_LOG(LogApp, ERROR, "Failed to load image");
-				assert(false);
-			}
-
-			//DepthText texture
-			TextureDescription descTexture;
-			descTexture.dimensions = {(uint32_t)w, (uint32_t)h};
-			descTexture.format = Format::RGBA_UNORM8;
-			descTexture.usage = TextureUsageBits::SAMPLED;
-			descTexture.isDepth = false;
-			descTexture.debugName = "MaderaTexture";
-			descTexture.data = img;
-
-			//DepthStencil texture
-			m_texture = rdevice->CreateTexture(descTexture);
-
-			auto value = m_texture.get()->GetTextureID();
-		}
+		
 		//Binding the buffer
 		rdevice->BindingIndexBuffer( m_indexBuffer );
 		rdevice->BindingVertexAttributesBuffer(m_vertexBuffer);
@@ -382,36 +416,28 @@ public:
 	{
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+		mat4 modelMat = glm::rotate(static_cast<float>(glfwGetTime()), vec3(0, 1, 0)) *
+			glm::rotate(static_cast<float>(glfwGetTime()), vec3(1, 0, 0));
+		mat4 viewMat = glm::lookAt(vec3(0, 0, 2), vec3(0, 0, 0), vec3(0, 1, 0));
+		mat4 projMat = glm::perspective(glm::radians(60.0f), aspectRatio, 0.1f, 10000.0f);
+		mat4 mvp  = projMat * viewMat * modelMat;
+		
 
 
-		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
-
-		const mat4 m = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 0.0f, 1.0f));
-		const mat4 p = glm::ortho(-ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-
-		struct PerConstant
-		{
-			glm::mat4 mvp;
-			uint32_t index;
-		}perconstant_;
-
-		perconstant_.mvp = p*m;
-		perconstant_.index = m_texture.get()->GetTextureID();
+		
 
 		rdevice->StartRecording();
-		
+		rdevice->WriteBuffer( m_PushConnstant, &mvp, sizeof( mvp) );
 
-		
-		rdevice->WriteBuffer( m_PushConnstant, &perconstant_, sizeof( perconstant_) );
+
 		DrawDescription desc;
 		desc.drawMode = DRAW_INDEXED;
-		desc.size = 6;
+		desc.size = 36;
 
 		rdevice->DrawObject( m_pipeline, desc );
 
 		rdevice->StopRecording();
-
-
 
 
 

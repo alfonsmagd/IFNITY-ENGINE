@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-17 by alfonsmagd
+// Last modified: 2025-05-24 by alfonsmagd
+
 
 //
 
@@ -39,16 +40,19 @@ namespace D3D12
 		Texture() = default;
 		Texture( const TextureDescription& desc, HolderTextureSM&& texture ): m_TextureDescription( desc ), m_holdTexture( std::move( texture ) )
 		{
-			m_TextureID = *m_holdTexture;
+			m_TextureID = *m_holdTexture + offset;
 		}
 		TextureDescription GetTextureDescription() override { return m_TextureDescription; }
 		//Todo: GetTextureFormatProperties
 		uint32_t GetTextureID() override { return m_TextureID; }
+		void   setOffset( uint32_t off = 10 ) { offset = off; }
+
 
 
 
 	private:
 		uint32_t m_TextureID = 0; ///< The texture ID.
+		uint32_t offset = 10; ///< The offset for the SRV descriptor. start_srv_binddless TODO
 		TextureDescription m_TextureDescription; ///< The texture description.
 		HolderTextureSM m_holdTexture; ///< The texture handle.
 	};
@@ -108,6 +112,8 @@ namespace D3D12
 		TextureHandleSM currentTexture_;		  ///< Handle to the current texture.
 		BufferHandleSM currentVertexBuffer_;	  ///< Handle to the current vertex buffer.
 		BufferHandleSM currentIndexBuffer_;	      ///< Handle to the current index buffer.
+
+
 
 	};
 

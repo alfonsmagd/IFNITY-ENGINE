@@ -28,12 +28,14 @@ enum IFNITY_API ShaderType: uint8_t
 
 enum IFNITY_API ShaderCompileFlagType: uint32_t
 {
-	OPTIMIZE_SIZE = 0x1,
+	OPTIMIZE_SIZE = 0x1, //not use because probably error for ascii format
 	ENABLE_DEBUG_INFO = 0x2,
 	ENABLE_SPIRV = 0x4,
 	PACK_MATRIX_ROW_MAJOR = 0x8,
 
 	DEFAULT_HLSL =  ENABLE_DEBUG_INFO | PACK_MATRIX_ROW_MAJOR,
+
+	COMPATIBE_GLSL = ENABLE_DEBUG_INFO,  ///This work like colum-major matrix, 
 
 	DEFAULT_FLAG = 0x0C     
 	// Agrega ms flags segn sea necesario

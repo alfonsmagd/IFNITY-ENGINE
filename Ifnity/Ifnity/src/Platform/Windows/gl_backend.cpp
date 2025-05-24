@@ -1,7 +1,8 @@
 //------------------ IFNITY ENGINE SOURCE -------------------//
 // Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
 // Licensed under the MIT License. See LICENSE file for details.
-// Last modified: 2025-05-09 by alfonsmagd
+// Last modified: 2025-05-24 by alfonsmagd
+
 
 
 #include "gl_backend.hpp"
@@ -1110,7 +1111,7 @@ namespace OpenGL
 				(void*)(mesh.indexOffset * sizeof(uint32_t)),      // Puntero a los indices
 				1,                                                 // Una instancia 
 				mesh.vertexOffset,                                 // Desplazamiento de vrtices
-				m_baseMaterialInstances[ i ]                                                // baseInstance 
+				m_baseMaterialInstances[ i ]                       // baseInstance 
 			);
 		}
 	
