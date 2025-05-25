@@ -317,6 +317,10 @@ namespace Vulkan
 	BufferHandle Device::CreateBuffer(const BufferDescription& desc)
 	{
 		//auxiliar storagetype config 
+
+
+
+
 		StorageType storage = desc.storage;
 
 		//This is a constant buffer and Vulkan Constant Buffer is inside like a PushConstant and manage	internal 

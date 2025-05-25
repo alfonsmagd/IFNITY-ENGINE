@@ -18,6 +18,7 @@ set(EXAMPLE_DIRS
     D3D12_SimpleTriangle
     D3Texture
 	D3D12_Cube_MVP
+	D3D12_Assimp
     #Simple_Texture
     #scene_materials
     #Geometry_Mesh

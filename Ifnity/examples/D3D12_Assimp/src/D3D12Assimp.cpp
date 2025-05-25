@@ -164,9 +164,19 @@ private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 
+	struct VertexData
+	{
+		vec3 pos;
+		vec3 normal;
+		vec2 tc;
+	};
+
+	std::vector<VertexData> vertices;
+		std::vector<uint32_t> indices;
 	TextureHandle m_texture;
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
+	BufferHandle m_PushConnstant; // Uniform Buffer Object for per-frame data
 	GraphicsPipelineHandle m_pipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
 public:
@@ -182,11 +192,7 @@ public:
 	}
 
 	//Vertex struct initialization 
-	struct VertexData
-	{
-		vec3 pos;
-		vec4 color;
-	};
+
 
 	void Initialize() override
 	{
@@ -208,22 +214,22 @@ public:
 		ShaderCreateDescription descShader;
 		{
 			descShader.NoCompile = false;
-			descShader.FileName = "triangle.hlsl";
+			descShader.FileName = "assimp.hlsl";
 			descShader.EntryPoint = L"VSMain";
-			descShader.Profile = L"vs_6_0";
+			descShader.Profile = L"vs_6_6";
 			descShader.Type = ShaderType::VERTEX_SHADER;
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
-			descShader.Flags = ShaderCompileFlagType::OPTIMIZE_SIZE;
+			descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
 			m_vs->SetShaderDescription(descShader);
 		}
 		ShaderCompiler::CompileShader(m_vs.get());
 		{
 			descShader.NoCompile = false;
 			descShader.EntryPoint = L"PSMain";
-			descShader.Profile = L"ps_6_0";
+			descShader.Profile = L"ps_6_6";
 			descShader.Type = ShaderType::PIXEL_SHADER;
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
-			descShader.Flags = ShaderCompileFlagType::OPTIMIZE_SIZE;
+			descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
 			m_ps->SetShaderDescription(descShader);
 		}
 		ShaderCompiler::CompileShader(m_ps.get());
@@ -235,18 +241,25 @@ public:
 			//Vertex Attributes Configure 
 			rhi::VertexInput vertexInput;
 			uint8_t position = 0;
-			uint8_t color = 1;
+			uint8_t normal = 1;
+			uint8_t tc = 2;
 			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::POSITION, 
-										    .location = position,
-										   .binding = 0,
-										   .format = rhi::Format::R32G32B32_FLOAT,
-										   .offset = offsetof(VertexData,pos) }, position);
+											.location = position,
+											.binding = 0,
+											.format = rhi::Format::R32G32B32_FLOAT,
+											.offset = offsetof(VertexData,pos) }, position);
 
-			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::COLOR,
-											.location = color,
-										   .binding = 0,
-										   .format = rhi::Format::R32G32B32_FLOAT,
-										   .offset = offsetof(VertexData,color) }, color);
+			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::NORMAL,
+											.location = normal,
+											.binding = 0,
+											.format = rhi::Format::R32G32B32_FLOAT,
+											.offset = offsetof(VertexData,normal) }, normal);
+			vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::TEXCOORD,
+											.location = tc,
+											.binding = 0,
+											.format = rhi::Format::R32G32_FLOAT,
+											.offset = offsetof( VertexData,tc ) }, tc );
+
 			vertexInput.addVertexInputBinding({ .stride = sizeof(VertexData) }, position);
 
 
@@ -257,33 +270,54 @@ public:
 				.SetVertexInput(vertexInput);
 
 			RasterizationState rasterizationState;
-			rasterizationState.cullMode = rhi::CullModeType::None;
-	
-			
+			rasterizationState.cullMode = rhi::CullModeType::FrontAndBack;
+
+
 			gdesc.SetRasterizationState( rasterizationState );
 
 
 		}//end of gdesc
-		//Create the pipeline
+		 //Create the pipeline
 		m_pipeline = rdevice->CreateGraphicsPipeline(gdesc);
 
 
-		//Buffer Data 
-		VertexData triangleVertices[] =
+		//Scene assimp
+
+		
 		{
-			{ { -0.5f, -0.5f , 0.0f}, { 1.0f, 0.0f, 0.0f, 1.0f } },
-			{ { 0.0f, 0.5f , 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-			{ { 0.5f, -0.5f , 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } },
-			{ { 0.5f, 0.5f , 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } }
+			//assimp 
+			const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
+			//const aiScene* scene = aiImportFile("data/helmet/helmet.gltf", aiProcess_Triangulate);
+
+			if( !scene || !scene->HasMeshes() )
+			{
+				printf("Unable to load data/rubber_duck/scene.gltf\n");
+				exit(255);
+			}
+
+			const aiMesh* mesh = scene->mMeshes[ 0 ];
 			
-		};
+			for( uint32_t i = 0; i != mesh->mNumVertices; i++ )
+			{
+				const aiVector3D v = mesh->mVertices[ i ];
+				const aiVector3D n = mesh->mNormals[ i ];
+				const aiVector3D t = mesh->mTextureCoords[ 0 ][ i ];
+				vertices.push_back({ .pos = vec3(v.x, v.y, v.z),
+									.normal = vec3(n.x, n.y, n.z),
+									.tc = vec2(t.x, 1.0 - t.y) });
+			}
+			
+			for( uint32_t i = 0; i != mesh->mNumFaces; i++ )
+			{
+				for( uint32_t j = 0; j != 3; j++ )
+					indices.push_back(mesh->mFaces[ i ].mIndices[ j ]);
+			}
 
-		//IndexBuffer
-		uint32_t indices[] = {
-			0, 1, 2,  // triángulo inferior izquierdo
-			2, 1, 3   // triángulo superior derecho
-		};
+			aiReleaseImport(scene);
+		}
 
+		const size_t kSizeIndices = sizeof(uint32_t) * indices.size();
+		const size_t kSizeVertices = sizeof(VertexData) * vertices.size();
 
 
 		BufferDescription bufferDesc;
@@ -291,8 +325,8 @@ public:
 			bufferDesc.SetDebugName( "Vertex Buffer" );
 			bufferDesc.SetBufferType( BufferType::VERTEX_BUFFER );
 			bufferDesc.SetStorageType( StorageType::DEVICE );
-			bufferDesc.SetByteSize( sizeof(triangleVertices));
-			bufferDesc.SetData( triangleVertices );
+			bufferDesc.SetByteSize( kSizeVertices);
+			bufferDesc.SetData( vertices.data() );
 			bufferDesc.SetStrideSize( sizeof( VertexData ) );
 
 		}
@@ -302,15 +336,27 @@ public:
 			bufferDesc.SetDebugName( "Index Buffer" );
 			bufferDesc.SetBufferType( BufferType::INDEX_BUFFER );
 			bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
-			bufferDesc.SetByteSize( sizeof( uint32_t ) * 6 );
-			bufferDesc.SetData( indices );
+			bufferDesc.SetByteSize( kSizeIndices );
+			bufferDesc.SetData( indices.data());
 			bufferDesc.SetStrideSize( sizeof( uint32_t ) );
 		}
 		m_indexBuffer = rdevice->CreateBuffer( bufferDesc );
-		 
+
+
+		{
+			bufferDesc.SetDebugName( "PushConstant Buffer" );
+			bufferDesc.SetBufferType( BufferType::CONSTANT_BUFFER );
+			bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
+			bufferDesc.SetByteSize(  sizeof(glm::vec4) + sizeof(uint32_t) );
+			bufferDesc.SetData( nullptr );
+
+		}
+
+		m_PushConnstant = rdevice->CreateBuffer(bufferDesc);
+
 		{
 			int w, h, comp;
-			const uint8_t* img = stbi_load("data/diffuse_madera.jpg", &w, &h, &comp, 4);
+			const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 4);
 
 			if( !img )
 			{
@@ -318,13 +364,14 @@ public:
 				assert(false);
 			}
 
-			//DepthText texture
+
+
 			TextureDescription descTexture;
 			descTexture.dimensions = {(uint32_t)w, (uint32_t)h};
 			descTexture.format = Format::RGBA_UNORM8;
 			descTexture.usage = TextureUsageBits::SAMPLED;
 			descTexture.isDepth = false;
-			descTexture.debugName = "Depth buffer";
+			descTexture.debugName = "ImageAssimp";
 			descTexture.data = img;
 
 			//DepthStencil texture
@@ -333,13 +380,6 @@ public:
 			auto value = m_texture.get()->GetTextureID();
 		}
 
-
-
-
-
-
-
-		
 		//Binding the buffer
 		rdevice->BindingIndexBuffer( m_indexBuffer );
 		rdevice->BindingVertexAttributesBuffer(m_vertexBuffer);
@@ -349,47 +389,56 @@ public:
 
 
 
-
-
-
-
-
-
-
-		
-
-
 	}
 
 	void Render() override
 	{
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
-		rdevice->StartRecording();
 
 		DrawDescription desc;
+		desc.size = static_cast< uint32_t >(indices.size());
 		desc.drawMode = DRAW_INDEXED;
-		desc.size = 6;
+
+
+
+		rdevice->StartRecording();
+
+		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+		const mat4 m = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
+		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.6f, -2.75f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+
+
+		struct PerConstant
+		{
+			glm::mat4 mvp;
+			uint32_t index;
+		}perconstant_;
+
+		perconstant_.mvp = p*v*m;
+		perconstant_.index = m_texture.get()->GetTextureID();
+		rdevice->WriteBuffer(m_PushConnstant, &perconstant_, sizeof(perconstant_));
+
 
 		rdevice->DrawObject( m_pipeline, desc );
-
 		rdevice->StopRecording();
 
 
 
 
-		
+
 	}
 
 	void Animate() override
 	{
-		
+
 	}
 
 	~Source() override {
-	
-		
-	
+
+
+
 	}
 };
 
