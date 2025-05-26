@@ -232,6 +232,8 @@ private:
 	float deltaSeconds = 0.0f;
 	double timeStamp = 0.0;
 
+
+
 public:
 	Source(IFNITY::rhi::GraphicsAPI api):
 		IFNITY::App(api),

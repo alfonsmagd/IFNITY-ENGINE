@@ -1391,7 +1391,7 @@ D3D12::SubmitHandle DeviceD3D12::submit( D3D12::CommandBuffer& commandBuffer, D3
 	//Is
 	if( shouldPresent )
 	{
-		m_SwapChain->Present( IsVSync() ? 1 : 0, 0 );
+		m_SwapChain->Present( IsVSync() ? 1 : 0, DXGI_PRESENT_ALLOW_TEARING );
 
 	}
 

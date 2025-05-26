@@ -33,6 +33,7 @@ namespace D3D12
         swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
         swapChainDesc.Scaling = DXGI_SCALING_NONE;
         swapChainDesc.Stereo = FALSE;
+        swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING; // Optional: allows waiting for frame completion
 
         // 2. Create a temporary IDXGISwapChain1
         ComPtr<IDXGISwapChain1> tempSwapchain;

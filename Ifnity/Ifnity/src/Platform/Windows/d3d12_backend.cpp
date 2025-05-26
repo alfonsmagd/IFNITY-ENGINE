@@ -135,7 +135,7 @@ namespace D3D12
 		// If the pipeline state already exists, set the actual pipeline and return
 		if( m_PipelineState )
 		{
-			IFNITY_LOG( LogApp, INFO, "Pipeline creator" );
+			/*IFNITY_LOG( LogApp, INFO, "Pipeline creator" );*/
 			d3Device->setActualPipeline( this );
 			return;
 		}

@@ -171,6 +171,13 @@ private:
 	const vec3 kInitialCameraPos    = vec3(0.0f, 1.0f, -1.5f);
 	const vec3 kInitialCameraTarget = vec3(0.0f, 0.5f, 0.0f);
 
+
+	//FPS Counter
+	IFNITY::FpsCounter m_FpsCounter;
+	float deltaSeconds = 0.0f;
+	double timeStamp = 0.0;
+
+
 	struct VertexData
 	{
 		vec3 pos;
@@ -417,6 +424,16 @@ public:
 
 	void Render() override
 	{
+
+		//Update FPS 
+		const double newTimeStamp = App::GetTime();
+		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
+		timeStamp = newTimeStamp;
+		m_FpsCounter.tick(deltaSeconds);
+
+
+
+
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
 

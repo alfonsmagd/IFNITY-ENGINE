@@ -163,6 +163,10 @@ class Source: public IFNITY::App
 private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
+	//FPS Counter
+	IFNITY::FpsCounter m_FpsCounter;
+	float deltaSeconds = 0.0f;
+	double timeStamp = 0.0;
 
 	TextureHandle m_texture;
 	BufferHandle m_vertexBuffer;
@@ -364,6 +368,14 @@ public:
 	void Render() override
 	{
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
+
+		//Update FPS
+		const double newTimeStamp = App::GetTime();
+		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
+		timeStamp = newTimeStamp;
+		m_FpsCounter.tick(deltaSeconds);
+
+
 
 		rdevice->StartRecording();
 
