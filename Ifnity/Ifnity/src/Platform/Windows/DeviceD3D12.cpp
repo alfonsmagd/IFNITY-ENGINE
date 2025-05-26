@@ -1004,7 +1004,7 @@ void DeviceD3D12::OnResize()
 	depthStencilResourceDesc.SampleDesc.Count = 1;
 	depthStencilResourceDesc.SampleDesc.Quality = 0;
 	depthStencilResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-	depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
+	depthStencilResourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
 	//These depth/stencil resources weren't used as shader resources during this capture, but the resources didn't have the D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE flag set on them at creation time. If the application doesn't use these resources as shader resources, then consider adding DENY_SHADER_RESOURCE to their creation flags to improve performance on some hardware. It will be particularly beneficial on AMD GCN 1.2+ hardware that supports "Delta Color Compression" (DCC).
 
@@ -1022,18 +1022,6 @@ void DeviceD3D12::OnResize()
 	m_DepthStencilAllocation->SetName( L"Depth/Stencil Allocation" );
 
 
-
-	//ThrowIfFailed(m_DepthStencilBuffer->SetName(L"Depth/Stencil Resource Heap"));
-	//m_DepthStencilAllocation->SetName(L"Depth/Stencil Resource Heap");
-	/*ThrowIfFailed(m_Device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		IN & depthStencilDesc,
-		D3D12_RESOURCE_STATE_COMMON,
-		IN & optClear,
-		IID_PPV_ARGS(OUT m_DepthStencilBuffer.GetAddressOf())));*/
-
-		/*Create descriptor to mip level 0 of entire resource using the format of the resource.*/
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -1041,14 +1029,26 @@ void DeviceD3D12::OnResize()
 	dsvDesc.Texture2D.MipSlice = 0;
 	m_Device->CreateDepthStencilView( m_DepthStencilBuffer.Get(), &dsvDesc, DepthStencilView() );
 
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;  
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.PlaneSlice = 0;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-	//// Transition the resource from its initial state to be used as a depth buffer.
-	//m_CommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
-	//	D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+	// DepthBuffer index 9.
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = AllocateSRV( DEPTH_SRV_INDEX );
+
+	m_Device->CreateShaderResourceView(m_DepthStencilBuffer.Get(), &srvDesc, handle);
+
+
 
 	  // Transition the resource from its initial state to be used as a depth buffer.
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition( m_DepthStencilBuffer.Get(),
-														 D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE );
+														 D3D12_RESOURCE_STATE_COMMON,
+														 D3D12_RESOURCE_STATE_DEPTH_WRITE );
 	cmd.commandList->ResourceBarrier( 1, &barrier );
 	// Execute the resize commands.
 	/*ThrowIfFailed(m_CommandList->Close());
@@ -1392,6 +1392,7 @@ D3D12::SubmitHandle DeviceD3D12::submit( D3D12::CommandBuffer& commandBuffer, D3
 	if( shouldPresent )
 	{
 		m_SwapChain->Present( IsVSync() ? 1 : 0, 0 );
+
 	}
 
 	// Optionally process deferred tasks (resource deletion, etc.)

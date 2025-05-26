@@ -164,11 +164,28 @@ private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 
+	//CAMERA LAYER
+	// Camera objects 
+	IFNITY::EventCameraListener m_CameraListener;
+	CameraPositioner_FirstPerson m_camera;
+	const vec3 kInitialCameraPos    = vec3(0.0f, 1.0f, -1.5f);
+	const vec3 kInitialCameraTarget = vec3(0.0f, 0.5f, 0.0f);
+
 	struct VertexData
 	{
 		vec3 pos;
 		vec3 normal;
 		vec2 tc;
+	};
+
+
+	struct PerFrameData
+	{
+		mat4 model;
+		mat4 view;
+		mat4 proj;
+		vec4 cameraPos;
+		uint32_t tex = 0;
 	};
 
 	std::vector<VertexData> vertices;
@@ -183,11 +200,16 @@ public:
 
 
 
-	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
+	Source(IFNITY::rhi::GraphicsAPI api): 
+		IFNITY::App(api),
+		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
+		m_camera(vec3(0.f, 1.0f, -1.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_CameraListener(&m_camera)
 	{
 		// Push layers including monitoring and GUI
 		PushLayer(new IFNITY::NVML_Monitor());
 		PushLayer(new ImGuiTestLayer());
+		PushLayer(new IFNITY::CameraLayer(&m_CameraListener));
 		PushOverlay(new IFNITY::ImguiLayer()); // DLL-based ImGui overlay
 	}
 
@@ -234,6 +256,7 @@ public:
 		}
 		ShaderCompiler::CompileShader(m_ps.get());
 
+
 		GraphicsPipelineDescription gdesc;
 		{
 
@@ -271,6 +294,8 @@ public:
 
 			RasterizationState rasterizationState;
 			rasterizationState.cullMode = rhi::CullModeType::FrontAndBack;
+
+
 
 
 			gdesc.SetRasterizationState( rasterizationState );
@@ -347,7 +372,7 @@ public:
 			bufferDesc.SetDebugName( "PushConstant Buffer" );
 			bufferDesc.SetBufferType( BufferType::CONSTANT_BUFFER );
 			bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
-			bufferDesc.SetByteSize(  sizeof(glm::vec4) + sizeof(uint32_t) );
+			bufferDesc.SetByteSize(  sizeof(PerFrameData) );
 			bufferDesc.SetData( nullptr );
 
 		}
@@ -363,7 +388,6 @@ public:
 				IFNITY_LOG(LogApp, ERROR, "Failed to load image");
 				assert(false);
 			}
-
 
 
 			TextureDescription descTexture;
@@ -396,6 +420,36 @@ public:
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
 
+
+
+
+		const vec4 cameraPos = vec4(m_camera.getPosition(), 1.0f);
+		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
+
+		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
+		const mat4 m1 = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
+		const mat4 m2 = glm::rotate(mat4(1.0f), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 v = glm::translate(mat4(1.0f), vec3(cameraPos));
+
+
+		
+
+		/*const mat4 m = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
+		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.0f, -2.75f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);*/
+		glm::mat3 normalMatrix = glm::inverse(glm::mat3(m2*m1));
+	 //clave
+
+		const PerFrameData pc = {
+			.model = m2*m1,
+			.view = m_camera.getViewMatrix(),
+			.proj = p,
+			.cameraPos = cameraPos,
+			.tex = m_texture->GetTextureID(),
+			//.texCube   = cubemapTex.index(),
+		};
+
+
 		DrawDescription desc;
 		desc.size = static_cast< uint32_t >(indices.size());
 		desc.drawMode = DRAW_INDEXED;
@@ -403,22 +457,7 @@ public:
 
 
 		rdevice->StartRecording();
-
-		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
-		const mat4 m = glm::rotate(mat4(1.0f), glm::radians(-90.0f), vec3(1, 0, 0));
-		const mat4 v = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.6f, -2.75f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
-		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
-
-
-		struct PerConstant
-		{
-			glm::mat4 mvp;
-			uint32_t index;
-		}perconstant_;
-
-		perconstant_.mvp = p*v*m;
-		perconstant_.index = m_texture.get()->GetTextureID();
-		rdevice->WriteBuffer(m_PushConnstant, &perconstant_, sizeof(perconstant_));
+		rdevice->WriteBuffer(m_PushConnstant, &pc, sizeof(PerFrameData));
 
 
 		rdevice->DrawObject( m_pipeline, desc );
