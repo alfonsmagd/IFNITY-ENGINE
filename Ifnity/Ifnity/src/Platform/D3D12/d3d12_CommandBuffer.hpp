@@ -50,7 +50,7 @@ namespace D3D12
 		void cmdBindIndexBuffer( BufferHandleSM& bf, uint32_t offset = 0 );
 		void cmdBindRenderPipeline( GraphicsPipeline* pipeline );
 		void cmdSetPrimitiveTopology( rhi::PrimitiveType primitiveType );
-
+		void cmdDrawIndexedIndirect(BufferHandleSM indirectBuffer, size_t indirectBufferOffset, uint32_t drawCount, uint32_t stride = 0);
 		void cmdDraw(DrawModeUse drawMode, uint32_t vertexCount, uint32_t instanceCount = 1, uint32_t firstVertex = 0, uint32_t baseInstance = 0);
 
 		template<PushConstentD3D12 Struct>
@@ -58,6 +58,7 @@ namespace D3D12
 		{
 			this->cmdPushConstants(&data, sizeof(Struct), offset);
 		}
+
 	
 		void cmdPushConstants(const void* data, size_t size, size_t offset = 0);
 

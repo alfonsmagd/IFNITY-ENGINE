@@ -77,6 +77,7 @@ DeviceD3D12::~DeviceD3D12()
 		m_VertexBufferAllocation = nullptr;
 	}
 	m_PipelineState.Reset();
+	m_CommandSignature.Reset();
 	m_RootSignature.Reset();
 	CloseHandle( m_FenceEvent );
 	m_CommandList.Reset();
@@ -288,6 +289,26 @@ D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture() const
 	IFNITY_ASSERT_MSG( texptr->format_ != DXGI_FORMAT_UNKNOWN, "Invalid image format" );
 
 	return tex;
+
+}
+
+void DeviceD3D12::CreateCommandSignature( ID3D12Device* device, 
+										  ID3D12CommandSignature** outSignature,
+										  ID3D12RootSignature* rootSig )
+{
+
+	D3D12_INDIRECT_ARGUMENT_DESC arg = {};
+	arg.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+
+	D3D12_COMMAND_SIGNATURE_DESC sigDesc = {};
+	sigDesc.pArgumentDescs = &arg;
+	sigDesc.NumArgumentDescs = 1;
+	sigDesc.ByteStride = sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
+	sigDesc.NodeMask = 0;
+
+	HRESULT hr = device->CreateCommandSignature(&sigDesc, rootSig, IID_PPV_ARGS(outSignature));
+	ThrowIfFailed(hr);
+
 
 }
 

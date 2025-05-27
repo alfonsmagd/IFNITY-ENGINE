@@ -183,6 +183,19 @@ HRESULT ShaderCompiler::CreateShaderBlob(const std::wstring& shaderSource, ComPt
 	return hr;
 }
 
+HRESULT ShaderCompiler::CreateShaderBlobFromFile( const std::string& shaderSource, ComPtr<IDxcBlobEncoding>& sourceBlob )
+{
+	//convert string to wstring
+	auto shaderPath = std::wstring( shaderSource.begin(), shaderSource.end() );
+
+	HRESULT hr = m_utils->LoadFile(shaderPath.c_str(), nullptr, &sourceBlob);
+	if (FAILED(hr))
+	{
+		IFNITY_LOG(LogApp, ERROR, "Error al cargar el shader desde archivo.");
+	}
+	return hr;
+}
+
 
 HRESULT ShaderCompiler::CompileShaderBlob(ComPtr<IDxcBlobEncoding>& sourceBlob, std::vector<const wchar_t*>& args, ComPtr<IDxcResult>& result)
 {
@@ -191,11 +204,20 @@ HRESULT ShaderCompiler::CompileShaderBlob(ComPtr<IDxcBlobEncoding>& sourceBlob, 
 	sourceBuffer.Size = sourceBlob->GetBufferSize();
 	sourceBuffer.Encoding = DXC_CP_UTF16; // ANSI code page
 
+	ComPtr<IDxcLibrary> m_library;
+	
+	ComPtr<IDxcIncludeHandler> includeHandler;
+	DxcCreateInstance(CLSID_DxcLibrary, IID_PPV_ARGS(&m_library));
+	m_library->CreateIncludeHandler(&includeHandler); 
+
+
+
+
 	HRESULT hr = m_compiler->Compile(
 		&sourceBuffer,
 		args.data(),
 		static_cast<uint32_t>(args.size()),
-		nullptr,
+		includeHandler.Get(),
 		IID_PPV_ARGS(&result)
 	);
 
@@ -370,6 +392,9 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 	// Crear el blob del shader
 	ComPtr<IDxcBlobEncoding> sourceBlob;
 	HRESULT hr = CreateShaderBlob(description.ShaderSource, sourceBlob);
+
+	//hr = CreateShaderBlobFromFile( description.Filepath, sourceBlob );
+
 	if( FAILED(hr) )
 	{
 		return hr;

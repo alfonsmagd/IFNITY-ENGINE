@@ -35,6 +35,7 @@ std::vector<const wchar_t*> IShader::CreateCompileArgs( const ShaderCreateDescri
 	}
 	args.push_back( L"-HV" ); // HLSL version
 	args.push_back( L"2021" ); // HLSL version 2021
+	args.push_back( L"-I." );
 	return args;
 }
 

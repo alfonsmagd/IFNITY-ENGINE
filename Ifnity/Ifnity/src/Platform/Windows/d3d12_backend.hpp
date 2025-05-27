@@ -20,6 +20,8 @@
 #include "Ifnity\Graphics\Interfaces\IBuffer.hpp"
 #include "Ifnity\Graphics\Interfaces\ITexture.hpp"
 #include "Ifnity\Graphics\Interfaces\IGraphicsPipeline.hpp"
+#include "Ifnity\Graphics\Interfaces\IMeshObject.hpp"
+
 #include "Platform\D3D12\d3d12_CommandBuffer.hpp"
 #include "Platform\D3D12\d3d12_classes.hpp"
 
@@ -48,7 +50,7 @@ namespace D3D12
 		void   setOffset( uint32_t off = 10 ) { offset = off; }
 
 
-
+		TextureHandleSM getTextureHandleSM() const { return *m_holdTexture; }
 
 	private:
 		uint32_t m_TextureID = 0; ///< The texture ID.
@@ -76,20 +78,23 @@ namespace D3D12
 		void BindingIndexBuffer( BufferHandle& bf )override;
 		BufferHandle CreateBuffer( const BufferDescription& desc ) override;
 		TextureHandle CreateTexture( TextureDescription& desc ) override; //TODO add TextureDescripton const
-		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc ) override { return {}; };;
-		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder ) override { return {}; };
-		SceneObjectHandler CreateSceneObject( const char* meshes, const char* scene, const char* materials ) override { return {}; };
-		MeshObjectHandle  CreateMeshObjectFromScene( const SceneObjectHandler& scene ) override { return {}; };
+		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc ) override ;
+		MeshObjectHandle CreateMeshObject( const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder ) override;
+		SceneObjectHandler CreateSceneObject( const char* meshes, const char* scene, const char* materials ) override ;
+		MeshObjectHandle  CreateMeshObjectFromScene( const SceneObjectHandler& scene ) override;
 		void DrawObject( GraphicsPipelineHandle& pipeline, DrawDescription& desc )override; //todo abstract 
 		void StartRecording() override;
 		void StopRecording() override;
 		void SetDepthTexture( TextureHandle texture )override {};
 		// Virtual destructor to ensure proper destruction of derived objects
 		void setActualPipeline( GraphicsPipeline* pipeline );
+		D3D12::GraphicsPipeline* getActualPipeline() const ;
 		void upload( BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset = 0 );
 		void upload( D3D12::D3D12Buffer* buffer, const void* data, size_t size, uint32_t offset = 0 );
 		void upload( TextureHandleSM handle, uint32_t miplevel, const void* data );
 
+
+		CommandBuffer& getCommandBuffer() { return cmdBuffer; }
 
 
 	private:
@@ -102,7 +107,12 @@ namespace D3D12
 												  D3D12_HEAP_TYPE heapType,
 												  const char* debugName );
 
-
+		struct
+		{
+			const void* data = nullptr;
+			size_t size = 0;
+			size_t offset = 0;
+		}pushConstants;
 
 		DeviceD3D12* m_DeviceD3D12 = nullptr;       ///< Pointer to the DeviceD3D12 instance.
 		GraphicsPipelineHandleSM m_PipelineHandle;	///< Handle to the graphics pipeline.
@@ -114,7 +124,7 @@ namespace D3D12
 		BufferHandleSM currentIndexBuffer_;	      ///< Handle to the current index buffer.
 
 
-
+		friend class MeshObject; ///< Allow MeshObject to access private members.
 	};
 
 
@@ -206,6 +216,118 @@ namespace D3D12
 		return std::make_shared<Device>( std::forward<Args>( args )... );
 	}
 
+
+	//------------------------------------------------------------------------------------//
+	//  MESH OBJECT D3D12                                                                 //
+	//-------------------------------------------------------------------------------------//
+		class IFNITY_API MeshObject final: public IMeshObject
+	{
+	public:
+
+		enum class MeshStatus
+		{
+			READY_TO_DRAW,
+			IDEVICE_NOT_VALID,
+			BUFFER_NOT_INITIALIZED,
+			// Agrega más estados según sea necesario
+		}meshStatus_ = MeshStatus::IDEVICE_NOT_VALID;
+
+		struct DrawIndexedIndirectCommand
+		{
+			uint32_t count;
+			uint32_t instanceCount;
+			uint32_t firstIndex;
+			int32_t baseVertex;
+			uint32_t baseInstance;
+		};
+
+		MeshObject( const MeshObjectDescription&& desc, IDevice* device ) {};
+		MeshObject( const SceneObjectHandler& data, IDevice* device);
+
+
+		void Draw() override {};
+		void Draw( const DrawDescription& desc ) override {};
+		void DrawIndexed() override {};
+
+		MeshObjectDescription& GetMeshObjectDescription() override { return  m_MeshObjectDescription; };
+		void DrawIndirect() override;
+		void DrawInstancedDirect() override {};
+
+
+
+	private :
+		Device* m_Device = nullptr; // avoid circular reference 
+		MeshObjectDescription m_MeshObjectDescription;
+		uint32_t numIndices_ = 0;
+
+		BufferHandle m_BufferVertex;
+		BufferHandle m_BufferIndex;
+		BufferHandle m_BufferIndirect;
+		BufferHandle m_BufferMaterials;
+		BufferHandle m_BufferDrawID;
+		BufferHandle m_BufferModelMatrices;
+
+		struct BufferGpuIndex
+		{
+			uint32_t drawId;
+			uint32_t materials;
+			uint32_t modelMatrices;
+		};
+		struct SMBuffers
+		{
+			BufferHandleSM vertexBuffer;
+			BufferHandleSM indexBuffer;
+			BufferHandleSM indirectBuffer;		
+			BufferHandleSM drawIDBuffer;
+			BufferHandleSM materialBuffer;
+			BufferHandleSM modelMatricesBuffer;
+			BufferGpuIndex srvIndex;
+		}m_SM;
+
+		std::vector<TextureHandle> allMaterialsTextures_; //In this case textures will be building because we use device to create textures, Opengl can create textures itself.
+
+	private: 
+		void convertToD3D12Material( std::vector<MaterialDescription>& mt,
+									 Device& device,
+									 const std::vector<std::string>& files,
+									 std::vector<TextureHandle>& mtlTextures );
+	};
+
+	//------------------------------------------------------------------------------------//
+	//  SCENE OBJECT VULKAN                                                               //
+	//-------------------------------------------------------------------------------------//
+
+	class IFNITY_API SceneObject final: public ISceneObject
+	{
+	public:
+		SceneObject(
+			const char* meshFile,
+			const char* sceneFile,
+			const char* materialFile);
+
+		//Implement Interface
+
+		const MeshFileHeader& getHeader() const override { return header_; }
+		const MeshData& getMeshData() const override { return meshData_; }
+		const Scene& getScene() const override { return scene_; }
+		const std::vector<MaterialDescription>& getMaterials() const override { return materials_; }
+
+		//Shapes its not overload here 
+		const std::vector<DrawData>& getShapes() const override { return shapes_; }
+		const std::vector<std::string>& getTexturesFiles() override { return textureFiles_; }
+		void loadSceneShapes(const char* sceneFile);
+
+		MeshFileHeader header_;
+		MeshData meshData_;
+	private:
+		Scene scene_;
+		std::vector<std::string> textureFiles_;
+		mutable std::vector<MaterialDescription> materials_;
+		std::vector<DrawData> shapes_;
+
+
+
+	};
 
 }
 

@@ -196,7 +196,54 @@ namespace D3D12
 
 	}
 
+	void CommandBuffer::cmdDrawIndexedIndirect(BufferHandleSM indirectBuffer,
+												size_t indirectBufferOffset,
+												uint32_t drawCount,
+												uint32_t stride)
+	{
+		if( indirectBuffer.empty() || drawCount == 0 )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Indirect buffer is empty or draw count is zero" );
+			return;
+		}
+		D3D12Buffer* buf = ctx_->slotMapBuffers_.get( indirectBuffer );
+		if( !buf || buf->bufferType_ != BufferType::INDIRECT_BUFFER )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Invalid indirect buffer" );
+			return;
+		}
 
+		//Check if we have a CommandSignature created 
+		if( !ctx_->m_CommandSignature )
+		{
+			IFNITY_LOG( LogCore, WARNING , "Indirect command signature is not set, try to build " );
+
+			ctx_->CreateCommandSignature( ctx_->m_Device.Get(), ctx_->m_CommandSignature.GetAddressOf() );
+			if( !ctx_->m_CommandSignature )
+			{
+				IFNITY_LOG( LogCore, ERROR, "Failed to create command signature for indirect draw" );
+				return;
+			}
+			else
+			{
+				IFNITY_LOG( LogCore, INFO, "Indirect command signature created successfully" );
+			}
+		}
+
+		//Execute the indirect draw command
+		wrapper_->commandList->ExecuteIndirect(
+			ctx_->m_CommandSignature.Get(),
+			drawCount, // Number of draws
+			buf->resource_.Get(), // Indirect buffer
+			indirectBufferOffset, // Offset in the indirect buffer
+			nullptr, // Argument buffer (not used)
+			0 // Argument buffer offset (not used)
+		);
+		
+
+
+
+	}
 
 
 

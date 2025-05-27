@@ -1,3 +1,4 @@
+
 struct VSInput
 {
     float4 position : POSITION;

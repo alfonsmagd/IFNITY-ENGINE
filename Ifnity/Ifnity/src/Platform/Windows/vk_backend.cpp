@@ -2132,10 +2132,6 @@ namespace Vulkan
 		// force recalculation of all global transformations
 		IFNITY::markAsChanged(scene_, 0);
 		IFNITY::recalculateGlobalTransforms(scene_);
-	
-	
-	
-	
 	}
 
 }

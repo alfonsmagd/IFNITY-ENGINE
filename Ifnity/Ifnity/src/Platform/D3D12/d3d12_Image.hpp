@@ -65,6 +65,8 @@ namespace D3D12
 		uint16_t depthOrArraySize_ = 1;
 		uint16_t mipLevels_ = 1;
 
+		uint32_t indexSrv_ = 0; // Index for bindless SRV
+
 		bool isDepthFormat_ = false;
 		bool isStencilFormat_ = false;
 		bool isSwapchainImage_ = false;

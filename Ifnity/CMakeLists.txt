@@ -13,12 +13,13 @@ add_subdirectory(Ifnity)
 
 
 set(EXAMPLE_DIRS
-    Sandbox
-    ShadersPipeLine
+    #Sandbox
+    #ShadersPipeLine
     D3D12_SimpleTriangle
     D3Texture
 	D3D12_Cube_MVP
 	D3D12_Assimp
+	D3D12_Scene
     #Simple_Texture
     #scene_materials
     #Geometry_Mesh

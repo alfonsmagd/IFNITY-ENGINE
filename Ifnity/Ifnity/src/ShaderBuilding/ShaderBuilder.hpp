@@ -81,6 +81,9 @@ public:
      */
     static HRESULT CreateShaderBlob(const std::wstring& shaderSource, ComPtr<IDxcBlobEncoding>& sourceBlob);
 
+
+	static HRESULT CreateShaderBlobFromFile(const std::string& shaderSource, ComPtr<IDxcBlobEncoding>& sourceBlob );
+
     /**
      * @brief Compiles a shader blob.
      * @param sourceBlob Source code blob.

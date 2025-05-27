@@ -229,6 +229,7 @@ public:
 
 		ShaderCompiler::CompileShader(m_vs.get());
 		{
+
 			descShader.NoCompile = false;
 			descShader.EntryPoint = L"PSMain";
 			descShader.Profile = L"ps_6_0";

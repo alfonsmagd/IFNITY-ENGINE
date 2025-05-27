@@ -25,7 +25,8 @@ class IFNITY_API MeshDataBuilderAssimp: public IMeshDataBuilder
 {
 public:
     MeshDataBuilderAssimp(float meshScale)
-        : m_meshScale(meshScale), m_numElementsPerVertex(rhi::VertexTraits<VertexType>::numElements)
+        : m_meshScale(meshScale), 
+        m_numElementsPerVertex(rhi::VertexTraits<VertexType>::numElements)
     {}
 
     void buildMeshData(MeshObjectDescription& description) override;

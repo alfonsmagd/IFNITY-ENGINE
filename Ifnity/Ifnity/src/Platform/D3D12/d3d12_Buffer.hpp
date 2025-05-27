@@ -28,12 +28,12 @@ class DeviceD3D12;
 
 namespace D3D12
 {
-	struct D3D12Buffer final : public D3D12Descriptor
+	struct D3D12Buffer final: public D3D12Descriptor
 	{
 		//Destructor
-		
+
 		~D3D12Buffer();
-		
+
 		// clang-format off
 		[[nodiscard]] inline uint8_t* getMappedPtr() const { return static_cast< uint8_t* >(mappedPtr_); }
 		[[nodiscard]] inline bool isMapped() const { return mappedPtr_ != nullptr; }
@@ -43,10 +43,11 @@ namespace D3D12
 		void getBufferSubData( const DeviceD3D12& ctx, size_t offset, size_t size, void* data );
 		void flushMappedMemory( const DeviceD3D12& ctx, size_t offset, size_t size ) const;
 		void invalidateMappedMemory( const DeviceD3D12& ctx, size_t offset, size_t size ) const;
-		[[nodiscard]] D3D12_VERTEX_BUFFER_VIEW getVertexBufferView( uint32_t stride_ = 0  ) const;
+		[[nodiscard]] D3D12_VERTEX_BUFFER_VIEW getVertexBufferView( uint32_t stride_ = 0 ) const;
 		[[nodiscard]] D3D12_INDEX_BUFFER_VIEW  getIndexBufferView() const;
-		
-		
+		[[nodiscard]] D3D12_CPU_DESCRIPTOR_HANDLE getSRVHandle() const { return srvHandle; }
+
+
 	public:
 		ComPtr<ID3D12Resource> resource_;
 		D3D12MA::Allocation* allocation_ = nullptr;
@@ -59,6 +60,7 @@ namespace D3D12
 		D3D12_RESOURCE_FLAGS resourceFlags_ = D3D12_RESOURCE_FLAG_NONE;
 		D3D12_RESOURCE_DESC desc_ = {};
 		BufferType bufferType_ = BufferType::NO_DEFINE_BUFFER;
+		D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = { 0 };
 
 		void* mappedPtr_ = nullptr;
 		bool isCoherentMemory_ = false;

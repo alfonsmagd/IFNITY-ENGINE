@@ -55,8 +55,12 @@ class DeviceD3D12 final: public GraphicsDeviceManager
 		MAX_SRV_IMAGES = 562,
 		MAX_UAV_IMAGES = 16,
 		MAX_DSV_IMAGES = 1,
+		MAX_INDEX_SLOT_BUFFERS = 10,
+
 		START_SLOT_TEXTURES = 10,
-		DEPTH_SRV_INDEX = 9
+		START_SLOT_BUFFERS = 1,
+
+		DEPTH_SRV_INDEX = 561
 	};
 
 	enum
@@ -87,6 +91,9 @@ public:
 	ComPtr<ID3D12CommandAllocator> m_DirectCmdListAlloc = nullptr;
 	ComPtr<ID3D12GraphicsCommandList> m_CommandList = nullptr;
 	ComPtr<IDXGISwapChain3> m_SwapChain = nullptr;
+	ComPtr<ID3D12CommandSignature> m_CommandSignature = nullptr;
+
+
 	HWND m_hWnd = nullptr;
 
 	ComPtr<D3D12MA::Allocator> g_Allocator;
@@ -229,6 +236,9 @@ public:
 
 	D3D12::TextureHandleSM getCurrentSwapChainTexture() const;
 
+	void CreateCommandSignature( ID3D12Device* device, 
+								 ID3D12CommandSignature** outSignature,
+								 ID3D12RootSignature* rootSig = nullptr) ;
 
 	//DeferredTask
 	void processDeferredTasks();
@@ -258,6 +268,8 @@ private:
 	bool CreateSwapChain();
 	void CreateCommandQueue();
 	void CreateImmediateCommands();
+
+	
 
 
 	void CaptureD3D12DebugMessages() const;

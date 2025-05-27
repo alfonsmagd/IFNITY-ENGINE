@@ -19,7 +19,7 @@
 
 
 #include "D3D12MemAlloc.h"
-
+#include <span>
 
 
 
@@ -256,6 +256,19 @@ namespace D3D12
 	}
 
 
+	D3D12::GraphicsPipeline* Device::getActualPipeline() const
+	{
+		if( m_DeviceD3D12->actualPipeline_ )
+		{
+			return m_DeviceD3D12->actualPipeline_;
+		}
+		else
+		{
+			IFNITY_LOG(LogApp, ERROR, "Actual pipeline is null");
+			return nullptr;
+		}
+	}
+
 
 	void Device::StartRecording()
 	{
@@ -289,7 +302,7 @@ namespace D3D12
 				return;
 			}
 		}
-		
+
 	}
 
 	void Device::StopRecording()
@@ -329,6 +342,68 @@ namespace D3D12
 
 
 
+
+	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
+	{// Not implemented yet//Check if MeshData its valid ? 
+		if( desc.meshData.indexData_.empty() || desc.meshData.vertexData_.empty() )
+		{
+			IFNITY_LOG(LogApp, ERROR, "MeshData its invalid, are you sure that mesh Object Desc has data? , you have to build, or use a IMeshObjectBuilder");
+			return nullptr;
+		}
+		// Check if ist not a large mesh 
+
+
+		//For now its a largeMesh 
+		else if( desc.isLargeMesh )
+		{
+			//Create a MeshObject with the data. 
+
+			/*MeshObject* mesh = new MeshObject(&desc.meshFileHeader, desc.meshData.meshes_.data(), desc.meshData.indexData_.data(), desc.meshData.vertexData_.data(), this);*/
+			MeshObject* mesh = new MeshObject(std::move(const_cast<MeshObjectDescription&>(desc)), this);
+
+			return MeshObjectHandle(mesh);
+		}
+
+
+		return nullptr;
+
+	}
+
+	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
+	{
+		if( meshbuilder )
+		{
+			meshbuilder->buildMeshData(const_cast<MeshObjectDescription&>(desc));
+			return CreateMeshObject(desc);
+		}
+		else
+		{
+			IFNITY_LOG(LogApp, ERROR, "MeshDataBuilder its invalid");
+			return nullptr;
+		}
+	}
+
+	SceneObjectHandler Device::CreateSceneObject(const char* meshes, const char* scene, const char* materials)
+	{
+		//Create a SceneObject with the data. 
+		SceneObject* sceneObject = new SceneObject(meshes, scene, materials);
+		return SceneObjectHandler(sceneObject);
+
+
+	}
+
+	MeshObjectHandle Device::CreateMeshObjectFromScene(const SceneObjectHandler& scene)
+	{
+		// Not implemented yet
+
+		MeshObject* mesh = new MeshObject(scene, this);
+		return MeshObjectHandle(mesh);
+	}
+
+
+
+
+
 	void Device::DrawObject( GraphicsPipelineHandle& pipeline, DrawDescription& desc )
 	{
 		//Changes the DepthState like vulkan en runtime its not posible in D3D12
@@ -358,6 +433,12 @@ namespace D3D12
 			cmdBuffer.cmdBindVertexBuffer( currentVertexBuffer_ );
 		}
 
+		cmdBuffer.cmdPushConstants(pushConstants.data,
+									pushConstants.size,
+									pushConstants.offset);
+
+
+
 		cmdBuffer.cmdDraw( desc.drawMode, desc.size, 1 );
 
 	}
@@ -370,7 +451,7 @@ namespace D3D12
 
 		//For simplify 
 		TextureDescription texdesc( desc );
-		 auto& ctx_ = *m_DeviceD3D12;
+		auto& ctx_ = *m_DeviceD3D12;
 
 		//Get the format value in this case will check only if the format is valid or depthformat 
 		if( !validateTextureDescription( texdesc ) )
@@ -475,7 +556,7 @@ namespace D3D12
 
 
 		TextureHandleSM textHanlde = ctx_.slotMapTextures_.create( std::move( image ) );
-		HolderTextureSM holder = makeHolder(&ctx_, textHanlde);
+		HolderTextureSM holder = makeHolder( &ctx_, textHanlde );
 
 		uint32_t index = textHanlde.index();
 
@@ -486,28 +567,29 @@ namespace D3D12
 		IFNITY_ASSERT_MSG( imageHandle != nullptr, "Image handle is null error ?? stranger please call me" );
 
 		//Descriptor preparer.
-	
 
+
+		imageHandle->indexSrv_ = index + DeviceD3D12::START_SLOT_TEXTURES;
 		imageHandle->descriptorHandle_.srvHandle = ctx_.AllocateSRV( index + DeviceD3D12::START_SLOT_TEXTURES );
 
 
-		ctx_.m_Device->CreateShaderResourceView( imageHandle->resource_.Get(), 
+		ctx_.m_Device->CreateShaderResourceView( imageHandle->resource_.Get(),
 												 nullptr,
-												 imageHandle->descriptorHandle_.srvHandle);
+												 imageHandle->descriptorHandle_.srvHandle );
 
 
 
 		TextureHandle texture = std::make_shared<Texture>( texdesc, std::move( holder ) );
-		
+
 
 		if( texdesc.data )
 		{
-			upload( textHanlde, texdesc.mipLevels , desc.data );
+			upload( textHanlde, texdesc.mipLevels, desc.data );
 		}
-		 
+
 
 		return texture;
-	
+
 
 	}
 
@@ -520,9 +602,9 @@ namespace D3D12
 
 		if( desc.type == BufferType::CONSTANT_BUFFER )
 		{
-			IFNITY_LOG(LogCore, INFO, "Constant buffer is managed inside D3D12. ");
-			Buffer* buff = new Buffer(desc);
-			return BufferHandle(buff);
+			IFNITY_LOG( LogCore, INFO, "Constant buffer is managed inside D3D12. " );
+			Buffer* buff = new Buffer( desc );
+			return BufferHandle( buff );
 
 		}
 
@@ -616,9 +698,45 @@ namespace D3D12
 
 		BufferHandleSM bufferHandle = m_DeviceD3D12->slotMapBuffers_.create( std::move( buffer ) );
 		IFNITY_ASSERT_MSG( bufferHandle.valid(), "Buffer handle is not valid" );
-		IFNITY_LOG( LogCore, INFO, "Buffer created: " + std::to_string( bufferHandle.index() ) );
+		
+		IFNITY_LOG( LogCore, INFO, "Buffer created: " + std::string(debugName) + std::to_string( bufferHandle.index() ) );
+
+		// Crear SRV si es STORAGE_BUFFER
+		if( desc.type == BufferType::STORAGE_BUFFER )
+		{
+			uint32_t bindlessIndex = bufferHandle.index();
+
+			if( bindlessIndex >= DeviceD3D12::MAX_INDEX_SLOT_BUFFERS )
+			{
+				IFNITY_LOG( LogCore, ERROR, "Bindless index out of range" );
+				return {};
+			}
+
+			// Get the buffer from the slot map
+			D3D12Buffer* finalBuffer = m_DeviceD3D12->slotMapBuffers_.get( bufferHandle );
+			IFNITY_ASSERT_MSG( finalBuffer != nullptr, "Final buffer is null ERROR creating buffer or calling it " );
+
+
+			finalBuffer->srvHandle = m_DeviceD3D12->AllocateSRV( bindlessIndex );
+
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+			srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			srvDesc.Buffer.FirstElement = 0;
+			srvDesc.Buffer.NumElements = desc.strideSize > 0 ? desc.byteSize / desc.strideSize : 1.0 ;
+			srvDesc.Buffer.StructureByteStride = desc.strideSize;
+			srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+			m_DeviceD3D12->m_Device->CreateShaderResourceView(
+				finalBuffer->resource_.Get(),
+				&srvDesc,
+				finalBuffer->srvHandle
+			);
+		}
 
 		return makeHolder( m_DeviceD3D12, bufferHandle );
+
 
 	}
 
@@ -657,9 +775,9 @@ namespace D3D12
 
 	}
 
-	void Device::upload( TextureHandleSM handle,  uint32_t miplevel, const void* data )
+	void Device::upload( TextureHandleSM handle, uint32_t miplevel, const void* data )
 	{
-	
+
 		auto& ctx_ = *m_DeviceD3D12;
 
 		//Previos check if the buffer is null and check it 
@@ -678,12 +796,12 @@ namespace D3D12
 			return;
 		}
 
-		
+
 		// 4. Calcular el layout de subrecursos
 		UINT64 uploadBufferSize = 0;
-		std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts(miplevel);
-		std::vector<UINT> numRows(miplevel);
-		std::vector<UINT64> rowSizes(miplevel);
+		std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts( miplevel );
+		std::vector<UINT> numRows( miplevel );
+		std::vector<UINT64> rowSizes( miplevel );
 
 		ctx_.m_Device->GetCopyableFootprints(
 			&image->desc_,
@@ -696,43 +814,43 @@ namespace D3D12
 			&uploadBufferSize );
 
 		// 5. Crear buffer intermedio
-		CD3DX12_RESOURCE_DESC uploadDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+		CD3DX12_RESOURCE_DESC uploadDesc = CD3DX12_RESOURCE_DESC::Buffer( uploadBufferSize );
 
 		D3D12MA::ALLOCATION_DESC uploadAllocDesc = {};
 		uploadAllocDesc.HeapType = D3D12_HEAP_TYPE_UPLOAD;
 
 		ComPtr<ID3D12Resource> uploadBuffer;
 		D3D12MA::Allocation* uploadAlloc = nullptr;
-		ctx_.g_Allocator->CreateResource(&uploadAllocDesc, 
+		ctx_.g_Allocator->CreateResource( &uploadAllocDesc,
 										  &uploadDesc,
 										  D3D12_RESOURCE_STATE_GENERIC_READ,
-										  nullptr, 
-										  &uploadAlloc, 
-										  IID_PPV_ARGS(OUT &uploadBuffer));
+										  nullptr,
+										  &uploadAlloc,
+										  IID_PPV_ARGS( OUT & uploadBuffer ) );
 
 		// 6. Preparar estructura para UpdateSubresources
-		std::vector<D3D12_SUBRESOURCE_DATA> subresources(miplevel);
-		const uint8_t* basePtr = reinterpret_cast<const uint8_t*>(data); // only chunk memory for now 
+		std::vector<D3D12_SUBRESOURCE_DATA> subresources( miplevel );
+		const uint8_t* basePtr = reinterpret_cast< const uint8_t* >(data); // only chunk memory for now 
 		UINT offset = 0;
-		for (UINT i = 0; i < miplevel; ++i)
+		for( UINT i = 0; i < miplevel; ++i )
 		{
-			subresources[i].pData = basePtr + offset;
-			subresources[i].RowPitch = rowSizes[i];
-			subresources[i].SlicePitch = rowSizes[i] * numRows[i];
+			subresources[ i ].pData = basePtr + offset;
+			subresources[ i ].RowPitch = rowSizes[ i ];
+			subresources[ i ].SlicePitch = rowSizes[ i ] * numRows[ i ];
 
-			offset += static_cast<UINT>(subresources[i].SlicePitch);
+			offset += static_cast< UINT >( subresources[ i ].SlicePitch );
 		}
 
-		D3D12ImmediateCommands::CommandListWrapper  wrapper  = ctx_.m_ImmediateCommands->acquire();
+		D3D12ImmediateCommands::CommandListWrapper  wrapper = ctx_.m_ImmediateCommands->acquire();
 
 
-		UpdateSubresources( wrapper.commandList.Get(), 
-							image->resource_.Get(), 
+		UpdateSubresources( wrapper.commandList.Get(),
+							image->resource_.Get(),
 							uploadBuffer.Get(),
 							0,
 							0,
-							static_cast< UINT >(miplevel), 
-							subresources.data());
+							static_cast< UINT >(miplevel),
+							subresources.data() );
 
 		// 7. Transition the image to the appropriate state
 		CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
@@ -744,10 +862,10 @@ namespace D3D12
 
 		//Submit the command list
 
-		SubmitHandle submithandle = ctx_.m_ImmediateCommands->submit(  wrapper);
+		SubmitHandle submithandle = ctx_.m_ImmediateCommands->submit( wrapper );
 		//Defer the destruction of the staging buffer
-		ctx_.addDeferredTask( 
-			std::packaged_task<void()>( [ res = std::move( uploadBuffer), alloc = std::move(uploadAlloc)]() mutable
+		ctx_.addDeferredTask(
+			std::packaged_task<void()>( [ res = std::move( uploadBuffer ), alloc = std::move( uploadAlloc ) ]() mutable
 										{
 											if( res ) res.Reset();
 											if( alloc )
@@ -756,7 +874,7 @@ namespace D3D12
 												alloc = nullptr;
 											}
 										} ),
-		 submithandle );
+			submithandle );
 
 	}
 
@@ -874,25 +992,30 @@ namespace D3D12
 	{
 		if( buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER )
 		{
-			cmdBuffer.cmdPushConstants(  data, size, offset );
+			//Internal cache buffer 
+			pushConstants.data = data;
+			pushConstants.size = size;
+			pushConstants.offset = offset;
+			return;
+			/*cmdBuffer.cmdPushConstants( data, size, offset );*/
 		}
 
 		//Write other options and getting the buffer 
 		if( buffer->GetBufferDescription().type == BufferType::UNIFORM_BUFFER )
 		{
 			//Get the BufferHandleSM by index  to avoid dynamic_cast. 
-			D3D12::D3D12Buffer* buf = m_DeviceD3D12->slotMapBuffers_.getByIndex(buffer->GetBufferID());
+			D3D12::D3D12Buffer* buf = m_DeviceD3D12->slotMapBuffers_.getByIndex( buffer->GetBufferID() );
 			if( !buf )
 			{
-				IFNITY_LOG(LogCore, ERROR, "Buffer is null to write ");
+				IFNITY_LOG( LogCore, ERROR, "Buffer is null to write " );
 				return;
 			}
-			upload(buf, data, size, offset);
+			upload( buf, data, size, offset );
 
 		}
-		
-	
-		
+
+
+
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -966,10 +1089,307 @@ namespace D3D12
 		return GraphicsPipelineHandle{ pipeline };
 	}
 
+	//==================================================================================================//
+	//  MeshObject Methods			                                                                    //
+	//==================================================================================================//
+	MeshObject::MeshObject( const SceneObjectHandler& data, IDevice* device ): m_Device( DCAST_DEVICE( device ) )
+	{
+		//Get information about scene 
+		//Chec if device its valid 
+		if( !m_Device )
+		{
+			IFNITY_LOG( LogApp, ERROR, "Device is not valid" );
+			return;
+		}
+		//Chec if mesh data its valid
+		meshStatus_ = MeshStatus::BUFFER_NOT_INITIALIZED;
+
+		//GET data information and fill m_MeshObjectDescription
+		const MeshData& meshData = data->getMeshData();
+		const MeshFileHeader header = data->getHeader();
+
+		const uint32_t* indices = meshData.indexData_.data();
+		const float* vertices = meshData.vertexData_.data();
+
+		const size_t transformsSize = data->getScene().globalTransform_.size() * sizeof( glm::mat4 );
+		const void* transformsData = data->getScene().globalTransform_.data();
+
+		m_MeshObjectDescription.meshFileHeader = header; // for now its only de data avaialbe in the future 
+		// its important to move the data sceen to meshobjectDescription. to avoid lost data. 
+
+
+
+//Get data to modify like materials in vk , this solution its not optimal but in the future
+//when we have a better solution that solve vk and d3d12, probably unify that Opengl scene pipeline. 
+		auto materials = data->getMaterials();
+		convertToD3D12Material(materials, *m_Device, data->getTexturesFiles(),allMaterialsTextures_);
+
+		//Create Buffers and fill the data.
+		BufferDescription bufferDesc = {};
+		{
+			bufferDesc.SetDebugName( "Indices Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::INDEX_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( header.indexDataSize );
+			bufferDesc.SetData( indices );
+		}
+		m_BufferIndex = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferIndex, "Failed to create index buffer" );
+		//VertexData
+		{
+			bufferDesc.SetDebugName( "Vertex Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::VERTEX_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( header.vertexDataSize );
+			bufferDesc.SetData( vertices );
+		}
+		m_BufferVertex = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferVertex, "Failed to create vertex buffer" );
+		//Buffer Transformers Model Matrices
+		{
+			bufferDesc.SetDebugName( "TransformerBuffer  - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::STORAGE_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( transformsSize );
+			bufferDesc.SetStrideSize( sizeof( glm::mat4 ) ); //Here is the transform size 
+			bufferDesc.SetData( transformsData );
+		}
+		m_BufferModelMatrices = m_Device->CreateBuffer( bufferDesc );
+
+
+		IFNITY_ASSERT_MSG( m_BufferModelMatrices, "Failed to create model matrices buffer" );
+
+		//Buffer Materials 
+		{
+			bufferDesc.SetDebugName( "Material Buffer  - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::STORAGE_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( sizeof( MaterialDescription ) * materials.size() );
+			bufferDesc.SetData( materials.data() );
+			bufferDesc.SetStrideSize( sizeof( MaterialDescription ) ); //Set the stride size for the material buffer
+		}
+		m_BufferMaterials = m_Device->CreateBuffer( bufferDesc );
+
+
+		//DrawCommands Buffer and DrawData 
+		std::vector<DrawIndexedIndirectCommand> drawCommands;
+		std::vector<DrawID> drawID;
+
+		const uint32_t numCommands = header.meshCount;
+
+		drawCommands.resize( numCommands );
+		drawID.resize( numCommands );
+
+		DrawIndexedIndirectCommand* cmd = drawCommands.data();
+		DrawID* dd = drawID.data();
+
+		IFNITY_ASSERT( data->getScene().meshes_.size() == numCommands );
+
+		uint32_t ddindex = 0;
+		//Fill the draw commands and draw data 
+		for( auto& shape : data->getShapes() )
+		{
+			int32_t meshId = shape.meshIndex;
+			*cmd++ = {
+				.count = meshData.meshes_[ meshId ].getLODIndicesCount( 0 ),
+				.instanceCount = 1,
+				.firstIndex = shape.indexOffset,
+				.baseVertex = ( int32_t )shape.vertexOffset,
+				.baseInstance = ddindex++,
+			};
+			*dd++ = {
+				.transformId = shape.transformIndex,
+				.materialId = shape.materialIndex,
+			};
+		}
+
+		// Now Build the buffer Indirect buffer and DrawID storage buffer 
+		// prepare indirect commands buffer
+		{
+			bufferDesc.SetDebugName( "Indirect Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::INDIRECT_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( sizeof( DrawIndexedIndirectCommand ) * numCommands );
+			bufferDesc.SetStrideSize( sizeof( DrawIndexedIndirectCommand ) ); //Set the stride size for the indirect buffer
+			bufferDesc.SetData( drawCommands.data() );
+		}
+		m_BufferIndirect = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferIndirect, "Failed to create indirect buffer" );
+
+
+		//DrawID buffer
+		{
+			bufferDesc.SetDebugName( "DrawID Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::STORAGE_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( sizeof( DrawID ) * numCommands );
+			bufferDesc.SetStrideSize( sizeof( DrawID ) ); //Set the stride size for the drawID buffer
+			bufferDesc.SetData( drawID.data() );
+
+		}
+		m_BufferDrawID = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferDrawID, "Failed to create drawID buffer" );
+
+		//Fill al m_SM
+		m_SM.vertexBuffer		 = DCAST_BUFFER( m_BufferVertex.get() )->getBufferHandleSM();
+		m_SM.indexBuffer		 = DCAST_BUFFER( m_BufferIndex.get() )->getBufferHandleSM();
+		m_SM.indirectBuffer		 = DCAST_BUFFER( m_BufferIndirect.get() )->getBufferHandleSM();
+		m_SM.drawIDBuffer		 = DCAST_BUFFER( m_BufferDrawID.get() )->getBufferHandleSM();
+		m_SM.materialBuffer		 = DCAST_BUFFER( m_BufferMaterials.get() )->getBufferHandleSM();
+		m_SM.modelMatricesBuffer = DCAST_BUFFER( m_BufferModelMatrices.get() )->getBufferHandleSM();
+
+		m_SM.srvIndex.drawId        = m_SM.drawIDBuffer.index();
+		m_SM.srvIndex.materials     = m_SM.materialBuffer.index();
+		m_SM.srvIndex.modelMatrices = m_SM.modelMatricesBuffer.index();
+
+
+	}
+
+	void MeshObject::convertToD3D12Material( std::vector<MaterialDescription>& mt,
+											 Device& device,
+											 const std::vector<std::string>& files,
+											 std::vector<TextureHandle>& mtlTextures )
+	{
+
+
+		uint32_t id = 0;
+		//For all files convert to material. 
+		//Iterate for all files and build texture
+		mtlTextures.resize( files.size() );
+		for( auto& file : files )
+		{
+			//load texture from file
+			TextureDescription texdesc = {};
+			texdesc.debugName = file;
+			texdesc.dimension = rhi::TextureType::TEXTURE2D;
+			texdesc.format = Format::R8G8B8A8;
+			texdesc.filepath = file;
+			texdesc.usage = TextureUsageBits::SAMPLED;
+			texdesc.isDepth = false;
+			// upload texture and fill widht, height, 
+			const void* img = LoadTextureFromFileDescription( texdesc );
+			texdesc.data = img;					//fill de data. 
+
+			//Now create the texture
+			TextureHandle texHandle = device.CreateTexture( texdesc );
+			//Get the texture now using dcast 
+			mtlTextures[ id++ ] = texHandle;
+		}
+
+		//Now create and update the material and get the id correctly 
+		auto getTextureId = []( uint32_t idx, const std::span<TextureHandle>& textures )->uint32_t
+			{
+				if( idx == INVALID_TEXTURE ) [[likely]]
+				{
+					return 0;
+				}
+				else
+				{
+					//Get the texture index. 
+					const auto& texture = textures[ idx ];
+					return texture ? texture->GetTextureID() : 0; // return 0 if texture is null
+				}
+			};
+
+		// use for each 
+		std::for_each( mt.begin(), mt.end(), [ &getTextureId, &mtlTextures ]( auto& mtl )
+					   {
+						   //Get the texture id. 
+						   mtl.ambientOcclusionMap_  = getTextureId( mtl.ambientOcclusionMap_, mtlTextures );
+						   mtl.emissiveMap_          = getTextureId( mtl.emissiveMap_, mtlTextures );
+						   mtl.albedoMap_            = getTextureId( mtl.albedoMap_, mtlTextures );
+						   mtl.metallicRoughnessMap_ = getTextureId( mtl.metallicRoughnessMap_, mtlTextures );
+						   mtl.normalMap_            = getTextureId( mtl.normalMap_, mtlTextures );
+						   mtl.opacityMap_           = getTextureId( mtl.opacityMap_, mtlTextures );
+					   } );
+
+	}
+
+
+
+	//==================================================================================================//
+	// MeshObject Methods                                                        //
+	//==================================================================================================//
+
+
+	void MeshObject::DrawIndirect()
+	{
+		//Not implemented yet
+		auto& buf = m_Device->getCommandBuffer();
+		const auto& pc = m_Device->pushConstants;
+		//Force now to use MAT4 [TODO] REMOVE FROM THIS. ITS ONLY FOR TESTING PURPOSES.
+		glm::mat4 viewmodel = *reinterpret_cast<const glm::mat4*>(pc.data);
+
+		//Build push constants
+		const struct {	
+			mat4 viewProj;
+			uint32_t bufferTransforms;
+			uint32_t bufferDrawData;
+			uint32_t bufferMaterials;
+		} pushConstans = {
+				.viewProj = viewmodel,
+				.bufferTransforms = m_SM.srvIndex.modelMatrices,
+				.bufferDrawData   = m_SM.srvIndex.drawId,
+				.bufferMaterials  = m_SM.srvIndex.materials
+		};
+
+		auto* pipeline = m_Device->getActualPipeline();
+		CHECK_PTR(pipeline, "Pipeline is null");
+
+		buf.cmdBindRenderPipeline(pipeline);
+		buf.cmdBindIndexBuffer(m_SM.indexBuffer);
+		buf.cmdBindVertexBuffer(m_SM.vertexBuffer);
+		buf.cmdPushConstants(pushConstans);
+		buf.cmdDrawIndexedIndirect(m_SM.indirectBuffer, 0, m_MeshObjectDescription.meshFileHeader.meshCount);
+
+
+
+	}
 
 
 
 
+
+
+	//==================================================================================================//
+	//  Scene Objects Methods			                                                        //
+	//==================================================================================================//
+	SceneObject::SceneObject( const char* meshFile, const char* sceneFile, const char* materialFile )
+	{
+		////1.First load the mesh file
+		header_ = loadMeshData( meshFile, meshData_ );
+		loadSceneShapes( sceneFile );
+		loadMaterials( materialFile, materials_, textureFiles_ );
+
+
+	}
+
+	void SceneObject::loadSceneShapes( const char* sceneFile )
+	{
+		IFNITY::loadScene( sceneFile, scene_ );
+
+		// prepare draw data buffer
+		for( const auto& c : scene_.meshes_ )
+		{
+			auto material = scene_.materialForNode_.find( c.first );
+			if( material != scene_.materialForNode_.end() )
+			{
+				shapes_.push_back(
+					DrawData{
+						.meshIndex = c.second, // c.second is the mesh index
+						.materialIndex = material->second, // material->second is the material index
+						.LOD = 0,
+						.indexOffset = meshData_.meshes_[ c.second ].indexOffset,
+						.vertexOffset = meshData_.meshes_[ c.second ].vertexOffset,
+						.transformIndex = c.first // c.first is the node index
+					} );
+			}
+		}
+
+		// force recalculation of all global transformations
+		IFNITY::markAsChanged( scene_, 0 );
+		IFNITY::recalculateGlobalTransforms( scene_ );
+	}
 
 
 

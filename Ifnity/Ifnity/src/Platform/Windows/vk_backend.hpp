@@ -317,8 +317,6 @@ namespace Vulkan
 			BufferGpuAddres gpuAddress;
 		}m_SM;
 
-		
-
 		std::vector<TextureHandle> allMaterialsTextures_; //In this case textures will be building because we use device to create textures, Opengl can create textures itself.
 
 	};
