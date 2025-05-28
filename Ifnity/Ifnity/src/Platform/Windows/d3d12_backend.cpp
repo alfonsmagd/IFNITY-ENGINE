@@ -1182,6 +1182,7 @@ namespace D3D12
 			bufferDesc.SetStorageType( StorageType::DEVICE );
 			bufferDesc.SetByteSize( header.indexDataSize );
 			bufferDesc.SetData( indices );
+			bufferDesc.SetStrideSize( sizeof( uint32_t ) );
 		}
 		m_BufferIndex = m_Device->CreateBuffer( bufferDesc );
 		IFNITY_ASSERT_MSG( m_BufferIndex, "Failed to create index buffer" );
@@ -1192,6 +1193,7 @@ namespace D3D12
 			bufferDesc.SetStorageType( StorageType::DEVICE );
 			bufferDesc.SetByteSize( header.vertexDataSize );
 			bufferDesc.SetData( vertices );
+			bufferDesc.SetStrideSize( VertexTraits<VertexScene>::numElements * sizeof(float));
 		}
 		m_BufferVertex = m_Device->CreateBuffer( bufferDesc );
 		IFNITY_ASSERT_MSG( m_BufferVertex, "Failed to create vertex buffer" );

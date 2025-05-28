@@ -51,6 +51,11 @@ struct RootConstants
     uint baseInstance;
 };
 
+struct BaseInstance
+{
+    uint id;
+};
+
 struct VSInput
 {
     float3 position : POSITION;
@@ -75,6 +80,7 @@ struct PSInput
 
     
 ConstantBuffer<RootConstants> root : register(b0);
+ConstantBuffer<BaseInstance> baseInstance : register(b1); // Base instance ID for instancing
 SamplerState g_sampler : register(s0);
 
 
@@ -85,7 +91,7 @@ PSInput VSMain(VSInput input)
     StructuredBuffer<float4x4> model_rotate = ResourceDescriptorHeap[root.indexTransform];
     StructuredBuffer<DrawData> drawDataBuffer = ResourceDescriptorHeap[root.drawIndex];
     
-    DrawData drawData = drawDataBuffer[root.baseInstance];
+    DrawData drawData = drawDataBuffer[baseInstance.id];
     float4x4 modelr = model_rotate[drawData.transformID];
     
     float4 modelpos = mul(modelr, float4(input.position, 1.0f));

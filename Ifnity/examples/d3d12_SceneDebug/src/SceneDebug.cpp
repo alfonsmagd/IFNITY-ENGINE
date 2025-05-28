@@ -418,27 +418,6 @@ public:
 		DrawID* dd = drawID.data();
 		DrawIndexedIndirectCommand* cmd = drawCommands.data();
 
-
-		//MeshIDX
-		
-		//for( size_t i = 0; i < numelement; ++i )
-		//{
-		//	uint32_t meshid = m_SceneObject->getShapes()[ 0 ].meshIndex;
-		//	auto shape = m_SceneObject->getShapes()[ 0 ];
-		//	// Initialize the draw command
-		//	*cmd++ = {
-		//		.bInstanceroot = ddindex, // This is not used in this example
-		//		.count =  meshData.meshes_[ meshid ].getLODIndicesCount( 0 ),
-		//		.instanceCount = 1,
-		//		.firstIndex = shape.indexOffset,
-		//		.baseVertex = ( int32_t )shape.vertexOffset,
-		//		.baseInstance = 0,
-		//	};
-		//	*dd++ = {
-		//		.transformId = shape.transformIndex,
-		//		.materialId = 0,
-		//	};
-		//}
 	
 		for( auto& shape : m_SceneObject->getShapes())
 		{
@@ -630,7 +609,7 @@ public:
 		desc.instanceCount = m_SceneObject->getHeader().meshCount;
 
 		rdevice->StartRecording();
-		rdevice->WriteBuffer(m_PushConnstant, &pc, sizeof(PerFrameData)-sizeof(uint32_t));
+		rdevice->WriteBuffer(m_PushConnstant, &pc, sizeof(PerFrameData));
 
 
 		rdevice->DrawObjectIndirect( m_pipeline, desc,m_BufferIndirect );

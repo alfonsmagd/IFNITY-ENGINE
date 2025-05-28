@@ -184,8 +184,8 @@ private:
 	struct VertexData
 	{
 		vec3 pos;
-		vec3 normal;
 		vec2 tc;
+		vec3 normal;
 	};
 
 
@@ -242,6 +242,8 @@ public:
 			.sceneConfig = vSceneconfig[ 0 ]
 
 
+
+
 		};
 
 		MeshDataBuilderAssimp<rhi::VertexScene> builder( 1 );
@@ -265,6 +267,8 @@ public:
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
+
+
 
 		ShaderCreateDescription descShader;
 		{
@@ -295,38 +299,40 @@ public:
 			//Vertex Attributes Configure 
 			rhi::VertexInput vertexInput;
 			uint8_t position = 0;
-			uint8_t normal = 1;
-			uint8_t tc = 2;
-			vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::POSITION,
+			uint8_t normal = 2;
+			uint8_t tc = 1;
+			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::POSITION, 
 											.location = position,
 											.binding = 0,
 											.format = rhi::Format::R32G32B32_FLOAT,
-											.offset = offsetof( VertexData,pos ) }, position );
-			vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::NORMAL,
-											.location = normal,
-											.binding = 0,
-											.format = rhi::Format::R32G32B32_FLOAT,
-											.offset = offsetof( VertexData,normal ) }, normal );
+											.offset = offsetof(VertexData,pos) }, position);
 			vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::TEXCOORD,
 											.location = tc,
 											.binding = 0,
 											.format = rhi::Format::R32G32_FLOAT,
 											.offset = offsetof( VertexData,tc ) }, tc );
 
-			vertexInput.addVertexInputBinding( { .stride = sizeof( VertexData ) }, position );
+			vertexInput.addVertexAttribute({ .semantic = rhi::VertexSemantic::NORMAL,
+											.location = normal,
+											.binding = 0,
+											.format = rhi::Format::R32G32B32_FLOAT,
+											.offset = offsetof(VertexData,normal) }, normal);
+
+
+
+			vertexInput.addVertexInputBinding({ .stride = sizeof(VertexData) }, position);
 
 
 
 
-			gdesc.SetVertexShader( m_vs.get() )
-				.SetPixelShader( m_ps.get() )
-				.SetVertexInput( vertexInput );
+			gdesc.SetVertexShader(m_vs.get())
+				.SetPixelShader(m_ps.get())
+				.SetVertexInput(vertexInput);
 
 			RasterizationState rasterizationState;
 			rasterizationState.cullMode = rhi::CullModeType::FrontAndBack;
 
-			gdesc.SetRenderState( { .depthTest = true, .depthFormat = Format::Z_FLOAT32 } );
-			gdesc.SetRasterizationState( rasterizationState );
+
 
 
 			m_pipeline = rdevice->CreateGraphicsPipeline( gdesc );

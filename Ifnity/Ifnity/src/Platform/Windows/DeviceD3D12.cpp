@@ -251,7 +251,7 @@ void DeviceD3D12::FreeSRV( uint32_t index )
 	}
 
 	--srvAlloc.nextSlot;
-	
+
 
 
 }
@@ -292,7 +292,7 @@ D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture() const
 
 }
 
-void DeviceD3D12::CreateCommandSignature( ID3D12Device* device, 
+void DeviceD3D12::CreateCommandSignature( ID3D12Device* device,
 										  ID3D12CommandSignature** outSignature,
 										  ID3D12RootSignature* rootSig )
 {
@@ -303,25 +303,25 @@ void DeviceD3D12::CreateCommandSignature( ID3D12Device* device,
 		D3D12_DRAW_INDEXED_ARGUMENTS draw;
 	};
 
-	D3D12_INDIRECT_ARGUMENT_DESC args[2] = {};
+	D3D12_INDIRECT_ARGUMENT_DESC args[ 2 ] = {};
 
 	// RootConstants -> equivalente a SetGraphicsRoot32BitConstants
-	args[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
-	args[0].Constant.RootParameterIndex = 0;
-	args[0].Constant.DestOffsetIn32BitValues = 55;
-	args[0].Constant.Num32BitValuesToSet = sizeof(uint32_t) / sizeof(uint32_t);
+	args[ 0 ].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+	args[ 0 ].Constant.RootParameterIndex = kBinding_RootConstant_BaseInstance;
+	args[ 0 ].Constant.DestOffsetIn32BitValues = 0;
+	args[ 0 ].Constant.Num32BitValuesToSet = sizeof( uint32_t ) / sizeof( uint32_t );
 
 	// DrawIndexed call
-	args[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+	args[ 1 ].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
 
 	D3D12_COMMAND_SIGNATURE_DESC desc = {};
-	desc.ByteStride = sizeof(IndirectDrawCall);
-	desc.NumArgumentDescs = _countof(args);
+	desc.ByteStride = sizeof( IndirectDrawCall );
+	desc.NumArgumentDescs = _countof( args );
 	desc.pArgumentDescs = args;
 
 
-	HRESULT hr = device->CreateCommandSignature(&desc, rootSig, IID_PPV_ARGS(outSignature));
-	ThrowIfFailed(hr);
+	HRESULT hr = device->CreateCommandSignature( &desc, rootSig, IID_PPV_ARGS( outSignature ) );
+	ThrowIfFailed( hr );
 
 
 }
@@ -548,8 +548,8 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 		 }*/
 
 		ThrowIfFailed( D3D12MA::CreateAllocator( &desc, &g_Allocator ) );
-		
-		
+
+
 	}
 
 	//Check if the debug layer when is enabled
@@ -854,7 +854,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE DeviceD3D12::DepthStencilView() const
 void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 {
 
-	
+
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc{};
 	rtvHeapDesc.NumDescriptors = (MAX_RTV_SWAPCHAIN_IMAGES + MAX_RTV_DEFFERED_IMAGES);
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -878,7 +878,7 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 		IID_PPV_ARGS( OUT m_DsvHeap.GetAddressOf() ) ) );
 
 	name = "DSV Heap";
-	
+
 	m_DsvHeap->SetName( L"DSV Heap" );
 
 
@@ -900,7 +900,7 @@ void DeviceD3D12::CreateRtvAndDsvDescriptorHeaps()
 	ThrowIfFailed( m_Device->CreateDescriptorHeap( &descBindles, IID_PPV_ARGS( OUT m_BindlessHeap.GetAddressOf() ) ) );
 
 	name = "Bindless Heap";
-	
+
 	m_BindlessHeap->SetName( L"Bindless Heap" );
 
 
@@ -1053,7 +1053,7 @@ void DeviceD3D12::OnResize()
 		IID_PPV_ARGS( m_DepthStencilBuffer.GetAddressOf() )
 	) );
 
-	m_DepthStencilBuffer->SetName(L"Depth/Stencil Resource");
+	m_DepthStencilBuffer->SetName( L"Depth/Stencil Resource" );
 	m_DepthStencilAllocation->SetName( L"Depth/Stencil Allocation" );
 
 
@@ -1065,7 +1065,7 @@ void DeviceD3D12::OnResize()
 	m_Device->CreateDepthStencilView( m_DepthStencilBuffer.Get(), &dsvDesc, DepthStencilView() );
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;  
+	srvDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Texture2D.MostDetailedMip = 0;
@@ -1076,11 +1076,11 @@ void DeviceD3D12::OnResize()
 	// DepthBuffer index 9.
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = AllocateSRV( DEPTH_SRV_INDEX );
 
-	m_Device->CreateShaderResourceView(m_DepthStencilBuffer.Get(), &srvDesc, handle);
+	m_Device->CreateShaderResourceView( m_DepthStencilBuffer.Get(), &srvDesc, handle );
 
 
 
-	  // Transition the resource from its initial state to be used as a depth buffer.
+	// Transition the resource from its initial state to be used as a depth buffer.
 	auto barrier = CD3DX12_RESOURCE_BARRIER::Transition( m_DepthStencilBuffer.Get(),
 														 D3D12_RESOURCE_STATE_COMMON,
 														 D3D12_RESOURCE_STATE_DEPTH_WRITE );
@@ -1161,8 +1161,15 @@ void DeviceD3D12::BuildRootSignature()
 			.Constants = {
 				.ShaderRegister = 0,
 				.RegisterSpace = 0,
-				.Num32BitValues = 64, // 64 because each root cbv takes 2 uints, and the max is 64
-		},
+				.Num32BitValues = 63, // 63 because each root cbv takes 2 uints, and the max is 64
+		} };
+		parameters[ kBinding_RootConstant_BaseInstance ] = {
+				.ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
+				.Constants = {
+				.ShaderRegister = 1,
+				.RegisterSpace = 0,
+				.Num32BitValues = 1, //only one base instance index.
+				}
 		};
 
 
@@ -1174,8 +1181,8 @@ void DeviceD3D12::BuildRootSignature()
 				.NumStaticSamplers = static_cast< UINT >(samplers.size()),
 				.pStaticSamplers = samplers.data(),
 				.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-						  D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED 
-						  
+						  D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED
+
 			},
 		};
 
@@ -1189,7 +1196,7 @@ void DeviceD3D12::BuildRootSignature()
 													  serialized_desc->GetBufferSize(),
 													  IID_PPV_ARGS( OUT & m_RootSignature ) ) );
 
-		std::string name  = "Root 1Constant-1StaticSampler-Bindless";
+		std::string name = "Root 1Constant-1StaticSampler-Bindless";
 		DEBUG_D3D12_NAME( name, m_RootSignature );
 
 		IFNITY_LOG( LogCore, INFO, "Root signature  Default created" );
@@ -1374,7 +1381,7 @@ void DeviceD3D12::destroy( SlotMap<D3D12::D3D12Buffer> sm )
 			buffer->resource_.Reset();
 			buffer->resource_ = nullptr;
 		}
-		
+
 	}
 	sm.clear();
 

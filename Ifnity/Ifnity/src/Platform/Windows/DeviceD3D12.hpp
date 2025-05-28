@@ -66,6 +66,7 @@ class DeviceD3D12 final: public GraphicsDeviceManager
 	enum
 	{
 		kBinding_RootConstant = 0,
+		kBinding_RootConstant_BaseInstance = 1,
 
 
 		kMAX_ROOT_DESCRIPTORS 
