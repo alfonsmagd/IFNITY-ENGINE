@@ -37,7 +37,8 @@ public:
 			CONNECT_EVENT_LAYER( MouseMove, eventBus );
 			CONNECT_EVENT_LAYER( ScrollMouseMove, eventBus );
 			CONNECT_EVENT_LAYER( MouseClick, eventBus );
-		}
+		} 
+
 		else
 		{
 			// Manage conversion pointer error. 
@@ -204,9 +205,7 @@ public:
 	Source( IFNITY::rhi::GraphicsAPI api ):
 		IFNITY::App( api ),
 		m_ManagerDevice( IFNITY::App::GetApp().GetDevicePtr() ),
-		m_camera( vec3( 0.f, 1.0f, -1.5f ),
-				  vec3( 0.f, -0.5f, -0.0f ),
-				  vec3( 0.0f, 1.0f, 0.0f ) ),
+		m_camera(vec3(0.f, 1.0f, -1.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener( &m_camera )
 	{
 		// Push layers including monitoring and GUI
@@ -229,164 +228,159 @@ public:
 		vfs.Mount( "test", "Shaders/testShader", IFNITY::FolderType::NO_DEFINED );
 
 
-		auto vSceneconfig = IFNITY::readSceneConfig("data/sceneconverter.json");
+		auto vSceneconfig = IFNITY::readSceneConfig( "data/sceneconverter.json" );
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 3 ].fileName,
+			.filePath = vSceneconfig[ 0 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
-			.meshFileHeader = MeshFileHeader{},  
+			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 3 ]
+			.sceneConfig = vSceneconfig[ 0 ]
+
+
 		};
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder(1);
+		MeshDataBuilderAssimp<rhi::VertexScene> builder( 1 );
 
-		builder.buildSceneData(meshAssimp);
+		//builder.buildSceneData( meshAssimp );
 
 		//Create a SceneObject with the data.
-		m_SceneObject = rdevice->CreateSceneObject(meshAssimp.sceneConfig.outputMesh.c_str(),
+		m_SceneObject = rdevice->CreateSceneObject( meshAssimp.sceneConfig.outputMesh.c_str(),
 													meshAssimp.sceneConfig.outputScene.c_str(),
-													meshAssimp.sceneConfig.outputMaterials.c_str());
+													meshAssimp.sceneConfig.outputMaterials.c_str() );
 
 		//Create the m_SceneObject with the device
-		m_MeshObject = rdevice->CreateMeshObjectFromScene(m_SceneObject);
+		m_MeshObject = rdevice->CreateMeshObjectFromScene( m_SceneObject );
 
 
 
-		////auto files = vfs.ListFilesInCurrentDirectory("test");
-		//auto* rdevice = m_ManagerDevice->GetRenderDevice();
-
-		//IFNITY_LOG( LogApp, INFO, "START COMPILING INFO  " );
-
-		//m_vs = std::make_shared<IShader>();
-		//m_ps = std::make_shared<IShader>();
-
-		//ShaderCreateDescription descShader;
-		//{
-		//	descShader.NoCompile = false;
-		//	descShader.FileName = "assimp.hlsl";
-		//	descShader.EntryPoint = L"VSMain";
-		//	descShader.Profile = L"vs_6_6";
-		//	descShader.Type = ShaderType::VERTEX_SHADER;
-		//	descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
-		//	descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
-		//	m_vs->SetShaderDescription( descShader );
-		//}
-		//ShaderCompiler::CompileShader( m_vs.get() );
-		//{
-		//	descShader.NoCompile = false;
-		//	descShader.EntryPoint = L"PSMain";
-		//	descShader.Profile = L"ps_6_6";
-		//	descShader.Type = ShaderType::PIXEL_SHADER;
-		//	descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
-		//	descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
-		//	m_ps->SetShaderDescription( descShader );
-		//}
-		//ShaderCompiler::CompileShader( m_ps.get() );
+		//auto files = vfs.ListFilesInCurrentDirectory("test");
 
 
-		//GraphicsPipelineDescription gdesc;
-		//{
-		//	//Vertex Attributes Configure 
-		//	rhi::VertexInput vertexInput;
-		//	uint8_t position = 0;
-		//	uint8_t normal = 1;
-		//	uint8_t tc = 2;
-		//	vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::POSITION,
-		//									.location = position,
-		//									.binding = 0,
-		//									.format = rhi::Format::R32G32B32_FLOAT,
-		//									.offset = offsetof( VertexData,pos ) }, position );
-		//	vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::NORMAL,
-		//									.location = normal,
-		//									.binding = 0,
-		//									.format = rhi::Format::R32G32B32_FLOAT,
-		//									.offset = offsetof( VertexData,normal ) }, normal );
-		//	vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::TEXCOORD,
-		//									.location = tc,
-		//									.binding = 0,
-		//									.format = rhi::Format::R32G32_FLOAT,
-		//									.offset = offsetof( VertexData,tc ) }, tc );
+		IFNITY_LOG( LogApp, INFO, "START COMPILING INFO  " );
 
-		//	vertexInput.addVertexInputBinding( { .stride = sizeof( VertexData ) }, position );
+		m_vs = std::make_shared<IShader>();
+		m_ps = std::make_shared<IShader>();
 
-
-
-
-		//	gdesc.SetVertexShader( m_vs.get() )
-		//		.SetPixelShader(   m_ps.get() )
-		//		.SetVertexInput(   vertexInput );
-
-		//	RasterizationState rasterizationState;
-		//	rasterizationState.cullMode = rhi::CullModeType::FrontAndBack;
+		ShaderCreateDescription descShader;
+		{
+			descShader.NoCompile = false;
+			descShader.FileName = "Scene.hlsl";
+			descShader.EntryPoint = L"VSMain";
+			descShader.Profile = L"vs_6_6";
+			descShader.Type = ShaderType::VERTEX_SHADER;
+			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
+			descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
+			m_vs->SetShaderDescription( descShader );
+		}
+		ShaderCompiler::CompileShader( m_vs.get() );
+		{
+			descShader.NoCompile = false;
+			descShader.EntryPoint = L"PSMain";
+			descShader.Profile = L"ps_6_6";
+			descShader.Type = ShaderType::PIXEL_SHADER;
+			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
+			descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
+			m_ps->SetShaderDescription( descShader );
+		}
+		ShaderCompiler::CompileShader( m_ps.get() );
 
 
+		GraphicsPipelineDescription gdesc;
+		{
+			//Vertex Attributes Configure 
+			rhi::VertexInput vertexInput;
+			uint8_t position = 0;
+			uint8_t normal = 1;
+			uint8_t tc = 2;
+			vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::POSITION,
+											.location = position,
+											.binding = 0,
+											.format = rhi::Format::R32G32B32_FLOAT,
+											.offset = offsetof( VertexData,pos ) }, position );
+			vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::NORMAL,
+											.location = normal,
+											.binding = 0,
+											.format = rhi::Format::R32G32B32_FLOAT,
+											.offset = offsetof( VertexData,normal ) }, normal );
+			vertexInput.addVertexAttribute( { .semantic = rhi::VertexSemantic::TEXCOORD,
+											.location = tc,
+											.binding = 0,
+											.format = rhi::Format::R32G32_FLOAT,
+											.offset = offsetof( VertexData,tc ) }, tc );
 
-		//	gdesc.SetRenderState( { .depthTest = true, .depthFormat = Format::Z_FLOAT32 } );
-		//	gdesc.SetRasterizationState( rasterizationState );
-
-
-		//}//end of gdesc
-		// //Create the pipeline
-		//m_pipeline = rdevice->CreateGraphicsPipeline( gdesc );
-
-
-		////Scene assimp
-
-
-		//BufferDescription bufferDesc;
-
-		//{
-		//	bufferDesc.SetDebugName( "PushConstant Buffer" );
-		//	bufferDesc.SetBufferType( BufferType::CONSTANT_BUFFER );
-		//	bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
-		//	bufferDesc.SetByteSize( sizeof( PerFrameData ) );
-		//	bufferDesc.SetData( nullptr );
-
-		//}
-
-		//m_PushConnstant = rdevice->CreateBuffer( bufferDesc );
+			vertexInput.addVertexInputBinding( { .stride = sizeof( VertexData ) }, position );
 
 
 
 
-		////BindPipeline
-		//m_pipeline->BindPipeline( rdevice );
+			gdesc.SetVertexShader( m_vs.get() )
+				.SetPixelShader( m_ps.get() )
+				.SetVertexInput( vertexInput );
+
+			RasterizationState rasterizationState;
+			rasterizationState.cullMode = rhi::CullModeType::FrontAndBack;
+
+			gdesc.SetRenderState( { .depthTest = true, .depthFormat = Format::Z_FLOAT32 } );
+			gdesc.SetRasterizationState( rasterizationState );
 
 
+			m_pipeline = rdevice->CreateGraphicsPipeline( gdesc );
+
+
+
+
+
+			BufferDescription bufferDesc;
+			{
+				bufferDesc.SetDebugName( "PushConstant Buffer" );
+				bufferDesc.SetBufferType( BufferType::CONSTANT_BUFFER );
+				bufferDesc.SetStorageType( StorageType::HOST_VISIBLE );
+				bufferDesc.SetByteSize( sizeof( PerFrameData ) );
+				bufferDesc.SetData( nullptr );
+
+			}
+			m_PushConnstant = rdevice->CreateBuffer( bufferDesc );
+
+			//BindPipeline
+			m_pipeline->BindPipeline( rdevice );
+
+
+		}
 
 	}
-
 	void Render() override
 	{
 		//Update FPS 
 		const double newTimeStamp = App::GetTime();
-		deltaSeconds = static_cast< float >(newTimeStamp - timeStamp);
+		deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
 		timeStamp = newTimeStamp;
-		m_FpsCounter.tick( deltaSeconds );
-
-
-
+		m_FpsCounter.tick(deltaSeconds);
 
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
+		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
+
+		const mat4 m(glm::scale(mat4(1.0f), vec3(1.f)));
+		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
+		const mat4 mvp = p * m_camera.getViewMatrix() * m;
+
+
+		////StartRecording
 		rdevice->StartRecording();
+		rdevice->WriteBuffer(m_PushConnstant, &mvp, sizeof(mvp));
 
-
-
-
-
-
-
+		m_MeshObject->DrawIndirect();
 
 
 
 
 		rdevice->StopRecording();
+
 
 
 

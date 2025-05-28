@@ -120,7 +120,7 @@ namespace D3D12
 		while( !numAvailableCommandBuffers_ )
 		{
 			// Optional logging like IFNITY_LOG
-			purge();
+			waitAll();
 		}
 
 		CommandListWrapper* current = nullptr;
@@ -274,13 +274,14 @@ namespace D3D12
 		for( auto& buf : buffers_ )
 		{
 			// Only wait on command buffers that were submitted and not currently recording
-			if( buf.commandList && !buf.isEncoding_ )
+			if( buf.commandList && buf.isEncoding_ )
 			{
 				if( buf.fence->GetCompletedValue() < buf.fenceValue )
 				{
 					// Wait on this fence until it's complete
 					buf.fence->SetEventOnCompletion(buf.fenceValue, buf.fenceEvent);
 					WaitForSingleObject(buf.fenceEvent, INFINITE);
+					++numAvailableCommandBuffers_; // Increment available count since we are done with this buffer
 				}
 			}
 		}
@@ -303,8 +304,6 @@ namespace D3D12
 			if (buf.fenceValue == 0)
 				continue; //not uses yet 
 
-			if( !buf.commandList || buf.isEncoding_ )
-				continue;
 
 			// Check if GPU has finished with this command list
 			if( buf.fence->GetCompletedValue() >= buf.fenceValue )

@@ -20,6 +20,8 @@ set(EXAMPLE_DIRS
 	D3D12_Cube_MVP
 	D3D12_Assimp
 	D3D12_Scene
+	d3d12_test_scene
+    d3d12_SceneDebug
     #Simple_Texture
     #scene_materials
     #Geometry_Mesh
@@ -27,7 +29,7 @@ set(EXAMPLE_DIRS
 	#bufferVulkan
    #Texture_Sample
    #camera_mesh_vk
-   #SceneVk
+   SceneVk
 )
 
 # Itera sobre la lista y añade cada subdirectorio

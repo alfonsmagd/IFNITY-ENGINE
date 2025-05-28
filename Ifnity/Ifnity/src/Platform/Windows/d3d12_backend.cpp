@@ -841,7 +841,7 @@ namespace D3D12
 			offset += static_cast< UINT >( subresources[ i ].SlicePitch );
 		}
 
-		D3D12ImmediateCommands::CommandListWrapper  wrapper = ctx_.m_ImmediateCommands->acquire();
+		const D3D12ImmediateCommands::CommandListWrapper&  wrapper = ctx_.m_ImmediateCommands->acquire();
 
 
 		UpdateSubresources( wrapper.commandList.Get(),
@@ -876,6 +876,56 @@ namespace D3D12
 										} ),
 			submithandle );
 
+	}
+
+	void Device::DrawObjectIndirect( GraphicsPipelineHandle& pipeline, DrawDescription& desc, BufferHandle& bf )
+	{
+	
+	
+		//Changes the DepthState like vulkan en runtime its not posible in D3D12
+		// the solution its to create differents pipelines state and only changin the PSO in runtime.
+		////Get cmdlist 
+		GraphicsPipeline* pi = dynamic_cast< GraphicsPipeline* >(pipeline.get());
+		if( !pi )
+		{
+			IFNITY_LOG( LogCore, ERROR, "Failed to get D3D12 dynamic cast" );
+			return;
+		}
+
+		//Get Rasterize state 
+		const RasterizationState& rasterState = pipeline->GetGraphicsPipelineDesc().rasterizationState;
+
+		pipeline->BindPipeline( this );
+		cmdBuffer.cmdBindRenderPipeline( pi );
+
+		cmdBuffer.cmdSetPrimitiveTopology( rasterState.primitiveType );
+
+		if( currentIndexBuffer_ )
+		{
+			cmdBuffer.cmdBindIndexBuffer( currentIndexBuffer_ );
+		}
+		if( currentVertexBuffer_ )
+		{
+			cmdBuffer.cmdBindVertexBuffer( currentVertexBuffer_ );
+		}
+
+		cmdBuffer.cmdPushConstants(pushConstants.data,
+									pushConstants.size,
+									pushConstants.offset);
+
+		BufferHandleSM indirectBufferHandle = DCAST_BUFFER( bf.get() )->getBufferHandleSM();
+
+
+		cmdBuffer.cmdDrawIndexedIndirect(indirectBufferHandle, 0, desc.instanceCount);
+
+	
+	
+	
+	
+	
+	
+	
+	
 	}
 
 
@@ -1191,6 +1241,7 @@ namespace D3D12
 		{
 			int32_t meshId = shape.meshIndex;
 			*cmd++ = {
+				.bInstanceroot = ddindex,
 				.count = meshData.meshes_[ meshId ].getLODIndicesCount( 0 ),
 				.instanceCount = 1,
 				.firstIndex = shape.indexOffset,
@@ -1334,11 +1385,15 @@ namespace D3D12
 		};
 
 		auto* pipeline = m_Device->getActualPipeline();
+		//Get rasterstate 
 		CHECK_PTR(pipeline, "Pipeline is null");
+		const auto& rasterState = pipeline->GetGraphicsPipelineDesc().rasterizationState;
+
 
 		buf.cmdBindRenderPipeline(pipeline);
 		buf.cmdBindIndexBuffer(m_SM.indexBuffer);
 		buf.cmdBindVertexBuffer(m_SM.vertexBuffer);
+		buf.cmdSetPrimitiveTopology( rasterState.primitiveType );
 		buf.cmdPushConstants(pushConstans);
 		buf.cmdDrawIndexedIndirect(m_SM.indirectBuffer, 0, m_MeshObjectDescription.meshFileHeader.meshCount);
 

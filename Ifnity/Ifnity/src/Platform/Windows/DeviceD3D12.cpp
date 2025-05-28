@@ -297,16 +297,30 @@ void DeviceD3D12::CreateCommandSignature( ID3D12Device* device,
 										  ID3D12RootSignature* rootSig )
 {
 
-	D3D12_INDIRECT_ARGUMENT_DESC arg = {};
-	arg.Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+	struct IndirectDrawCall
+	{
+		uint32_t baseInstance;
+		D3D12_DRAW_INDEXED_ARGUMENTS draw;
+	};
 
-	D3D12_COMMAND_SIGNATURE_DESC sigDesc = {};
-	sigDesc.pArgumentDescs = &arg;
-	sigDesc.NumArgumentDescs = 1;
-	sigDesc.ByteStride = sizeof(D3D12_DRAW_INDEXED_ARGUMENTS);
-	sigDesc.NodeMask = 0;
+	D3D12_INDIRECT_ARGUMENT_DESC args[2] = {};
 
-	HRESULT hr = device->CreateCommandSignature(&sigDesc, rootSig, IID_PPV_ARGS(outSignature));
+	// RootConstants -> equivalente a SetGraphicsRoot32BitConstants
+	args[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT;
+	args[0].Constant.RootParameterIndex = 0;
+	args[0].Constant.DestOffsetIn32BitValues = 55;
+	args[0].Constant.Num32BitValuesToSet = sizeof(uint32_t) / sizeof(uint32_t);
+
+	// DrawIndexed call
+	args[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+
+	D3D12_COMMAND_SIGNATURE_DESC desc = {};
+	desc.ByteStride = sizeof(IndirectDrawCall);
+	desc.NumArgumentDescs = _countof(args);
+	desc.pArgumentDescs = args;
+
+
+	HRESULT hr = device->CreateCommandSignature(&desc, rootSig, IID_PPV_ARGS(outSignature));
 	ThrowIfFailed(hr);
 
 

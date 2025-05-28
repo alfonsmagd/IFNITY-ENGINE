@@ -309,19 +309,19 @@ public:
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 0 ].fileName,
+			.filePath = vSceneconfig[ 3 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},  
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 0 ]
+			.sceneConfig = vSceneconfig[ 3 ]
 		};
 
 		//meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
 
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder(1);
+		MeshDataBuilderAssimp<rhi::VertexScene> builder(3);
 
 		builder.buildSceneData(meshAssimp);
 
@@ -414,7 +414,7 @@ public:
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
 
-		const mat4 m(glm::scale(mat4(1.0f), vec3(0.2f)));
+		const mat4 m(glm::scale(mat4(1.0f), vec3(1.f)));
 		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
 		const mat4 mvp = p * m_camera.getViewMatrix() * m;
 

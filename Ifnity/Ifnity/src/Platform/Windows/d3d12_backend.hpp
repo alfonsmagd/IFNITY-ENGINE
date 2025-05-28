@@ -93,6 +93,7 @@ namespace D3D12
 		void upload( D3D12::D3D12Buffer* buffer, const void* data, size_t size, uint32_t offset = 0 );
 		void upload( TextureHandleSM handle, uint32_t miplevel, const void* data );
 
+		void DrawObjectIndirect( GraphicsPipelineHandle& pipeline, DrawDescription& desc, BufferHandle& bf ) override;
 
 		CommandBuffer& getCommandBuffer() { return cmdBuffer; }
 
@@ -234,6 +235,7 @@ namespace D3D12
 
 		struct DrawIndexedIndirectCommand
 		{
+			uint32_t bInstanceroot;
 			uint32_t count;
 			uint32_t instanceCount;
 			uint32_t firstIndex;

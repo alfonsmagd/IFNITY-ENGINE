@@ -115,6 +115,7 @@ public:
 	virtual SceneObjectHandler CreateSceneObject(const char* meshes, const char* scene, const char* materials) = 0;
 	virtual MeshObjectHandle  CreateMeshObjectFromScene(const SceneObjectHandler& scene) = 0;
 	virtual void DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc) = 0; //todo abstract 
+	virtual void DrawObjectIndirect( GraphicsPipelineHandle& pipeline, DrawDescription& desc, BufferHandle& bf ) {};
 	virtual void StartRecording() {};
 	virtual void StopRecording() {};
 	virtual void SetDepthTexture(TextureHandle texture) = 0;

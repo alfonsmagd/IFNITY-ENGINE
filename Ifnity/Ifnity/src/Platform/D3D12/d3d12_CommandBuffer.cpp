@@ -218,7 +218,9 @@ namespace D3D12
 		{
 			IFNITY_LOG( LogCore, WARNING , "Indirect command signature is not set, try to build " );
 
-			ctx_->CreateCommandSignature( ctx_->m_Device.Get(), ctx_->m_CommandSignature.GetAddressOf() );
+			ctx_->CreateCommandSignature( ctx_->m_Device.Get(), 
+										  ctx_->m_CommandSignature.GetAddressOf() ,
+										  ctx_->m_RootSignature.Get());
 			if( !ctx_->m_CommandSignature )
 			{
 				IFNITY_LOG( LogCore, ERROR, "Failed to create command signature for indirect draw" );
