@@ -246,7 +246,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY_DIST    ${CMAKE_BINARY_DIR}/DistContributor
   RUNTIME_OUTPUT_DIRECTORY_DIST    ${CMAKE_BINARY_DIR}/DistContributor
 )
-
+set_target_properties(zlib PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/zlib/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/zlib/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/zlib/bin"
+)
+  
   
 # Preprocessor definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS IFNITY_EXPORTS_DLL)
