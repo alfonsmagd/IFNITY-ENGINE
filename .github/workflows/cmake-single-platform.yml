@@ -29,8 +29,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cmake-
 
-    # 🧹 Solución a error MSB3191 con ReleaseContributor (archivo conflictivo en caché)
+    
     - name: Delete ReleaseContributor file if it exists (conflict prevention)
+      shell: cmd
       run: |
         if exist "${{ github.workspace }}\Ifnity\build\ReleaseContributor" (
           echo "Found ReleaseContributor as file, deleting..."
