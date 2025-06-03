@@ -20,23 +20,10 @@ jobs:
         submodules: true
         fetch-depth: 0
 
-    - name: Cache CMake build
-      uses: actions/cache@v3
-      with:
-        path: |
-          ${{ github.workspace }}/Ifnity/build
-        key: ${{ runner.os }}-cmake-${{ hashFiles('**/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-cmake-
-
-    
-    - name: Delete ReleaseContributor file if it exists (conflict prevention)
-      shell: cmd
-      run: |
-        if exist "${{ github.workspace }}\Ifnity\build\ReleaseContributor" (
-          echo "Found ReleaseContributor as file, deleting..."
-          del "${{ github.workspace }}\Ifnity\build\ReleaseContributor"
-        )
+    #  
+    #- name: Cache CMake build
+    #  uses: actions/cache@v3
+    #  ...
 
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.1
@@ -50,3 +37,4 @@ jobs:
 
     - name: Build
       run: cmake --build ${{ github.workspace }}/Ifnity/build --config ${{ env.BUILD_TYPE }}
+
