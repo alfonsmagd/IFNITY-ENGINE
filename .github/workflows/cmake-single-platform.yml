@@ -51,6 +51,3 @@ jobs:
             Remove-Item $debugPath -Force
           }
         }
-
-    - name: Build (Debug)
-      run: cmake --build C:\temp\ifnity_build --config Debug
