@@ -447,7 +447,7 @@ namespace D3D12
 
 		if( !data || size == 0 )
 		{
-			IFNITY_LOG( LogCore, ERROR, "Invalid push constant data" );
+			IFNITY_LOG( LogCore, INFO, "Invalid push constant data" );
 			return;
 		}
 		//Check in compiletime with consteval size ==4 

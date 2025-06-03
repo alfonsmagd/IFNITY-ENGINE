@@ -50,11 +50,11 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
 )
 
-#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#    ${CMAKE_SOURCE_DIR}/../data
-#    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
-#)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different
+   ${CMAKE_SOURCE_DIR}/../data
+   $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
+)
 
 # Search  .glsl, .frag, .vert, .geom, .sp, y .h dentro de src/
 file(GLOB_RECURSE GLSL_SHADERS "${PROJECT_SOURCE_DIR}/src/*.glsl")

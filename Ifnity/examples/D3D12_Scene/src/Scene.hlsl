@@ -245,8 +245,7 @@ float4 PSMain(PSInput input) : SV_TARGET
     }
 
     // Alpha test
-    if (mat.alphaTest > 0.0f && albedo.a < mat.alphaTest)
-        discard;
+    runAlphaTest(albedo.a, mat.alphaTest,input.position.xy);
 
     // Normal mapping
     float3 n = normalize(input.worldNormal);
