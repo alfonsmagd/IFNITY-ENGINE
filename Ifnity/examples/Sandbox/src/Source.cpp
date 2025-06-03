@@ -204,11 +204,11 @@ public:
 	
 	void Render() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Render App");
+		//IFNITY_LOG(LogApp, INFO, "Render App");
 	}
 	void Animate() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Animate App");
+		//IFNITY_LOG(LogApp, INFO, "Animate App");
 	}
 	~Source() override {}
 };
@@ -230,7 +230,7 @@ IFNITY::App* IFNITY::CreateApp()
 {
 
 
-	auto api = IFNITY::rhi::GraphicsAPI::VULKAN;
+	auto api = IFNITY::rhi::GraphicsAPI::D3D12;
 
 
 	//return new Source_TestD3D12(api);

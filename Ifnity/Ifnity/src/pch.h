@@ -38,6 +38,7 @@
 
 #ifdef _WIN64
 	#include  <Windows.h>
+	#include  <wrl.h>
 #endif
 
 

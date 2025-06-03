@@ -11,33 +11,25 @@ set(EXAMPLES_BASE_PATH "${CMAKE_SOURCE_DIR}/examples")
 # Añade el subdirectorio que contiene el proyecto Ifnity
 add_subdirectory(Ifnity)
 
-# Añade el subdirectorio que contiene el proyecto Sandbox Y EJEMPLOS 
-#add_subdirectory(Sandbox)
-#add_subdirectory(GPU_MONITOR)
-#add_subdirectory(ShadersPipeLine)
-#add_subdirectory(Simple_Texture)
-#add_subdirectory(Tetahedre)
-#add_subdirectory(Skybox_Camera)
-#add_subdirectory(MeshGeometrical_Draw)
-#add_subdirectory(scene_materials)
-#add_subdirectory(glslang_vk_test)
-#add_subdirectory(Source_VTXP_HLSL)
-#add_subdirectory(CubeMap_Texture)
-#add_subdirectory(bufferVulkan)
-#add_subdirectory(Texture_Sample)
-#add_subdirectory(camera_mesh_vk)
-
 
 set(EXAMPLE_DIRS
     Sandbox
+    #ShadersPipeLine
+    D3D12_SimpleTriangle
+    #D3Texture
+	#D3D12_Cube_MVP
+	#D3D12_Assimp
+	D3D12_Scene
+	#d3d12_test_scene
+    #d3d12_SceneDebug
     #Simple_Texture
-    scene_materials
-    Geometry_Mesh
+    #scene_materials
+    #Geometry_Mesh
 	#glslang_vk_test
 	#bufferVulkan
-   Texture_Sample
-   camera_mesh_vk
-   SceneVk
+   #Texture_Sample
+   #camera_mesh_vk
+   #SceneVk
 )
 
 # Itera sobre la lista y añade cada subdirectorio

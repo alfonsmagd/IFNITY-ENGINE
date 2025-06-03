@@ -19,9 +19,15 @@ if(MSVC)
 endif()
 
 # Output directories
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG_IFNITY ${CMAKE_BINARY_DIR}/DebugContributor)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE_IFNITY ${CMAKE_BINARY_DIR}/ReleaseContributor)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST_IFNITY ${CMAKE_BINARY_DIR}/DistContributor)
+
+
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;" CACHE STRING "" FORCE)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/ReleaseContributor)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/ReleaseContributor)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/DistContributor)
+
+
 
 #DXC directories and variables 
 set(DXC_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/include")
@@ -29,8 +35,17 @@ set(DXC_LIB_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/lib/x64/dxcompiler.lib")
 # Ruta al directorio de DLLs
 set(DXC_DLL_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/bin/x64")
 
+
+
 # Copiar todas las DLLs del directorio al directorio de salida
 file(GLOB DXC_DLLS "${DXC_DLL_DIR}/*.dll")
+foreach(DLL_PATH IN LISTS DXC_DLLS)
+    if(EXISTS ${DLL_PATH})
+        message(STATUS "DLL found: ${DLL_PATH}")
+    else()
+        message(WARNING "DLL not found: ${DLL_PATH}")
+    endif()
+endforeach()
 
 set(SPIRV_SKIP_TESTS ON CACHE BOOL "Skip SPIRV tests")
 set(SPIRV_BUILD_COMPRESSION OFF CACHE BOOL "Do not build SPIRV compressing codec")
@@ -247,31 +262,16 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG_IFNITY}
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE_IFNITY}
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST_IFNITY}
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}
 )
 
-foreach(DLL_PATH IN LISTS DXC_DLLS)
-    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${DLL_PATH}
-        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG_IFNITY}
-    )
-    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${DLL_PATH}
-        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE_IFNITY}
-    )
-    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        ${DLL_PATH}
-        ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST_IFNITY}
-    )
-endforeach()
+# Export variables to parent scope and use them in other CMakeLists.txt
+set(DXC_DLLS_GLOBAL ${DXC_DLLS} PARENT_SCOPE)
 
 

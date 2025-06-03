@@ -10,15 +10,6 @@ IFNITY_NAMESPACE
 namespace Vulkan
 {
 
-
-
-
-
-
-
-
-
-
 	//------------------------------------------------------------------------------------//
 	// BUFFER VULKAN                                                                       //
 	//-------------------------------------------------------------------------------------//
@@ -53,8 +44,8 @@ namespace Vulkan
 	class IFNITY_API Texture final: public ITexture
 	{
 	public:
-		virtual TextureDescription GetTextureDescription() override { return m_TextureDescription; }
-		virtual uint32_t           GetTextureID() override { return m_TextureID; }
+		 TextureDescription GetTextureDescription() override { return m_TextureDescription; }
+		 uint32_t           GetTextureID() override { return m_TextureID; }
 
 		//Constructor 
 		Texture() = default;
@@ -325,8 +316,6 @@ namespace Vulkan
 			BufferHandleSM modelMatricesBuffer;
 			BufferGpuAddres gpuAddress;
 		}m_SM;
-
-		
 
 		std::vector<TextureHandle> allMaterialsTextures_; //In this case textures will be building because we use device to create textures, Opengl can create textures itself.
 

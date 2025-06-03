@@ -1,3 +1,10 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-24 by alfonsmagd
+
+
+
 #include "gl_backend.hpp"
 #include <GLFW\glfw3.h>
 #include "..\..\..\vendor\glfw\deps\stb_image_write.h"
@@ -237,7 +244,7 @@ namespace OpenGL
 				index,
 				desc[ i ].arraySize,
 				GL_FLOAT, // Asumiendo que rhi::Format se puede convertir a GLenum
-				GL_FALSE, // Asumiendo que no hay normalización
+				GL_FALSE, // Asumiendo que no hay normalizacin
 				desc[ i ].offset
 			);
 			glVertexArrayAttribBinding(m_VAO, index, 0);
@@ -397,10 +404,10 @@ namespace OpenGL
 
 	GLuint Device::CreateVAO()
 	{
-		// Verificar si el contexto de OpenGL está inicializado
+		// Verificar si el contexto de OpenGL est inicializado
 		if(!glfwGetCurrentContext())
 		{
-			IFNITY_LOG(LogApp, ERROR, "El contexto de OpenGL no está inicializado.");
+			IFNITY_LOG(LogApp, ERROR, "El contexto de OpenGL no est inicializado.");
 			return 0;
 		}
 
@@ -896,12 +903,12 @@ namespace OpenGL
 
 		// Crear un VAO
 		m_VAO = dev->CreateVAO();
-		// Crear un BufferHandle para los índices sin flags
+		// Crear un BufferHandle para los ndices sin flags
 		m_BufferIndex = dev->CreateDefaultBuffer(m_MeshObjectDescription.meshFileHeader.indexDataSize, m_MeshObjectDescription.meshData.indexData_.data());
-		// Crear un BufferHandle para los atributos de vértices sin flags
+		// Crear un BufferHandle para los atributos de vrtices sin flags
 		m_BufferVertex = dev->CreateDefaultBuffer(m_MeshObjectDescription.meshFileHeader.vertexDataSize, m_MeshObjectDescription.meshData.vertexData_.data());
 
-		// Configurar los atributos de vértices
+		// Configurar los atributos de vrtices
 		std::vector<OpenGL::VertexAttribute> attributes =
 		{
 			{0, 3, GL_FLOAT, GL_FALSE, sizeof(vec3) + sizeof(vec3) + sizeof(vec2), 0, 0}, // Position
@@ -986,12 +993,12 @@ namespace OpenGL
 		for(size_t i = 0; i != data->getShapes().size(); i++)
 		{
 			const uint32_t meshIdx = data->getShapes()[ i ].meshIndex;
-			const uint32_t lod = data->getShapes()[ i ].LOD;
+			const uint32_t lod     = data->getShapes()[ i ].LOD;
 			*cmd++ = {
 				.count_ = data->getMeshData().meshes_[ meshIdx ].getLODIndicesCount(lod),
 				.instanceCount_ = 1,
-				.firstIndex_ = data->getShapes()[ i ].indexOffset,
-				.baseVertex_ = data->getShapes()[ i ].vertexOffset,
+				.firstIndex_   = data->getShapes()[ i ].indexOffset,
+				.baseVertex_   = data->getShapes()[ i ].vertexOffset,
 				.baseInstance_ = data->getShapes()[ i ].materialIndex
 			};
 			m_baseMaterialInstances[i] = data->getShapes()[i].materialIndex;
@@ -1099,12 +1106,12 @@ namespace OpenGL
 			const Mesh& mesh = m_meshes[ m_MeshIdx[ i ] ];
 			glDrawElementsInstancedBaseVertexBaseInstance(
 				GL_TRIANGLES,                                      // Modo de dibujo
-				mesh.getLODIndicesCount(0),                        // Cantidad de índices
-				GL_UNSIGNED_INT,                                   // Tipo de índice
-				(void*)(mesh.indexOffset * sizeof(uint32_t)),      // Puntero a los índices
-				1,                                                 // Una instancia (puedes poner 1 si solo dibujas una instancia)
-				mesh.vertexOffset,                                 // Desplazamiento de vértices
-				m_baseMaterialInstances[ i ]                                                // baseInstance (puedes poner 0 si solo tienes una instancia)
+				mesh.getLODIndicesCount(0),                        // Cantidad de indices
+				GL_UNSIGNED_INT,                                   // Tipo de ndice
+				(void*)(mesh.indexOffset * sizeof(uint32_t)),      // Puntero a los indices
+				1,                                                 // Una instancia 
+				mesh.vertexOffset,                                 // Desplazamiento de vrtices
+				m_baseMaterialInstances[ i ]                       // baseInstance 
 			);
 		}
 	
@@ -1126,10 +1133,10 @@ namespace OpenGL
 
 	Texture::Texture(TextureDescription& desc)
 	{
-		// Verificar si el contexto de OpenGL está activo
+		// Verificar si el contexto de OpenGL est activo
 		if(!glfwGetCurrentContext())
 		{
-			IFNITY_LOG(LogApp, ERROR, "El contexto de OpenGL no está activo.");
+			IFNITY_LOG(LogApp, ERROR, "El contexto de OpenGL no est activo.");
 			return;
 		}
 
@@ -1198,7 +1205,7 @@ namespace OpenGL
 		// Liberar la imagen
 		FreeTexture(img);
 
-		// Llenar la descripción de la textura
+		// Llenar la descripcin de la textura
 		m_TextureDescription = desc;
 	}
 

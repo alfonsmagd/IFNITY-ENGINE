@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-09 by alfonsmagd
+
 #pragma once 
 
 #include "pch.h"
@@ -76,6 +81,9 @@ public:
      */
     static HRESULT CreateShaderBlob(const std::wstring& shaderSource, ComPtr<IDxcBlobEncoding>& sourceBlob);
 
+
+	static HRESULT CreateShaderBlobFromFile(const std::string& shaderSource, ComPtr<IDxcBlobEncoding>& sourceBlob );
+
     /**
      * @brief Compiles a shader blob.
      * @param sourceBlob Source code blob.
@@ -96,18 +104,31 @@ public:
      */
     static std::string GetShaderFilePath(const VFS& vfs, const std::string& virtualPath, const std::string& subdirectory, const std::string& fileName, const std::string& extension);
 
-private:
+
+	/**
+	 * @brief Saves a blob to a file.
+	 * @param filePath Path to the output file.
+	 * @param blob Blob to save.
+	 */
+	static void SaveBlobToFile(const std::string& filePath, IDxcBlob* blob);
+
+
+	
+    static IDxcBlob* GetBlobFromFile(const std::string& filePath);
+	
     /**
-     * @brief Gets a reference to the virtual file system.
-     * @return Reference to the virtual file system.
-     */
+    * @brief Gets a reference to the virtual file system.
+    * @return Reference to the virtual file system.
+    */
     static VFS& GetVFS();
 
     /**
-     * @brief Checks if the initialization was successful.
-     * @return true if initialization was successful, false otherwise.
-     */
+    * @brief Checks if the initialization was successful.
+    * @return true if initialization was successful, false otherwise.
+    */
     static bool CheckInitialization();
+private:
+    
 
     /// Shader compiler.
     static ComPtr<IDxcCompiler3> m_compiler;

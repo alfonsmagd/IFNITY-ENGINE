@@ -1,3 +1,8 @@
+//------------------ IFNITY ENGINE SOURCE -------------------//
+// Copyright (c) 2025 Alfonso Mateos Aparicio Garcia de Dionisio
+// Licensed under the MIT License. See LICENSE file for details.
+// Last modified: 2025-05-09 by alfonsmagd
+
 
 #pragma once	
 
@@ -20,23 +25,30 @@ enum IFNITY_API ShaderType: uint8_t
 };
 
 
+
 enum IFNITY_API ShaderCompileFlagType: uint32_t
 {
-	OPTIMIZE_SIZE = 0x1,
+	OPTIMIZE_SIZE = 0x1, //not use because probably error for ascii format
 	ENABLE_DEBUG_INFO = 0x2,
 	ENABLE_SPIRV = 0x4,
 	PACK_MATRIX_ROW_MAJOR = 0x8,
 
+	DEFAULT_HLSL =  ENABLE_DEBUG_INFO | PACK_MATRIX_ROW_MAJOR,
+
+	COMPATIBE_GLSL = ENABLE_DEBUG_INFO,  ///This work like colum-major matrix, 
 
 	DEFAULT_FLAG = 0x0C     
-	// Agrega más flags según sea necesario
+	// Agrega ms flags segn sea necesario
 };
 
 //This flag its only works in Vulkan API 
 enum IFNITY_API ShaderAPIflag: uint8_t
 {
 	DEFAULT_GLSL = 0x00,
-	SPIRV_BIN = 0x01
+	SPIRV_BIN = 0x01,
+	ONLY_HLSL = 0x02,
+
+	ALL_API = DEFAULT_GLSL | SPIRV_BIN | ONLY_HLSL
 };
 
 

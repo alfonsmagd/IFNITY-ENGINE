@@ -5,8 +5,11 @@
 
 
 
-//#define SANDBOX_TOOL 
+
+
+#define SANDBOX_TOOL 
 #define VMA_ALLOCATOR_VK 1
+#define D3D12VMA_ALLOCATOR 1
 
 #if defined(_WIN32) || defined(_WIN64)
 #if defined(BUILD_SHARED_IFNITY)
@@ -37,7 +40,7 @@
 
 
 #define IN      // This help you to understand that the variable is input in the function.
-#define OUT    // This help you to understand that the variable change in the function.
+#define OUT     // This help you to understand that the variable change in the function AND ITS OUTPUT
 
 
 #define ARRAY_NUM_ELEMENTS(array) (sizeof(array) / sizeof(array[0]))
@@ -51,3 +54,10 @@
 //Templates Concepts
 template<typename T>
 concept PushConstentImpl = requires { sizeof(T); };
+
+//Concepts multiple 4 T
+template<typename T>
+concept Multiple4 = requires { sizeof( T ) % 4 == 0; };
+
+template<typename T>
+concept PushConstentD3D12 = PushConstentImpl<T> && Multiple4<T>;
