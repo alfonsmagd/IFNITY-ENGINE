@@ -1,0 +1,50 @@
+name: C++/C CMake (Debug, Ninja + MSVC safe build)
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+env:
+  BUILD_TYPE: Debug
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout repository and submodules
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+        fetch-depth: 0
+
+    - name: Prepare Vulkan SDK
+      uses: humbletim/setup-vulkan-sdk@v1.2.1
+      with:
+        vulkan-query-version: 1.3.275.0
+        vulkan-components: Vulkan-Headers, Vulkan-Loader
+        vulkan-use-cache: true
+
+    - name: Ensure clean build directory
+      shell: pwsh
+      run: |
+        $buildPath = "${{ github.workspace }}\out\build\Ifnity-Debug"
+        if (Test-Path $buildPath) {
+          Write-Host "Removing previous build directory: $buildPath"
+          Remove-Item $buildPath -Recurse -Force
+        }
+        New-Item -ItemType Directory -Path $buildPath | Out-Null
+
+    - name: Configure CMake (Debug with Ninja and MSVC)
+      run: >
+        cmake -S ${{ github.workspace }}/Ifnity
+              -B ${{ github.workspace }}/out/build/Ifnity-Debug
+              -G "Ninja"
+              -DCMAKE_BUILD_TYPE=Debug
+              -DCMAKE_C_COMPILER=cl.exe
+              -DCMAKE_CXX_COMPILER=cl.exe
+
+    - name: Build with Ninja
+      run: cmake --build ${{ github.workspace }}/out/build/Ifnity-Debug --config Debug
