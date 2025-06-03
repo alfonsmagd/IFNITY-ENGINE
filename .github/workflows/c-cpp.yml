@@ -38,13 +38,16 @@ jobs:
         New-Item -ItemType Directory -Path $buildPath | Out-Null
 
     - name: Configure CMake (Debug with Ninja and MSVC)
+      shell: cmd
       run: >
-        cmake -S ${{ github.workspace }}/Ifnity
-              -B ${{ github.workspace }}/out/build/Ifnity-Debug
+        cmake -S "%GITHUB_WORKSPACE%\Ifnity"
+              -B "%GITHUB_WORKSPACE%\out\build\Ifnity-Debug"
               -G "Ninja"
               -DCMAKE_BUILD_TYPE=Debug
               -DCMAKE_C_COMPILER=cl.exe
               -DCMAKE_CXX_COMPILER=cl.exe
 
     - name: Build with Ninja
-      run: cmake --build ${{ github.workspace }}/out/build/Ifnity-Debug --config Debug
+      shell: cmd
+      run: cmake --build "%GITHUB_WORKSPACE%\out\build\Ifnity-Debug" --config Debug
+
