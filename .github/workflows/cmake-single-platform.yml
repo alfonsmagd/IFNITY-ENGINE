@@ -20,8 +20,6 @@ jobs:
         submodules: true
         fetch-depth: 0
 
-    # ❌ No usamos caché para evitar conflictos con archivos como ReleaseContributor
-
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.1
       with:
@@ -31,6 +29,15 @@ jobs:
 
     - name: Configure CMake (Debug)
       run: cmake -S ${{ github.workspace }}/Ifnity -B ${{ github.workspace }}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug
+
+    # 🛡️ Protege el build: elimina el archivo DebugContributor si fue generado por error
+    - name: Delete DebugContributor if incorrectly created as file
+      shell: cmd
+      run: |
+        if exist "${{ github.workspace }}\Ifnity\build\DebugContributor" (
+          echo Deleting invalid DebugContributor file...
+          del /f /q "${{ github.workspace }}\Ifnity\build\DebugContributor"
+        )
 
     - name: Build (Debug)
       run: cmake --build ${{ github.workspace }}/Ifnity/build --config Debug
