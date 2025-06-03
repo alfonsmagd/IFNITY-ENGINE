@@ -29,19 +29,20 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-cmake-
 
+    # 🧹 Solución a error MSB3191 con ReleaseContributor (archivo conflictivo en caché)
+    - name: Delete ReleaseContributor file if it exists (conflict prevention)
+      run: |
+        if exist "${{ github.workspace }}\Ifnity\build\ReleaseContributor" (
+          echo "Found ReleaseContributor as file, deleting..."
+          del "${{ github.workspace }}\Ifnity\build\ReleaseContributor"
+        )
+
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.1
       with:
         vulkan-query-version: 1.3.275.0
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
-
-    - name: Clean conflicting ReleaseContributor file if exists
-      run: |
-        if exist "${{ github.workspace }}\Ifnity\build\ReleaseContributor" (
-          echo Found and deleting file: ReleaseContributor
-          del "${{ github.workspace }}\Ifnity\build\ReleaseContributor"
-        )
 
     - name: Configure CMake
       run: cmake -S ${{ github.workspace }}/Ifnity -B ${{ github.workspace }}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
