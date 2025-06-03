@@ -1,4 +1,4 @@
-name: C++/C CMakename: C++/C CMake (Debug)
+name: C++/C CMake (Debug)
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
         submodules: true
         fetch-depth: 0
 
-    # No usamos caché para evitar conflictos con archivos como ReleaseContributor
+    # ❌ No usamos caché para evitar conflictos con archivos como ReleaseContributor
 
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.1
@@ -34,43 +34,4 @@ jobs:
 
     - name: Build (Debug)
       run: cmake --build ${{ github.workspace }}/Ifnity/build --config Debug
-
-
-on:
-  push:
-    branches: [ "*" ]
-  pull_request:
-    branches: [ "*" ]
-
-env:
-  BUILD_TYPE: Release
-
-jobs:
-  build:
-    runs-on: windows-latest
-
-    steps:
-    - name: Checkout repository and submodules
-      uses: actions/checkout@v4
-      with:
-        submodules: true
-        fetch-depth: 0
-
-    #  
-    #- name: Cache CMake build
-    #  uses: actions/cache@v3
-    #  ...
-
-    - name: Prepare Vulkan SDK}}
-      uses: humbletim/setup-vulkan-sdk@v1.2.1
-      with:
-        vulkan-query-version: 1.3.275.0
-        vulkan-components: Vulkan-Headers, Vulkan-Loader
-        vulkan-use-cache: true
-
-    - name: Configure CMake
-      run: cmake -S ${{ github.workspace }}/Ifnity -B ${{ github.workspace }}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE 
-
-    - name: Build
-      run: cmake --build ${{ github.workspace }}/Ifnity/build --config ${{ env.BUILD_TYPE }}
 
