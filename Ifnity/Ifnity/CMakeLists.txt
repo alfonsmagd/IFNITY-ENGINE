@@ -27,7 +27,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/DebugContributor)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/ReleaseContributor)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/DistContributor)
 
-
+# Crear carpetas para asegurar que existen
+file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG})
+file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE})
+file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST})
 
 #DXC directories and variables 
 set(DXC_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/include")
@@ -296,5 +299,3 @@ endif()
 
 # Export variables to parent scope and use them in other CMakeLists.txt
 set(DXC_DLLS_GLOBAL ${DXC_DLLS} PARENT_SCOPE)
-
-

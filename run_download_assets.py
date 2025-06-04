@@ -3,8 +3,8 @@ import urllib.request
 import zipfile
 
 
-ASSETS_URL = "https://github.com/alfonsmagd/IFNITY-ENGINE/releases/download/v1.0-assets/IfnitiDataScenes.zip"
-ZIP_FILENAME = "IfnitiDataScenes.zip"
+ASSETS_URL = "https://github.com/alfonsmagd/IFNITY-ENGINE/releases/download/v1.0.0/data.zip"
+ZIP_FILENAME = "data.zip"
 SCRIPT_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(SCRIPT_DIR, "data")
 ZIP_PATH = os.path.join(DATA_DIR, ZIP_FILENAME)
