@@ -23,7 +23,9 @@ endif()
 
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;" CACHE STRING "" FORCE)
 
-
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/DebugContributor)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/ReleaseContributor)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/DistContributor)
 
 
 
@@ -181,11 +183,6 @@ else()
 	add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES} ${PCH_SOURCES}  ${GLAD_SOURCE}  ${GLSLANG_SOURCES})
 endif()
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/DebugContributor
-    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/ReleaseContributor
-    RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/DistContributor
-)
 
 target_precompile_headers(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src/pch.h)
 
@@ -236,7 +233,25 @@ else()
     message(STATUS "nvml.dll no fue encontrado. nvml.lib no será enlazado.")
 endif()
 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+  ARCHIVE_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_BINARY_DIR}/DebugContributor
+  LIBRARY_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_BINARY_DIR}/DebugContributor
+  RUNTIME_OUTPUT_DIRECTORY_DEBUG   ${CMAKE_BINARY_DIR}/DebugContributor
 
+  ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/ReleaseContributor
+  LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/ReleaseContributor
+  RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/ReleaseContributor
+
+  ARCHIVE_OUTPUT_DIRECTORY_DIST    ${CMAKE_BINARY_DIR}/DistContributor
+  LIBRARY_OUTPUT_DIRECTORY_DIST    ${CMAKE_BINARY_DIR}/DistContributor
+  RUNTIME_OUTPUT_DIRECTORY_DIST    ${CMAKE_BINARY_DIR}/DistContributor
+)
+set_target_properties(zlib PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/zlib/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/zlib/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/zlib/bin"
+)
+  
   
 # Preprocessor definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS IFNITY_EXPORTS_DLL)
@@ -260,9 +275,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Filtrar y mostrar solo los destinos que generan archivos .exe
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-
-# Copiar nvml.lib al directorio de enlace
-add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+if(EXISTS "${NVML_LIB_PATH}")
+ add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
@@ -271,8 +285,14 @@ add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}
-)
+    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST})
+
+else()
+  message(WARNING "nvml.lib not found, skipping copy.")
+endif()
+
+# Copiar nvml.lib al directorio de enlace
+
 
 # Export variables to parent scope and use them in other CMakeLists.txt
 set(DXC_DLLS_GLOBAL ${DXC_DLLS} PARENT_SCOPE)
