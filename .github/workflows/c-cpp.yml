@@ -14,16 +14,22 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout repository and submodules
+    - name: Checkout repository (no submodules yet)
       uses: actions/checkout@v4
       with:
-        submodules: true
+        submodules: false
         fetch-depth: 0
 
-    - name: Ensure submodules are updated recursively
+    - name: Manually clone submodules recursively (exact as --recursive)
       run: |
-        git submodule sync --recursive
         git submodule update --init --recursive
+
+    - name: Verify SPIRV-Cross folder
+      run: |
+        echo "Verificando estructura de SPIRV-Cross..."
+        dir "${{ github.workspace }}\Ifnity\vendor\spirv-cross"
+        dir "${{ github.workspace }}\Ifnity\vendor\spirv-cross\include"
+        dir "${{ github.workspace }}\Ifnity\vendor\spirv-cross\include\spirv_cross"
 
     - name: Prepare Vulkan SDK
       uses: humbletim/setup-vulkan-sdk@v1.2.1
@@ -32,11 +38,8 @@ jobs:
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
 
-    - name: Verify SPIRV-Cross header exists
-      run: dir ${{github.workspace}}\\Ifnity\\vendor\\spirv-cross\\include\\spirv_cross
-
     - name: Configure CMake (Visual Studio + MSVC)
-      run: cmake -S "${{github.workspace}}/Ifnity" -B "${{github.workspace}}/Ifnity/build" -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      run: cmake -S "${{ github.workspace }}/Ifnity" -B "${{ github.workspace }}/Ifnity/build" -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
 
-    - name: Build
-      run: cmake --build "${{github.workspace}}/Ifnity/build" --config ${{env.BUILD_TYPE}}
+    - name: Build project
+      run: cmake --build "${{ github.workspace }}/Ifnity/build" --config ${{ env.BUILD_TYPE }}
