@@ -1,3 +1,4 @@
+
 name: C++/C CMake (Debug, safe build in C:\temp)
 
 on:
@@ -36,7 +37,6 @@ jobs:
           Remove-Item $buildPath -Recurse -Force
         }
         New-Item -ItemType Directory -Path $buildPath | Out-Null
-
     - name: Configure CMake (Debug)
       run: cmake -S ${{ github.workspace }}/Ifnity -B C:\temp\ifnity_build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug
 
