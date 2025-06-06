@@ -233,13 +233,13 @@ public:
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 0 ].fileName,
+			.filePath = vSceneconfig[ 4 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 0 ]
+			.sceneConfig = vSceneconfig[ 4 ]
 
 
 
@@ -248,7 +248,7 @@ public:
 
 		MeshDataBuilderAssimp<rhi::VertexScene> builder( 1 );
 
-		builder.buildSceneData( meshAssimp );
+		//builder.buildSceneData( meshAssimp );
 
 		//Create a SceneObject with the data.
 		m_SceneObject = rdevice->CreateSceneObject( meshAssimp.sceneConfig.outputMesh.c_str(),

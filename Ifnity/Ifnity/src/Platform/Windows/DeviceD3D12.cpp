@@ -493,42 +493,77 @@ bool DeviceD3D12::ConfigureSpecificHintsGLFW() const
 bool DeviceD3D12::InitializeDeviceAndContext()
 {
 
-	int adapterIndex = 0;
-	//Enumerate the adapters and select the first one, normally the primary adapter is Hardware Device.
-	if( FAILED( dxgiFactory4->EnumAdapters( adapterIndex, OUT & m_DxgiAdapter ) ) )
-	{
-		if( adapterIndex == 0 )
-			IFNITY_LOG( LogCore, ERROR, "Cannot find any DXGI adapters in the system. D3D12" );
-		else
-			//IFNITY_LOG(LogCore, ERROR, "The specified DXGI adapter %d does not exist. D3D12", adapterIndex);
+	ComPtr<IDXGIAdapter> nvidiaAdapter = nullptr;
+	ComPtr<IDXGIAdapter> secondAdapter = nullptr;
+	ComPtr<IDXGIAdapter> currentAdapter = nullptr;
+	DXGI_ADAPTER_DESC desc;
+	UINT adapterIndex = 0;
+	bool foundNvidia = false;
+	bool foundSecond = false;
 
-			return false;
+	// Enumerar todos los adaptadores
+	while( dxgiFactory4->EnumAdapters( adapterIndex, &currentAdapter ) != DXGI_ERROR_NOT_FOUND )
+	{
+		currentAdapter->GetDesc( &desc );
+		if( desc.VendorId == 0x10DE && !foundNvidia )
+		{ // NVIDIA
+			nvidiaAdapter = currentAdapter;
+			foundNvidia = true;
+		}
+		else if( !foundSecond )
+		{
+			secondAdapter = currentAdapter;
+			foundSecond = true;
+		}
+		currentAdapter.Reset();
+		++adapterIndex;
 	}
 
+	if( nvidiaAdapter )
 	{
-		DXGI_ADAPTER_DESC aDesc;
-		m_DxgiAdapter->GetDesc( &aDesc );
-		m_IsNvidia = rhi::IsNvDeviceID( aDesc.VendorId );
+		m_DxgiAdapter = nvidiaAdapter;
+		m_DxgiAdapter->GetDesc( &desc );
+		std::wstring adapterName(desc.Description);
+		std::string adapterNameStr(adapterName.begin(), adapterName.end());
+		IFNITY_LOG( LogCore, INFO, "Init  with GPU NVIDIA: " + adapterNameStr );
 	}
-
-	//Create the D3D12 device
-	HRESULT result = D3D12CreateDevice(
-		IN m_DxgiAdapter.Get(),
-		IN m_DeviceParams.featureLevel,
-		IID_PPV_ARGS( OUT & m_Device ) );
-
-
-
-	// Fallback to WARP device.
-	if( FAILED( result ) )
+	else if( secondAdapter )
 	{
+		m_DxgiAdapter = secondAdapter;
+		m_DxgiAdapter->GetDesc( &desc );
+		std::wstring adapterName(desc.Description);
+		std::string adapterNameStr(adapterName.begin(), adapterName.end());
+		IFNITY_LOG( LogCore, INFO, "Init with Second GPU : " + adapterNameStr );
+	}
+	else
+	{
+		IFNITY_LOG( LogCore, WARNING, "NOT PHYSICAL GPU , USING WARP (software)." );
 		ComPtr<IDXGIAdapter> pWarpAdapter;
 		ThrowIfFailed( dxgiFactory4->EnumWarpAdapter( IID_PPV_ARGS( &pWarpAdapter ) ) );
+		m_DxgiAdapter = pWarpAdapter;
+		// No hay descripción legible para WARP
+	}
 
+	m_IsNvidia = (desc.VendorId == 0x10DE);
+
+	// Crear el dispositivo D3D12
+	HRESULT result = D3D12CreateDevice(
+		m_DxgiAdapter.Get(),
+		m_DeviceParams.featureLevel,
+		IID_PPV_ARGS( &m_Device )
+	);
+
+	// Si falla con el adaptador físico, intenta con WARP
+	if( FAILED( result ) )
+	{
+		IFNITY_LOG( LogCore, WARNING, "Fail craeting physical device, try to use warp.." );
+		ComPtr<IDXGIAdapter> pWarpAdapter;
+		ThrowIfFailed( dxgiFactory4->EnumWarpAdapter( IID_PPV_ARGS( &pWarpAdapter ) ) );
 		ThrowIfFailed( D3D12CreateDevice(
-			IN pWarpAdapter.Get(),
-			IN D3D_FEATURE_LEVEL_11_0,
-			IID_PPV_ARGS( OUT & m_Device ) ) );
+			pWarpAdapter.Get(),
+			D3D_FEATURE_LEVEL_11_0,
+			IID_PPV_ARGS( &m_Device )
+		) );
 	}
 
 	LogD3D12DeviceCapabilities( m_Device.Get() );
