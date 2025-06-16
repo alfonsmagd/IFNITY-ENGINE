@@ -50,7 +50,7 @@ set(EXAMPLE_DIRS
     #bufferVulkan
     #Texture_Sample
     #camera_mesh_vk
-    #SceneVk
+    SceneVk
 )
 
 foreach(EXAMPLE ${EXAMPLE_DIRS})

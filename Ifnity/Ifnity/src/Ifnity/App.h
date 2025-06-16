@@ -58,9 +58,6 @@ public:
 protected:
 	void SetEventBus(GLFWEventSource* eventBus) { m_EventBus = eventBus; }
 
-
-
-
 private:
 	using ImGuiRenderFunction = std::function<void()>;
 	std::unordered_map<rhi::GraphicsAPI, ImGuiRenderFunction> m_ImguiRenderFunctionMap;

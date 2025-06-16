@@ -629,22 +629,14 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	LogAdaptersD3D12();
 
 	#endif
-	// Create Fence and obtain descriptor sizes.
 	CreateFenceAndDescriptorSizes();
-	// Create CommandQueue 
 	CreateCommandQueue();
-	//Create SwapChain
 	CreateImmediateCommands();
 	CreateRtvAndDsvDescriptorHeaps();
 	CreateSwapChain();
-	//Crate RTV and DSV Descriptor Heaps
 	CreateDefaultSampler();
-
-
 	LoadAssetDemo();
-
 	OnResize();
-
 	CaptureD3D12DebugMessages();
 
 	//Ok try to create the DeviceHandle 
@@ -652,7 +644,6 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	stagingDevice_ = std::make_unique<D3D12::D3D12StagingDevice>( *this );
 
-	//
 
 	return true;
 }

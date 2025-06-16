@@ -63,6 +63,7 @@ namespace OpenGL
         void BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf) override;
 		void BindingVertexAttributesBuffer(BufferHandle& bf) override;
 		void BindingIndexBuffer(BufferHandle& bf) override;
+        
       
 
         virtual TextureHandle CreateTexture(TextureDescription& desc) override;
@@ -188,6 +189,7 @@ namespace OpenGL
     {
 		Program m_Program;
 		GraphicsPipelineDescription m_Description;
+		GLuint m_VAO; ///< The vertex array object used by the device.
 
     public:
         //Destructor 
@@ -198,6 +200,10 @@ namespace OpenGL
 		 void  SetProgram(Program program) { m_Program = program; }
 		 void SetGraphicsPipelineDesc(GraphicsPipelineDescription desc) { m_Description = desc; }
 
+    private:
+        void configureVertexAttributes();
+
+        friend Device;
     };
 
     //-------------------------------------------------  //

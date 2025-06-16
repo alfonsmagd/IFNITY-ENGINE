@@ -168,37 +168,37 @@ namespace rhi
   */
     enum class Format: uint8_t
     {
-        R8G8B8_UINT, /**< R8G8B8 unsigned integer format */
-        R8G8B8,      /**< R8G8B8 format */
-        R8G8B8A8,    /**< R8G8B8A8 format */
-        R32G32B32_FLOAT, /**< R32G32B32 float format used to glm vec3 */
-        R8G8B8A8_UNORM, /**< R8G8B8A8 unorm format */
-        B8G8R8A8_UNORM, /**< B8G8R8A8 unorm format */
-        R_UNORM8,    /**< R unsigned normalized 8-bit format */
-        R_UINT16,    /**< R unsigned 16-bit integer format */
-        R_UINT32,    /**< R unsigned 32-bit integer format */
-        R_UNORM16,   /**< R unsigned normalized 16-bit format */
-        R_FLOAT16,   /**< R 16-bit float format */
-        R_FLOAT32,   /**< R 32-bit float format */
-        RG_UNORM8,   /**< RG unsigned normalized 8-bit format */
-        RG_UINT16,   /**< RG unsigned 16-bit integer format */
-        RG_UINT32,   /**< RG unsigned 32-bit integer format */
-        RG_UNORM16,  /**< RG unsigned normalized 16-bit format */
-        RG_FLOAT16,  /**< RG 16-bit float format */
-        R32G32_FLOAT,  /**< RG 32-bit float format Similar vec2 glm  */
-        RGBA_UNORM8, /**< RGBA unsigned normalized 8-bit format */
-        RGBA_UINT32, /**< RGBA unsigned 32-bit integer format */
-        RGBA_FLOAT16,/**< RGBA 16-bit float format */
-        RGBA_FLOAT32,/**< RGBA 32-bit float format */
-        RGBA_SRGB8,  /**< RGBA sRGB 8-bit format */
-        BGRA_UNORM8, /**< BGRA unsigned normalized 8-bit format */
-        BGRA_SRGB8,  /**< BGRA sRGB 8-bit format */
-        ETC2_RGB8,   /**< ETC2 RGB 8-bit format */
-        ETC2_SRGB8,  /**< ETC2 sRGB 8-bit format */
-        BC7_RGBA,    /**< BC7 RGBA format */
-        Z_UNORM16,   /**< Depth 16-bit unorm format */
-        Z_UNORM24,   /**< Depth 24-bit unorm format */
-        Z_FLOAT32,   /**< Depth 32-bit float format */
+        R8G8B8_UINT,         /**< R8G8B8 unsigned integer format */
+        R8G8B8,              /**< R8G8B8 format */
+        R8G8B8A8,            /**< R8G8B8A8 format */
+        R32G32B32_FLOAT,     /**< R32G32B32 float format used to glm vec3 */
+        R8G8B8A8_UNORM,     /**< R8G8B8A8 unorm format */
+        B8G8R8A8_UNORM,     /**< B8G8R8A8 unorm format */
+        R_UNORM8,           /**< R unsigned normalized 8-bit format */
+        R_UINT16,           /**< R unsigned 16-bit integer format */
+        R_UINT32,           /**< R unsigned 32-bit integer format */
+        R_UNORM16,          /**< R unsigned normalized 16-bit format */
+        R_FLOAT16,          /**< R 16-bit float format */
+        R_FLOAT32,          /**< R 32-bit float format */
+        RG_UNORM8,          /**< RG unsigned normalized 8-bit format */
+        RG_UINT16,          /**< RG unsigned 16-bit integer format */
+        RG_UINT32,          /**< RG unsigned 32-bit integer format */
+        RG_UNORM16,         /**< RG unsigned normalized 16-bit format */
+        RG_FLOAT16,         /**< RG 16-bit float format */
+        R32G32_FLOAT,       /**< RG 32-bit float format Similar vec2 glm  */
+        RGBA_UNORM8,        /**< RGBA unsigned normalized 8-bit format */
+        RGBA_UINT32,        /**< RGBA unsigned 32-bit integer format */
+        RGBA_FLOAT16,       /**< RGBA 16-bit float format */
+        RGBA_FLOAT32,       /**< RGBA 32-bit float format */
+        RGBA_SRGB8,         /**< RGBA sRGB 8-bit format */
+        BGRA_UNORM8,        /**< BGRA unsigned normalized 8-bit format */
+        BGRA_SRGB8,         /**< BGRA sRGB 8-bit format */
+        ETC2_RGB8,          /**< ETC2 RGB 8-bit format */
+        ETC2_SRGB8,         /**< ETC2 sRGB 8-bit format */
+        BC7_RGBA,           /**< BC7 RGBA format */
+        Z_UNORM16,          /**< Depth 16-bit unorm format */
+        Z_UNORM24,          /**< Depth 24-bit unorm format */
+        Z_FLOAT32,          /**< Depth 32-bit float format */
         Z_UNORM24_S_UINT8, /**< Depth 24-bit unorm with stencil 8-bit uint format */
         Z_FLOAT32_S_UINT8, /**< Depth 32-bit float with stencil 8-bit uint format */
         UNKNOWN,     /**< Unknown format */
