@@ -291,6 +291,7 @@ public:
 		{
 			DescriptionShader.NoCompile = true;
 			DescriptionShader.FileName = "scene_vk.vert";
+
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
 		{
@@ -309,21 +310,21 @@ public:
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 3 ].fileName,
+			.filePath = vSceneconfig[ 0 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},  
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 3 ]
+			.sceneConfig = vSceneconfig[ 0 ]
 		};
 
 		//meshAssimp.meshFileHeader = loadMeshData("data/bistro/Exterior/exterior.obj.meshdata", meshAssimp.meshData);
 
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder(3);
+		//MeshDataBuilderAssimp<rhi::VertexScene> builder(3);
 
-		builder.buildSceneData(meshAssimp);
+		//builder.buildSceneData(meshAssimp);
 
 		//Create a SceneObject with the data.
 		m_SceneObject = rdevice->CreateSceneObject(meshAssimp.sceneConfig.outputMesh.c_str(),
@@ -348,7 +349,7 @@ public:
 
 		//DepthText texture
 		TextureDescription descTexture;
-		descTexture.dimensions = { 1280 , 720 ,1 };//please change this to the size of the window
+		descTexture.dimensions = { m_ManagerDevice->GetWidth() , m_ManagerDevice->GetHeight() ,1};//please change this to the size of the window
 		descTexture.format = Format::Z_FLOAT32;
 		descTexture.usage = TextureUsageBits::ATTACHMENT;
 		descTexture.isDepth = true;
@@ -428,8 +429,6 @@ public:
 
 		rdevice->StopRecording();
 		
-
-		IFNITY_LOG(LogApp, INFO, "Render App");
 	}
 
 	void Animate() override

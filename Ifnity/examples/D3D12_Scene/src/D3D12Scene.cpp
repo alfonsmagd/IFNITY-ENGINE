@@ -8,7 +8,6 @@ using namespace IFNITY::rhi;
 
 using vec3 = glm::vec3;
 
-
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
 public:
@@ -173,13 +172,10 @@ private:
 	CameraPositioner_FirstPerson m_camera;
 	const vec3 kInitialCameraPos = vec3( 0.0f, 1.0f, -1.5f );
 	const vec3 kInitialCameraTarget = vec3( 0.0f, 0.5f, 0.0f );
-
-
 	//FPS Counter
 	IFNITY::FpsCounter m_FpsCounter;
 	float deltaSeconds = 0.0f;
 	double timeStamp = 0.0;
-
 
 	struct VertexData
 	{
@@ -188,16 +184,16 @@ private:
 		vec3 normal;
 	};
 
-
 	struct PerFrameData
 	{
-		mat4 model;
+		mat4 mvp;
 	};
-
 
 	BufferHandle m_PushConnstant; // Uniform Buffer Object for per-frame data
 	GraphicsPipelineHandle m_pipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
+
+
 public:
 
 
@@ -240,10 +236,6 @@ public:
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
 			.sceneConfig = vSceneconfig[ 5 ]
-
-
-
-
 		};
 
 		MeshDataBuilderAssimp<rhi::VertexScene> builder( 1 );
@@ -257,11 +249,6 @@ public:
 
 		//Create the m_SceneObject with the device
 		m_MeshObject = rdevice->CreateMeshObjectFromScene( m_SceneObject );
-
-
-
-		//auto files = vfs.ListFilesInCurrentDirectory("test");
-
 
 		IFNITY_LOG( LogApp, INFO, "START COMPILING INFO  " );
 
@@ -327,14 +314,12 @@ public:
 
 			gdesc.SetVertexShader(m_vs.get())
 				.SetPixelShader(m_ps.get())
-				.SetVertexInput(vertexInput);
+				.AddDebugName("Solid Pipeline")
+				.SetVertexInput(vertexInput)
+				.SetRasterizationState({ .cullMode = rhi::CullModeType::None ,.polygonMode = rhi::PolygonModeType::Fill })
+				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
 
-			RasterizationState rasterizationState;
-			rasterizationState.cullMode = rhi::CullModeType::FrontAndBack;
-
-
-
-
+			
 			m_pipeline = rdevice->CreateGraphicsPipeline( gdesc );
 
 
@@ -422,7 +407,6 @@ IFNITY::App* IFNITY::CreateApp()
 {
 	auto api = IFNITY::rhi::GraphicsAPI::D3D12;
 
-	//return new Source_TestD3D12(api);
 	return new Source( api );
 }
 
