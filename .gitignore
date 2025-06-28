@@ -146,3 +146,4 @@ yarn-error.log
 # Unignore AgilitySDK folder and its contents
 !Ifnity/Ifnity/vendor/AgilitySDK/
 !Ifnity/Ifnity/vendor/AgilitySDK/**
+!Ifnity/Ifnity/vendor/dxc/**
