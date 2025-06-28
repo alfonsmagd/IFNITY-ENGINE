@@ -201,7 +201,7 @@ public:
 	Source( IFNITY::rhi::GraphicsAPI api ):
 		IFNITY::App( api ),
 		m_ManagerDevice( IFNITY::App::GetApp().GetDevicePtr() ),
-		m_camera(vec3(0.f, 1.0f, -1.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_camera(vec3(-19.f, 18.0f, -6.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener( &m_camera )
 	{
 		// Push layers including monitoring and GUI
@@ -227,18 +227,22 @@ public:
 		auto vSceneconfig = IFNITY::readSceneConfig( "data/sceneconverter.json" );
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
+		#define BISTRO  0
+		#define SPONZA  4
+		#define SANMIGUEL 5
+
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 5 ].fileName,
+			.filePath = vSceneconfig[ SPONZA ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 5 ]
+			.sceneConfig = vSceneconfig[ SPONZA ]
 		};
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder( 1 );
+		//MeshDataBuilderAssimp<rhi::VertexScene> builder( 1 );
 
 		//builder.buildSceneData( meshAssimp );
 
@@ -273,7 +277,7 @@ public:
 			descShader.NoCompile = false;
 			descShader.EntryPoint = L"PSMain";
 			descShader.Profile = L"ps_6_6";
-			descShader.Type = ShaderType::PIXEL_SHADER;
+			descShader.Type = ShaderType::PIXEL_SHADER;	
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
 			descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
 			m_ps->SetShaderDescription( descShader );
@@ -323,9 +327,6 @@ public:
 			m_pipeline = rdevice->CreateGraphicsPipeline( gdesc );
 
 
-
-
-
 			BufferDescription bufferDesc;
 			{
 				bufferDesc.SetDebugName( "PushConstant Buffer" );
@@ -352,31 +353,22 @@ public:
 		timeStamp = newTimeStamp;
 		m_FpsCounter.tick(deltaSeconds);
 
+		//Get Rdevice and ratio image. 
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-
+		//Update camera values
 		const mat4 m(glm::scale(mat4(1.0f), vec3(1.f)));
 		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
 		const mat4 mvp = p * m_camera.getViewMatrix() * m;
 
-
 		////StartRecording
 		rdevice->StartRecording();
-		rdevice->WriteBuffer(m_PushConnstant, &mvp, sizeof(mvp));
 
-		m_MeshObject->DrawIndirect();
-
-
-
+			rdevice->WriteBuffer(m_PushConnstant, &mvp, sizeof(mvp));
+			m_MeshObject->DrawIndirect();
 
 		rdevice->StopRecording();
-
-
-
-
-
-
 	}
 
 	void Animate() override

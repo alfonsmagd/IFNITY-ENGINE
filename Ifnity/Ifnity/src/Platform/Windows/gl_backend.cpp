@@ -1218,7 +1218,7 @@ namespace OpenGL
 
 		// Generar mipmaps y almacenar la textura
 		GLsizei numMipmaps = Utils::getNumMipMapLevels2D( width, height );
-		glTextureStorage2D( m_TextureID, numMipmaps, GL_RGBA8, width, height );
+		glTextureStorage2D( m_TextureID, 1, GL_RGBA8, width, height ); //no mipmap
 		GLenum error = glGetError();
 		if( error != GL_NO_ERROR )
 		{
@@ -1236,7 +1236,7 @@ namespace OpenGL
 			return;
 		}
 
-		glGenerateTextureMipmap( m_TextureID );
+		//glGenerateTextureMipmap( m_TextureID );
 		glTextureParameteri( m_TextureID, GL_TEXTURE_MAX_LEVEL, numMipmaps - 1 );
 		glTextureParameteri( m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 		glTextureParameteri( m_TextureID, GL_TEXTURE_MAX_ANISOTROPY, 16 );

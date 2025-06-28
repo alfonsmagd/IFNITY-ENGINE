@@ -14,7 +14,8 @@
 #include "Ifnity/Utils/SlotMap.hpp"
 #include "Ifnity/Utils/HolderUtils.hpp"
 
-
+#define D3D12_SDK_VERSION 616  // o la versión que estés usando
+#define D3D12_SDK_PATH L"."
 #define USE_PIX //THIS FLAG WILL BE ADDED IN CMAKE  CHECKING IF PIX HAS BEEN INSTALLED IN THE SYSTEM.
 #ifdef USE_PIX
 #include <pix.h>

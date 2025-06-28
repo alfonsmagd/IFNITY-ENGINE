@@ -1,46 +1,36 @@
 cmake_minimum_required(VERSION 3.8)
 project(Ifnity CXX C)
 
-
-#Options and Functions 
 function(assign_vendor_folder target)
     set_target_properties(${target} PROPERTIES FOLDER "Vendor")
 endfunction()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_C STANDARD 11)
+set(CMAKE_C_STANDARD 11)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_SKIP_INSTALL_RULES true)
 
 if(MSVC)
     add_definitions(-DUNICODE -D_UNICODE)
+        add_compile_options("/showIncludes")
 endif()
 
-# Output directories
-
-
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release;" CACHE STRING "" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist" CACHE STRING "" FORCE)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/DebugContributor)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/ReleaseContributor)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST ${CMAKE_BINARY_DIR}/DistContributor)
 
-# Crear carpetas para asegurar que existen
 file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG})
 file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE})
 file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST})
 
-#DXC directories and variables 
 set(DXC_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/include")
 set(DXC_LIB_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/lib/x64/dxcompiler.lib")
-# Ruta al directorio de DLLs
 set(DXC_DLL_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/bin/x64")
 
-
-
-# Copiar todas las DLLs del directorio al directorio de salida
 file(GLOB DXC_DLLS "${DXC_DLL_DIR}/*.dll")
 foreach(DLL_PATH IN LISTS DXC_DLLS)
     if(EXISTS ${DLL_PATH})
@@ -49,6 +39,20 @@ foreach(DLL_PATH IN LISTS DXC_DLLS)
         message(WARNING "DLL not found: ${DLL_PATH}")
     endif()
 endforeach()
+
+# Agility SDK
+set(DX12_AGILITY_SDK_PATH "${PROJECT_SOURCE_DIR}/vendor/AgilitySDK/build/native")
+set(D3D12_SDK_VERSION 616)
+
+set(DX_AGILITY_DLLS
+    "${DX12_AGILITY_SDK_PATH}/bin/x64/D3D12core.dll"
+    "${DX12_AGILITY_SDK_PATH}/bin/x64/d3d12SDKLayers.dll"
+)
+set(DX_AGILITY_DLLS_GLOBAL ${DX_AGILITY_DLLS} PARENT_SCOPE)
+
+set(DXC_DLLS_GLOBAL ${DXC_DLLS} PARENT_SCOPE)
+
+
 
 set(SPIRV_SKIP_TESTS ON CACHE BOOL "Skip SPIRV tests")
 set(SPIRV_BUILD_COMPRESSION OFF CACHE BOOL "Do not build SPIRV compressing codec")
@@ -93,6 +97,7 @@ include(${PROJECT_SOURCE_DIR}/FindGraphicsAPIs.cmake)
 
 #Rutas  nvml.lib 
 set(NVML_LIB_PATH "${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib")
+
 
 # Add GLFW like a subdirectory to be built with the project
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glfw)
@@ -223,8 +228,11 @@ ASSIGN_VENDOR_FOLDER(assimp)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
 # Include Target DXC Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${DXC_INCLUDE_DIR})
+
+target_include_directories(${PROJECT_NAME} BEFORE PRIVATE "${DX12_AGILITY_SDK_PATH}/include")
 # Include Target assimp Directories
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
+
 
 
 if(NVML_LIBRARY)

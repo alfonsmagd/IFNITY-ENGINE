@@ -18,9 +18,9 @@
 
 
 
-
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
+//
+//#pragma comment(lib, "d3d12.lib")
+//#pragma comment(lib, "dxgi.lib")
 IFNITY_NAMESPACE
 
 using namespace DirectX;
@@ -454,19 +454,37 @@ bool DeviceD3D12::InitInternalInstance()
 	UINT debugFlags = 0;
 
 	// Enable the D3D12 debug layer.
+	// Enable the D3D12 debug layer.
+	#ifdef _DEBUG
 	if( m_DeviceParams.enableDebugRuntime )
 	{
 		ComPtr<ID3D12Debug> debugController;
-		ThrowIfFailed( D3D12GetDebugInterface( IID_PPV_ARGS( OUT & debugController ) ) );
+		ThrowIfFailed( D3D12GetDebugInterface( IID_PPV_ARGS( OUT &debugController ) ) );
+
 		debugController->EnableDebugLayer();
 		debugFlags = DXGI_CREATE_FACTORY_DEBUG;
-		IFNITY_LOG( LogCore, TRACE, "Enable Debug Layer D3D12" );
 
+		// Intentar habilitar validación adicional
+		ComPtr<ID3D12Debug1> debugController1;
+		if( SUCCEEDED(debugController.As(&debugController1)) )
+		{
+			debugController1->SetEnableGPUBasedValidation(TRUE);
+			debugController1->SetEnableSynchronizedCommandQueueValidation(TRUE);
+			IFNITY_LOG(LogCore, TRACE, "Enabled GPU-Based Validation and Synchronized Queue Validation.");
+			OutputDebugStringA("Hello from D3D12 debug layer\n");
+		}
+		else
+		{
+			IFNITY_LOG(LogCore, WARNING, "ID3D12Debug1 not available — skipping extended validation.");
+		}
+
+		IFNITY_LOG(LogCore, TRACE, "Enable Debug Layer D3D12");
+
+		
 		ReportLiveObjects();
-		#if defined(_DEBUG)
-		ReportLiveObjects();
-		#endif
+		
 	}
+	#endif
 
 	//Build the DXGI Factory
 	if( !dxgiFactory4 )
@@ -478,6 +496,17 @@ bool DeviceD3D12::InitInternalInstance()
 						"For more info, get log from debug D3D runtime: (1) Install DX SDK, and enable Debug D3D from DX Control Panel Utility. (2) Install and start DbgView. (3) Try running the program again.\n" );
 			return false;
 		}
+	}
+
+	ComPtr<ID3D12Debug> debugController;
+	HRESULT hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
+	if (SUCCEEDED(hr))
+	{
+		IFNITY_LOG(LogCore, WARNING, "WARNING: D3D12 Debug Layer still active!");
+	}
+	else
+	{
+		IFNITY_LOG(LogCore, INFO, "Debug Layer is not active");
 	}
 
 	return true;

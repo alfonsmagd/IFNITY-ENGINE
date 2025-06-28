@@ -257,7 +257,7 @@ public:
 	Source(IFNITY::rhi::GraphicsAPI api):
 		IFNITY::App(api),
 		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
-		m_camera(vec3(0.f, 1.0f, -1.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_camera(vec3(-19.f, 18.0f, -6.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener(&m_camera)
 	{
 		m_ImGuiLayer = new ImGuiTestLayer();
@@ -366,13 +366,13 @@ public:
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 5 ].fileName,
+			.filePath = vSceneconfig[ 4 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 5 ]
+			.sceneConfig = vSceneconfig[ 4 ]
 		};
 
 		//MeshDataBuilderAssimp<rhi::VertexScene> builder(0.01);

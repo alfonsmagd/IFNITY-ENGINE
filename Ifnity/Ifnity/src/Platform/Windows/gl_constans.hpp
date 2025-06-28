@@ -27,11 +27,11 @@ namespace OpenGL
      */
     struct DrawElementsIndirectCommand
     {
-        GLuint count_;          /**< Number of elements to be rendered. */
-        GLuint instanceCount_;  /**< Number of instances to be rendered. */
-        GLuint firstIndex_;     /**< Index of the first element. */
-        GLuint baseVertex_;     /**< Base vertex index. */
-        GLuint baseInstance_;   /**< Base instance index. */
+        GLuint count_;                  /**< Number of elements to be rendered. */
+        GLuint instanceCount_;          /**< Number of instances to be rendered. */
+        GLuint firstIndex_;             /**< Index of the first element. */
+        GLuint baseVertex_;             /**< Base vertex index. */
+        GLuint baseInstance_;           /**< Base instance index. */
     };
 
     /**

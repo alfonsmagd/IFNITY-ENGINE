@@ -254,7 +254,7 @@ float4 PSMain(PSInput input) : SV_TARGET
         n = perturbNormal(n, input.worldPos, normalSample, input.uv);
 
     // Light direction and shading
-    float3 lightDir = normalize(float3(-1.0f, -1.0f, 0.1f));
+    float3 lightDir = normalize(float3(-1.0f, 1.0f, 0.1f));
     float NdotL = clamp(dot(n, lightDir), 0.3f, 1.0f);
 
     return float4(albedo.rgb * NdotL, 1.0f);

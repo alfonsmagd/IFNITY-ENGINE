@@ -30,6 +30,9 @@
 #include <dxgidebug.h>
 
 //D3D12
+#define D3D12_SDK_VERSION 616
+#define D3D12_SDK_PATH L"."
+#include <d3d12.h>
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include "Platform/Windows/d3dx12.h"
