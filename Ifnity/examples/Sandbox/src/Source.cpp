@@ -11,36 +11,36 @@ using namespace IFNITY::rhi;
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
 public:
-	ExampleLayer(): Layer("Example") {}
+	ExampleLayer(): Layer( "Example" ) {}
 	~ExampleLayer() {}
 
 	void OnUpdate() override
 	{
-		IFNITY_LOG(LogApp, INFO, "Update App");
+		IFNITY_LOG( LogApp, INFO, "Update App" );
 	}
 
 
-	void onEventReceived(const IFNITY::WindowResize& event) override
+	void onEventReceived( const IFNITY::WindowResize& event ) override
 	{
-		IFNITY_LOG(LogApp, WARNING, event.ToString() + "Example Layer");
+		IFNITY_LOG( LogApp, WARNING, event.ToString() + "Example Layer" );
 	}
-	void ConnectToEventBusImpl(void* bus) override
+	void ConnectToEventBusImpl( void* bus ) override
 	{
-		auto eventBus = static_cast<IFNITY::GLFWEventSource*>(bus);
-		if(eventBus)
+		auto eventBus = static_cast< IFNITY::GLFWEventSource* >(bus);
+		if( eventBus )
 		{
-			CONNECT_EVENT_LAYER(WindowResize, eventBus);
-			CONNECT_EVENT_LAYER(WindowClose, eventBus);
-			CONNECT_EVENT_LAYER(KeyPressed, eventBus);
-			CONNECT_EVENT_LAYER(KeyRelease, eventBus);
-			CONNECT_EVENT_LAYER(MouseMove, eventBus);
-			CONNECT_EVENT_LAYER(ScrollMouseMove, eventBus);
-			CONNECT_EVENT_LAYER(MouseClick, eventBus);
+			CONNECT_EVENT_LAYER( WindowResize, eventBus );
+			CONNECT_EVENT_LAYER( WindowClose, eventBus );
+			CONNECT_EVENT_LAYER( KeyPressed, eventBus );
+			CONNECT_EVENT_LAYER( KeyRelease, eventBus );
+			CONNECT_EVENT_LAYER( MouseMove, eventBus );
+			CONNECT_EVENT_LAYER( ScrollMouseMove, eventBus );
+			CONNECT_EVENT_LAYER( MouseClick, eventBus );
 		}
 		else
 		{
 			//Manage conversion pointer error. 
-			IFNITY_LOG(LogApp, ERROR, "The pointer is not type IFNITY::GLFWEventSource*");
+			IFNITY_LOG( LogApp, ERROR, "The pointer is not type IFNITY::GLFWEventSource*" );
 		}
 	}
 
@@ -50,7 +50,7 @@ public:
 class NVMLLayer: public IFNITY::Layer
 {
 public:
-	NVMLLayer(): Layer("NVML") {}
+	NVMLLayer(): Layer( "NVML" ) {}
 	~NVMLLayer() {}
 
 	void OnUpdate() override
@@ -60,14 +60,14 @@ public:
 		monitor.display();
 	}
 
-	void ConnectToEventBusImpl(void* bus) override
+	void ConnectToEventBusImpl( void* bus ) override
 	{}
 	void OnAttach() override
 	{
 		loggerDisplayMonitor = LoggerDisplayMonitor();
-		monitor.setDisplay(&loggerDisplayMonitor);
+		monitor.setDisplay( &loggerDisplayMonitor );
 
-		IFNITY_LOG(LogApp, INFO, "NVML Layer is attached");
+		IFNITY_LOG( LogApp, INFO, "NVML Layer is attached" );
 	}
 
 private:
@@ -77,90 +77,95 @@ private:
 
 
 
-class ImGuiTestLayer : public IFNITY::Layer
+class ImGuiTestLayer: public IFNITY::Layer
 {
 public:
-	ImGuiTestLayer() : Layer("ImGuiTest") {}
+	ImGuiTestLayer(): Layer( "ImGuiTest" ) {}
 	~ImGuiTestLayer() {}
 
 	void OnAttach() override
 	{
-		IFNITY_LOG(LogApp, INFO, "ImGuiTest Layer is attached");
+		IFNITY_LOG( LogApp, INFO, "ImGuiTest Layer is attached" );
 	}
 
 	void OnUpdate() override
 	{
 		ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
+		if( context == nullptr )
 		{
-			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
+			IFNITY_LOG( LogApp, ERROR, "Failed to get ImGui context from DLL" );
 			return;
 		}
-		ImGui::SetCurrentContext(context);
+		ImGui::SetCurrentContext( context );
 
 		ChooseApi();
 		//IFNITY_LOG(LogApp, INFO, "Update ImGuiTest Layer OnUpdate");
 	}
 	// Heredado vía Layer
-	void ConnectToEventBusImpl(void* bus) override
+	void ConnectToEventBusImpl( void* bus ) override
 	{
-		
+
 
 	}
 private:
 	// Una función que se llama al hacer clic en el botón
-	void AccionPorOpcion(int opcionSeleccionada) {
+	void AccionPorOpcion( int opcionSeleccionada )
+	{
 
 		GraphicsAPI api = IFNITY::App::GetApp().GetGraphicsAPI();
-		switch (opcionSeleccionada) {
-		case 0:
-			// Acción para la opción 1
-			IFNITY_LOG(LogApp, INFO, "OPENGL");
-			
+		switch( opcionSeleccionada )
+		{
+			case 0:
+				// Acción para la opción 1
+				IFNITY_LOG( LogApp, INFO, "OPENGL" );
 
-			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::OPENGL,api != GraphicsAPI::OPENGL);
-			break;
-		case 1:
-			// Acción para la opción 2
-			IFNITY_LOG(LogApp, INFO, "D3D11");
-			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::D3D11, api != GraphicsAPI::D3D11);
-			break;
 
-		case 2:
-			// Acción para la opción 3
-			IFNITY_LOG(LogApp, INFO, "D3D12");
-			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::D3D12, api != GraphicsAPI::D3D12);
-			break;
+				IFNITY::App::GetApp()
+					.SetGraphicsAPI( GraphicsAPI::OPENGL, api != GraphicsAPI::OPENGL );
+				break;
+			case 1:
+				// Acción para la opción 2
+				IFNITY_LOG( LogApp, INFO, "D3D11" );
+				IFNITY::App::GetApp()
+					.SetGraphicsAPI( GraphicsAPI::D3D11, api != GraphicsAPI::D3D11 );
+				break;
 
-		case 3:
-			// Acción para la opción 3
-			IFNITY_LOG(LogApp, INFO, "VULKAN");
-			IFNITY::App::GetApp()
-				.SetGraphicsAPI(GraphicsAPI::VULKAN, api != GraphicsAPI::VULKAN);
-			break;
-		default:
-		
-			break;
+			case 2:
+				// Acción para la opción 3
+				IFNITY_LOG( LogApp, INFO, "D3D12" );
+				IFNITY::App::GetApp()
+					.SetGraphicsAPI( GraphicsAPI::D3D12, api != GraphicsAPI::D3D12 );
+				break;
+
+			case 3:
+				// Acción para la opción 3
+				IFNITY_LOG( LogApp, INFO, "VULKAN" );
+				IFNITY::App::GetApp()
+					.SetGraphicsAPI( GraphicsAPI::VULKAN, api != GraphicsAPI::VULKAN );
+				break;
+			default:
+
+				break;
 		}
 	}
 
-	void ChooseApi() {
+	void ChooseApi()
+	{
 		static int selectOption = 0;
-		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN"};
+		const char* options[] = { "OPENGL", "D3D11","D3D12","VULKAN" };
 
-		ImGui::Begin("API WINDOW");  // Comienza la creación de la ventana
+		ImGui::Begin( "API WINDOW" );  // Comienza la creación de la ventana
 
 		// Combo box con las opciones
-		if (ImGui::Combo("Choose Option ", &selectOption, options, IM_ARRAYSIZE(options))) {
+		if( ImGui::Combo( "Choose Option ", &selectOption, options, IM_ARRAYSIZE( options ) ) )
+		{
 			// Este bloque se ejecuta cada vez que se selecciona una opción diferente
 		}
 
 		// Botón que ejecuta la función cuando se hace clic
-		if (ImGui::Button("OK")) {
-			AccionPorOpcion(selectOption);
+		if( ImGui::Button( "OK" ) )
+		{
+			AccionPorOpcion( selectOption );
 		}
 
 		ImGui::End();  // Termina la creación de la ventana
@@ -171,69 +176,45 @@ private:
 
 
 
-	
+
 };
 
 class Source: public IFNITY::App
 {
 public:
-	Source(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source( IFNITY::rhi::GraphicsAPI api ): IFNITY::App( api )
 	{
-		// Obtener el contexto de ImGui desde IFNITY  DLL
-		/*ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
-		{
-			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
-			return;
-		}*/
-
-		// Establecer el contexto de ImGui en la aplicación principal
-		//ImGui::SetCurrentContext(context);
-		PushLayer(new   IFNITY::NVML_Monitor());
-		PushLayer(new ImGuiTestLayer());
-		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
-		
-		
-
+		PushLayer( new   IFNITY::NVML_Monitor() );
+		PushLayer( new ImGuiTestLayer() );
+		PushOverlay( new IFNITY::ImguiLayer() );  
 	}
 
 	void Initialize() override
-	{
-
-	}
-	
+	{}
 	void Render() override
-	{
-		//IFNITY_LOG(LogApp, INFO, "Render App");
-	}
+	{}
 	void Animate() override
-	{
-		//IFNITY_LOG(LogApp, INFO, "Animate App");
-	}
+	{}
 	~Source() override {}
 };
 
-class Source_TestD3D12 : public IFNITY::App
+class Source_TestD3D12: public IFNITY::App
 {
 public:
-	Source_TestD3D12(IFNITY::rhi::GraphicsAPI api) : IFNITY::App(api)
+	Source_TestD3D12( IFNITY::rhi::GraphicsAPI api ): IFNITY::App( api )
 	{
-		PushLayer(new ExampleLayer());
+		PushLayer( new ExampleLayer() );
 	}
 	~Source_TestD3D12() override
-	{
-	}
+	{}
 };
 
 
 IFNITY::App* IFNITY::CreateApp()
 {
 
+	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
-	auto api = IFNITY::rhi::GraphicsAPI::D3D12;
-
-
-	//return new Source_TestD3D12(api);
-	return new Source(api);
+	return new Source( api );
 }
 

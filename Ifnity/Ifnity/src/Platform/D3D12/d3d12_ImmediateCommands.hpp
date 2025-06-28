@@ -25,7 +25,7 @@ namespace D3D12
 	public:
 		// the maximum number of command buffers which can similtaneously exist in the system; when we run out of buffers, we stall and wait until
 		// an existing buffer becomes available
-		static constexpr uint32_t kMaxCommandBuffers = 3;
+		static constexpr uint32_t kMaxCommandBuffers = 64;
 
 
 		D3D12ImmediateCommands(ID3D12Device* device, ID3D12CommandQueue* queue, uint32_t numContexts = kMaxCommandBuffers);

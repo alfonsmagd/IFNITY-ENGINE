@@ -46,7 +46,7 @@ public:
 		{
 			return index_;
 		}
-		return 0xFFFFF; // Devuelve un valor predeterminado cuando gen_ es 0
+		return 0xFFFFFF; // Devuelve un valor predeterminado cuando gen_ es 0
 	}
 
 private:

@@ -33,12 +33,12 @@ void main() {
 	vec3 normalSample = vec3(0.0);
 
 	// fetch albedo
-	if (mat.albedoMap_ < INVALID_HANDLE)
+	if (mat.albedoMap_ < INVALID_HANDLE && mat.albedoMap_ > 0)
 	{
 		uint texIdx = uint(mat.albedoMap_);
 		albedo = textureBindless2D(texIdx, 0, uv);
 	}
-	if (mat.normalMap_ < INVALID_HANDLE)
+	if (mat.normalMap_ < INVALID_HANDLE && mat.normalMap_ > 0)
 	{
 		uint texIdx = uint(mat.normalMap_);
 		normalSample = textureBindless2D(texIdx, 0, uv).xyz;
@@ -52,7 +52,7 @@ void main() {
 
   
 
-	vec3 lightDir = normalize(vec3(-1.0, -1.0, 0.1));
+	vec3 lightDir = normalize(vec3(-1.0, 1.0, 0.1));
 
 	float NdotL = clamp( dot(n, lightDir), 0.3, 1.0 );
 

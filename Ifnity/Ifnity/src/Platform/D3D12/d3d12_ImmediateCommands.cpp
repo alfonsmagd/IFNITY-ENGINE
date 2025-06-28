@@ -101,6 +101,7 @@ namespace D3D12
 			buf.fenceValue = 0;
 			buf.isEncoding_ = false;
 		}
+		
 
 
 
@@ -313,11 +314,11 @@ namespace D3D12
 			}
 			else
 			{
-
+				
 				//Error handling 
 				/*IFNITY_LOG(LogCore, INFO, "not purgin buffer position {}",i);
 				IFNITY_LOG(LogCore, INFO, "Buffer {} is still in use by the GPU", buf.handle_.bufferIndex_);*/
-			    this->wait(buf.handle_); // Wait for the GPU to finish with this command list
+			    //this->wait(buf.handle_); // Wait for the GPU to finish with this command list
 				// This buffer is still in use by the GPU, so we can't recycle it yet
 				return;
 			}

@@ -229,15 +229,15 @@ float4 PSMain(PSInput input) : SV_TARGET
    
     const int INVALID_HANDLE = 2000;
     // Albedo map
-    if (mat.albedoMap.x < INVALID_HANDLE)
+    if (mat.albedoMap.x > 0 && mat.albedoMap.x < INVALID_HANDLE)
     {
         uint texIdx = mat.albedoMap.x;
         Texture2D texAlbedo = ResourceDescriptorHeap[texIdx];
         albedo = texAlbedo.SampleLevel(g_sampler, input.uv, 0.0f);
     }
 
-    // Normal map
-    if (mat.normalMap.x < INVALID_HANDLE)
+// Normal map
+    if (mat.normalMap.x > 0 && mat.normalMap.x < INVALID_HANDLE)
     {
         uint texIdx = mat.normalMap.x;
         Texture2D texNormal = ResourceDescriptorHeap[texIdx];
@@ -254,7 +254,7 @@ float4 PSMain(PSInput input) : SV_TARGET
         n = perturbNormal(n, input.worldPos, normalSample, input.uv);
 
     // Light direction and shading
-    float3 lightDir = normalize(float3(-1.0f, -1.0f, 0.1f));
+    float3 lightDir = normalize(float3(-1.0f, 1.0f, 0.1f));
     float NdotL = clamp(dot(n, lightDir), 0.3f, 1.0f);
 
     return float4(albedo.rgb * NdotL, 1.0f);

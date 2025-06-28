@@ -27,11 +27,11 @@ namespace OpenGL
      */
     struct DrawElementsIndirectCommand
     {
-        GLuint count_;          /**< Number of elements to be rendered. */
-        GLuint instanceCount_;  /**< Number of instances to be rendered. */
-        GLuint firstIndex_;     /**< Index of the first element. */
-        GLuint baseVertex_;     /**< Base vertex index. */
-        GLuint baseInstance_;   /**< Base instance index. */
+        GLuint count_;                  /**< Number of elements to be rendered. */
+        GLuint instanceCount_;          /**< Number of instances to be rendered. */
+        GLuint firstIndex_;             /**< Index of the first element. */
+        GLuint baseVertex_;             /**< Base vertex index. */
+        GLuint baseInstance_;           /**< Base instance index. */
     };
 
     /**
@@ -77,7 +77,64 @@ namespace OpenGL
     { rhi::Format::Z_FLOAT32, GL_DEPTH_COMPONENT32F },
     { rhi::Format::Z_UNORM24_S_UINT8, GL_DEPTH24_STENCIL8 },
     { rhi::Format::Z_FLOAT32_S_UINT8, GL_DEPTH32F_STENCIL8 }
+
+
+
+
 } };
+
+    inline uint32_t getNumComponents(rhi::Format format)
+    {
+        using enum rhi::Format;
+
+        switch (format)
+        {
+            case R_UNORM8:
+            case R_UINT16:
+            case R_UINT32:
+            case R_UNORM16:
+            case R_FLOAT16:
+            case R_FLOAT32:
+            case Z_UNORM16:
+            case Z_UNORM24:
+            case Z_FLOAT32:
+                return 1;
+
+            case RG_UNORM8:
+            case RG_UINT16:
+            case RG_UINT32:
+            case RG_UNORM16:
+            case RG_FLOAT16:
+            case R32G32_FLOAT:
+                return 2;
+
+            case R8G8B8:
+            case R8G8B8_UINT:
+            case R32G32B32_FLOAT:
+            case ETC2_RGB8:
+            case ETC2_SRGB8:
+                return 3;
+
+            case R8G8B8A8:
+            case R8G8B8A8_UNORM:
+            case B8G8R8A8_UNORM:
+            case RGBA_UNORM8:
+            case RGBA_UINT32:
+            case RGBA_FLOAT16:
+            case RGBA_FLOAT32:
+            case RGBA_SRGB8:
+            case BGRA_UNORM8:
+            case BGRA_SRGB8:
+            case BC7_RGBA:
+            case Z_UNORM24_S_UINT8:
+            case Z_FLOAT32_S_UINT8:
+                return 4;
+
+            default:
+                return 1; // fallback seguro
+        }
+    }
+  
 
 
 

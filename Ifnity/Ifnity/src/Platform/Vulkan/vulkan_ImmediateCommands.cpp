@@ -116,7 +116,7 @@ namespace Vulkan
 
 		while(!numAvailableCommandBuffers_)
 		{
-			IFNITY_LOG(LogCore, INFO, "Waiting for command buffers...\n");
+			//IFNITY_LOG(LogCore, INFO, "Waiting for command buffers...\n");
 			purge();
 		}
 

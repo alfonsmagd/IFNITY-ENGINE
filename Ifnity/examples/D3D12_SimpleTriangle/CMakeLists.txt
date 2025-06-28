@@ -51,9 +51,9 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 )
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-   ${CMAKE_SOURCE_DIR}/../data
-   $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/../data
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
 )
 
 # Search  .glsl, .frag, .vert, .geom, .sp, y .h dentro de src/

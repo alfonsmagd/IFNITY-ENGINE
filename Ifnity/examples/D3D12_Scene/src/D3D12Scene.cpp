@@ -8,7 +8,6 @@ using namespace IFNITY::rhi;
 
 using vec3 = glm::vec3;
 
-
 class ExampleLayer: public IFNITY::GLFWEventListener, public IFNITY::Layer
 {
 public:
@@ -173,13 +172,10 @@ private:
 	CameraPositioner_FirstPerson m_camera;
 	const vec3 kInitialCameraPos = vec3( 0.0f, 1.0f, -1.5f );
 	const vec3 kInitialCameraTarget = vec3( 0.0f, 0.5f, 0.0f );
-
-
 	//FPS Counter
 	IFNITY::FpsCounter m_FpsCounter;
 	float deltaSeconds = 0.0f;
 	double timeStamp = 0.0;
-
 
 	struct VertexData
 	{
@@ -188,16 +184,16 @@ private:
 		vec3 normal;
 	};
 
-
 	struct PerFrameData
 	{
-		mat4 model;
+		mat4 mvp;
 	};
-
 
 	BufferHandle m_PushConnstant; // Uniform Buffer Object for per-frame data
 	GraphicsPipelineHandle m_pipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
+
+
 public:
 
 
@@ -205,7 +201,7 @@ public:
 	Source( IFNITY::rhi::GraphicsAPI api ):
 		IFNITY::App( api ),
 		m_ManagerDevice( IFNITY::App::GetApp().GetDevicePtr() ),
-		m_camera(vec3(0.f, 1.0f, -1.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_camera(vec3(-19.f, 18.0f, -6.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener( &m_camera )
 	{
 		// Push layers including monitoring and GUI
@@ -231,24 +227,24 @@ public:
 		auto vSceneconfig = IFNITY::readSceneConfig( "data/sceneconverter.json" );
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 
+		#define BISTRO  0
+		#define SPONZA  4
+		#define SANMIGUEL 5
+
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 0 ].fileName,
+			.filePath = vSceneconfig[ SPONZA ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 0 ]
-
-
-
-
+			.sceneConfig = vSceneconfig[ SPONZA ]
 		};
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder( 1 );
+		//MeshDataBuilderAssimp<rhi::VertexScene> builder( 1 );
 
-		builder.buildSceneData( meshAssimp );
+		//builder.buildSceneData( meshAssimp );
 
 		//Create a SceneObject with the data.
 		m_SceneObject = rdevice->CreateSceneObject( meshAssimp.sceneConfig.outputMesh.c_str(),
@@ -257,11 +253,6 @@ public:
 
 		//Create the m_SceneObject with the device
 		m_MeshObject = rdevice->CreateMeshObjectFromScene( m_SceneObject );
-
-
-
-		//auto files = vfs.ListFilesInCurrentDirectory("test");
-
 
 		IFNITY_LOG( LogApp, INFO, "START COMPILING INFO  " );
 
@@ -286,7 +277,7 @@ public:
 			descShader.NoCompile = false;
 			descShader.EntryPoint = L"PSMain";
 			descShader.Profile = L"ps_6_6";
-			descShader.Type = ShaderType::PIXEL_SHADER;
+			descShader.Type = ShaderType::PIXEL_SHADER;	
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
 			descShader.Flags = ShaderCompileFlagType::ENABLE_DEBUG_INFO;
 			m_ps->SetShaderDescription( descShader );
@@ -327,18 +318,13 @@ public:
 
 			gdesc.SetVertexShader(m_vs.get())
 				.SetPixelShader(m_ps.get())
-				.SetVertexInput(vertexInput);
+				.AddDebugName("Solid Pipeline")
+				.SetVertexInput(vertexInput)
+				.SetRasterizationState({ .cullMode = rhi::CullModeType::None ,.polygonMode = rhi::PolygonModeType::Fill })
+				.SetRenderState({ .depthTest = true, .depthFormat = Format::Z_FLOAT32 });
 
-			RasterizationState rasterizationState;
-			rasterizationState.cullMode = rhi::CullModeType::FrontAndBack;
-
-
-
-
+			
 			m_pipeline = rdevice->CreateGraphicsPipeline( gdesc );
-
-
-
 
 
 			BufferDescription bufferDesc;
@@ -367,31 +353,22 @@ public:
 		timeStamp = newTimeStamp;
 		m_FpsCounter.tick(deltaSeconds);
 
+		//Get Rdevice and ratio image. 
 		auto* rdevice = m_ManagerDevice->GetRenderDevice();
 		float ratio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 
-
+		//Update camera values
 		const mat4 m(glm::scale(mat4(1.0f), vec3(1.f)));
 		const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
 		const mat4 mvp = p * m_camera.getViewMatrix() * m;
 
-
 		////StartRecording
 		rdevice->StartRecording();
-		rdevice->WriteBuffer(m_PushConnstant, &mvp, sizeof(mvp));
 
-		m_MeshObject->DrawIndirect();
-
-
-
+			rdevice->WriteBuffer(m_PushConnstant, &mvp, sizeof(mvp));
+			m_MeshObject->DrawIndirect();
 
 		rdevice->StopRecording();
-
-
-
-
-
-
 	}
 
 	void Animate() override
@@ -422,7 +399,6 @@ IFNITY::App* IFNITY::CreateApp()
 {
 	auto api = IFNITY::rhi::GraphicsAPI::D3D12;
 
-	//return new Source_TestD3D12(api);
 	return new Source( api );
 }
 

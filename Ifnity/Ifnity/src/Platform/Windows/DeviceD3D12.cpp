@@ -18,9 +18,9 @@
 
 
 
-
-#pragma comment(lib, "d3d12.lib")
-#pragma comment(lib, "dxgi.lib")
+//
+//#pragma comment(lib, "d3d12.lib")
+//#pragma comment(lib, "dxgi.lib")
 IFNITY_NAMESPACE
 
 using namespace DirectX;
@@ -454,19 +454,37 @@ bool DeviceD3D12::InitInternalInstance()
 	UINT debugFlags = 0;
 
 	// Enable the D3D12 debug layer.
+	// Enable the D3D12 debug layer.
+	#ifdef _DEBUG
 	if( m_DeviceParams.enableDebugRuntime )
 	{
 		ComPtr<ID3D12Debug> debugController;
-		ThrowIfFailed( D3D12GetDebugInterface( IID_PPV_ARGS( OUT & debugController ) ) );
+		ThrowIfFailed( D3D12GetDebugInterface( IID_PPV_ARGS( OUT &debugController ) ) );
+
 		debugController->EnableDebugLayer();
 		debugFlags = DXGI_CREATE_FACTORY_DEBUG;
-		IFNITY_LOG( LogCore, TRACE, "Enable Debug Layer D3D12" );
 
+		// Intentar habilitar validación adicional
+		ComPtr<ID3D12Debug1> debugController1;
+		if( SUCCEEDED(debugController.As(&debugController1)) )
+		{
+			debugController1->SetEnableGPUBasedValidation(TRUE);
+			debugController1->SetEnableSynchronizedCommandQueueValidation(TRUE);
+			IFNITY_LOG(LogCore, TRACE, "Enabled GPU-Based Validation and Synchronized Queue Validation.");
+			OutputDebugStringA("Hello from D3D12 debug layer\n");
+		}
+		else
+		{
+			IFNITY_LOG(LogCore, WARNING, "ID3D12Debug1 not available — skipping extended validation.");
+		}
+
+		IFNITY_LOG(LogCore, TRACE, "Enable Debug Layer D3D12");
+
+		
 		ReportLiveObjects();
-		#if defined(_DEBUG)
-		ReportLiveObjects();
-		#endif
+		
 	}
+	#endif
 
 	//Build the DXGI Factory
 	if( !dxgiFactory4 )
@@ -478,6 +496,17 @@ bool DeviceD3D12::InitInternalInstance()
 						"For more info, get log from debug D3D runtime: (1) Install DX SDK, and enable Debug D3D from DX Control Panel Utility. (2) Install and start DbgView. (3) Try running the program again.\n" );
 			return false;
 		}
+	}
+
+	ComPtr<ID3D12Debug> debugController;
+	HRESULT hr = D3D12GetDebugInterface(IID_PPV_ARGS(&debugController));
+	if (SUCCEEDED(hr))
+	{
+		IFNITY_LOG(LogCore, WARNING, "WARNING: D3D12 Debug Layer still active!");
+	}
+	else
+	{
+		IFNITY_LOG(LogCore, INFO, "Debug Layer is not active");
 	}
 
 	return true;
@@ -493,42 +522,77 @@ bool DeviceD3D12::ConfigureSpecificHintsGLFW() const
 bool DeviceD3D12::InitializeDeviceAndContext()
 {
 
-	int adapterIndex = 0;
-	//Enumerate the adapters and select the first one, normally the primary adapter is Hardware Device.
-	if( FAILED( dxgiFactory4->EnumAdapters( adapterIndex, OUT & m_DxgiAdapter ) ) )
-	{
-		if( adapterIndex == 0 )
-			IFNITY_LOG( LogCore, ERROR, "Cannot find any DXGI adapters in the system. D3D12" );
-		else
-			//IFNITY_LOG(LogCore, ERROR, "The specified DXGI adapter %d does not exist. D3D12", adapterIndex);
+	ComPtr<IDXGIAdapter> nvidiaAdapter = nullptr;
+	ComPtr<IDXGIAdapter> secondAdapter = nullptr;
+	ComPtr<IDXGIAdapter> currentAdapter = nullptr;
+	DXGI_ADAPTER_DESC desc;
+	UINT adapterIndex = 0;
+	bool foundNvidia = false;
+	bool foundSecond = false;
 
-			return false;
+	// Enumerar todos los adaptadores
+	while( dxgiFactory4->EnumAdapters( adapterIndex, &currentAdapter ) != DXGI_ERROR_NOT_FOUND )
+	{
+		currentAdapter->GetDesc( &desc );
+		if( desc.VendorId == 0x10DE && !foundNvidia )
+		{ // NVIDIA
+			nvidiaAdapter = currentAdapter;
+			foundNvidia = true;
+		}
+		else if( !foundSecond )
+		{
+			secondAdapter = currentAdapter;
+			foundSecond = true;
+		}
+		currentAdapter.Reset();
+		++adapterIndex;
 	}
 
+	if( nvidiaAdapter )
 	{
-		DXGI_ADAPTER_DESC aDesc;
-		m_DxgiAdapter->GetDesc( &aDesc );
-		m_IsNvidia = rhi::IsNvDeviceID( aDesc.VendorId );
+		m_DxgiAdapter = nvidiaAdapter;
+		m_DxgiAdapter->GetDesc( &desc );
+		std::wstring adapterName(desc.Description);
+		std::string adapterNameStr(adapterName.begin(), adapterName.end());
+		IFNITY_LOG( LogCore, INFO, "Init  with GPU NVIDIA: " + adapterNameStr );
 	}
-
-	//Create the D3D12 device
-	HRESULT result = D3D12CreateDevice(
-		IN m_DxgiAdapter.Get(),
-		IN m_DeviceParams.featureLevel,
-		IID_PPV_ARGS( OUT & m_Device ) );
-
-
-
-	// Fallback to WARP device.
-	if( FAILED( result ) )
+	else if( secondAdapter )
 	{
+		m_DxgiAdapter = secondAdapter;
+		m_DxgiAdapter->GetDesc( &desc );
+		std::wstring adapterName(desc.Description);
+		std::string adapterNameStr(adapterName.begin(), adapterName.end());
+		IFNITY_LOG( LogCore, INFO, "Init with Second GPU : " + adapterNameStr );
+	}
+	else
+	{
+		IFNITY_LOG( LogCore, WARNING, "NOT PHYSICAL GPU , USING WARP (software)." );
 		ComPtr<IDXGIAdapter> pWarpAdapter;
 		ThrowIfFailed( dxgiFactory4->EnumWarpAdapter( IID_PPV_ARGS( &pWarpAdapter ) ) );
+		m_DxgiAdapter = pWarpAdapter;
+		// No hay descripción legible para WARP
+	}
 
+	m_IsNvidia = (desc.VendorId == 0x10DE);
+
+	// Crear el dispositivo D3D12
+	HRESULT result = D3D12CreateDevice(
+		m_DxgiAdapter.Get(),
+		m_DeviceParams.featureLevel,
+		IID_PPV_ARGS( &m_Device )
+	);
+
+	// Si falla con el adaptador físico, intenta con WARP
+	if( FAILED( result ) )
+	{
+		IFNITY_LOG( LogCore, WARNING, "Fail craeting physical device, try to use warp.." );
+		ComPtr<IDXGIAdapter> pWarpAdapter;
+		ThrowIfFailed( dxgiFactory4->EnumWarpAdapter( IID_PPV_ARGS( &pWarpAdapter ) ) );
 		ThrowIfFailed( D3D12CreateDevice(
-			IN pWarpAdapter.Get(),
-			IN D3D_FEATURE_LEVEL_11_0,
-			IID_PPV_ARGS( OUT & m_Device ) ) );
+			pWarpAdapter.Get(),
+			D3D_FEATURE_LEVEL_11_0,
+			IID_PPV_ARGS( &m_Device )
+		) );
 	}
 
 	LogD3D12DeviceCapabilities( m_Device.Get() );
@@ -594,22 +658,14 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 	LogAdaptersD3D12();
 
 	#endif
-	// Create Fence and obtain descriptor sizes.
 	CreateFenceAndDescriptorSizes();
-	// Create CommandQueue 
 	CreateCommandQueue();
-	//Create SwapChain
 	CreateImmediateCommands();
 	CreateRtvAndDsvDescriptorHeaps();
 	CreateSwapChain();
-	//Crate RTV and DSV Descriptor Heaps
 	CreateDefaultSampler();
-
-
 	LoadAssetDemo();
-
 	OnResize();
-
 	CaptureD3D12DebugMessages();
 
 	//Ok try to create the DeviceHandle 
@@ -617,7 +673,6 @@ bool DeviceD3D12::InitializeDeviceAndContext()
 
 	stagingDevice_ = std::make_unique<D3D12::D3D12StagingDevice>( *this );
 
-	//
 
 	return true;
 }

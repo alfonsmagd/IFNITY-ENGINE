@@ -316,6 +316,10 @@ public:
 			int w, h, comp;
 			const uint8_t* img = stbi_load("data/diffuse_madera.jpg", &w, &h, &comp, 4);
 
+
+
+
+
 			if( !img )
 			{
 				IFNITY_LOG(LogApp, ERROR, "Failed to load image");

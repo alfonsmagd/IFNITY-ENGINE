@@ -41,11 +41,11 @@ struct IFNITY_API ScissorRect
 
 struct IFNITY_API RasterizationState
 {
-	rhi::PrimitiveType primitiveType = rhi::PrimitiveType::TriangleList;
-	rhi::CullModeType cullMode = rhi::CullModeType::FrontAndBack;
-	rhi::FrontFaceType frontFace = rhi::FrontFaceType::CounterClockwise;
-	rhi::FillModeType fillMode = rhi::FillModeType::None;
-	rhi::PolygonModeType polygonMode = rhi::PolygonModeType::Fill;
+	rhi::PrimitiveType primitiveType	= rhi::PrimitiveType::TriangleList;
+	rhi::CullModeType cullMode			= rhi::CullModeType::FrontAndBack;
+	rhi::FrontFaceType frontFace		= rhi::FrontFaceType::CounterClockwise;
+	rhi::FillModeType fillMode			= rhi::FillModeType::None;
+	rhi::PolygonModeType polygonMode	= rhi::PolygonModeType::Fill;
 };
 
 struct IFNITY_API SpecializationConstantState
@@ -66,14 +66,14 @@ struct IFNITY_API BlendState
 	//Todo: if the user use vkconfiguration --> pass in opengl configuration based. 
 	//Todo: if the user uses opengl configuration --> pass in vkconfiguration based.
 	bool        blendEnable = false;
-	rhi::BlendFactor srcBlend = rhi::BlendFactor::SRC_ALPHA;
-	rhi::BlendFactor dstBlend = rhi::BlendFactor::ONE_MINUS_SRC_ALPHA;
+	rhi::BlendFactor srcBlend            = rhi::BlendFactor::SRC_ALPHA;
+	rhi::BlendFactor dstBlend            = rhi::BlendFactor::ONE_MINUS_SRC_ALPHA;
 	rhi::BlendFactor srcAlphaBlendFactor = rhi::BlendFactor::SRC_ALPHA;
 	rhi::BlendFactor dstAlphaBlendFactor = rhi::BlendFactor::ONE_MINUS_SRC_ALPHA;
-	rhi::BlendFactor alphaBlendOp = rhi::BlendFactor::OPERATION_ADD;
+	rhi::BlendFactor alphaBlendOp        = rhi::BlendFactor::OPERATION_ADD;
 	rhi::BlendFactor srcColorBlendFactor = rhi::BlendFactor::SRC_ALPHA;
 	rhi::BlendFactor dstColorBlendFactor = rhi::BlendFactor::ZERO;
-	rhi::BlendFactor colorBlendOp = rhi::BlendFactor::OPERATION_ADD;
+	rhi::BlendFactor colorBlendOp        = rhi::BlendFactor::OPERATION_ADD;
 
 	constexpr BlendState& setBlendEnable(bool enable) { blendEnable = enable; return *this; }
 	constexpr BlendState& enableBlend() { blendEnable = true; return *this; }
@@ -95,7 +95,7 @@ struct IFNITY_API RenderState
 	bool depthTest = false;
 	bool depthWrite = false;
 	bool stencil = false;
-	rhi::Format depthFormat = rhi::Format::UNKNOWN;
+	rhi::Format depthFormat   = rhi::Format::UNKNOWN;
 	rhi::Format stencilFormat = rhi::Format::UNKNOWN;
 	BlendState blendState;
 };
@@ -114,16 +114,15 @@ struct IFNITY_API StencilState
 
 struct IFNITY_API GraphicsPipelineDescription
 {
-	const char* debugName = "";
-
+	
 	RasterizationState rasterizationState;
 	RenderState renderState;
 	std::vector<SpecializationConstantState> specInfo;
 	rhi::VertexInput         vertexInput;
-
 	IShader* vs = nullptr;
 	IShader* ps = nullptr;
 	IShader* gs = nullptr;
+	const char* debugName = "";
 
 	GraphicsPipelineDescription& SetVertexShader(IShader* shader)
 	{

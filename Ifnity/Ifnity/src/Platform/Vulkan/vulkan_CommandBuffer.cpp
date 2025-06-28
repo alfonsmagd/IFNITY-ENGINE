@@ -104,7 +104,7 @@ namespace Vulkan
 		framebuffer_ = fb;
 
 		//2. transition all the color attachments and depth-stencil attachment
-			// transition all the color attachments
+		// transition all the color attachments
 		for( uint32_t i = 0; i != numFbColorAttachments; i++ )
 		{
 			if( const auto handle = fb.color[ i ].texture )
@@ -128,11 +128,11 @@ namespace Vulkan
 			IFNITY_ASSERT_MSG(depthImg.vkImageFormat_ != VK_FORMAT_UNDEFINED, "Invalid depth attachment format");
 			const VkImageAspectFlags flags = depthImg.getImageAspectFlags();
 			depthImg.transitionLayout(wrapper_->cmdBuf_,
-									  VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-									  VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-									  VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // wait for all subsequent
-									  // operations
-									  VkImageSubresourceRange{ flags, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
+									   VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+									   VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+									   VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, // wait for all subsequent
+									   // operations
+									   VkImageSubresourceRange{ flags, 0, VK_REMAINING_MIP_LEVELS, 0, VK_REMAINING_ARRAY_LAYERS });
 		}
 
 		VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
@@ -170,27 +170,27 @@ namespace Vulkan
 			samples = colorTexture.vkSamples_;
 			colorAttachments[ i ] =
 			{
-				 .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-				 .pNext = nullptr,
-				 .imageView = colorTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descColor.level, descColor.layer),
-				 .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-				 .resolveMode = (samples > 1) ? VK_RESOLVE_MODE_AVERAGE_BIT : VK_RESOLVE_MODE_NONE,
-				 .resolveImageView = VK_NULL_HANDLE,
-				 .resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-				 .loadOp = loadOpToVkAttachmentLoadOp(descColor.loadOp),
-				 .storeOp = storeOpToVkAttachmentStoreOp(descColor.storeOp),
-				 .clearValue =
-					  {.color = {.float32 = {descColor.clearColor[ 0 ], descColor.clearColor[ 1 ], descColor.clearColor[ 2 ], descColor.clearColor[ 3 ]}}},
+				.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+				.pNext = nullptr,
+				.imageView = colorTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descColor.level, descColor.layer),
+				.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+				.resolveMode = (samples > 1) ? VK_RESOLVE_MODE_AVERAGE_BIT : VK_RESOLVE_MODE_NONE,
+				.resolveImageView = VK_NULL_HANDLE,
+				.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+				.loadOp = loadOpToVkAttachmentLoadOp(descColor.loadOp),
+				.storeOp = storeOpToVkAttachmentStoreOp(descColor.storeOp),
+				.clearValue =
+				{.color = {.float32 = {descColor.clearColor[ 0 ], descColor.clearColor[ 1 ], descColor.clearColor[ 2 ], descColor.clearColor[ 3 ]}}},
 			};
 			// handle MSAA 
 			/*if(descColor.storeOp == StoreOp_MsaaResolve)
 			{
-				_ASSERT(samples > 1);
-				_ASSERT_MSG(!attachment.resolveTexture.empty(), "Framebuffer attachment should contain a resolve texture");
-				::VulkanImage& colorResolveTexture = *ctx_->texturesPool_.get(attachment.resolveTexture);
-				colorAttachments[ i ].resolveImageView =
-					colorResolveTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descColor.level, descColor.layer);
-				colorAttachments[ i ].resolveImageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			_ASSERT(samples > 1);
+			_ASSERT_MSG(!attachment.resolveTexture.empty(), "Framebuffer attachment should contain a resolve texture");
+			::VulkanImage& colorResolveTexture = *ctx_->texturesPool_.get(attachment.resolveTexture);
+			colorAttachments[ i ].resolveImageView =
+			colorResolveTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descColor.level, descColor.layer);
+			colorAttachments[ i ].resolveImageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 			}*/
 		}
 
@@ -204,27 +204,27 @@ namespace Vulkan
 			const RenderPass::AttachmentDesc& descDepth = renderPass.depth;
 			IFNITY_ASSERT_MSG(descDepth.level == mipLevel, "Depth attachment should have the same mip-level as color attachments");
 			depthAttachment = {
-				 .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
-				 .pNext = nullptr,
-				 .imageView = depthTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descDepth.level, descDepth.layer),
-				 .imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-				 .resolveMode = VK_RESOLVE_MODE_NONE,
-				 .resolveImageView = VK_NULL_HANDLE,
-				 .resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-				 .loadOp = loadOpToVkAttachmentLoadOp(descDepth.loadOp),
-				 .storeOp = storeOpToVkAttachmentStoreOp(descDepth.storeOp),
-				 .clearValue = {.depthStencil = {.depth = descDepth.clearDepth, .stencil = descDepth.clearStencil}},
+				.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+				.pNext = nullptr,
+				.imageView = depthTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descDepth.level, descDepth.layer),
+				.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+				.resolveMode = VK_RESOLVE_MODE_NONE,
+				.resolveImageView = VK_NULL_HANDLE,
+				.resolveImageLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+				.loadOp = loadOpToVkAttachmentLoadOp(descDepth.loadOp),
+				.storeOp = storeOpToVkAttachmentStoreOp(descDepth.storeOp),
+				.clearValue = {.depthStencil = {.depth = descDepth.clearDepth, .stencil = descDepth.clearStencil}},
 			};
 			// handle depth MSAA
 			/*if(descDepth.storeOp == StoreOp_MsaaResolve)
 			{
-				_ASSERT(depthTexture.vkSamples_ == samples);
-				const ::Framebuffer::AttachmentDesc& attachment = fb.depthStencil;
-				_ASSERT_MSG(!attachment.resolveTexture.empty(), "Framebuffer depth attachment should contain a resolve texture");
-				::VulkanImage& depthResolveTexture = *ctx_->texturesPool_.get(attachment.resolveTexture);
-				depthAttachment.resolveImageView = depthResolveTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descDepth.level, descDepth.layer);
-				depthAttachment.resolveImageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-				depthAttachment.resolveMode = VK_RESOLVE_MODE_AVERAGE_BIT;
+			_ASSERT(depthTexture.vkSamples_ == samples);
+			const ::Framebuffer::AttachmentDesc& attachment = fb.depthStencil;
+			_ASSERT_MSG(!attachment.resolveTexture.empty(), "Framebuffer depth attachment should contain a resolve texture");
+			::VulkanImage& depthResolveTexture = *ctx_->texturesPool_.get(attachment.resolveTexture);
+			depthAttachment.resolveImageView = depthResolveTexture.getOrCreateVkImageViewForFramebuffer(*ctx_, descDepth.level, descDepth.layer);
+			depthAttachment.resolveImageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			depthAttachment.resolveMode = VK_RESOLVE_MODE_AVERAGE_BIT;
 			}*/
 			const VkExtent3D dim = depthTexture.vkExtent_;
 			if( fbWidth )
@@ -251,16 +251,16 @@ namespace Vulkan
 
 		//5. Rendering Info Creation and binding differents RenderingInfos.
 		const VkRenderingInfo renderingInfo = {
-			 .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
-			 .pNext = nullptr,
-			 .flags = 0,
-			 .renderArea = {VkOffset2D{(int32_t)scissor.x, (int32_t)scissor.y}, VkExtent2D{scissor.width, scissor.height}},
-			 .layerCount = 1,
-			 .viewMask = 0,
-			 .colorAttachmentCount = numFbColorAttachments,
-			 .pColorAttachments = colorAttachments,
-			 .pDepthAttachment = fb.depthStencil.texture ? &depthAttachment : nullptr,
-			 .pStencilAttachment = isStencilFormat ? &stencilAttachment : nullptr,
+			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+			.pNext = nullptr,
+			.flags = 0,
+			.renderArea = {VkOffset2D{(int32_t)scissor.x, (int32_t)scissor.y}, VkExtent2D{scissor.width, scissor.height}},
+			.layerCount = 1,
+			.viewMask = 0,
+			.colorAttachmentCount = numFbColorAttachments,
+			.pColorAttachments = colorAttachments,
+			.pDepthAttachment = fb.depthStencil.texture ? &depthAttachment : nullptr,
+			.pStencilAttachment = isStencilFormat ? &stencilAttachment : nullptr,
 		};
 
 		cmdBindViewport(viewport);

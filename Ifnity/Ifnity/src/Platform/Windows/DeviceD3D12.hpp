@@ -205,7 +205,7 @@ public:
 
 	struct DeviceParams
 	{
-		D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_0;
+		D3D_FEATURE_LEVEL featureLevel = D3D_FEATURE_LEVEL_12_2;
 		bool enableDebugRuntime = true;
 	} m_DeviceParams;
 

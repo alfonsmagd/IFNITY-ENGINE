@@ -257,7 +257,7 @@ public:
 	Source(IFNITY::rhi::GraphicsAPI api):
 		IFNITY::App(api),
 		m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr()),
-		m_camera(vec3(35.f, 0.5f, -10.f), vec3(-1.0f, -90, -1.0f), vec3(0.0f, 1.0f, 0.0f)),
+		m_camera(vec3(-19.f, 18.0f, -6.5f), vec3(0.f, -0.5f, -0.0f), vec3(0.0f, 1.0f, 0.0f)),
 		m_CameraListener(&m_camera)
 	{
 		m_ImGuiLayer = new ImGuiTestLayer();
@@ -366,16 +366,16 @@ public:
 
 		MeshObjectDescription meshAssimp =
 		{
-			.filePath = vSceneconfig[ 0 ].fileName,
+			.filePath = vSceneconfig[ 4 ].fileName,
 			.isLargeMesh = true,
 			.isGeometryModel = false,
 			.meshData = MeshData{},
 			.meshFileHeader = MeshFileHeader{},
 			.meshDataBuilder = nullptr,
-			.sceneConfig = vSceneconfig[ 0 ]
+			.sceneConfig = vSceneconfig[ 4 ]
 		};
 
-		MeshDataBuilderAssimp<rhi::VertexScene> builder(0.01);
+		//MeshDataBuilderAssimp<rhi::VertexScene> builder(0.01);
 
 		//builder.buildSceneData(meshAssimp);
 
@@ -400,13 +400,16 @@ public:
 		timeStamp = newTimeStamp;
 		m_FpsCounter.tick(deltaSeconds);
 
-		m_GraphicsPipeline[ GRID ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
+		//m_GraphicsPipeline[ GRID ]->BindPipeline(m_ManagerDevice->GetRenderDevice());
 
 		float aspectRatio = m_ManagerDevice->GetWidth() / static_cast<float>(m_ManagerDevice->GetHeight());
 		//IFNITY_LOG(LogApp, INFO, "Mesh loaded, ready to render");
 
-		const mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+		const mat4 p = glm::perspective(glm::radians(60.0f), aspectRatio, 0.1f, 1000.0f);
 		const mat4 view = m_camera.getViewMatrix();
+
+		
+		//const mat4 p = glm::perspective(glm::radians(60.0f), ratio, 0.1f, 1000.0f);
 
 		const PerFrameData perFrameData = { .view = view, .proj = p, .cameraPos = glm::vec4(m_camera.getPosition(), 1.0f) };
 
@@ -426,7 +429,7 @@ public:
 		desc.indices = nullptr;
 		desc.isIndexed = false;
 
-		m_ManagerDevice->GetRenderDevice()->Draw(desc);
+		//m_ManagerDevice->GetRenderDevice()->Draw(desc);
 
 
 		//Change the Pipeline to render the Scene

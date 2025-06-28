@@ -44,13 +44,13 @@ set(EXAMPLE_DIRS
     #d3d12_test_scene
     #d3d12_SceneDebug
     #Simple_Texture
-    #scene_materials
+    scene_materials
     #Geometry_Mesh
     #glslang_vk_test
     #bufferVulkan
     #Texture_Sample
     #camera_mesh_vk
-    #SceneVk
+    SceneVk
 )
 
 foreach(EXAMPLE ${EXAMPLE_DIRS})

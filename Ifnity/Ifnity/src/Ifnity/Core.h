@@ -7,7 +7,7 @@
 
 
 
-#define SANDBOX_TOOL 
+//#define SANDBOX_TOOL 
 #define VMA_ALLOCATOR_VK 1
 #define D3D12VMA_ALLOCATOR 1
 

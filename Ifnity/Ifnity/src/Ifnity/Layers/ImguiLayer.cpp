@@ -49,9 +49,6 @@ void ImguiLayer::ConnectToEventBusImpl(void* bus)
 	{
 		IFNITY_LOG(LogApp, ERROR, "The pointer is not type IFNITY::GLFWEventSource*");
 	}
-
-
-
 }
 
 //TODO : If exist more functions, translate this switch case to extern global function OpenGl to easy maintenance.

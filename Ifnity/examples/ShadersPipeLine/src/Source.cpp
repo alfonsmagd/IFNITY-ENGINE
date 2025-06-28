@@ -1023,10 +1023,14 @@ float4 main_ps(VSOutput input) : SV_Target
 			DescriptionShader.Profile = L"vs_6_0";
 			DescriptionShader.Type = ShaderType::VERTEX_SHADER;
 			DescriptionShader.Flags = ShaderCompileFlagType::DEFAULT_FLAG;
+			DescriptionShader.APIflag = ShaderAPIflag::ALL_API;
 			DescriptionShader.ShaderSource = shaderSource3;
 			DescriptionShader.FileName = "vsTriangle";
 			m_vs->SetShaderDescription(DescriptionShader);
 		}
+		ShaderCompiler::CompileShader(m_vs.get());
+
+
 		{
 			DescriptionShader.EntryPoint = L"main_ps";
 			DescriptionShader.Profile = L"ps_6_0";
@@ -1037,7 +1041,7 @@ float4 main_ps(VSOutput input) : SV_Target
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
 
-		ShaderCompiler::CompileShader(m_vs.get());
+
 		ShaderCompiler::CompileShader(m_ps.get());
 
 
