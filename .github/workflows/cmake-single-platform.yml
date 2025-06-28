@@ -1,4 +1,3 @@
-
 name: C++/C CMake (Debug, safe build in C:\temp)
 
 on:
@@ -11,7 +10,7 @@ env:
   BUILD_TYPE: Debug
 
 jobs:
-  build:
+  cmake-configure-only:
     runs-on: windows-latest
 
     steps:
@@ -28,7 +27,7 @@ jobs:
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
 
-    - name: Ensure clean C:\temp\ifnity_build directory
+    - name: Ensure clean C:\temp\ifnity_build
       shell: pwsh
       run: |
         $buildPath = "C:\temp\ifnity_build"
@@ -36,18 +35,9 @@ jobs:
           Write-Host "Removing previous build directory: $buildPath"
           Remove-Item $buildPath -Recurse -Force
         }
+        Write-Host "Creating clean build directory: $buildPath"
         New-Item -ItemType Directory -Path $buildPath | Out-Null
-    - name: Configure CMake (Debug)
-      run: cmake -S ${{ github.workspace }}/Ifnity -B C:\temp\ifnity_build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug
 
-    - name: Final safety check
-      shell: pwsh
+    - name: Configure CMake (Debug)
       run: |
-        $debugPath = "C:\temp\ifnity_build\Debug"
-        if (Test-Path $debugPath) {
-          $item = Get-Item $debugPath
-          if (-not $item.PSIsContainer) {
-            Write-Host "Deleting file: $debugPath"
-            Remove-Item $debugPath -Force
-          }
-        }
+        cmake -S ${{ github.workspace }}/Ifnity `
