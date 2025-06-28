@@ -86,7 +86,7 @@ find_file(NVML_LIBRARY
 )
 
 if(NOT NVML_LIBRARY)
-    message(STATUS "nvml.dll no se encontrÛ en el sistema.")
+    message(STATUS "nvml.dll no se encontr√≥ en el sistema.")
 else()
     message(STATUS "nvml.dll encontrado: ${NVML_LIBRARY}")
 endif()
@@ -126,7 +126,7 @@ ASSIGN_VENDOR_FOLDER(glslang)
 # Include directories
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
-# La lÌnea siguiente ya no es necesaria porque add_subdirectory se encargar· de incluir los directorios necesarios
+# La l√≠nea siguiente ya no es necesaria porque add_subdirectory se encargar√° de incluir los directorios necesarios
 # include_directories(${PROJECT_SOURCE_DIR}/vendor/glfw/include)
 include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
 #include nvml directory
@@ -241,7 +241,7 @@ if(NVML_LIBRARY)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${NVML_LIB_PATH})
 else()
     # nvml.dll no fue encontrado
-    message(STATUS "nvml.dll no fue encontrado. nvml.lib no ser· enlazado.")
+    message(STATUS "nvml.dll no fue encontrado. nvml.lib no ser√° enlazado.")
 endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -270,8 +270,10 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS IFNIT
 # Configurations
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist")
 
-# Antes de definir las propiedades del target, establece las banderas del enlazador para la configuraciÛn Dist
+# Antes de definir las propiedades del target, establece las banderas del enlazador para la configuraci√≥n Dist
 set(CMAKE_SHARED_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
+set(CMAKE_EXE_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
+set(CMAKE_MODULE_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
 
 
 
