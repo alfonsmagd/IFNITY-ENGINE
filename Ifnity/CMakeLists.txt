@@ -57,3 +57,6 @@ foreach(EXAMPLE ${EXAMPLE_DIRS})
     add_subdirectory("${EXAMPLES_BASE_PATH}/${EXAMPLE}" "${CMAKE_BINARY_DIR}/${EXAMPLE}")
     set_target_properties(${EXAMPLE} PROPERTIES FOLDER "Examples")
 endforeach()
+
+unset(CMAKE_EXE_LINKER_FLAGS_DIST CACHE)
+set(CMAKE_EXE_LINKER_FLAGS_DIST "")
