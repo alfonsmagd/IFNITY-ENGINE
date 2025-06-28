@@ -27,9 +27,18 @@ jobs:
         vulkan-components: Vulkan-Headers, Vulkan-Loader
         vulkan-use-cache: true
 
-    - name: Configure CMake
-      run: cmake -S ${{github.workspace}}/Ifnity -B ${{github.workspace}}/Ifnity/build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} 
+    - name: Configure CMake (Visual Studio 2022, x64)
+      run: |
+        cmake -S ${{github.workspace}}/Ifnity `
+              -B ${{github.workspace}}/Ifnity/build `
+              -G "Visual Studio 17 2022" `
+              -A x64
 
+    - name: Build (Debug)
+      run: |
+        cmake --build ${{github.workspace}}/Ifnity/build --config Debug
 
-    - name: Build
-      run: cmake --build ${{github.workspace}}/Ifnity/build --config ${{env.BUILD_TYPE}}
+    - name: Test (Optional)
+      if: success()
+      run: |
+        ctest --test-dir ${{github.workspace}}/Ifnity/build --build-config Debug --output-on-failure
