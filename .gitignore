@@ -141,3 +141,8 @@ yarn-error.log
 /Logos
 /Ifnity/Ifnity/vendor/imgui/examples
 /data
+
+#not ignore 
+# Unignore AgilitySDK folder and its contents
+!Ifnity/Ifnity/vendor/AgilitySDK/
+!Ifnity/Ifnity/vendor/AgilitySDK/**
