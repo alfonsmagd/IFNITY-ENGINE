@@ -419,7 +419,7 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 	}
 
 
-	if( description.APIflag == ShaderAPIflag::ONLY_HLSL )
+	if( description.APIflag >= ShaderAPIflag::ONLY_HLSL )
 	{
 		//Check if a vertex shader o pixel shader
 		if( description.Type == ShaderType::VERTEX_SHADER )
@@ -446,7 +446,6 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 		if( !GetBlobFromFile(description.Filepath) )IFNITY_LOG(LogCore, ERROR, "Fail get load blob from file < " + description.Filepath);
 		#endif
 
-		return S_OK;
 	}
 
 
