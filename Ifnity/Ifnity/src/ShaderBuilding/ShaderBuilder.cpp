@@ -101,7 +101,8 @@ HRESULT ShaderCompiler::CompileShader(const std::wstring& shaderSource,
 		L"-E", entryPoint.c_str(),
 		L"-T", profile.c_str(),
 		L"-Zpr",
-		L"-spirv"
+		L"-spirv",
+		L"-I", L"."
 	};
 
 	DxcBuffer sourceBuffer;
@@ -419,7 +420,7 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 	}
 
 
-	if( description.APIflag == ShaderAPIflag::ONLY_HLSL )
+	if( description.APIflag >= ShaderAPIflag::ONLY_HLSL )
 	{
 		//Check if a vertex shader o pixel shader
 		if( description.Type == ShaderType::VERTEX_SHADER )

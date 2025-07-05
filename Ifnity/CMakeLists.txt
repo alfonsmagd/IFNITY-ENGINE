@@ -51,6 +51,7 @@ set(EXAMPLE_DIRS
     #Texture_Sample
     #camera_mesh_vk
     SceneVk
+    Triangle
 )
 
 foreach(EXAMPLE ${EXAMPLE_DIRS})

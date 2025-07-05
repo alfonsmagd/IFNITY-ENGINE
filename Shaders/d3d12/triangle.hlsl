@@ -8,7 +8,6 @@
 // PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
 //
 //*********************************************************
-#include "common.hlsl"
 
 struct PSInput
 {
@@ -28,5 +27,5 @@ PSInput VSMain(float4 position : POSITION, float4 color : COLOR)
 
 float4 PSMain(PSInput input) : SV_TARGET
 {
-	return constColor;
+    return input.color;
 }
