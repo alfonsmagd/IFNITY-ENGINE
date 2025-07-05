@@ -69,7 +69,7 @@ namespace D3D12
 		virtual ~Device() = default;
 
 
-		void Draw( DrawDescription& desc )override {};
+		void Draw( DrawDescription& desc )override;
 		GraphicsPipelineHandle CreateGraphicsPipeline( GraphicsPipelineDescription& desc ) override;
 		void WriteBuffer( BufferHandle& buffer, const void* data, size_t size, uint32_t offset = 0 ) override;
 		void BindingVertexAttributes( const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size ) override {};

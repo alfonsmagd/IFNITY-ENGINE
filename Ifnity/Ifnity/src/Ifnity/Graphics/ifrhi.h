@@ -227,6 +227,12 @@ namespace rhi
         UNKNOW = 0
     };
 
+    enum class ShaderFileMode : uint8_t
+    {
+        FILE,           /**< Text shader file mode */
+        BINARY,         /**< Binary shader file mode */
+	};
+
     /**
      * @enum TextureType
      * @brief Enum representing the dimension of texture.

@@ -18,8 +18,8 @@ struct IFNITY_API ViewPortState
 {
 	uint32_t x = 0.0f;
 	uint32_t y = 0.0f;
-	uint32_t width = 1200;
-	uint32_t height = 720;
+	uint32_t width = 0;
+	uint32_t height = 0;
 	uint32_t minDepth = 0;
 	uint32_t maxDepth = 1;
 

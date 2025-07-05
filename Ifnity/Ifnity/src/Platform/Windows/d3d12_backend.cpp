@@ -1071,7 +1071,17 @@ namespace D3D12
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
+	void Device::Draw(DrawDescription& desc)
+	{
+		//Only draw if m_managedPipeline its valid
+		if( !m_DeviceD3D12->actualPipeline_ )
+		{
+			IFNITY_LOG( LogCore, ERROR, "No pipeline is set for drawing" );
+			return;
+		}
+		GraphicsPipelineHandle pipeline = std::shared_ptr<GraphicsPipeline>( m_DeviceD3D12->actualPipeline_, [](GraphicsPipeline*){} );
+		DrawObject( pipeline, desc );
+	}
 
 
 	GraphicsPipelineHandle Device::CreateGraphicsPipeline( GraphicsPipelineDescription& desc )
