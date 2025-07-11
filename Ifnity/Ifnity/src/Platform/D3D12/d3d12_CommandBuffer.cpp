@@ -171,6 +171,10 @@ namespace D3D12
 			wrapper_->commandList->SetGraphicsRootSignature( ctx_->m_RootSignature.Get() );
 
 		}
+		else
+		{
+			IFNITY_LOG( LogCore, WARNING, "Pipeline already bound" );
+		}
 
 	}
 
