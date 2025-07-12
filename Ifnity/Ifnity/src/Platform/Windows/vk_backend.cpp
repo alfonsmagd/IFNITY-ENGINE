@@ -719,6 +719,17 @@ namespace Vulkan
 			IFNITY_LOG(LogCore, WARNING, "Texture usage is not set. Setting it to sampled.");
 			texdesc.usage = rhi::TextureUsageBits::SAMPLED;
 		}
+		// check if texture is depth the size have to be lower than bootstrap size limits swapchain
+		if(texdesc.isDepth && texdesc.width > m_DeviceVulkan->swapchainBootStraap_.extent.width)
+		{
+			texdesc.width = m_DeviceVulkan->swapchainBootStraap_.extent.width;
+			IFNITY_LOG( LogCore, WARNING, "Texture width is too high for depth texture. Setting it to the maximum possible value." );
+		}
+		if(texdesc.isDepth && texdesc.height > m_DeviceVulkan->swapchainBootStraap_.extent.height)
+		{
+			texdesc.height = m_DeviceVulkan->swapchainBootStraap_.extent.height;
+			IFNITY_LOG( LogCore, WARNING, "Texture height is too high for depth texture. Setting it to the maximum possible value." );
+		}
 
 		return true;
 	}
