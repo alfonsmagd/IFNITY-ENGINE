@@ -214,7 +214,7 @@ public:
 			descShader.NoCompile = false;
 			descShader.FileName = "triangle.hlsl";
 			descShader.EntryPoint = L"VSMain";
-			descShader.Profile = L"vs_6_0";
+			descShader.Profile = L"vs_6_6";
 			descShader.Type = ShaderType::VERTEX_SHADER;
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
 			descShader.Flags = ShaderCompileFlagType::OPTIMIZE_SIZE;
@@ -224,7 +224,7 @@ public:
 		{
 			descShader.NoCompile = false;
 			descShader.EntryPoint = L"PSMain";
-			descShader.Profile = L"ps_6_0";
+			descShader.Profile = L"ps_6_6";
 			descShader.Type = ShaderType::PIXEL_SHADER;
 			descShader.APIflag = ShaderAPIflag::ONLY_HLSL;
 			descShader.Flags = ShaderCompileFlagType::OPTIMIZE_SIZE;

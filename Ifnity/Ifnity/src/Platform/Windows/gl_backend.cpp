@@ -54,14 +54,15 @@ namespace OpenGL
 	void Device::Draw( DrawDescription& desc )
 	{
 
-		glViewport( desc.viewPortState.x,
+		/*glViewport( desc.viewPortState.x,
 					desc.viewPortState.y,
 					desc.viewPortState.width,
-					desc.viewPortState.height );
-
+					desc.viewPortState.height );*/
+		glBindVertexArray( m_VAO );
 		SetOpenGLRasterizationState( desc.rasterizationState );
-		if( desc.isIndexed )
+		if( desc.isIndexed || desc.drawMode == DRAW_INDEXED )
 		{
+			
 			glDrawElements( GL_TRIANGLES, desc.size, GL_UNSIGNED_INT, desc.indices );
 		}
 		else
@@ -136,6 +137,7 @@ namespace OpenGL
 
 		SetRenderState( desc.renderState );
 		pipeline->SetGraphicsPipelineDesc( desc );
+		pipeline->configureVertexAttributes();
 
 
 		return GraphicsPipelineHandle( pipeline );
@@ -160,6 +162,24 @@ namespace OpenGL
 			glBindBufferRange( GL_UNIFORM_BUFFER, desc.binding, perFrameDataBuffer, desc.offset, kBufferSize );
 			Buffer* buffer = new Buffer( perFrameDataBuffer, desc );
 			return  BufferHandle( buffer );
+
+		}
+		else if( desc.type == BufferType::INDEX_BUFFER )
+		{
+			return CreateVertexAttAndIndexBuffer( desc );
+		}
+		else if( desc.type == BufferType::VERTEX_BUFFER )
+		{
+			GLuint vertexBuffer;
+			glCreateBuffers( 1, &vertexBuffer );
+
+			const GLsizeiptr kBufferSize = desc.byteSize;
+			const void* data = desc.data ? desc.data : nullptr;
+
+			glNamedBufferStorage( vertexBuffer, kBufferSize, data, GL_DYNAMIC_STORAGE_BIT );
+
+			
+			return std::make_shared<Buffer>( vertexBuffer, desc );
 
 		}
 		else if( desc.type == BufferType::VERTEX_INDEX_BUFFER )
@@ -289,13 +309,27 @@ namespace OpenGL
 
 	void Device::BindingVertexAttributesBuffer( BufferHandle& bf )
 	{
-		IFNITY_LOG( LogApp, ERROR, "BindingVertexAttributesBuffer its not implemented" );
+		const GLuint vao = m_VAO;
+		const GLuint bufferID = bf->GetBufferID();
+		const GLsizeiptr size = bf->GetBufferDescription().byteSize;
+		const  GLintptr offset = bf->GetBufferDescription().offset;
+		const GLsizei stride = bf->GetBufferDescription().strideSize;
+
+		//only one binding buffer for now.
+		GLuint bindingIndex = bf->GetBufferDescription().binding;
+
+		glVertexArrayVertexBuffer( vao, bindingIndex, bufferID,offset,stride );
 	}
 
 	void Device::BindingIndexBuffer( BufferHandle& bf )
 	{
 
-		IFNITY_LOG( LogApp, ERROR, "BindingVertexAttributesBuffer its not implemented" );
+		const GLuint vao = m_VAO;
+		const GLuint bufferID = bf->GetBufferID();
+
+	    glVertexArrayElementBuffer( vao, bufferID );
+
+
 	}
 
 	/**
@@ -682,19 +716,16 @@ namespace OpenGL
 	*/
 	BufferHandle Device::CreateVertexAttAndIndexBuffer( const BufferDescription& desc )
 	{
+		GLuint indexBuffer;
+		glCreateBuffers(1, &indexBuffer);
+
 		const GLsizeiptr kBufferSize = desc.byteSize;
+		const void* data = desc.data;
 
-		//Create the buffer id 
-		GLuint meshData;
-		glCreateBuffers( 1, &meshData );
+		glNamedBufferStorage(indexBuffer, kBufferSize, data, 0);
 
-		//Create the buffer storage
-		glNamedBufferStorage( meshData, kBufferSize, nullptr, GL_DYNAMIC_STORAGE_BIT );
-		glVertexArrayElementBuffer( m_VAO, meshData ); // index buffer
-
-		Buffer* buffer = new Buffer( meshData, desc );
-
-		return BufferHandle( buffer );
+		
+		return std::make_shared<Buffer>( indexBuffer, desc );
 
 	}
 
@@ -801,12 +832,12 @@ namespace OpenGL
 
 	void GraphicsPipeline::configureVertexAttributes()
 	{
+		//For now only support one binding, all vertex attributes are bound to the same binding point, its binding 0.
 		const auto& vertexInput = m_Description.vertexInput;
 		IFNITY_ASSERT_MSG( vertexInput.getNumAttributes() <= rhi::VertexInput::VERTEX_ATTRIBUTES_MAX, "Too many attributes" );
 
 
 		const auto& inputElementCount = vertexInput.getNumAttributes();
-
 		glCreateVertexArrays(1, &m_VAO);
 
 		uint32_t stride = 0;
@@ -818,14 +849,6 @@ namespace OpenGL
 			if (attr.format >= rhi::Format::UNKNOWN)
 				continue;
 
-			const auto& binding = vertexInput.inputBindings[attr.binding];
-			if (!strideSet)
-			{
-				uint32_t bind = i;
-				stride = binding.stride;
-				glVertexArrayVertexBuffer(m_VAO, bind, 0, 0, stride); // asociar el layout al binding 0 (aunque aún no haya buffer)
-				strideSet = true;
-			}
 
 			uint32_t location = attr.location;
 			uint32_t offset   = static_cast<uint32_t>(attr.offset);
@@ -848,6 +871,12 @@ namespace OpenGL
 		if( gldev )
 		{
 			gldev->SetRenderState( m_Description.renderState );
+			
+			if(gldev->GetVAO() != this->m_VAO)
+			{
+				gldev->SetVAO(this->m_VAO);
+			}
+			
 			glUseProgram( m_Program.id );
 		}
 

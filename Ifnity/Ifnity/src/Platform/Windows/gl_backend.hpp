@@ -79,6 +79,7 @@ namespace OpenGL
 		
 		    GLuint GetVAO() const { return m_VAO; }
 			GLuint CreateVAO();
+			void  SetVAO( GLuint vao ) { m_VAO = vao; }
 		    TextureHandle CreateTexture2DImpl(TextureDescription& desc);
 			TextureHandle CreateTextureCubeMapImpl(TextureDescription& desc);
 	    	Program CreateProgram(const char* vertexShader, const char* fragmentShader);
@@ -87,21 +88,22 @@ namespace OpenGL
             BufferHandle CreateDefaultBuffer(int64 size, const void* data, uint32_t flags = 0);
 			BufferHandle CreateDefaultBoundBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags = 0);
             void GetMeshVAO(const std::string mesh);
-            void SetupVertexAttributes(GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes);
+            void SetupVertexAttributes( GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes );
 
 			
-            
-
-
+           
             Program m_Program; ///< The program used by the device.
 
 			GLuint       m_VAO; ///< The vertex array object used by the device DEFAULT VAO. 
 			BufferHandle m_VertexBuffer; ///< The vertex buffer used by the device.
 
+			
+
 			std::unordered_map<std::string_view, GLuint> m_MeshVAOs; ///< The buffers used by save VAO by ID Mesh.
             
             //Friend class 
             friend class MeshObject;
+			friend class GraphicsPipeline;
     };
 
 

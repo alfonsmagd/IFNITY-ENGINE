@@ -447,6 +447,7 @@ HRESULT ShaderCompiler::CompileShader(IShader* shader)
 		#endif
 
 		return S_OK;
+
 	}
 
 

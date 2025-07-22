@@ -24,33 +24,33 @@ namespace Vulkan
 	//  UTILS METHODS INSIDE FILE IMPLEMENTATION       //
 	//-------------------------------------------------//
 
-	bool validateImageLimits(VkImageType imageType,
-							 VkSampleCountFlagBits samples,
-							 const VkExtent3D& extent,
-							 const VkPhysicalDeviceLimits& limits
+	bool validateImageLimits( VkImageType imageType,
+							  VkSampleCountFlagBits samples,
+							  const VkExtent3D& extent,
+							  const VkPhysicalDeviceLimits& limits
 	)
 	{
 
-		if( samples != VK_SAMPLE_COUNT_1_BIT && !IFNITY_VERIFY(imageType == VK_IMAGE_TYPE_2D) )
+		if( samples != VK_SAMPLE_COUNT_1_BIT && !IFNITY_VERIFY( imageType == VK_IMAGE_TYPE_2D ) )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Sample count > 1 only supported for 2D images");
+			IFNITY_LOG( LogCore, ERROR, "Sample count > 1 only supported for 2D images" );
 			return false;
 		}
 
 		if( imageType == VK_IMAGE_TYPE_2D &&
-		   !IFNITY_VERIFY(extent.width <= limits.maxImageDimension2D &&
-						  extent.height <= limits.maxImageDimension2D) )
+			!IFNITY_VERIFY( extent.width <= limits.maxImageDimension2D &&
+							extent.height <= limits.maxImageDimension2D ) )
 		{
 
-			IFNITY_LOG(LogCore, ERROR, "2D texture size exceeded");
+			IFNITY_LOG( LogCore, ERROR, "2D texture size exceeded" );
 			return false;
 		}
 		if( imageType == VK_IMAGE_TYPE_3D &&
-		   !IFNITY_VERIFY(extent.width <= limits.maxImageDimension3D &&
-						  extent.height <= limits.maxImageDimension3D &&
-						  extent.depth <= limits.maxImageDimension3D) )
+			!IFNITY_VERIFY( extent.width <= limits.maxImageDimension3D &&
+							extent.height <= limits.maxImageDimension3D &&
+							extent.depth <= limits.maxImageDimension3D ) )
 		{
-			IFNITY_LOG(LogCore, ERROR, "3D texture size exceeded");
+			IFNITY_LOG( LogCore, ERROR, "3D texture size exceeded" );
 			return false;
 		}
 
@@ -67,39 +67,39 @@ namespace Vulkan
 	* @param range The range description to validate.
 	* @return true if the range is valid, false otherwise.
 	*/
-	bool validateRange(const VkExtent3D& ext, uint32_t numLevels, const TextureRangeDesc& range)
+	bool validateRange( const VkExtent3D& ext, uint32_t numLevels, const TextureRangeDesc& range )
 	{
 		bool isValidate = true;
 
-		if( !IFNITY_VERIFY(range.dimensions.width > 0 && range.dimensions.height > 0 || range.dimensions.depth > 0 || range.numLayers > 0 ||
-						   range.numMipLevels > 0) )
+		if( !IFNITY_VERIFY( range.dimensions.width > 0 && range.dimensions.height > 0 || range.dimensions.depth > 0 || range.numLayers > 0 ||
+							range.numMipLevels > 0 ) )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Invalid range dimensions");
+			IFNITY_LOG( LogCore, ERROR, "Invalid range dimensions" );
 			return false;
 		}
 		if( range.mipLevel > numLevels )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Mip level out of range");
+			IFNITY_LOG( LogCore, ERROR, "Mip level out of range" );
 			return false;
 
 		}
 
-		const uint32_t texWidth = std::max(ext.width >> range.mipLevel, 1u);
-		const uint32_t texHeight = std::max(ext.height >> range.mipLevel, 1u);
-		const uint32_t texDepth = std::max(ext.depth >> range.mipLevel, 1u);
+		const uint32_t texWidth = std::max( ext.width >> range.mipLevel, 1u );
+		const uint32_t texHeight = std::max( ext.height >> range.mipLevel, 1u );
+		const uint32_t texDepth = std::max( ext.depth >> range.mipLevel, 1u );
 
 		if( range.dimensions.width > texWidth ||
-		   range.dimensions.height > texHeight ||
-		   range.dimensions.depth > texDepth )
+			range.dimensions.height > texHeight ||
+			range.dimensions.depth > texDepth )
 		{
-			IFNITY_LOG(LogCore, ERROR, "range dimensions exceed texture dimensions");
+			IFNITY_LOG( LogCore, ERROR, "range dimensions exceed texture dimensions" );
 			return false;
 		}
 		if( range.offset.x > texWidth - range.dimensions.width ||
-		   range.offset.y > texHeight - range.dimensions.height ||
-		   range.offset.z > texDepth - range.dimensions.depth )
+			range.offset.y > texHeight - range.dimensions.height ||
+			range.offset.z > texDepth - range.dimensions.depth )
 		{
-			IFNITY_LOG(LogCore, ERROR, "range offset exceeds texture dimensions");
+			IFNITY_LOG( LogCore, ERROR, "range offset exceeds texture dimensions" );
 			return false;
 		}
 
@@ -110,17 +110,17 @@ namespace Vulkan
 	//-----------------------------------------------//
 	// Device METHODS                                //
 	//-----------------------------------------------//
-	Device::Device(VkDevice vkDevice, DeviceVulkan* ptr): vkDevice_(vkDevice), m_DeviceVulkan(ptr)
+	Device::Device( VkDevice vkDevice, DeviceVulkan* ptr ): vkDevice_( vkDevice ), m_DeviceVulkan( ptr )
 	{
 
-		IFNITY_ASSERT_MSG(vkDevice_ != VK_NULL_HANDLE, "VkDevice is null");
-		IFNITY_ASSERT_MSG(m_DeviceVulkan != nullptr, "DeviceVulkan is null");
+		IFNITY_ASSERT_MSG( vkDevice_ != VK_NULL_HANDLE, "VkDevice is null" );
+		IFNITY_ASSERT_MSG( m_DeviceVulkan != nullptr, "DeviceVulkan is null" );
 
 		//set the stagindevice
 
 		vkPhysicalDevice_ = m_DeviceVulkan->getPhysicalDevice();
 
-		IFNITY_ASSERT_MSG(vkPhysicalDevice_ != VK_NULL_HANDLE, "VkPhysicalDevice is null, creatin device");
+		IFNITY_ASSERT_MSG( vkPhysicalDevice_ != VK_NULL_HANDLE, "VkPhysicalDevice is null, creatin device" );
 
 
 
@@ -131,61 +131,66 @@ namespace Vulkan
 	Device::~Device()
 	{
 		destroyShaderModule();
-		
-		
+
+
 		//Destroy the dummy texture
 
 
 	}
 
-	void Device::Draw(DrawDescription& desc)
+	void Device::Draw( DrawDescription& desc )
 	{
+		auto pipeline = m_DeviceVulkan->actualPipeline_;
+		if( !pipeline )
+		{
+			IFNITY_LOG( LogApp, ERROR, "No active pipeline to draw with" );
+			return;
+		}
 
+		GraphicsPipelineHandle pip = std::shared_ptr<GraphicsPipeline>( pipeline, []( GraphicsPipeline* ) {} );
 
-
-
-
+		DrawObject( pip, desc );
 
 	}
 
 	//TODO: Implement this function texdesc information
-	void Device::DrawObject(GraphicsPipelineHandle& pipeline, DrawDescription& desc)
+	void Device::DrawObject( GraphicsPipelineHandle& pipeline, DrawDescription& desc )
 	{
 		DepthState depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = desc.depthTest };
 
 
-		cmdBuffer.cmdBindDepthState(depthState);
-		cmdBuffer.cmdSetDepthBiasEnable(desc.enableBias);
-		cmdBuffer.cmdSetDepthBias(desc.depthBiasValues.Constant,
-								  desc.depthBiasValues.Clamp,
-								  desc.depthBiasValues.Clamp);
+		cmdBuffer.cmdBindDepthState( depthState );
+		cmdBuffer.cmdSetDepthBiasEnable( desc.enableBias );
+		cmdBuffer.cmdSetDepthBias( desc.depthBiasValues.Constant,
+								   desc.depthBiasValues.Clamp,
+								   desc.depthBiasValues.Clamp );
 
-		pipeline->BindPipeline(this);//This set pipeline like actualpilenine in VK.
+		pipeline->BindPipeline( this );//This set pipeline like actualpilenine in VK.
 
 
 
-		cmdBuffer.cmdBindRenderPipeline(*m_DeviceVulkan->actualPipeline_);
+		cmdBuffer.cmdBindRenderPipeline( *m_DeviceVulkan->actualPipeline_ );
 
 		//for each vertex buffer bind 
 		for( auto& vb : m_vertexBuffer )
 		{
 
-			cmdBuffer.cmdBindVertexBuffer(0, vb);
+			cmdBuffer.cmdBindVertexBuffer( 0, vb );
 		}
 		for( auto& ib : m_indexBuffer )
 		{
 			if( !ib.valid() ) continue;
-			cmdBuffer.cmdBindIndexBuffer(ib, rhi::IndexFormat::IndexFormat_UINT32);
+			cmdBuffer.cmdBindIndexBuffer( ib, rhi::IndexFormat::IndexFormat_UINT32 );
 		}
 
 
-		cmdBuffer.cmdBindDepthState(depthState);
-		cmdBuffer.cmdPushConstants(pushConstants.data,
-								   pushConstants.size,
-								   pushConstants.offset);
+		cmdBuffer.cmdBindDepthState( depthState );
+		cmdBuffer.cmdPushConstants( pushConstants.data,
+									pushConstants.size,
+									pushConstants.offset );
 
 
-		cmdBuffer.cmdDraw(desc.drawMode, desc.size, desc.instanceCount);
+		cmdBuffer.cmdDraw( desc.drawMode, desc.size, desc.instanceCount );
 
 	}
 
@@ -198,7 +203,7 @@ namespace Vulkan
 
 		Vulkan::CommandBuffer& cmdb = m_DeviceVulkan->acquireCommandBuffer();
 
-		cmdBuffer = std::move(cmdb);
+		cmdBuffer = std::move( cmdb );
 
 		//Get handler current texture 
 		currentTexture_ = m_DeviceVulkan->getCurrentSwapChainTexture();
@@ -218,7 +223,7 @@ namespace Vulkan
 
 
 		//Start Rendering
-		cmdBuffer.cmdBeginRendering(renderPass, framebuffer);
+		cmdBuffer.cmdBeginRendering( renderPass, framebuffer );
 
 
 
@@ -227,18 +232,21 @@ namespace Vulkan
 	void Device::StopRecording()
 	{
 
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_);
+		ImGui_ImplVulkan_RenderDrawData( ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_ );
 		cmdBuffer.cmdEndRendering();
-		m_DeviceVulkan->submit(cmdBuffer, currentTexture_);
+		m_DeviceVulkan->submit( cmdBuffer, currentTexture_ );
 
 	}
 
 
-	GraphicsPipelineHandle Device::CreateGraphicsPipeline(GraphicsPipelineDescription& desc)
+	GraphicsPipelineHandle Device::CreateGraphicsPipeline( GraphicsPipelineDescription& desc )
 	{
 		auto* vs = desc.vs;
 		auto* fs = desc.ps;
 		auto* gs = desc.gs;
+
+		HolderShaderSM vert;
+		HolderShaderSM frag;
 
 		//Get if files are binary, other solution its get the extension. 
 		bool vsbinary = desc.vs->GetShaderDescription().APIflag & ShaderAPIflag::SPIRV_BIN;
@@ -247,7 +255,7 @@ namespace Vulkan
 
 		if( !vs || !fs )
 		{
-			IFNITY_LOG(LogApp, WARNING, "Load GetPixelShader or VertexShader");
+			IFNITY_LOG( LogApp, WARNING, "Load GetPixelShader or VertexShader" );
 			return GraphicsPipelineHandle{};
 		}
 		// 1. retrieve the vertex/fragment/geometry source code from filePath
@@ -258,63 +266,124 @@ namespace Vulkan
 		std::ifstream fShaderFile;
 		std::ifstream gShaderFile;
 		// ensure ifstream objects can throw exceptions:
-		vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+		vShaderFile.exceptions( std::ifstream::failbit | std::ifstream::badbit );
+		fShaderFile.exceptions( std::ifstream::failbit | std::ifstream::badbit );
+		gShaderFile.exceptions( std::ifstream::failbit | std::ifstream::badbit );
 
-		try
+		if( vsbinary && fsbinary )
 		{
-			std::tie(vertexCode, fragmentCode, geometryCode) = Utils::readShaderFilesByAPI(rhi::GraphicsAPI::VULKAN, vs, fs, gs);
+			//Read the binary files
+			auto [vShaderBinary, fShaderBinary, gShaderBinary] = Utils::readShadersMode<std::vector<uint8_t>>(
+				m_DeviceVulkan->GetStaticGraphicsAPI(),
+				vs,
+				fs,
+				gs,
+				ShaderFileMode::BINARY );
+
+			auto vShaderCode = reinterpret_cast< const char* >(vShaderBinary.data());
+			auto fShaderCode = reinterpret_cast< const char* >(fShaderBinary.data());
+
+
+			auto& vert = m_shaderVert.emplace_back( createShaderModule( vShaderCode,
+																		vShaderBinary.size(),
+																		VK_SHADER_STAGE_VERTEX_BIT,
+																		vsbinary,
+																		"Vertex Shader" ) );
+			auto& frag = m_shaderFragment.emplace_back( createShaderModule( fShaderCode, 
+																			fShaderBinary.size(), 
+																			VK_SHADER_STAGE_FRAGMENT_BIT, 
+																			fsbinary, 
+																			"Fragment Shader" ) );
+
+			// 2. compile shaders
+			GraphicsPipeline* pipeline = new GraphicsPipeline( std::move( desc ), m_DeviceVulkan );
+
+
+
+
+			//Check if we have geometry shader
+			if( gs )
+			{
+				auto gShaderCode = reinterpret_cast< const char* >(gShaderBinary.data());
+				auto& geom = m_shaderGeometry.emplace_back( createShaderModule( gShaderCode, geometryCode.size(), VK_SHADER_STAGE_GEOMETRY_BIT, gsbinary, "Geometry Shader" ) );
+				pipeline->m_shaderGeometry = *geom.get();
+			}
+
+			//3. Create the pipeline and configure colorFormat,
+			const DeviceVulkan& ctx = getDeviceContextVulkan();
+
+			pipeline->setColorFormat( getRHIFormat( ctx.GetSwapChainFormat() ) ); //Get the SwapChain Color Format 
+			pipeline->setDepthFormat( pipeline->GetGraphicsPipelineDesc().renderState.depthFormat );
+			pipeline->passSpecializationConstantToVkFormat();
+			pipeline->configureVertexAttributes();
+			pipeline->m_shaderFragment = *frag.get();
+			pipeline->m_shaderVert = *vert.get();
+
+			pipeline->ownerHandle_ = m_DeviceVulkan->slotMapRenderPipelines_.create( std::move( *pipeline ) );
+
+			return GraphicsPipelineHandle( pipeline );
+
+
+
 		}
-		catch( const std::runtime_error& e )
+		else
 		{
-			IFNITY_LOG(LogApp, ERROR, e.what());
-			return GraphicsPipelineHandle{};
+			//Read the binary files
+			auto [vertexCode, fragmentCode, geometryCode] = Utils::readShadersMode<std::string>(
+				m_DeviceVulkan->GetStaticGraphicsAPI(),
+				vs,
+				fs,
+				gs,
+				ShaderFileMode::FILE );
+
+			const char* vShaderCode = vertexCode.c_str();
+			const char* fShaderCode = fragmentCode.c_str();
+			const char* gShaderCode = gs ? geometryCode.c_str() : nullptr;
+
+			auto& vert = m_shaderVert.emplace_back( createShaderModule( vShaderCode,
+																		vertexCode.size(),
+																		VK_SHADER_STAGE_VERTEX_BIT,
+																		vsbinary,
+																		"Vertex Shader" ) );
+			auto& frag = m_shaderFragment.emplace_back( createShaderModule( fShaderCode, 
+																			fragmentCode.size(), 
+																			VK_SHADER_STAGE_FRAGMENT_BIT, 
+																			fsbinary, 
+																			"Fragment Shader" ) );
+
+			// 2. compile shaders
+			GraphicsPipeline* pipeline = new GraphicsPipeline( std::move( desc ), m_DeviceVulkan );
+
+
+
+
+			//Check if we have geometry shader
+			if( gs )
+			{
+				auto gShaderCode = reinterpret_cast< const char* >(geometryCode.data());
+				auto& geom = m_shaderGeometry.emplace_back( createShaderModule( gShaderCode, geometryCode.size(), VK_SHADER_STAGE_GEOMETRY_BIT, gsbinary, "Geometry Shader" ) );
+				pipeline->m_shaderGeometry = *geom.get();
+			}
+
+			//3. Create the pipeline and configure colorFormat,
+			const DeviceVulkan& ctx = getDeviceContextVulkan();
+
+			pipeline->setColorFormat( getRHIFormat( ctx.GetSwapChainFormat() ) ); //Get the SwapChain Color Format 
+			pipeline->setDepthFormat( pipeline->GetGraphicsPipelineDesc().renderState.depthFormat );
+			pipeline->passSpecializationConstantToVkFormat();
+			pipeline->configureVertexAttributes();
+			pipeline->m_shaderFragment = *frag.get();
+			pipeline->m_shaderVert = *vert.get();
+
+			pipeline->ownerHandle_ = m_DeviceVulkan->slotMapRenderPipelines_.create( std::move( *pipeline ) );
+
+			return GraphicsPipelineHandle( pipeline );
+
 		}
-
-		const char* vShaderCode = vertexCode.c_str();
-		const char* fShaderCode = fragmentCode.c_str();
-		const char* gShaderCode = gs ? geometryCode.c_str() : nullptr;
-
-		// 2. compile shaders
-		GraphicsPipeline* pipeline = new GraphicsPipeline(std::move(desc), m_DeviceVulkan);
-
-
-		auto& vert = m_shaderVert.emplace_back(createShaderModule(vShaderCode, vertexCode.size(), VK_SHADER_STAGE_VERTEX_BIT, vsbinary, "Vertex Shader"));
-		auto& frag = m_shaderFragment.emplace_back(createShaderModule(fShaderCode, fragmentCode.size(), VK_SHADER_STAGE_FRAGMENT_BIT, fsbinary, "Fragment Shader"));
-
-		//Check if we have geometry shader
-		if( gs )
-		{
-			auto& geom = m_shaderGeometry.emplace_back(createShaderModule(gShaderCode, geometryCode.size(), VK_SHADER_STAGE_GEOMETRY_BIT, gsbinary, "Geometry Shader"));
-			pipeline->m_shaderGeometry = *geom.get();
-		}
-
-
-
-
-
-		//3. Create the pipeline and configure colorFormat,
-		const DeviceVulkan& ctx = getDeviceContextVulkan();
-
-		pipeline->setColorFormat(getRHIFormat(ctx.GetSwapChainFormat())); //Get the SwapChain Color Format 
-		pipeline->setDepthFormat(pipeline->GetGraphicsPipelineDesc().renderState.depthFormat);
-		pipeline->passSpecializationConstantToVkFormat();
-		pipeline->configureVertexAttributes();
-		pipeline->m_shaderFragment = *frag.get();
-		pipeline->m_shaderVert = *vert.get();
-
-
-
-
-		pipeline->ownerHandle_ = m_DeviceVulkan->slotMapRenderPipelines_.create(std::move(*pipeline));
-
-		return GraphicsPipelineHandle(pipeline);
-
 
 	}
 
-	BufferHandle Device::CreateBuffer(const BufferDescription& desc)
+	BufferHandle Device::CreateBuffer( const BufferDescription& desc )
 	{
 		//auxiliar storagetype config 
 
@@ -326,15 +395,15 @@ namespace Vulkan
 		//This is a constant buffer and Vulkan Constant Buffer is inside like a PushConstant and manage	internal 
 		if( desc.type == BufferType::CONSTANT_BUFFER )
 		{
-			IFNITY_LOG(LogCore, INFO, "Constant Buffer its managed in vulkan like push constants inside ");
-			Buffer* buff = new Buffer(desc);
-			return BufferHandle(buff);
+			IFNITY_LOG( LogCore, INFO, "Constant Buffer its managed in vulkan like push constants inside " );
+			Buffer* buff = new Buffer( desc );
+			return BufferHandle( buff );
 
 		}
 
 		if( desc.type == BufferType::NO_DEFINE_BUFFER )
 		{
-			IFNITY_LOG(LogCore, WARNING, "No define buffer "); return{};
+			IFNITY_LOG( LogCore, WARNING, "No define buffer " ); return{};
 		}
 
 
@@ -349,40 +418,40 @@ namespace Vulkan
 
 
 		//Generate Flags and MemFlags using BufferDescription 
-		usageFlags |= Vulkan::getVkBufferUsageFlags(desc.type);
-		VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags(storage);
+		usageFlags |= Vulkan::getVkBufferUsageFlags( desc.type );
+		VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags( storage );
 
 		//Create the buffer holder 
-		HolderBufferSM buffer = CreateInternalVkBuffer(desc.byteSize, usageFlags, memFlags, desc.debugName.c_str());
+		HolderBufferSM buffer = CreateInternalVkBuffer( desc.byteSize, usageFlags, memFlags, desc.debugName.c_str() );
 
 		//Check if the buffer its created
-		IFNITY_ASSERT_MSG(buffer, "Buffer its not created internal ");
+		IFNITY_ASSERT_MSG( buffer, "Buffer its not created internal " );
 
 		//Upload data if the bufferdesc have it; 
 		if( desc.data )
 		{
-			upload(*buffer, desc.data, desc.byteSize, desc.offset);
+			upload( *buffer, desc.data, desc.byteSize, desc.offset );
 		}
 
 
 		//Check if is a vertex buffer or index buffer 
-		Buffer* handle = new Buffer(desc, std::move(buffer));
+		Buffer* handle = new Buffer( desc, std::move( buffer ) );
 		//Try to set the buffer gpu address
-		handle->getBufferGpuAddress(*m_DeviceVulkan);
+		handle->getBufferGpuAddress( *m_DeviceVulkan );
 
-		IFNITY_LOG(LogCore, INFO, STRMESSAGE("BufferCreation: ", desc.debugName));
+		IFNITY_LOG( LogCore, INFO, STRMESSAGE( "BufferCreation: ", desc.debugName ) );
 
-		return BufferHandle(handle);
+		return BufferHandle( handle );
 
 	}
 
-	HolderBufferSM Device::CreateInternalVkBuffer(VkDeviceSize bufferSize,
-												  VkBufferUsageFlags usageFlags,
-												  VkMemoryPropertyFlags memFlags,
-												  const char* debugName)
+	HolderBufferSM Device::CreateInternalVkBuffer( VkDeviceSize bufferSize,
+												   VkBufferUsageFlags usageFlags,
+												   VkMemoryPropertyFlags memFlags,
+												   const char* debugName )
 	{
 		//Check the buffersize has valid value
-		IFNITY_ASSERT_MSG(bufferSize > 0, "Buffer size is invalid");
+		IFNITY_ASSERT_MSG( bufferSize > 0, "Buffer size is invalid" );
 
 		//Get limits to verify the buffer size its 
 		const VkPhysicalDeviceLimits& limits = m_DeviceVulkan->GetPhysicalDeviceLimits();
@@ -391,7 +460,7 @@ namespace Vulkan
 		{
 			if( !(bufferSize <= limits.maxUniformBufferRange) )
 			{
-				IFNITY_LOG(LogCore, ERROR, "Buffer size exceeded VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT");
+				IFNITY_LOG( LogCore, ERROR, "Buffer size exceeded VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT" );
 				return {};
 			}
 		}
@@ -400,7 +469,7 @@ namespace Vulkan
 		{
 			if( !(bufferSize <= limits.maxStorageBufferRange) )
 			{
-				IFNITY_LOG(LogCore, ERROR, "Buffer size exceeded VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM");
+				IFNITY_LOG( LogCore, ERROR, "Buffer size exceeded VK_BUFFER_USAGE_FLAG_BITS_MAX_ENUM" );
 				return {};
 			}
 		}
@@ -441,10 +510,10 @@ namespace Vulkan
 			if( memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT )
 			{
 				// Check if coherent buffer is available.
-				VK_ASSERT(vkCreateBuffer(vkDevice_, &ci, nullptr, &buf.vkBuffer_));
+				VK_ASSERT( vkCreateBuffer( vkDevice_, &ci, nullptr, &buf.vkBuffer_ ) );
 				VkMemoryRequirements requirements = {};
-				vkGetBufferMemoryRequirements(vkDevice_, buf.vkBuffer_, &requirements);
-				vkDestroyBuffer(vkDevice_, buf.vkBuffer_, nullptr);
+				vkGetBufferMemoryRequirements( vkDevice_, buf.vkBuffer_, &requirements );
+				vkDestroyBuffer( vkDevice_, buf.vkBuffer_, nullptr );
 				buf.vkBuffer_ = VK_NULL_HANDLE;
 
 				if( requirements.memoryTypeBits & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT )
@@ -456,52 +525,52 @@ namespace Vulkan
 
 			vmaAllocInfo.usage = VMA_MEMORY_USAGE_AUTO;
 
-			vmaCreateBuffer((VmaAllocator)m_DeviceVulkan->getVmaAllocator(),
-							&ci,
-							&vmaAllocInfo,
-							&buf.vkBuffer_,
-							&buf.vmaAllocation_,
-							nullptr);
+			vmaCreateBuffer( ( VmaAllocator )m_DeviceVulkan->getVmaAllocator(),
+							 &ci,
+							 &vmaAllocInfo,
+							 &buf.vkBuffer_,
+							 &buf.vmaAllocation_,
+							 nullptr );
 
 			// handle memory-mapped buffers
 			if( memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT )
 			{
-				vmaMapMemory((VmaAllocator)m_DeviceVulkan->getVmaAllocator(),
-							 buf.vmaAllocation_,
-							 &buf.mappedPtr_);
+				vmaMapMemory( ( VmaAllocator )m_DeviceVulkan->getVmaAllocator(),
+							  buf.vmaAllocation_,
+							  &buf.mappedPtr_ );
 			}
 		}
 		//Not using VMA Allocator
 		else
 		{
 			// create buffer
-			IFNITY_ASSERT(vkCreateBuffer(vkDevice_, &ci, nullptr, &buf.vkBuffer_));
+			IFNITY_ASSERT( vkCreateBuffer( vkDevice_, &ci, nullptr, &buf.vkBuffer_ ) );
 
 			// back the buffer with some memory
 			{
 				VkMemoryRequirements requirements = {};
-				vkGetBufferMemoryRequirements(vkDevice_, buf.vkBuffer_, &requirements);
+				vkGetBufferMemoryRequirements( vkDevice_, buf.vkBuffer_, &requirements );
 				if( requirements.memoryTypeBits & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT )
 				{
 					buf.isCoherentMemory_ = true;
 				}
 
-				IFNITY_ASSERT(allocateMemory(vkPhysicalDevice_, vkDevice_, &requirements, memFlags, &buf.vkMemory_));
-				IFNITY_ASSERT(vkBindBufferMemory(vkDevice_, buf.vkBuffer_, buf.vkMemory_, 0));
+				IFNITY_ASSERT( allocateMemory( vkPhysicalDevice_, vkDevice_, &requirements, memFlags, &buf.vkMemory_ ) );
+				IFNITY_ASSERT( vkBindBufferMemory( vkDevice_, buf.vkBuffer_, buf.vkMemory_, 0 ) );
 			}
 
 			// handle memory-mapped buffers
 			if( memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT )
 			{
-				IFNITY_ASSERT(vkMapMemory(vkDevice_, buf.vkMemory_, 0, buf.bufferSize_, 0, &buf.mappedPtr_));
+				IFNITY_ASSERT( vkMapMemory( vkDevice_, buf.vkMemory_, 0, buf.bufferSize_, 0, &buf.mappedPtr_ ) );
 			}
 
 		}//end of else createbuffer. 
 
-		IFNITY_ASSERT(buf.vkBuffer_ != VK_NULL_HANDLE);
+		IFNITY_ASSERT( buf.vkBuffer_ != VK_NULL_HANDLE );
 
 		// set debug name
-		VK_ASSERT(setDebugObjectName(vkDevice_, VK_OBJECT_TYPE_BUFFER, (uint64_t)buf.vkBuffer_, debugName));
+		VK_ASSERT( setDebugObjectName( vkDevice_, VK_OBJECT_TYPE_BUFFER, ( uint64_t )buf.vkBuffer_, debugName ) );
 
 		// handle shader access
 		if( usageFlags & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT )
@@ -510,13 +579,13 @@ namespace Vulkan
 				 .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
 				 .buffer = buf.vkBuffer_,
 			};
-			buf.vkDeviceAddress_ = vkGetBufferDeviceAddress(vkDevice_, &ai);
-			IFNITY_ASSERT(buf.vkDeviceAddress_);
+			buf.vkDeviceAddress_ = vkGetBufferDeviceAddress( vkDevice_, &ai );
+			IFNITY_ASSERT( buf.vkDeviceAddress_ );
 		}
 
-		BufferHandleSM buffhandle = m_DeviceVulkan->slotMapBuffers_.create(std::move(buf));
+		BufferHandleSM buffhandle = m_DeviceVulkan->slotMapBuffers_.create( std::move( buf ) );
 
-		return makeHolder(m_DeviceVulkan, buffhandle);
+		return makeHolder( m_DeviceVulkan, buffhandle );
 
 	}
 
@@ -524,67 +593,67 @@ namespace Vulkan
 
 
 
-	void Device::upload(BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset)
+	void Device::upload( BufferHandleSM& buffer, const void* data, size_t size, uint32_t offset )
 	{
 
 		//Previos check if the buffer is null and check it 
 		if( !data )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Data is null to upload ");
+			IFNITY_LOG( LogCore, ERROR, "Data is null to upload " );
 			return;
 		}
 
-		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
+		IFNITY_ASSERT_MSG( size, "Data size should be non-zero" );
 
-		VulkanBuffer* buf = m_DeviceVulkan->slotMapBuffers_.get(buffer);
+		VulkanBuffer* buf = m_DeviceVulkan->slotMapBuffers_.get( buffer );
 
 		if( !buf )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Buffer is null to upload ");
+			IFNITY_LOG( LogCore, ERROR, "Buffer is null to upload " );
 			return;
 		}
 
-		if( !IFNITY_VERIFY(offset + size <= buf->bufferSize_) )
+		if( !IFNITY_VERIFY( offset + size <= buf->bufferSize_ ) )
 		{
 			return;
 		}
 
-		
+
 
 		//Lets to staginDevice to upload data 
-		m_DeviceVulkan->m_StagingDevice->bufferSubData(*buf, offset, size, data);
+		m_DeviceVulkan->m_StagingDevice->bufferSubData( *buf, offset, size, data );
 
 
 
 	}
 
-	void Device::upload(Vulkan::VulkanBuffer* buffer, const void* data, size_t size, uint32_t offset)
+	void Device::upload( Vulkan::VulkanBuffer* buffer, const void* data, size_t size, uint32_t offset )
 	{
 
 		//Previos check if the buffer is null and check it 
 		if( !data )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Data is null to upload ");
+			IFNITY_LOG( LogCore, ERROR, "Data is null to upload " );
 			return;
 		}
 
-		IFNITY_ASSERT_MSG(size, "Data size should be non-zero");
+		IFNITY_ASSERT_MSG( size, "Data size should be non-zero" );
 
 
 		if( !buffer )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Buffer is null to upload ");
+			IFNITY_LOG( LogCore, ERROR, "Buffer is null to upload " );
 			return;
 		}
 
-		if( !IFNITY_VERIFY(offset + size <= buffer->bufferSize_) )
+		if( !IFNITY_VERIFY( offset + size <= buffer->bufferSize_ ) )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Buffer is enough size ");
+			IFNITY_LOG( LogCore, ERROR, "Buffer is enough size " );
 			return;
 		}
 
 		//Lets to staginDevice to upload data 
-		m_DeviceVulkan->m_StagingDevice->bufferSubData(*buffer, offset, size, data);
+		m_DeviceVulkan->m_StagingDevice->bufferSubData( *buffer, offset, size, data );
 
 
 
@@ -593,44 +662,44 @@ namespace Vulkan
 
 	}
 
-	void Device::upload(TextureHandleSM handle, const TextureRangeDesc& range, const void* data)
+	void Device::upload( TextureHandleSM handle, const TextureRangeDesc& range, const void* data )
 	{
 		if( !data )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Data is null to upload creatin texture vulkan ");
+			IFNITY_LOG( LogCore, ERROR, "Data is null to upload creatin texture vulkan " );
 			return;
 		}
 
-		VulkanImage* texture = m_DeviceVulkan->slootMapTextures_.get(handle);
+		VulkanImage* texture = m_DeviceVulkan->slootMapTextures_.get( handle );
 
 		if( !texture )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Texture not create,error at get in slotmap");
+			IFNITY_LOG( LogCore, ERROR, "Texture not create,error at get in slotmap" );
 			return;
 		}
 
 
-		if( !validateRange(texture->vkExtent_, texture->numLevels_, range) )
+		if( !validateRange( texture->vkExtent_, texture->numLevels_, range ) )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Error at validate range");
+			IFNITY_LOG( LogCore, ERROR, "Error at validate range" );
 
 		}
 
-		const uint32_t numLayers = std::max(range.numLayers, 1u);
+		const uint32_t numLayers = std::max( range.numLayers, 1u );
 
 
 		//Get the format of the texture
 		VkFormat vkFormat = texture->vkImageFormat_;
 
 		//For now we only use 2D textures
-		IFNITY_ASSERT(texture->vkType_ == VK_IMAGE_TYPE_2D);
+		IFNITY_ASSERT( texture->vkType_ == VK_IMAGE_TYPE_2D );
 
 		//Get the image region for build image. 
 		const VkRect2D imageRegion = {
 			.offset = {.x = range.offset.x, .y = range.offset.y},
 			.extent = {.width = range.dimensions.width, .height = range.dimensions.height},
 		};
-		m_DeviceVulkan->m_StagingDevice->imageData2D(*texture, imageRegion, range.mipLevel, range.numMipLevels, range.layer, range.numLayers, vkFormat, data);
+		m_DeviceVulkan->m_StagingDevice->imageData2D( *texture, imageRegion, range.mipLevel, range.numMipLevels, range.layer, range.numLayers, vkFormat, data );
 
 
 
@@ -640,7 +709,7 @@ namespace Vulkan
 
 	}
 
-	void Device::WriteBuffer(BufferHandle& buffer, const void* data, size_t size, uint32_t offset)
+	void Device::WriteBuffer( BufferHandle& buffer, const void* data, size_t size, uint32_t offset )
 	{
 		if( buffer->GetBufferDescription().type == BufferType::CONSTANT_BUFFER )
 		{
@@ -653,19 +722,19 @@ namespace Vulkan
 		if( buffer->GetBufferDescription().type == BufferType::UNIFORM_BUFFER )
 		{
 			//Get the BufferHandleSM by index  to avoid dynamic_cast. 
-			Vulkan::VulkanBuffer* buf = m_DeviceVulkan->slotMapBuffers_.getByIndex(buffer->GetBufferID());
+			Vulkan::VulkanBuffer* buf = m_DeviceVulkan->slotMapBuffers_.getByIndex( buffer->GetBufferID() );
 			if( !buf )
 			{
-				IFNITY_LOG(LogCore, ERROR, "Buffer is null to write ");
+				IFNITY_LOG( LogCore, ERROR, "Buffer is null to write " );
 				return;
 			}
-			upload(buf, data, size, offset);
+			upload( buf, data, size, offset );
 
 			if( buf->vkDeviceAddress_ )
 			{
 				//Update push constant
 				pushConstants.data = &buf->vkDeviceAddress_;
-				pushConstants.size = sizeof(uint64_t);
+				pushConstants.size = sizeof( uint64_t );
 				pushConstants.offset = 0; // force to offset 0 in vulkan 
 
 			}
@@ -674,49 +743,49 @@ namespace Vulkan
 	}
 
 
-	bool Device::validateTextureDescription(TextureDescription& texdesc)
+	bool Device::validateTextureDescription( TextureDescription& texdesc )
 	{
 		const rhi::TextureType type = texdesc.dimension;
 
 		if( texdesc.width <= 0 && texdesc.height <= 0 && texdesc.depth <= 0 )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Texture dimension is invalid");
+			IFNITY_LOG( LogCore, ERROR, "Texture dimension is invalid" );
 			return false;
 		}
 		if( !(type == TextureType::TEXTURE2D || type == TextureType::TEXTURECUBE || type == TextureType::TEXTURE3D) )
 		{
-			IFNITY_ASSERT(false, "Only 2D, 3D and Cube textures are supported");
+			IFNITY_ASSERT( false, "Only 2D, 3D and Cube textures are supported" );
 			return false;
 		}
 
 		if( texdesc.mipLevels == 0 )
 		{
-			IFNITY_LOG(LogCore, WARNING, "The number of mip-levels is 0. Setting it to 1.");
+			IFNITY_LOG( LogCore, WARNING, "The number of mip-levels is 0. Setting it to 1." );
 			texdesc.mipLevels = 1;
 		}
 
 		if( texdesc.sampleCount > 1 && texdesc.mipLevels != 1 )
 		{
-			IFNITY_LOG(LogCore, WARNING, "Multisampled textures must have only one mip-level. Setting it to 1.");
+			IFNITY_LOG( LogCore, WARNING, "Multisampled textures must have only one mip-level. Setting it to 1." );
 			return false;
 		}
 
 		if( texdesc.sampleCount > 1 && type == rhi::TextureType::TEXTURE3D )
 		{
-			IFNITY_LOG(LogCore, WARNING, "Multisampled 3D textures are not supported. Setting it to 1.");
+			IFNITY_LOG( LogCore, WARNING, "Multisampled 3D textures are not supported. Setting it to 1." );
 			texdesc.sampleCount = 1;
 			return false;
 		}
 
-		if( !(texdesc.mipLevels <= Utils::getNumMipMapLevels2D(texdesc.dimensions.width, texdesc.dimensions.height)) )
+		if( !(texdesc.mipLevels <= Utils::getNumMipMapLevels2D( texdesc.dimensions.width, texdesc.dimensions.height )) )
 		{
-			IFNITY_LOG(LogCore, WARNING, "The number of mip-levels is too high. Setting it to the maximum possible value.");
-			texdesc.mipLevels = Utils::getNumMipMapLevels2D(texdesc.dimensions.width, texdesc.dimensions.height);
+			IFNITY_LOG( LogCore, WARNING, "The number of mip-levels is too high. Setting it to the maximum possible value." );
+			texdesc.mipLevels = Utils::getNumMipMapLevels2D( texdesc.dimensions.width, texdesc.dimensions.height );
 		}
 
 		if( texdesc.usage == rhi::TextureUsageBits::UNKNOW )
 		{
-			IFNITY_LOG(LogCore, WARNING, "Texture usage is not set. Setting it to sampled.");
+			IFNITY_LOG( LogCore, WARNING, "Texture usage is not set. Setting it to sampled." );
 			texdesc.usage = rhi::TextureUsageBits::SAMPLED;
 		}
 		// check if texture is depth the size have to be lower than bootstrap size limits swapchain
@@ -734,22 +803,22 @@ namespace Vulkan
 		return true;
 	}
 
-	VkImageUsageFlags Device::getImageUsageFlags(const TextureDescription& texdesc)
+	VkImageUsageFlags Device::getImageUsageFlags( const TextureDescription& texdesc )
 	{
 		VkImageUsageFlags usageFlags = (texdesc.storage == StorageType::DEVICE) ? VK_IMAGE_USAGE_TRANSFER_DST_BIT : 0;
 
-		if( static_cast<uint8_t>(texdesc.usage) & static_cast<uint8_t>(rhi::TextureUsageBits::SAMPLED) )
+		if( static_cast< uint8_t >(texdesc.usage) & static_cast< uint8_t >(rhi::TextureUsageBits::SAMPLED) )
 		{
 			usageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 		}
-		if( static_cast<uint8_t>(texdesc.usage) & static_cast<uint8_t>(rhi::TextureUsageBits::STORAGE) )
+		if( static_cast< uint8_t >(texdesc.usage) & static_cast< uint8_t >(rhi::TextureUsageBits::STORAGE) )
 		{
-			IFNITY_ASSERT_MSG(texdesc.sampleCount <= 1, "Storage images cannot be multisampled");
+			IFNITY_ASSERT_MSG( texdesc.sampleCount <= 1, "Storage images cannot be multisampled" );
 			usageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
 		}
-		if( static_cast<uint8_t>(texdesc.usage) & static_cast<uint8_t>(rhi::TextureUsageBits::ATTACHMENT) )
+		if( static_cast< uint8_t >(texdesc.usage) & static_cast< uint8_t >(rhi::TextureUsageBits::ATTACHMENT) )
 		{
-			usageFlags |= isDepthFormat(texdesc.format) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
+			usageFlags |= isDepthFormat( texdesc.format ) ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT
 				: VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 			if( texdesc.storage == StorageType::MEMORYLESS )
 			{
@@ -765,75 +834,75 @@ namespace Vulkan
 		return usageFlags;
 	}
 
-	void Device::BindingVertexAttributes(const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size)
+	void Device::BindingVertexAttributes( const VertexAttributeDescription* desc, int sizedesc, const void* data, size_t size )
 	{
 		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		throw std::runtime_error( "The function or operation is not implemented." );
 	}
 
-	void Device::BindingVertexIndexAttributes(const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf)
+	void Device::BindingVertexIndexAttributes( const VertexAttributeDescription* desc, int sizedesc, BufferHandle& bf )
 	{
 		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		throw std::runtime_error( "The function or operation is not implemented." );
 	}
 
-	void Device::BindingVertexAttributesBuffer(BufferHandle& bf)
+	void Device::BindingVertexAttributesBuffer( BufferHandle& bf )
 	{
 		//Dynamic cast to VkDevice 
 		// 
-		Buffer* vkBuffer = dynamic_cast<Buffer*>(bf.get());
+		Buffer* vkBuffer = dynamic_cast< Buffer* >(bf.get());
 		if( !vkBuffer )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanBuffar dynamic cast");
+			IFNITY_LOG( LogCore, ERROR, "Failed to get VulkanBuffar dynamic cast" );
 			return;
 		}
 
 		//Get the holderbuffer and push back 
-		m_vertexBuffer.push_back(vkBuffer->getBufferHandleSM());
+		m_vertexBuffer.push_back( vkBuffer->getBufferHandleSM() );
 
 		//m_indexBuffer.push_back(bf);
 	}
 
-	void Device::BindingIndexBuffer(BufferHandle& bf)
+	void Device::BindingIndexBuffer( BufferHandle& bf )
 	{
 
 		//Dynamic cast to VkDevice 
 		// 
-		Buffer* vkBuffer = dynamic_cast<Buffer*>(bf.get());
+		Buffer* vkBuffer = dynamic_cast< Buffer* >(bf.get());
 		if( !vkBuffer )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanBuffar dynamic cast");
+			IFNITY_LOG( LogCore, ERROR, "Failed to get VulkanBuffar dynamic cast" );
 			return;
 		}
 
 		//Get the holderbuffer and push back 
-		m_indexBuffer.push_back(vkBuffer->getBufferHandleSM());
+		m_indexBuffer.push_back( vkBuffer->getBufferHandleSM() );
 	}
 
-	TextureHandle Device::CreateTexture(TextureDescription& desc)
+	TextureHandle Device::CreateTexture( TextureDescription& desc )
 	{
 		using namespace rhi;
 
-		TextureDescription texdesc(desc);
+		TextureDescription texdesc( desc );
 		const auto& dvk = *m_DeviceVulkan;
 
 		//Validate and asure the texture description is valid , if some values are invalid, the function force
 		//by default some values but not all. 
-		if( !validateTextureDescription(texdesc) )
+		if( !validateTextureDescription( texdesc ) )
 		{
 			return {};
 		}
 
 		//Get the format value. 
-		const VkFormat vkFormat = isDepthFormat(desc.format) ? getClosestDepthStencilFormat(desc.format)
-			: formatToVkFormat(desc.format);
+		const VkFormat vkFormat = isDepthFormat( desc.format ) ? getClosestDepthStencilFormat( desc.format )
+			: formatToVkFormat( desc.format );
 
 
-		IFNITY_ASSERT_MSG(vkFormat != VK_FORMAT_UNDEFINED, "Invalid VkFormat value");
+		IFNITY_ASSERT_MSG( vkFormat != VK_FORMAT_UNDEFINED, "Invalid VkFormat value" );
 
-		VkImageUsageFlags usageFlags = getImageUsageFlags(texdesc);
+		VkImageUsageFlags usageFlags = getImageUsageFlags( texdesc );
 
-		const VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags(texdesc.storage);
+		const VkMemoryPropertyFlags memFlags = storageTypeToVkMemoryPropertyFlags( texdesc.storage );
 
 		const bool hasDebugName = texdesc.debugName.size() > 0;
 
@@ -842,8 +911,8 @@ namespace Vulkan
 
 		if( hasDebugName )
 		{
-			snprintf(debugNameImage, sizeof(debugNameImage) - 1, "Image: %s", texdesc.debugName);
-			snprintf(debugNameImageView, sizeof(debugNameImageView) - 1, "Image View: %s", texdesc.debugName);
+			snprintf( debugNameImage, sizeof( debugNameImage ) - 1, "Image: %s", texdesc.debugName );
+			snprintf( debugNameImageView, sizeof( debugNameImageView ) - 1, "Image View: %s", texdesc.debugName );
 		}
 
 		//Get the correct VkImageCreateFlags and properties to build texture desc.
@@ -858,18 +927,18 @@ namespace Vulkan
 			case TextureType::TEXTURE2D:
 				vkImageViewType = VK_IMAGE_VIEW_TYPE_2D;
 				vkImageType = VK_IMAGE_TYPE_2D;
-				vkSamples = getVulkanSampleCountFlags(texdesc.sampleCount, m_DeviceVulkan->getFramebufferMSAABitMask());
+				vkSamples = getVulkanSampleCountFlags( texdesc.sampleCount, m_DeviceVulkan->getFramebufferMSAABitMask() );
 				break;
 			case TextureType::TEXTURECUBE:
-				IFNITY_LOG(LogCore, ERROR, "Cubemaps are not supported yet");
+				IFNITY_LOG( LogCore, ERROR, "Cubemaps are not supported yet" );
 				break;
 			case TextureType::TEXTURE3D:
-				IFNITY_LOG(LogCore, ERROR, "3D textures are not supported yet");
+				IFNITY_LOG( LogCore, ERROR, "3D textures are not supported yet" );
 				break;
 
 
 			default:
-				IFNITY_LOG(LogCore, ERROR, "Unsupported texture type");
+				IFNITY_LOG( LogCore, ERROR, "Unsupported texture type" );
 
 				return {};
 		}
@@ -878,17 +947,17 @@ namespace Vulkan
 		const uint32_t numLevels = texdesc.mipLevels;
 
 		//TODO: Complete 
-		if( !IFNITY_VERIFY(validateImageLimits(vkImageType, vkSamples, vkExtent, m_DeviceVulkan->GetPhysicalDeviceLimits())) )
+		if( !IFNITY_VERIFY( validateImageLimits( vkImageType, vkSamples, vkExtent, m_DeviceVulkan->GetPhysicalDeviceLimits() ) ) )
 		{
 			return {};
 		}
 
-		IFNITY_ASSERT_MSG(numLevels > 0, "The image must contain at least one mip-level");
-		IFNITY_ASSERT_MSG(numLayers > 0, "The image must contain at least one layer");
-		IFNITY_ASSERT_MSG(vkSamples > 0, "The image must contain at least one sample");
-		IFNITY_ASSERT(vkExtent.width > 0);
-		IFNITY_ASSERT(vkExtent.height > 0);
-		IFNITY_ASSERT(vkExtent.depth > 0);
+		IFNITY_ASSERT_MSG( numLevels > 0, "The image must contain at least one mip-level" );
+		IFNITY_ASSERT_MSG( numLayers > 0, "The image must contain at least one layer" );
+		IFNITY_ASSERT_MSG( vkSamples > 0, "The image must contain at least one sample" );
+		IFNITY_ASSERT( vkExtent.width > 0 );
+		IFNITY_ASSERT( vkExtent.height > 0 );
+		IFNITY_ASSERT( vkExtent.depth > 0 );
 
 		VulkanImage image = {
 			 .vkUsageFlags_ = usageFlags,
@@ -898,11 +967,11 @@ namespace Vulkan
 			 .vkSamples_ = vkSamples,
 			 .numLevels_ = numLevels,
 			 .numLayers_ = numLayers,
-			 .isDepthFormat_ = VulkanImage::isDepthFormat(vkFormat),
-			 .isStencilFormat_ = VulkanImage::isStencilFormat(vkFormat),
+			 .isDepthFormat_ = VulkanImage::isDepthFormat( vkFormat ),
+			 .isStencilFormat_ = VulkanImage::isStencilFormat( vkFormat ),
 		};
 
-		const uint32_t numPlanes = getNumImagePlanes(desc.format);
+		const uint32_t numPlanes = getNumImagePlanes( desc.format );
 
 		const VkImageCreateInfo ci = {
 			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
@@ -931,21 +1000,21 @@ namespace Vulkan
 			};
 
 
-			VkResult result = vmaCreateImage((VmaAllocator)dvk.getVmaAllocator(),
-											 &ci,
-											 &vmaAllocInfo,
-											 &image.vkImage_,
-											 &image.vmaAllocation_,
-											 nullptr);
+			VkResult result = vmaCreateImage( ( VmaAllocator )dvk.getVmaAllocator(),
+											  &ci,
+											  &vmaAllocInfo,
+											  &image.vkImage_,
+											  &image.vmaAllocation_,
+											  nullptr );
 			if( !(result == VK_SUCCESS) )
 			{
-				IFNITY_LOG(LogCore, ERROR, "Failed to create image in format correctly ");
+				IFNITY_LOG( LogCore, ERROR, "Failed to create image in format correctly " );
 				return {};
 			}
 			// handle memory-mapped buffers
 			if( memFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT )
 			{
-				vmaMapMemory((VmaAllocator)dvk.getVmaAllocator(), image.vmaAllocation_, &image.mappedPtr_);
+				vmaMapMemory( ( VmaAllocator )dvk.getVmaAllocator(), image.vmaAllocation_, &image.mappedPtr_ );
 			}
 		}
 		else
@@ -954,10 +1023,10 @@ namespace Vulkan
 		}
 		// Creation debug name
 
-		VK_ASSERT(setDebugObjectName(vkDevice_, VK_OBJECT_TYPE_IMAGE, (uint64_t)image.vkImage_, debugNameImage));
+		VK_ASSERT( setDebugObjectName( vkDevice_, VK_OBJECT_TYPE_IMAGE, ( uint64_t )image.vkImage_, debugNameImage ) );
 
 		//Get physical device's properties for the image's format
-		vkGetPhysicalDeviceFormatProperties(vkPhysicalDevice_, image.vkImageFormat_, &image.vkFormatProperties_);
+		vkGetPhysicalDeviceFormatProperties( vkPhysicalDevice_, image.vkImageFormat_, &image.vkFormatProperties_ );
 
 		VkImageAspectFlags aspect = 0;
 		if( image.isDepthFormat_ || image.isStencilFormat_ )
@@ -976,37 +1045,37 @@ namespace Vulkan
 			aspect = VK_IMAGE_ASPECT_COLOR_BIT;
 		}
 
-		image.imageView_ = image.createImageView(vkDevice_,
-												 vkImageViewType,   // Type of image view
-												 vkFormat,			//Format of the image
-												 aspect,			//Aspect of the image
-												 0,					// Base mip level
-												 VK_REMAINING_MIP_LEVELS,// Number of mip levels
-												 0,						// Base array layer
-												 numLayers,				// Number of array layers
-												 {}, 					// Swizzle
-												 nullptr,			  // View format
-												 debugNameImageView); //Debug name for the image view
-		if( !IFNITY_VERIFY(image.imageView_ != VK_NULL_HANDLE) )
+		image.imageView_ = image.createImageView( vkDevice_,
+												  vkImageViewType,   // Type of image view
+												  vkFormat,			//Format of the image
+												  aspect,			//Aspect of the image
+												  0,					// Base mip level
+												  VK_REMAINING_MIP_LEVELS,// Number of mip levels
+												  0,						// Base array layer
+												  numLayers,				// Number of array layers
+												  {}, 					// Swizzle
+												  nullptr,			  // View format
+												  debugNameImageView ); //Debug name for the image view
+		if( !IFNITY_VERIFY( image.imageView_ != VK_NULL_HANDLE ) )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Failed to create image view");
+			IFNITY_LOG( LogCore, ERROR, "Failed to create image view" );
 			return {};
 		}
 
 		//Creating all  IMAGE-->MOVE TO HANDLE --> CREATE THE HOLDER AND MOVE THE HANDLE --> THE TEXTURE ITS OWNER NOW ABOUT TEXTURE
-		TextureHandleSM handle = m_DeviceVulkan->slootMapTextures_.create(std::move(image));
-		HolderTextureSM holder = makeHolder(m_DeviceVulkan, handle);
+		TextureHandleSM handle = m_DeviceVulkan->slootMapTextures_.create( std::move( image ) );
+		HolderTextureSM holder = makeHolder( m_DeviceVulkan, handle );
 
 		Texture* tex;
 		if( holder.get()->valid() )
 		{
-			tex = new Texture(texdesc, std::move(holder));
+			tex = new Texture( texdesc, std::move( holder ) );
 
 		}
 		else
 		{
 			delete tex;
-			IFNITY_LOG(LogCore, ERROR, "Failed to create texture in vulkan , not error reporter before ");
+			IFNITY_LOG( LogCore, ERROR, "Failed to create texture in vulkan , not error reporter before " );
 			return {};
 		}
 
@@ -1015,7 +1084,7 @@ namespace Vulkan
 		if( desc.data )
 		{
 			//upload process to texture 
-			upload(handle, { .dimensions = desc.dimensions, .numLayers = numLayers, .numMipLevels = 1 }, desc.data);
+			upload( handle, { .dimensions = desc.dimensions, .numLayers = numLayers, .numMipLevels = 1 }, desc.data );
 
 		}
 
@@ -1023,7 +1092,7 @@ namespace Vulkan
 		//Update awaitingCreation , because we have a new texture 
 		m_DeviceVulkan->awaitingCreation_ = true;
 
-		return TextureHandle(tex);
+		return TextureHandle( tex );
 
 
 	}
@@ -1036,11 +1105,11 @@ namespace Vulkan
 
 
 
-	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc)
+	MeshObjectHandle Device::CreateMeshObject( const MeshObjectDescription& desc )
 	{// Not implemented yet//Check if MeshData its valid ? 
 		if( desc.meshData.indexData_.empty() || desc.meshData.vertexData_.empty() )
 		{
-			IFNITY_LOG(LogApp, ERROR, "MeshData its invalid, are you sure that mesh Object Desc has data? , you have to build, or use a IMeshObjectBuilder");
+			IFNITY_LOG( LogApp, ERROR, "MeshData its invalid, are you sure that mesh Object Desc has data? , you have to build, or use a IMeshObjectBuilder" );
 			return nullptr;
 		}
 		// Check if ist not a large mesh 
@@ -1052,9 +1121,9 @@ namespace Vulkan
 			//Create a MeshObject with the data. 
 
 			/*MeshObject* mesh = new MeshObject(&desc.meshFileHeader, desc.meshData.meshes_.data(), desc.meshData.indexData_.data(), desc.meshData.vertexData_.data(), this);*/
-			MeshObject* mesh = new MeshObject(std::move(const_cast<MeshObjectDescription&>(desc)), this);
+			MeshObject* mesh = new MeshObject( std::move( const_cast< MeshObjectDescription& >(desc) ), this );
 
-			return MeshObjectHandle(mesh);
+			return MeshObjectHandle( mesh );
 		}
 
 
@@ -1062,56 +1131,56 @@ namespace Vulkan
 
 	}
 
-	MeshObjectHandle Device::CreateMeshObject(const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder)
+	MeshObjectHandle Device::CreateMeshObject( const MeshObjectDescription& desc, IMeshDataBuilder* meshbuilder )
 	{
 		if( meshbuilder )
 		{
-			meshbuilder->buildMeshData(const_cast<MeshObjectDescription&>(desc));
-			return CreateMeshObject(desc);
+			meshbuilder->buildMeshData( const_cast< MeshObjectDescription& >(desc) );
+			return CreateMeshObject( desc );
 		}
 		else
 		{
-			IFNITY_LOG(LogApp, ERROR, "MeshDataBuilder its invalid");
+			IFNITY_LOG( LogApp, ERROR, "MeshDataBuilder its invalid" );
 			return nullptr;
 		}
 	}
 
-	SceneObjectHandler Device::CreateSceneObject(const char* meshes, const char* scene, const char* materials)
+	SceneObjectHandler Device::CreateSceneObject( const char* meshes, const char* scene, const char* materials )
 	{
 		//Create a SceneObject with the data. 
-		SceneObject* sceneObject = new SceneObject(meshes, scene, materials);
-		return SceneObjectHandler(sceneObject);
-		
+		SceneObject* sceneObject = new SceneObject( meshes, scene, materials );
+		return SceneObjectHandler( sceneObject );
+
 
 	}
 
-	MeshObjectHandle Device::CreateMeshObjectFromScene(const SceneObjectHandler& scene)
+	MeshObjectHandle Device::CreateMeshObjectFromScene( const SceneObjectHandler& scene )
 	{
 		// Not implemented yet
-		
-		MeshObject* mesh = new MeshObject(scene, this);
-		return MeshObjectHandle(mesh);
+
+		MeshObject* mesh = new MeshObject( scene, this );
+		return MeshObjectHandle( mesh );
 	}
 
-	void Device::SetRenderState(const RenderState& state)
+	void Device::SetRenderState( const RenderState& state )
 	{
 		// Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		throw std::runtime_error( "The function or operation is not implemented." );
 	}
 
-	void Device::SetDepthTexture(TextureHandle texture)
+	void Device::SetDepthTexture( TextureHandle texture )
 	{
-		Texture* vkdepth = DCAST_TEXTURE(texture.get());
+		Texture* vkdepth = DCAST_TEXTURE( texture.get() );
 		if( !vkdepth )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanTexture depht dynamic cast");
+			IFNITY_LOG( LogCore, ERROR, "Failed to get VulkanTexture depht dynamic cast" );
 			return;
 		}
 
 		depthTexture_ = vkdepth->getTextureHandleSM();
 		if( !depthTexture_.valid() )
 		{
-			IFNITY_LOG(LogCore, ERROR, "Failed to get VulkanTexture depht dynamic cast");
+			IFNITY_LOG( LogCore, ERROR, "Failed to get VulkanTexture depht dynamic cast" );
 			depthTexture_ = {}; //invalid texture
 		}
 
@@ -1122,7 +1191,7 @@ namespace Vulkan
 	//                  Device Specific Methods                                                         //
 	//--------------------------------------------------------------------------------------------------//
 
-	VkPipeline Device::getVkPipeline(GraphicsPipelineHandleSM handle) const
+	VkPipeline Device::getVkPipeline( GraphicsPipelineHandleSM handle ) const
 	{
 		// Steps to follow:
 		// 1. Validate the GraphicsPipeline pointer.
@@ -1135,14 +1204,15 @@ namespace Vulkan
 		// 8. Create VkPipelineLayout.
 		// 9. Build the pipeline using VulkanPipelineBuilder.
 
-		IFNITY_ASSERT_MSG(handle.valid(), "GraphicsPipeline is null");
+		IFNITY_ASSERT_MSG( handle.valid(), "GraphicsPipeline is null" );
 
-		GraphicsPipeline* gp = m_DeviceVulkan->slotMapRenderPipelines_.get(handle);
+		GraphicsPipeline* gp = m_DeviceVulkan->slotMapRenderPipelines_.get( handle );
 
+	 
 
 		if( !gp )
 		{
-			IFNITY_LOG(LogCore, ERROR, "GraphicsPipeline is null");
+			IFNITY_LOG( LogCore, ERROR, "GraphicsPipeline is null" );
 			return VK_NULL_HANDLE;
 		}
 
@@ -1157,8 +1227,8 @@ namespace Vulkan
 			auto device = ctx_->device_;
 			auto pipeline = rps->pipeline_;
 			auto pipelineLayout = rps->pipelineLayout_;
-			ctx_->addDeferredTask(DESTROY_VK_PIPELINE_DEFERRED(device, pipeline));
-			ctx_->addDeferredTask(DESTROY_VK_PIPELINE_LAYOUT_DEFERRED(device, pipelineLayout));
+			ctx_->addDeferredTask( DESTROY_VK_PIPELINE_DEFERRED( device, pipeline ) );
+			ctx_->addDeferredTask( DESTROY_VK_PIPELINE_LAYOUT_DEFERRED( device, pipelineLayout ) );
 
 			rps->pipeline_ = VK_NULL_HANDLE;
 			rps->lastVkDescriptorSetLayout_ = vkDSL_;
@@ -1204,7 +1274,7 @@ namespace Vulkan
 		// 4. Create the Color Blend Attachment States
 
 		const auto& attachment = gp->colorFormat;
-		IFNITY_ASSERT_MSG(attachment != rhi::Format::UNKNOWN, "format invalid");
+		IFNITY_ASSERT_MSG( attachment != rhi::Format::UNKNOWN, "format invalid" );
 		colorAttachmentFormats[ 0 ] = VK_FORMAT_B8G8R8A8_UNORM;
 
 
@@ -1228,12 +1298,12 @@ namespace Vulkan
 			colorBlendAttachmentStates[ 0 ] = VkPipelineColorBlendAttachmentState
 			{
 				 .blendEnable = VK_TRUE,
-				 .srcColorBlendFactor = ConvertToVkBlendFactor(blendstate.srcColorBlendFactor),
-				 .dstColorBlendFactor = ConvertToVkBlendFactor(blendstate.dstColorBlendFactor),
-				 .colorBlendOp = ConvertToVkBlendOp(blendstate.colorBlendOp),
-				 .srcAlphaBlendFactor = ConvertToVkBlendFactor(blendstate.srcAlphaBlendFactor),
-				 .dstAlphaBlendFactor = ConvertToVkBlendFactor(blendstate.dstAlphaBlendFactor),
-				 .alphaBlendOp = ConvertToVkBlendOp(blendstate.alphaBlendOp),
+				 .srcColorBlendFactor = ConvertToVkBlendFactor( blendstate.srcColorBlendFactor ),
+				 .dstColorBlendFactor = ConvertToVkBlendFactor( blendstate.dstColorBlendFactor ),
+				 .colorBlendOp = ConvertToVkBlendOp( blendstate.colorBlendOp ),
+				 .srcAlphaBlendFactor = ConvertToVkBlendFactor( blendstate.srcAlphaBlendFactor ),
+				 .dstAlphaBlendFactor = ConvertToVkBlendFactor( blendstate.dstAlphaBlendFactor ),
+				 .alphaBlendOp = ConvertToVkBlendOp( blendstate.alphaBlendOp ),
 				 .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
 			};
 		} //end if blendEnable
@@ -1251,15 +1321,32 @@ namespace Vulkan
 
 		//6. PushConstant Vulkan Range and Specialization Info
 		VkSpecializationMapEntry entries[ SpecializationConstantDesc::SPECIALIZATION_CONSTANTS_MAX ] = {};
-		const VkSpecializationInfo si = getPipelineShaderStageSpecializationInfo(specInfo, entries);
+		const VkSpecializationInfo si = getPipelineShaderStageSpecializationInfo( specInfo, entries );
 
 
 		//7. Create VkPipelineShaderStageCreateInfo for each shader module
+		//Obtain names of input shader modules
+		const auto& wvName = desc.vs->GetShaderDescription().EntryPoint;
+		const auto& wpName = desc.ps->GetShaderDescription().EntryPoint;
+	
+		std::string vertxShaderName( wvName.begin(), wvName.end() );
+		std::string fragShaderName( wpName.begin(), wpName.end() );
+		
+		const char* vertexEntry   =  Utils::processEntryPoint(wvName, vertxShaderName);
+		const char* fragmentEntry =  Utils::processEntryPoint(wpName, fragShaderName);
+		
+
 
 		VkPipelineShaderStageCreateInfo shaderStages[ MAX_SHADER_STAGE ] = {};
-		shaderStages[ VSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_VERTEX_BIT, vertModule->sm, "main", &si);
-		shaderStages[ FSHADER ] = getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_FRAGMENT_BIT, fragModule->sm, "main", &si);
-		shaderStages[ GSHADER ] = geomModule ? getPipelineShaderStageCreateInfo(VK_SHADER_STAGE_GEOMETRY_BIT, geomModule->sm, "main", &si) : VkPipelineShaderStageCreateInfo{ .module = VK_NULL_HANDLE };
+		shaderStages[ VSHADER ] = getPipelineShaderStageCreateInfo( VK_SHADER_STAGE_VERTEX_BIT,
+																	vertModule->sm,
+																	vertexEntry,
+																	&si);
+		shaderStages[ FSHADER ] = getPipelineShaderStageCreateInfo( VK_SHADER_STAGE_FRAGMENT_BIT,
+																	fragModule->sm,   
+																	fragmentEntry,
+																	&si );
+		shaderStages[ GSHADER ] = geomModule ? getPipelineShaderStageCreateInfo( VK_SHADER_STAGE_GEOMETRY_BIT, geomModule->sm, "main", &si ) : VkPipelineShaderStageCreateInfo{ .module = VK_NULL_HANDLE };
 
 
 		#define UPDATE_PUSH_CONSTANT_SIZE(sm, bit)                                  \
@@ -1269,9 +1356,9 @@ namespace Vulkan
 		}
 		rps->shaderStageFlags_ = 0;
 		uint32_t pushConstantsSize = 0;
-		UPDATE_PUSH_CONSTANT_SIZE(vertModule, VK_SHADER_STAGE_VERTEX_BIT);
-		UPDATE_PUSH_CONSTANT_SIZE(fragModule, VK_SHADER_STAGE_FRAGMENT_BIT);
-		UPDATE_PUSH_CONSTANT_SIZE(geomModule, VK_SHADER_STAGE_GEOMETRY_BIT);
+		UPDATE_PUSH_CONSTANT_SIZE( vertModule, VK_SHADER_STAGE_VERTEX_BIT );
+		UPDATE_PUSH_CONSTANT_SIZE( fragModule, VK_SHADER_STAGE_FRAGMENT_BIT );
+		UPDATE_PUSH_CONSTANT_SIZE( geomModule, VK_SHADER_STAGE_GEOMETRY_BIT );
 
 		#undef UPDATE_PUSH_CONSTANT_SIZE
 
@@ -1282,9 +1369,9 @@ namespace Vulkan
 		if( !(pushConstantsSize <= limits.maxPushConstantsSize) )
 		{
 			//Fill and complete with IFNITY_LOG 
-			IFNITY_LOG(LogApp, ERROR,
-					   STRMESSAGE("Push constants size exceeded ", std::to_string(pushConstantsSize))
-					   + STRMESSAGE(" (max ", std::to_string(limits.maxPushConstantsSize)) + " bytes)");
+			IFNITY_LOG( LogApp, ERROR,
+						STRMESSAGE( "Push constants size exceeded ", std::to_string( pushConstantsSize ) )
+						+ STRMESSAGE( " (max ", std::to_string( limits.maxPushConstantsSize ) ) + " bytes)" );
 		}
 
 		//7. Create VkPipelineLayout
@@ -1300,59 +1387,59 @@ namespace Vulkan
 		const VkPipelineLayoutCreateInfo ci =
 		{
 			 .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-			 .setLayoutCount = (uint32_t)ARRAY_NUM_ELEMENTS(dsls),
+			 .setLayoutCount = ( uint32_t )ARRAY_NUM_ELEMENTS( dsls ),
 			 .pSetLayouts = dsls,
 			 .pushConstantRangeCount = pushConstantsSize ? 1u : 0u,
 			 .pPushConstantRanges = pushConstantsSize ? &range : nullptr,
 		};
-		VK_ASSERT(vkCreatePipelineLayout(vkDevice_, &ci, nullptr, &layout), "Fail CREATE PIPELINE LAYOUT IN getVkPipeline");
+		VK_ASSERT( vkCreatePipelineLayout( vkDevice_, &ci, nullptr, &layout ), "Fail CREATE PIPELINE LAYOUT IN getVkPipeline" );
 		char pipelineLayoutName[ 256 ] = { 0 };
 		if( desc.debugName )
 		{
-			snprintf(pipelineLayoutName, sizeof(pipelineLayoutName) - 1, "Pipeline Layout: %s", desc.debugName);
+			snprintf( pipelineLayoutName, sizeof( pipelineLayoutName ) - 1, "Pipeline Layout: %s", desc.debugName );
 		}
-		VK_ASSERT(setDebugObjectName(vkDevice_, VK_OBJECT_TYPE_PIPELINE_LAYOUT, (uint64_t)layout, pipelineLayoutName));
+		VK_ASSERT( setDebugObjectName( vkDevice_, VK_OBJECT_TYPE_PIPELINE_LAYOUT, ( uint64_t )layout, pipelineLayoutName ) );
 
 
 
 		//8. Create BuilderPipeline 
 		VulkanPipelineBuilder()
 			// from Vulkan 1.0
-			.dynamicState(VK_DYNAMIC_STATE_VIEWPORT)
-			.dynamicState(VK_DYNAMIC_STATE_SCISSOR)
-			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS)
-			.dynamicState(VK_DYNAMIC_STATE_BLEND_CONSTANTS)
+			.dynamicState( VK_DYNAMIC_STATE_VIEWPORT )
+			.dynamicState( VK_DYNAMIC_STATE_SCISSOR )
+			.dynamicState( VK_DYNAMIC_STATE_DEPTH_BIAS )
+			.dynamicState( VK_DYNAMIC_STATE_BLEND_CONSTANTS )
 			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state
-			.dynamicState(VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE)
-			.dynamicState(VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE)
-			.dynamicState(VK_DYNAMIC_STATE_DEPTH_COMPARE_OP)
+			.dynamicState( VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE )
+			.dynamicState( VK_DYNAMIC_STATE_DEPTH_WRITE_ENABLE )
+			.dynamicState( VK_DYNAMIC_STATE_DEPTH_COMPARE_OP )
 			// from Vulkan 1.3 or VK_EXT_extended_dynamic_state2
-			.dynamicState(VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE)
-			.primitiveTopology(ConvertToVkPrimitiveTopology(desc.rasterizationState.primitiveType))
-			.rasterizationSamples(getVulkanSampleCountFlags(samplesCount, m_DeviceVulkan->getFramebufferMSAABitMask()), minSampleShading)
-			.polygonMode(ConverToVkPolygonMode(desc.rasterizationState.polygonMode))
-			.stencilStateOps(VK_STENCIL_FACE_FRONT_BIT,
-							 ConvertstencilOpToVkStencilOp(frontFaceStencil.stencilFailureOp),
-							 ConvertstencilOpToVkStencilOp(frontFaceStencil.depthStencilPassOp),
-							 ConvertstencilOpToVkStencilOp(frontFaceStencil.depthFailureOp),
-							 compareOpToVkCompareOp(frontFaceStencil.stencilCompareOp))
-			.stencilStateOps(VK_STENCIL_FACE_BACK_BIT,
-							 ConvertstencilOpToVkStencilOp(backFaceStencil.stencilFailureOp),
-							 ConvertstencilOpToVkStencilOp(backFaceStencil.depthStencilPassOp),
-							 ConvertstencilOpToVkStencilOp(backFaceStencil.depthFailureOp),
-							 compareOpToVkCompareOp(backFaceStencil.stencilCompareOp))
-			.stencilMasks(VK_STENCIL_FACE_FRONT_BIT, 0xFF, frontFaceStencil.writeMask, frontFaceStencil.readMask)
-			.stencilMasks(VK_STENCIL_FACE_BACK_BIT, 0xFF, backFaceStencil.writeMask, backFaceStencil.readMask)
-			.shaderStage(shaderStages[ VSHADER ])
-			.shaderStage(shaderStages[ FSHADER ])
-			.shaderStage(shaderStages[ GSHADER ])
-			.cullMode(cullModeToVkCullMode(desc.rasterizationState.cullMode))
-			.frontFace(windingModeToVkFrontFace(desc.rasterizationState.frontFace))
-			.vertexInputState(ciVertexInputState)
-			.colorAttachments(colorBlendAttachmentStates, colorAttachmentFormats, 1)
-			.depthAttachmentFormat(formatToVkFormat(gp->depthFormat))
-			.stencilAttachmentFormat(formatToVkFormat(gp->stencilFormat))
-			.build(vkDevice_, m_DeviceVulkan->pipelineCache_, layout, &pipeline, desc.debugName);
+			.dynamicState( VK_DYNAMIC_STATE_DEPTH_BIAS_ENABLE )
+			.primitiveTopology( ConvertToVkPrimitiveTopology( desc.rasterizationState.primitiveType ) )
+			.rasterizationSamples( getVulkanSampleCountFlags( samplesCount, m_DeviceVulkan->getFramebufferMSAABitMask() ), minSampleShading )
+			.polygonMode( ConverToVkPolygonMode( desc.rasterizationState.polygonMode ) )
+			.stencilStateOps( VK_STENCIL_FACE_FRONT_BIT,
+							  ConvertstencilOpToVkStencilOp( frontFaceStencil.stencilFailureOp ),
+							  ConvertstencilOpToVkStencilOp( frontFaceStencil.depthStencilPassOp ),
+							  ConvertstencilOpToVkStencilOp( frontFaceStencil.depthFailureOp ),
+							  compareOpToVkCompareOp( frontFaceStencil.stencilCompareOp ) )
+			.stencilStateOps( VK_STENCIL_FACE_BACK_BIT,
+							  ConvertstencilOpToVkStencilOp( backFaceStencil.stencilFailureOp ),
+							  ConvertstencilOpToVkStencilOp( backFaceStencil.depthStencilPassOp ),
+							  ConvertstencilOpToVkStencilOp( backFaceStencil.depthFailureOp ),
+							  compareOpToVkCompareOp( backFaceStencil.stencilCompareOp ) )
+			.stencilMasks( VK_STENCIL_FACE_FRONT_BIT, 0xFF, frontFaceStencil.writeMask, frontFaceStencil.readMask )
+			.stencilMasks( VK_STENCIL_FACE_BACK_BIT, 0xFF, backFaceStencil.writeMask, backFaceStencil.readMask )
+			.shaderStage( shaderStages[ VSHADER ] )
+			.shaderStage( shaderStages[ FSHADER ] )
+			.shaderStage( shaderStages[ GSHADER ] )
+			.cullMode( cullModeToVkCullMode( desc.rasterizationState.cullMode ) )
+			.frontFace( windingModeToVkFrontFace( desc.rasterizationState.frontFace ) )
+			.vertexInputState( ciVertexInputState )
+			.colorAttachments( colorBlendAttachmentStates, colorAttachmentFormats, 1 )
+			.depthAttachmentFormat( formatToVkFormat( gp->depthFormat ) )
+			.stencilAttachmentFormat( formatToVkFormat( gp->stencilFormat ) )
+			.build( vkDevice_, m_DeviceVulkan->pipelineCache_, layout, &pipeline, desc.debugName );
 
 
 		rps->pipeline_ = pipeline;
@@ -1360,7 +1447,7 @@ namespace Vulkan
 
 
 
-		m_DeviceVulkan->addGraphicsPipeline(gp);
+		m_DeviceVulkan->addGraphicsPipeline( gp );
 
 
 		return pipeline;
@@ -1368,7 +1455,7 @@ namespace Vulkan
 
 	}
 
-	void Device::setActualPipeline(GraphicsPipeline* pipeline)
+	void Device::setActualPipeline( GraphicsPipeline* pipeline )
 	{
 
 		m_DeviceVulkan->actualPipeline_ = pipeline;
@@ -1382,7 +1469,7 @@ namespace Vulkan
 		}
 		else
 		{
-			IFNITY_LOG(LogApp, ERROR, "Actual pipeline is null");
+			IFNITY_LOG( LogApp, ERROR, "Actual pipeline is null" );
 			return nullptr;
 		}
 	}
@@ -1392,28 +1479,28 @@ namespace Vulkan
 	void Device::destroyShaderModule()
 	{
 
-		auto resetShaderModule = [](auto& shaderModule, const char* shaderType)
+		auto resetShaderModule = []( auto& shaderModule, const char* shaderType )
 			{
 				if( shaderModule )
 				{
-					IFNITY_LOG(LogApp, INFO, STRMESSAGE("Destroy ", shaderType, " Shader Module"));
+					IFNITY_LOG( LogApp, INFO, STRMESSAGE( "Destroy ", shaderType, " Shader Module" ) );
 					shaderModule.reset();
 				}
 			};
 
 		for( auto& vertex : m_shaderVert )
 		{
-			resetShaderModule(vertex, "Vertex");
+			resetShaderModule( vertex, "Vertex" );
 		}
 
 		for( auto& fragment : m_shaderFragment )
 		{
-			resetShaderModule(fragment, "Fragment");
+			resetShaderModule( fragment, "Fragment" );
 		}
 
 		for( auto& geometry : m_shaderGeometry )
 		{
-			resetShaderModule(geometry, "Geometry");
+			resetShaderModule( geometry, "Geometry" );
 		}
 
 
@@ -1421,18 +1508,18 @@ namespace Vulkan
 
 
 
-	HolderShaderSM Device::createShaderModuleFromSpirV(const void* spirv, size_t numBytes, const char* debugName) const
+	HolderShaderSM Device::createShaderModuleFromSpirV( const void* spirv, size_t numBytes, const char* debugName ) const
 	{
 		VkShaderModule vkShaderModule = VK_NULL_HANDLE;
 
 		const VkShaderModuleCreateInfo ci = {
 			 .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 			 .codeSize = numBytes,
-			 .pCode = (const uint32_t*)spirv
+			 .pCode = ( const uint32_t* )spirv
 		};
 
 		{
-			const VkResult result = vkCreateShaderModule(vkDevice_, &ci, nullptr, &vkShaderModule);
+			const VkResult result = vkCreateShaderModule( vkDevice_, &ci, nullptr, &vkShaderModule );
 
 
 			if( result != VK_SUCCESS )
@@ -1440,11 +1527,11 @@ namespace Vulkan
 				return {};
 			}
 
-			size_t numElements = numBytes / sizeof(uint32_t);
+			size_t numElements = numBytes / sizeof( uint32_t );
 
 			//todo: move to heap compilerRefelction to stack 
 
-			spirv_cross::CompilerReflection* compiler = new  spirv_cross::CompilerReflection((const uint32_t*)spirv, numElements);
+			spirv_cross::CompilerReflection* compiler = new  spirv_cross::CompilerReflection( ( const uint32_t* )spirv, numElements );
 
 			// Refleja los recursos del shader
 			spirv_cross::ShaderResources resources = compiler->get_shader_resources();
@@ -1454,45 +1541,45 @@ namespace Vulkan
 			// Itera sobre las push constants y calcula el tamao total
 			for( const auto& pushConstant : resources.push_constant_buffers )
 			{
-				const spirv_cross::SPIRType& type = compiler->get_type(pushConstant.base_type_id);
-				pushConstantSize += compiler->get_declared_struct_size(type);
+				const spirv_cross::SPIRType& type = compiler->get_type( pushConstant.base_type_id );
+				pushConstantSize += compiler->get_declared_struct_size( type );
 			}
 
 
 			ShaderModuleState smstate = { .sm = vkShaderModule, .pushConstantsSize = pushConstantSize };
 
 			//Create the handle 
-			ShaderModuleHandleSM handle = m_DeviceVulkan->slotMapShaderModules_.create(std::move(smstate));
+			ShaderModuleHandleSM handle = m_DeviceVulkan->slotMapShaderModules_.create( std::move( smstate ) );
 
 			//Make holder 
-			return  makeHolder(m_DeviceVulkan, handle);
+			return  makeHolder( m_DeviceVulkan, handle );
 
 		}
 	}
 
-	HolderShaderSM Device::createShaderModule(const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName) const
+	HolderShaderSM Device::createShaderModule( const char* shaderCode, size_t codeSize, VkShaderStageFlagBits stage, bool isBinary, const char* debugName ) const
 	{
 		std::vector<uint8_t> spirv;
 		if( isBinary )
 		{
-			return createShaderModuleFromSpirV(shaderCode, codeSize, debugName);
+			return createShaderModuleFromSpirV( shaderCode, codeSize, debugName );
 		}
 		else
 		{
 
-			const glslang_resource_t resource = getGlslangResource(m_DeviceVulkan->properties2.properties.limits);
+			const glslang_resource_t resource = getGlslangResource( m_DeviceVulkan->properties2.properties.limits );
 
-			compileShaderVK(stage, shaderCode, &spirv, &resource);
-			return createShaderModuleFromSpirV(spirv.data(), spirv.size(), debugName);
+			compileShaderVK( stage, shaderCode, &spirv, &resource );
+			return createShaderModuleFromSpirV( spirv.data(), spirv.size(), debugName );
 		}
 	}
 
-	VkFormat Device::getClosestDepthStencilFormat(rhi::Format desiredFormat) const
+	VkFormat Device::getClosestDepthStencilFormat( rhi::Format desiredFormat ) const
 	{
 
 		// get a list of compatible depth formats for a given desired format
 		// The list will contain depth format that are ordered from most to least closest
-		const std::vector<VkFormat> compatibleDepthStencilFormatList = getCompatibleDepthStencilFormats(desiredFormat);
+		const std::vector<VkFormat> compatibleDepthStencilFormatList = getCompatibleDepthStencilFormats( desiredFormat );
 
 		const auto deviceDepthFormats_ = m_DeviceVulkan->depthFormats_;
 
@@ -1500,13 +1587,13 @@ namespace Vulkan
 		std::set<VkFormat> availableFormats;
 		for( auto format : deviceDepthFormats_ )
 		{
-			availableFormats.insert(format);
+			availableFormats.insert( format );
 		}
 
 		// check if any of the format in compatible list is supported
 		for( auto depthStencilFormat : compatibleDepthStencilFormatList )
 		{
-			if( availableFormats.count(depthStencilFormat) != 0 )
+			if( availableFormats.count( depthStencilFormat ) != 0 )
 			{
 				return depthStencilFormat;
 			}
@@ -1519,7 +1606,7 @@ namespace Vulkan
 	const VkPhysicalDeviceLimits& Device::getPhysicalDeviceLimits() const
 	{
 		// TODO: Insertar una instruccin "return" aqu
-		IFNITY_ASSERT_MSG(m_DeviceVulkan != VK_NULL_HANDLE, "VkPhysicalDevice is null");
+		IFNITY_ASSERT_MSG( m_DeviceVulkan != VK_NULL_HANDLE, "VkPhysicalDevice is null" );
 		return m_DeviceVulkan->properties2.properties.limits;
 
 	}
@@ -1532,25 +1619,25 @@ namespace Vulkan
 
 	GraphicsPipeline::~GraphicsPipeline()
 	{
-		DestroyPipeline(m_DeviceVulkan->device_);
+		DestroyPipeline( m_DeviceVulkan->device_ );
 	}
-	GraphicsPipeline::GraphicsPipeline(GraphicsPipelineDescription&& desc, DeviceVulkan* dev): m_Description(std::move(desc)), m_DeviceVulkan(dev)
+	GraphicsPipeline::GraphicsPipeline( GraphicsPipelineDescription&& desc, DeviceVulkan* dev ): m_Description( std::move( desc ) ), m_DeviceVulkan( dev )
 	{}
 
-	void GraphicsPipeline::BindPipeline (IDevice* device)
+	void GraphicsPipeline::BindPipeline( IDevice* device )
 	{
-		Device* vkDevice = dynamic_cast<Device*>(device);
-		IFNITY_ASSERT_MSG(vkDevice != nullptr, "Device is not a Vulkan Device");
+		Device* vkDevice = dynamic_cast< Device* >(device);
+		IFNITY_ASSERT_MSG( vkDevice != nullptr, "Device is not a Vulkan Device" );
 
 
 		if( ownerHandle_.valid() )
 		{
-			auto vkpipeline = vkDevice->getVkPipeline(ownerHandle_);
+			auto vkpipeline = vkDevice->getVkPipeline( ownerHandle_ );
 		}
 
 
 
-		vkDevice->setActualPipeline(this);
+		vkDevice->setActualPipeline( this );
 
 
 	}
@@ -1559,10 +1646,10 @@ namespace Vulkan
 	{
 		if( m_shaderVert.valid() )
 		{
-			ShaderModuleState* mvert = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderVert);
+			ShaderModuleState* mvert = m_DeviceVulkan->slotMapShaderModules_.get( m_shaderVert );
 			return mvert;
 		}
-		IFNITY_LOG(LogApp, ERROR, "Vertex Shader Module State getHandle   its not valid");
+		IFNITY_LOG( LogApp, ERROR, "Vertex Shader Module State getHandle   its not valid" );
 		return nullptr;
 	}
 
@@ -1570,10 +1657,10 @@ namespace Vulkan
 	{
 		if( m_shaderVert.valid() )
 		{
-			ShaderModuleState* frag = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderFragment);
+			ShaderModuleState* frag = m_DeviceVulkan->slotMapShaderModules_.get( m_shaderFragment );
 			return frag;
 		}
-		IFNITY_LOG(LogApp, ERROR, "Vertex frag Module State getHandle   its not valid");
+		IFNITY_LOG( LogApp, ERROR, "Vertex frag Module State getHandle   its not valid" );
 
 		return nullptr;
 	}
@@ -1582,21 +1669,21 @@ namespace Vulkan
 	{
 		if( m_shaderVert.valid() )
 		{
-			ShaderModuleState* geom = m_DeviceVulkan->slotMapShaderModules_.get(m_shaderGeometry);
+			ShaderModuleState* geom = m_DeviceVulkan->slotMapShaderModules_.get( m_shaderGeometry );
 			return geom;
 		}
-		IFNITY_LOG(LogApp, ERROR, "Geometry  Module State getHandle   its not valid");
+		IFNITY_LOG( LogApp, ERROR, "Geometry  Module State getHandle   its not valid" );
 
 		return nullptr;
 	}
 
-	void GraphicsPipeline::setSpecializationConstant(const SpecializationConstantDesc& spec)
+	void GraphicsPipeline::setSpecializationConstant( const SpecializationConstantDesc& spec )
 	{
 		if( spec.data && spec.dataSize )
 		{
 			// copy into a local storage //First Reserve the memory,
-			m_rVkPipelineState.specConstantDataStorage_ = malloc(spec.dataSize);
-			memcpy(m_rVkPipelineState.specConstantDataStorage_, spec.data, spec.dataSize);
+			m_rVkPipelineState.specConstantDataStorage_ = malloc( spec.dataSize );
+			memcpy( m_rVkPipelineState.specConstantDataStorage_, spec.data, spec.dataSize );
 			//Copy the data in the memory VkPipeline 
 			specInfo.data = m_rVkPipelineState.specConstantDataStorage_; // GetInformation from the data
 		}
@@ -1604,7 +1691,7 @@ namespace Vulkan
 
 	}
 
-	void GraphicsPipeline::DestroyPipeline(VkDevice device)
+	void GraphicsPipeline::DestroyPipeline( VkDevice device )
 	{
 
 		if( !destroy )
@@ -1612,13 +1699,13 @@ namespace Vulkan
 
 			if( m_rVkPipelineState.pipeline_ != VK_NULL_HANDLE )
 			{
-				vkDestroyPipeline(device, m_rVkPipelineState.pipeline_, nullptr);
+				vkDestroyPipeline( device, m_rVkPipelineState.pipeline_, nullptr );
 
 			}
 
 			if( m_rVkPipelineState.pipelineLayout_ != VK_NULL_HANDLE )
 			{
-				vkDestroyPipelineLayout(device, m_rVkPipelineState.pipelineLayout_, nullptr);
+				vkDestroyPipelineLayout( device, m_rVkPipelineState.pipelineLayout_, nullptr );
 			}
 		}
 
@@ -1646,8 +1733,8 @@ namespace Vulkan
 			{
 				 .location = attr.location,
 				 .binding = attr.binding,
-				 .format = formatToVkFormat(attr.format),
-				 .offset = (uint32_t)attr.offset
+				 .format = formatToVkFormat( attr.format ),
+				 .offset = ( uint32_t )attr.offset
 			};
 
 			if( !bufferAlreadyBound[ attr.binding ] )
@@ -1663,7 +1750,7 @@ namespace Vulkan
 		}//end for
 
 		//Set the specialization constant
-		setSpecializationConstant(specInfo);
+		setSpecializationConstant( specInfo );
 
 
 	}
@@ -1686,13 +1773,13 @@ namespace Vulkan
 	}
 
 
-	VkDeviceAddress Buffer::getBufferGpuAddress(const DeviceVulkan& device) const
+	VkDeviceAddress Buffer::getBufferGpuAddress( const DeviceVulkan& device ) const
 	{
-		const Vulkan::VulkanBuffer* vkBuffer = device.slotMapBuffers_.get(*m_holdBuffer);
+		const Vulkan::VulkanBuffer* vkBuffer = device.slotMapBuffers_.get( *m_holdBuffer );
 
 		if( vkBuffer->vkDeviceAddress_ )
 		{
-			IFNITY_LOG(LogCore, TRACE, "Buffer has a valid VkDeviceAddress");
+			IFNITY_LOG( LogCore, TRACE, "Buffer has a valid VkDeviceAddress" );
 			if( m_BufferGpuAddress == 0 )
 			{
 				m_BufferGpuAddress = vkBuffer->vkDeviceAddress_;
@@ -1707,16 +1794,16 @@ namespace Vulkan
 	//==================================================================================================//
 
 	//Constructor 
-	MeshObject::MeshObject(const MeshObjectDescription&& desc, IDevice* device)
-		: m_MeshObjectDescription(std::move(desc))
+	MeshObject::MeshObject( const MeshObjectDescription&& desc, IDevice* device )
+		: m_MeshObjectDescription( std::move( desc ) )
 	{
 
-		m_Device = DCAST_DEVICE(device);
+		m_Device = DCAST_DEVICE( device );
 
 		//Chec if device its valid 
 		if( !m_Device )
 		{
-			IFNITY_LOG(LogApp, ERROR, "Device is not valid");
+			IFNITY_LOG( LogApp, ERROR, "Device is not valid" );
 			return;
 		}
 		//Chec if mesh data its valid
@@ -1731,22 +1818,22 @@ namespace Vulkan
 		const uint32_t numCommands = desc.meshFileHeader.meshCount;
 
 
-		drawCommands.resize(sizeof(DrawIndexedIndirectCommand) * numCommands + sizeof(uint32_t));
+		drawCommands.resize( sizeof( DrawIndexedIndirectCommand ) * numCommands + sizeof( uint32_t ) );
 
 		// store the number of draw commands in the very beginning of the buffer
-		memcpy(drawCommands.data(), &numCommands, sizeof(numCommands));
+		memcpy( drawCommands.data(), &numCommands, sizeof( numCommands ) );
 
 		//avoid aliassing issues. 
-		DrawIndexedIndirectCommand* cmd = std::launder(reinterpret_cast<DrawIndexedIndirectCommand*>(drawCommands.data() + sizeof(uint32_t)));
+		DrawIndexedIndirectCommand* cmd = std::launder( reinterpret_cast< DrawIndexedIndirectCommand* >(drawCommands.data() + sizeof( uint32_t )) );
 
 		// prepare indirect commands buffer
 		for( uint32_t i = 0; i != numCommands; i++ )
 		{
 			*cmd++ = {
-				.count = desc.meshData.meshes_[ i ].getLODIndicesCount(0),
+				.count = desc.meshData.meshes_[ i ].getLODIndicesCount( 0 ),
 				.instanceCount = 1,
 				.firstIndex = desc.meshData.meshes_[ i ].indexOffset,
-				.baseVertex = (int32_t)desc.meshData.meshes_[ i ].vertexOffset,
+				.baseVertex = ( int32_t )desc.meshData.meshes_[ i ].vertexOffset,
 				.baseInstance = 0,
 			};
 		}
@@ -1754,44 +1841,44 @@ namespace Vulkan
 		// 
 		BufferDescription bufferDesc = {};
 		{
-			bufferDesc.SetDebugName("Indices Data Buffer - MeshObject");
-			bufferDesc.SetBufferType(BufferType::INDEX_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(desc.meshFileHeader.indexDataSize);
-			bufferDesc.SetData(indices);
+			bufferDesc.SetDebugName( "Indices Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::INDEX_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( desc.meshFileHeader.indexDataSize );
+			bufferDesc.SetData( indices );
 		}
-		m_BufferIndex = m_Device->CreateBuffer(bufferDesc);
+		m_BufferIndex = m_Device->CreateBuffer( bufferDesc );
 
-		IFNITY_ASSERT_MSG(m_BufferIndex, "Failed to create index buffer");
+		IFNITY_ASSERT_MSG( m_BufferIndex, "Failed to create index buffer" );
 
 		//VertexData
 		{
-			bufferDesc.SetDebugName("Vertex Data Buffer - MeshObject");
-			bufferDesc.SetBufferType(BufferType::VERTEX_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(desc.meshFileHeader.vertexDataSize);
-			bufferDesc.SetData(vertices);
+			bufferDesc.SetDebugName( "Vertex Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::VERTEX_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( desc.meshFileHeader.vertexDataSize );
+			bufferDesc.SetData( vertices );
 		}
 
-		m_BufferVertex = m_Device->CreateBuffer(bufferDesc);
-		IFNITY_ASSERT_MSG(m_BufferVertex, "Failed to create vertex buffer");
+		m_BufferVertex = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferVertex, "Failed to create vertex buffer" );
 
 		//Indrect buffer
 		{
-			bufferDesc.SetDebugName("Indirect Data Buffer - MeshObject");
-			bufferDesc.SetBufferType(BufferType::INDIRECT_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(sizeof(DrawIndexedIndirectCommand) * numCommands + sizeof(uint32_t));
-			bufferDesc.SetData(drawCommands.data());
+			bufferDesc.SetDebugName( "Indirect Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::INDIRECT_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( sizeof( DrawIndexedIndirectCommand ) * numCommands + sizeof( uint32_t ) );
+			bufferDesc.SetData( drawCommands.data() );
 		}
 
-		m_BufferIndirect = m_Device->CreateBuffer(bufferDesc);
-		IFNITY_ASSERT_MSG(m_BufferIndirect, "Failed to create indirect buffer");
+		m_BufferIndirect = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferIndirect, "Failed to create indirect buffer" );
 
 		//Fill al m_SM
-		m_SM.indexBuffer = DCAST_BUFFER(m_BufferIndex.get())->getBufferHandleSM();
-		m_SM.vertexBuffer = DCAST_BUFFER(m_BufferVertex.get())->getBufferHandleSM();
-		m_SM.indirectBuffer = DCAST_BUFFER(m_BufferIndirect.get())->getBufferHandleSM();
+		m_SM.indexBuffer = DCAST_BUFFER( m_BufferIndex.get() )->getBufferHandleSM();
+		m_SM.vertexBuffer = DCAST_BUFFER( m_BufferVertex.get() )->getBufferHandleSM();
+		m_SM.indirectBuffer = DCAST_BUFFER( m_BufferIndirect.get() )->getBufferHandleSM();
 
 		meshStatus_ = MeshStatus::READY_TO_DRAW;
 
@@ -1799,81 +1886,81 @@ namespace Vulkan
 
 	}
 
-	MeshObject::MeshObject(const SceneObjectHandler& data, IDevice* device): m_Device(DCAST_DEVICE(device))
+	MeshObject::MeshObject( const SceneObjectHandler& data, IDevice* device ): m_Device( DCAST_DEVICE( device ) )
 	{
-	
+
 		//Get information about scene 
 		//Chec if device its valid 
 		if( !m_Device )
 		{
-			IFNITY_LOG(LogApp, ERROR, "Device is not valid");
+			IFNITY_LOG( LogApp, ERROR, "Device is not valid" );
 			return;
 		}
 		//Chec if mesh data its valid
 		meshStatus_ = MeshStatus::BUFFER_NOT_INITIALIZED;
 
 		//GET data information and fill m_MeshObjectDescription
-		const MeshData& meshData    = data->getMeshData();
+		const MeshData& meshData = data->getMeshData();
 		const MeshFileHeader header = data->getHeader();
 
 		const uint32_t* indices = meshData.indexData_.data();
 		const float* vertices = meshData.vertexData_.data();
 
-		const size_t transformsSize = data->getScene().globalTransform_.size() * sizeof(glm::mat4);
+		const size_t transformsSize = data->getScene().globalTransform_.size() * sizeof( glm::mat4 );
 		const void* transformsData = data->getScene().globalTransform_.data();
 
 		m_MeshObjectDescription.meshFileHeader = header; // for now its only de data avaialbe in the future 
-														 // its important to move the data sceen to meshobjectDescription. to avoid lost data. 
-		
-		
+		// its important to move the data sceen to meshobjectDescription. to avoid lost data. 
 
-		//Get data to modify like materials in vk , this solution its not optimal but in the future
-		//when we have a better solution that solve vk and d3d12, probably unify that Opengl scene pipeline. 
+
+
+//Get data to modify like materials in vk , this solution its not optimal but in the future
+//when we have a better solution that solve vk and d3d12, probably unify that Opengl scene pipeline. 
 		auto materials = data->getMaterials();
 		//Convert Materials to vk format and make happy to GPU. 
-		convertToVkMaterial(materials, *m_Device, data->getTexturesFiles(),allMaterialsTextures_);
+		convertToVkMaterial( materials, *m_Device, data->getTexturesFiles(), allMaterialsTextures_ );
 
 		//Create Buffers and fill the data.
 		BufferDescription bufferDesc = {};
 		{
-			bufferDesc.SetDebugName("Indices Data Buffer - MeshObject");
-			bufferDesc.SetBufferType(BufferType::INDEX_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(header.indexDataSize);
-			bufferDesc.SetData(indices);
+			bufferDesc.SetDebugName( "Indices Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::INDEX_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( header.indexDataSize );
+			bufferDesc.SetData( indices );
 		}
-		m_BufferIndex = m_Device->CreateBuffer(bufferDesc);
-		IFNITY_ASSERT_MSG(m_BufferIndex, "Failed to create index buffer");
+		m_BufferIndex = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferIndex, "Failed to create index buffer" );
 		//VertexData
 		{
-			bufferDesc.SetDebugName("Vertex Data Buffer - MeshObject");
-			bufferDesc.SetBufferType(BufferType::VERTEX_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(header.vertexDataSize);
-			bufferDesc.SetData(vertices);
+			bufferDesc.SetDebugName( "Vertex Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::VERTEX_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( header.vertexDataSize );
+			bufferDesc.SetData( vertices );
 		}
-		m_BufferVertex = m_Device->CreateBuffer(bufferDesc);
-		IFNITY_ASSERT_MSG(m_BufferVertex, "Failed to create vertex buffer");
+		m_BufferVertex = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferVertex, "Failed to create vertex buffer" );
 		//Buffer Transformers Model Matrices
 		{
-			bufferDesc.SetDebugName("TransformerBuffer  - MeshObject");
-			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(transformsSize);
-			bufferDesc.SetData(transformsData);
+			bufferDesc.SetDebugName( "TransformerBuffer  - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::STORAGE_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( transformsSize );
+			bufferDesc.SetData( transformsData );
 		}
-		m_BufferModelMatrices = m_Device->CreateBuffer(bufferDesc);
-		IFNITY_ASSERT_MSG(m_BufferModelMatrices, "Failed to create model matrices buffer");
+		m_BufferModelMatrices = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferModelMatrices, "Failed to create model matrices buffer" );
 
 		//Buffer Materials 
 		{
-			bufferDesc.SetDebugName("Material Buffer  - MeshObject");
-			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(sizeof(MaterialDescription) * materials.size());
-			bufferDesc.SetData(materials.data());
+			bufferDesc.SetDebugName( "Material Buffer  - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::STORAGE_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( sizeof( MaterialDescription ) * materials.size() );
+			bufferDesc.SetData( materials.data() );
 		}
-		m_BufferMaterials = m_Device->CreateBuffer(bufferDesc);
+		m_BufferMaterials = m_Device->CreateBuffer( bufferDesc );
 
 		//DrawCommands Buffer and DrawData 
 		std::vector<DrawIndexedIndirectCommand> drawCommands;
@@ -1881,68 +1968,68 @@ namespace Vulkan
 
 		const uint32_t numCommands = header.meshCount;
 
-		drawCommands.resize(numCommands);
-		drawID.resize(numCommands);
+		drawCommands.resize( numCommands );
+		drawID.resize( numCommands );
 
 		DrawIndexedIndirectCommand* cmd = drawCommands.data();
-		DrawID* dd                    =   drawID.data();
+		DrawID* dd = drawID.data();
 
-		IFNITY_ASSERT(data->getScene().meshes_.size() == numCommands);
-		
+		IFNITY_ASSERT( data->getScene().meshes_.size() == numCommands );
+
 		uint32_t ddindex = 0;
 		//Fill the draw commands and draw data 
 		for( auto& shape : data->getShapes() )
 		{
 			int32_t meshId = shape.meshIndex;
 			*cmd++ = {
-				.count = meshData.meshes_[ meshId ].getLODIndicesCount(0),
+				.count = meshData.meshes_[ meshId ].getLODIndicesCount( 0 ),
 				.instanceCount = 1,
 				.firstIndex = shape.indexOffset,
-				.baseVertex = (int32_t)shape.vertexOffset,
+				.baseVertex = ( int32_t )shape.vertexOffset,
 				.baseInstance = ddindex++,
 			};
 			*dd++ = {
 				.transformId = shape.transformIndex,
-				.materialId =  shape.materialIndex,
+				.materialId = shape.materialIndex,
 			};
 		}
 
 		// Now Build the buffer Indirect buffer and DrawID storage buffer 
 		// prepare indirect commands buffer
 		{
-			bufferDesc.SetDebugName("Indirect Data Buffer - MeshObject");
-			bufferDesc.SetBufferType(BufferType::INDIRECT_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(sizeof(DrawIndexedIndirectCommand) * numCommands);
-			bufferDesc.SetData(drawCommands.data());
+			bufferDesc.SetDebugName( "Indirect Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::INDIRECT_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( sizeof( DrawIndexedIndirectCommand ) * numCommands );
+			bufferDesc.SetData( drawCommands.data() );
 		}
-		m_BufferIndirect = m_Device->CreateBuffer(bufferDesc);
-		IFNITY_ASSERT_MSG(m_BufferIndirect, "Failed to create indirect buffer");
+		m_BufferIndirect = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferIndirect, "Failed to create indirect buffer" );
 
 		//DrawID buffer
 		{
-			bufferDesc.SetDebugName("DrawID Data Buffer - MeshObject");
-			bufferDesc.SetBufferType(BufferType::STORAGE_BUFFER);
-			bufferDesc.SetStorageType(StorageType::DEVICE);
-			bufferDesc.SetByteSize(sizeof(DrawID) * numCommands);
-			bufferDesc.SetData(drawID.data());
+			bufferDesc.SetDebugName( "DrawID Data Buffer - MeshObject" );
+			bufferDesc.SetBufferType( BufferType::STORAGE_BUFFER );
+			bufferDesc.SetStorageType( StorageType::DEVICE );
+			bufferDesc.SetByteSize( sizeof( DrawID ) * numCommands );
+			bufferDesc.SetData( drawID.data() );
 		}
-		m_BufferDrawID = m_Device->CreateBuffer(bufferDesc);
-		IFNITY_ASSERT_MSG(m_BufferDrawID, "Failed to create drawID buffer");
+		m_BufferDrawID = m_Device->CreateBuffer( bufferDesc );
+		IFNITY_ASSERT_MSG( m_BufferDrawID, "Failed to create drawID buffer" );
 
 		//Fill al m_SM
-		m_SM.vertexBuffer		 = DCAST_BUFFER(m_BufferVertex.get())->getBufferHandleSM();
-		m_SM.indexBuffer		 = DCAST_BUFFER(m_BufferIndex.get())->getBufferHandleSM();
-		m_SM.indirectBuffer		 = DCAST_BUFFER(m_BufferIndirect.get())->getBufferHandleSM();
-		m_SM.drawIDBuffer		 = DCAST_BUFFER(m_BufferDrawID.get())->getBufferHandleSM();
-		m_SM.materialBuffer		 = DCAST_BUFFER(m_BufferMaterials.get())->getBufferHandleSM();
-		m_SM.modelMatricesBuffer = DCAST_BUFFER(m_BufferModelMatrices.get())->getBufferHandleSM();
+		m_SM.vertexBuffer = DCAST_BUFFER( m_BufferVertex.get() )->getBufferHandleSM();
+		m_SM.indexBuffer = DCAST_BUFFER( m_BufferIndex.get() )->getBufferHandleSM();
+		m_SM.indirectBuffer = DCAST_BUFFER( m_BufferIndirect.get() )->getBufferHandleSM();
+		m_SM.drawIDBuffer = DCAST_BUFFER( m_BufferDrawID.get() )->getBufferHandleSM();
+		m_SM.materialBuffer = DCAST_BUFFER( m_BufferMaterials.get() )->getBufferHandleSM();
+		m_SM.modelMatricesBuffer = DCAST_BUFFER( m_BufferModelMatrices.get() )->getBufferHandleSM();
 
 
 		//Fill the gpu address
-		m_SM.gpuAddress.drawId         = m_BufferDrawID->GetBufferGpuAddress();
-		m_SM.gpuAddress.materials      = m_BufferMaterials->GetBufferGpuAddress();
-		m_SM.gpuAddress.modelMatrices  = m_BufferModelMatrices->GetBufferGpuAddress();
+		m_SM.gpuAddress.drawId = m_BufferDrawID->GetBufferGpuAddress();
+		m_SM.gpuAddress.materials = m_BufferMaterials->GetBufferGpuAddress();
+		m_SM.gpuAddress.modelMatrices = m_BufferModelMatrices->GetBufferGpuAddress();
 
 
 		meshStatus_ = MeshStatus::READY_TO_DRAW;
@@ -1962,15 +2049,15 @@ namespace Vulkan
 		DepthState depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true };
 
 
-		buf.cmdBindDepthState(depthState);
-		buf.cmdBindRenderPipeline(*m_Device->getActualPipeline());
+		buf.cmdBindDepthState( depthState );
+		buf.cmdBindRenderPipeline( *m_Device->getActualPipeline() );
 
 
-		buf.cmdBindIndexBuffer(m_SM.indexBuffer, rhi::IndexFormat::IndexFormat_UINT32);
-		buf.cmdBindVertexBuffer(0, m_SM.vertexBuffer);
-		buf.cmdPushConstants(pc.data, pc.size, pc.offset);
-		buf.cmdBindDepthState({ .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true });
-		buf.cmdDrawIndexedIndirect(m_SM.indirectBuffer, sizeof(uint32_t), m_MeshObjectDescription.meshFileHeader.meshCount);
+		buf.cmdBindIndexBuffer( m_SM.indexBuffer, rhi::IndexFormat::IndexFormat_UINT32 );
+		buf.cmdBindVertexBuffer( 0, m_SM.vertexBuffer );
+		buf.cmdPushConstants( pc.data, pc.size, pc.offset );
+		buf.cmdBindDepthState( { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true } );
+		buf.cmdDrawIndexedIndirect( m_SM.indirectBuffer, sizeof( uint32_t ), m_MeshObjectDescription.meshFileHeader.meshCount );
 
 
 	}
@@ -1978,7 +2065,7 @@ namespace Vulkan
 	void MeshObject::DrawIndexed()
 	{
 		//Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		throw std::runtime_error( "The function or operation is not implemented." );
 	}
 
 	void MeshObject::DrawIndirect()
@@ -1987,10 +2074,11 @@ namespace Vulkan
 		auto& buf = m_Device->getCommandBuffer();
 		const auto& pc = m_Device->pushConstants;
 		//Force now to use MAT4 [TODO] REMOVE FROM THIS. ITS ONLY FOR TESTING PURPOSES.
-		glm::mat4 viewmodel = *reinterpret_cast<const glm::mat4*>(pc.data);
+		glm::mat4 viewmodel = *reinterpret_cast< const glm::mat4* >(pc.data);
 
 		//Build push constants
-		const struct {	
+		const struct
+		{
 			mat4 viewProj;
 			uint64_t bufferTransforms;
 			uint64_t bufferDrawData;
@@ -1998,31 +2086,31 @@ namespace Vulkan
 		} pushConstans = {
 				.viewProj = viewmodel,
 				.bufferTransforms = m_SM.gpuAddress.modelMatrices,
-				.bufferDrawData   = m_SM.gpuAddress.drawId,
-				.bufferMaterials  = m_SM.gpuAddress.materials,
+				.bufferDrawData = m_SM.gpuAddress.drawId,
+				.bufferMaterials = m_SM.gpuAddress.materials,
 		};
-		
+
 
 
 		DepthState depthState = { .compareOp = rhi::CompareOp::CompareOp_Less, .isDepthWriteEnabled = true };
-		buf.cmdBindDepthState(depthState);
+		buf.cmdBindDepthState( depthState );
 
 		auto* pipeline = m_Device->getActualPipeline();
-		CHECK_PTR(pipeline, "Pipeline is null");
-		
-		buf.cmdBindRenderPipeline(*pipeline);
-		buf.cmdBindIndexBuffer(m_SM.indexBuffer, rhi::IndexFormat::IndexFormat_UINT32);
-		buf.cmdBindVertexBuffer(0, m_SM.vertexBuffer);
-		buf.cmdPushConstants(pushConstans);
-		buf.cmdDrawIndexedIndirect(m_SM.indirectBuffer, 0, m_MeshObjectDescription.meshFileHeader.meshCount);
-		
+		CHECK_PTR( pipeline, "Pipeline is null" );
 
-		
+		buf.cmdBindRenderPipeline( *pipeline );
+		buf.cmdBindIndexBuffer( m_SM.indexBuffer, rhi::IndexFormat::IndexFormat_UINT32 );
+		buf.cmdBindVertexBuffer( 0, m_SM.vertexBuffer );
+		buf.cmdPushConstants( pushConstans );
+		buf.cmdDrawIndexedIndirect( m_SM.indirectBuffer, 0, m_MeshObjectDescription.meshFileHeader.meshCount );
+
+
+
 	}
-	void MeshObject::Draw(const DrawDescription& desc)
+	void MeshObject::Draw( const DrawDescription& desc )
 	{
 		//Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		throw std::runtime_error( "The function or operation is not implemented." );
 	}
 
 	MeshObjectDescription& MeshObject::GetMeshObjectDescription()
@@ -2033,18 +2121,18 @@ namespace Vulkan
 	void MeshObject::DrawInstancedDirect()
 	{
 		//Not implemented yet
-		throw std::runtime_error("The function or operation is not implemented.");
+		throw std::runtime_error( "The function or operation is not implemented." );
 	}
 
-	void MeshObject::convertToVkMaterial(std::vector<MaterialDescription>& mt,
-										 Device& device, 
-										 const std::vector<std::string>& files,
-										 std::vector<TextureHandle>& mtlTextures)
+	void MeshObject::convertToVkMaterial( std::vector<MaterialDescription>& mt,
+										  Device& device,
+										  const std::vector<std::string>& files,
+										  std::vector<TextureHandle>& mtlTextures )
 	{
 		uint32_t id = 0;
 		//For all files convert to material. 
 		//Iterate for all files and build texture
-		mtlTextures.resize(files.size());
+		mtlTextures.resize( files.size() );
 		for( auto& file : files )
 		{
 			//load texture from file
@@ -2056,19 +2144,19 @@ namespace Vulkan
 			texdesc.usage = TextureUsageBits::SAMPLED;
 			texdesc.isDepth = false;
 			// upload texture and fill widht, height, 
-			const void* img = LoadTextureFromFileDescription(texdesc);
+			const void* img = LoadTextureFromFileDescription( texdesc );
 			texdesc.data = img;					//fill de data. 
 
 			//Now create the texture
-			TextureHandle texHandle = device.CreateTexture(texdesc);
+			TextureHandle texHandle = device.CreateTexture( texdesc );
 			//Get the texture now using dcast 
 			mtlTextures[ id++ ] = texHandle;
 		}
 
 		//Now create and update the material 
-		auto getTextureId = [](uint32_t idx,const std::span<TextureHandle>& textures )->uint32_t
+		auto getTextureId = []( uint32_t idx, const std::span<TextureHandle>& textures )->uint32_t
 			{
-				if( idx == INVALID_TEXTURE )[[likely]] 
+				if( idx == INVALID_TEXTURE ) [[likely]]
 				{
 					return 0;
 				}
@@ -2077,10 +2165,10 @@ namespace Vulkan
 					//Get the texture index. 
 					const auto& texture = textures[ idx ];
 					//Get the texture id.
-					Texture* vktexture = DCAST_TEXTURE(texture.get());
+					Texture* vktexture = DCAST_TEXTURE( texture.get() );
 					if( !vktexture )
 					{
-						IFNITY_LOG(LogApp, ERROR, "Failed to get VulkanTexturedynamic cast");
+						IFNITY_LOG( LogApp, ERROR, "Failed to get VulkanTexturedynamic cast" );
 						return 0;
 					}
 					//Get the texture id.
@@ -2089,16 +2177,16 @@ namespace Vulkan
 			};
 
 		// use for each 
-		std::for_each(mt.begin(), mt.end(), [&getTextureId,&mtlTextures](auto& mtl)
-					  {
-						  //Get the texture id. 
-						  mtl.ambientOcclusionMap_  = getTextureId(mtl.ambientOcclusionMap_ , mtlTextures);
-						  mtl.emissiveMap_          = getTextureId(mtl.emissiveMap_         , mtlTextures);
-						  mtl.albedoMap_            = getTextureId(mtl.albedoMap_           , mtlTextures);
-						  mtl.metallicRoughnessMap_ = getTextureId(mtl.metallicRoughnessMap_, mtlTextures);
-						  mtl.normalMap_            = getTextureId(mtl.normalMap_           , mtlTextures);
-						  mtl.opacityMap_           = getTextureId(mtl.opacityMap_          , mtlTextures);
-					  });
+		std::for_each( mt.begin(), mt.end(), [ &getTextureId, &mtlTextures ]( auto& mtl )
+					   {
+						   //Get the texture id. 
+						   mtl.ambientOcclusionMap_ = getTextureId( mtl.ambientOcclusionMap_, mtlTextures );
+						   mtl.emissiveMap_ = getTextureId( mtl.emissiveMap_, mtlTextures );
+						   mtl.albedoMap_ = getTextureId( mtl.albedoMap_, mtlTextures );
+						   mtl.metallicRoughnessMap_ = getTextureId( mtl.metallicRoughnessMap_, mtlTextures );
+						   mtl.normalMap_ = getTextureId( mtl.normalMap_, mtlTextures );
+						   mtl.opacityMap_ = getTextureId( mtl.opacityMap_, mtlTextures );
+					   } );
 
 
 
@@ -2108,41 +2196,41 @@ namespace Vulkan
 	//==================================================================================================//
 	//  Scene Objects Methods			                                                        //
 	//==================================================================================================//
-	SceneObject::SceneObject(const char* meshFile, const char* sceneFile, const char* materialFile)
+	SceneObject::SceneObject( const char* meshFile, const char* sceneFile, const char* materialFile )
 	{
 		////1.First load the mesh file
-		header_ = loadMeshData(meshFile, meshData_);
-		loadSceneShapes(sceneFile);
-		loadMaterials(materialFile, materials_, textureFiles_);
+		header_ = loadMeshData( meshFile, meshData_ );
+		loadSceneShapes( sceneFile );
+		loadMaterials( materialFile, materials_, textureFiles_ );
 
 
 	}
 
-	void SceneObject::loadSceneShapes(const char* sceneFile)
+	void SceneObject::loadSceneShapes( const char* sceneFile )
 	{
-		IFNITY::loadScene(sceneFile, scene_);
+		IFNITY::loadScene( sceneFile, scene_ );
 
 		// prepare draw data buffer
-		for(const auto& c : scene_.meshes_)
+		for( const auto& c : scene_.meshes_ )
 		{
-			auto material = scene_.materialForNode_.find(c.first);
-			if(material != scene_.materialForNode_.end())
+			auto material = scene_.materialForNode_.find( c.first );
+			if( material != scene_.materialForNode_.end() )
 			{
 				shapes_.push_back(
 					DrawData{
 						.meshIndex = c.second, // c.second is the mesh index
 						.materialIndex = material->second, // material->second is the material index
 						.LOD = 0,
-						.indexOffset = meshData_.meshes_ [ c.second ].indexOffset,
+						.indexOffset = meshData_.meshes_[ c.second ].indexOffset,
 						.vertexOffset = meshData_.meshes_[ c.second ].vertexOffset,
 						.transformIndex = c.first // c.first is the node index
-					});
+					} );
 			}
 		}
 
 		// force recalculation of all global transformations
-		IFNITY::markAsChanged(scene_, 0);
-		IFNITY::recalculateGlobalTransforms(scene_);
+		IFNITY::markAsChanged( scene_, 0 );
+		IFNITY::recalculateGlobalTransforms( scene_ );
 	}
 
 }
