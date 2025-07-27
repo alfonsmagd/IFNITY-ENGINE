@@ -50,6 +50,7 @@ set(EXAMPLE_DIRS
     #bufferVulkan
     #Texture_Sample
     #camera_mesh_vk
+    Triangle
     SceneVk
 )
 

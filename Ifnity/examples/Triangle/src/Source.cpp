@@ -402,7 +402,7 @@ public:
 
 IFNITY::App* IFNITY::CreateApp()
 {
-	auto api = IFNITY::rhi::GraphicsAPI::VULKAN;
+	auto api = IFNITY::rhi::GraphicsAPI::OPENGL;
 
 	//return new Source_TestD3D12(api);
 	return new Source( api );
