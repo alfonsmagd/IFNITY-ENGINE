@@ -1005,7 +1005,7 @@ void DeviceD3D12::OnResize()
 	//Ensure the command list is in a clean state before recording new commands.
 	//Properly synchronize with the GPU to avoid overwriting commands that have not yet been executed.
 	//ThrowIfFailed(m_CommandList->Reset(m_DirectCmdListAlloc.Get(), m_PipelineState.Get()));
-	cmd.commandList->SetPipelineState( m_PipelineState.Get() );
+	//cmd.commandList->SetPipelineState( m_PipelineState.Get() );
 
 	UINT64 width, height;
 	//TODO : Check if the width and height are greater than 0.
@@ -1530,8 +1530,8 @@ D3D12::TextureHandleSM DeviceD3D12::getCurrentSwapChainTexture()
 void DeviceD3D12::LoadAssetDemo()
 {
 	BuildRootSignature();
-	BuildShadersAndInputLayout();
-	BuildPipelineStage();
+	//BuildShadersAndInputLayout();
+	//BuildPipelineStage();
 }
 
 

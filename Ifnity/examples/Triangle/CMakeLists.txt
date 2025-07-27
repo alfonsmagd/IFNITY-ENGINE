@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.8)
 
 # Nombre del proyecto
-project(D3D12_SimpleTriangle)
+project(Triangle)
 
 # C++ 17 standar 
 set(CMAKE_CXX_STANDARD 20)
@@ -50,12 +50,16 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     $<TARGET_FILE_DIR:${PROJECT_NAME}>/Shaders
 )
 
-#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#    COMMAND ${CMAKE_COMMAND} -E copy_directory
-#    ${CMAKE_SOURCE_DIR}/../data
-#    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
-#)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/../data
+    $<TARGET_FILE_DIR:${PROJECT_NAME}>/data
+)
 
+
+
+
+# Search  .glsl, .frag, .vert, .geom, .sp, y .h dentro de src/
 # Search  .glsl, .frag, .vert, .geom, .sp, y .h dentro de src/
 file(GLOB_RECURSE GLSL_SHADERS "${PROJECT_SOURCE_DIR}/src/*.glsl")
 file(GLOB_RECURSE VULKAN_SHADERS "${PROJECT_SOURCE_DIR}/src/*.frag" "${PROJECT_SOURCE_DIR}/src/*.vert" "${PROJECT_SOURCE_DIR}/src/*.geom")
