@@ -4,6 +4,7 @@
 
 
 #pragma once
+#include "Ifnity/Graphics/ifrhi.h"
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
 #include "Ifnity/Graphics/Features/CubeMapTextures.hpp"
 #include "gl_constans.hpp"
@@ -19,6 +20,7 @@ namespace OpenGL
 	//Forward declaration
 	class SceneObject;
 
+    //Other definitions
     //-------------------------------------------------//
     //  DEVICE OPENGL                                  //
     //-------------------------------------------------//
@@ -160,6 +162,7 @@ namespace OpenGL
 		Texture() = default;
         Texture(TextureDescription desc, uint32_t uid) : m_TextureDescription(desc), m_TextureID(uid){ }
         Texture(TextureDescription& desc);
+        Texture(TextureDescription& desc, bool renderTarget);
         Texture(GLenum type, int width, int height, GLenum internalFormat);
         Texture(int w, int h, const void* img);
 
@@ -168,9 +171,6 @@ namespace OpenGL
             Texture(const Texture& other) = delete;
         #endif // !BUILD_SHARED_IFNITY
 
-      
-
-       
 		//Destructor
          ~Texture();
          
@@ -299,6 +299,11 @@ namespace OpenGL
         uint64_t getTextureHandleBindless(uint64_t idx, const std::span<Texture>& textures);
 
     };
+
+
+	//-------------------------------------------------  //
+	using RenderPass = rhi::RenderPass;
+	using Framebuffer = rhi::Framebuffer<Texture>;
 	
   
 };

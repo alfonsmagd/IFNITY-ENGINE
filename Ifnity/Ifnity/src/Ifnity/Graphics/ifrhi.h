@@ -389,6 +389,15 @@ namespace rhi
             }
             return n;
         }
+
+        void addAttachment(AttachmentDesc& attachment, uint8_t index)
+        {
+            if (index < _MAX_COLOR_ATACHMENT_)
+            {
+                color[index] = attachment;
+            }
+		}
+
     };
 
 
@@ -399,11 +408,12 @@ namespace rhi
 	//VERTEX TYPES ATTRIBUTES
 	//-------------------------------------------------------------------------------------//
 
-
+    //
     struct IFNITY_API VertexScene
     {
 
     };
+
 
     struct IFNITY_API VertexBasic
     {};

@@ -352,6 +352,11 @@ namespace OpenGL
 					//Create a bindless texture
 					return TextureHandle( new Texture( desc ) );
 				}
+				else if( desc.hasFlag( TextureDescription::TextureFlags::IS_RENDER_TARGET ) )
+				{
+					bool isAttachment = true;
+					return TextureHandle( new Texture( desc, isAttachment ));
+				}
 				return CreateTexture2DImpl( desc );
 				break;
 
@@ -1278,6 +1283,30 @@ namespace OpenGL
 
 		// Llenar la descripcin de la textura
 		m_TextureDescription = desc;
+	}
+
+	Texture::Texture( TextureDescription& desc, bool renderTarget )
+	{
+		// Verificar si el contexto de OpenGL est activo
+		if( !glfwGetCurrentContext() )
+		{
+			IFNITY_LOG( LogApp, ERROR, "El contexto de OpenGL no est activo." );
+			return;
+		}
+
+		// Forzar el formato a R8G8B8A8
+		desc.format = rhi::Format::R8G8B8A8;
+
+		int numMipmaps = Utils::getNumMipMapLevels2D( desc.width, desc.height );
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
+		glTextureStorage2D(m_TextureID, 1, GL_RGBA8, desc.width, desc.height); 
+
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(m_TextureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 	}
 
 	Texture::Texture( GLenum type, int width, int height, GLenum internalFormat )
