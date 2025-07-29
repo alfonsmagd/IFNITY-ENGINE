@@ -13,6 +13,10 @@
 
 IFNITY_NAMESPACE
 
+struct IDevice;
+
+using DeviceHandle = std::shared_ptr<IDevice>;
+
 
 enum IFNITY_API DrawModeUse
 {
@@ -97,6 +101,19 @@ struct IFNITY_API DrawDescription
 
 };
 
+class IFNITY_API IRendererPass
+{
+public:
+	virtual ~IRendererPass() = default;
+	// Initialize the renderer pass
+	virtual void Initialize( DeviceHandle device, unsigned int sizeX, unsigned int sizeY ) = 0;
+	// Shutdown the renderer pass
+	virtual void Shutdown() = 0;
+	// Render the scene
+	virtual void Render() = 0;
+};
+
+
 // Definition of the IDevice interface
 class IFNITY_API IDevice {
 public:
@@ -126,7 +143,7 @@ public:
 };
 
 
-using DeviceHandle = std::shared_ptr<IDevice>;
+
 
 
 IFNITY_END_NAMESPACE

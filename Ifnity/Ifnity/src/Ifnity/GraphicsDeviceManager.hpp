@@ -88,6 +88,7 @@ public:
 	virtual unsigned int GetHeight() const = 0;
 	//To implment next.
 	[[nodiscard]] virtual IDevice* GetRenderDevice() const { return nullptr; }
+	[[nodiscard]] virtual DeviceHandle GetRenderDeviceHandle() const { return nullptr; }
 
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowData&& props);

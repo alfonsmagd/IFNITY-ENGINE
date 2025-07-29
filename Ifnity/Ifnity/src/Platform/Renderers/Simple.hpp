@@ -11,30 +11,30 @@ IFNITY_NAMESPACE
 
 //Implementing CRTP Renderer
 template<typename Derived>
-class RendererPassCRTP
+class RendererPassCRTP: public IRendererPass
 {
 public:
 	RendererPassCRTP() = default;
 	virtual ~RendererPassCRTP() = default;
 	// Initialize the renderer
-	void Initialize( DeviceHandle device, unsigned int sizeX, unsigned int sizeY )
+	void Initialize( DeviceHandle device, unsigned int sizeX, unsigned int sizeY ) override
 	{
 		static_cast< Derived* >(this)->Initialize( device, sizeX, sizeY );
 	}
 	// Shutdown the renderer
-	void Shutdown()
+	void Shutdown() override
 	{
 		static_cast< Derived* >(this)->Shutdown();
 	}
 	// Render the scene
-	void Render()
+	void Render() override
 	{
 		static_cast< Derived* >(this)->Render();
 	}
 };
 
 
-class SimpleRenderer: public RendererPassCRTP<SimpleRenderer>
+class SimpleRenderer final: public RendererPassCRTP<SimpleRenderer>
 {
 public:
 	SimpleRenderer();

@@ -32,6 +32,7 @@ public:
 	void RenderDemo(int w, int h) const override;
 	
 	IDevice* GetRenderDevice() const override { return m_RenderDevice.get(); }
+	DeviceHandle GetRenderDeviceHandle() const override { return m_RenderDevice; }
 
 
 protected:

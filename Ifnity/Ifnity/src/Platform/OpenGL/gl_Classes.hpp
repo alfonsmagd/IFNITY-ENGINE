@@ -5,18 +5,16 @@
 
 #include "pch.h"
 #include "Platform/Windows/gl_constans.hpp"
+#include <Ifnity\Graphics\Interfaces\ITexture.hpp>
 
 IFNITY_NAMESPACE
 
-//Forward declarations
-class TextureHandle;
-namespace rhi {
-	template<typename T>
-	class Framebuffer;
-}
+
 
 namespace OpenGl
 {
+	#define BACKFRAMEBUFFER_OPENGL_ID 0
+
 	class GLFrameBuffer final
 	{
 	public:
@@ -24,7 +22,7 @@ namespace OpenGl
 
 		~GLFrameBuffer();
 
-		void bindAsInput( uint8_t baseSlot = 0 );
+		void bindAsInput(GLuint framebuffer = BACKFRAMEBUFFER_OPENGL_ID, uint8_t baseSlot = 0);
 
 	private:
 		std::vector<std::pair<GLuint, TextureHandle>> m_ColorAttachments;
