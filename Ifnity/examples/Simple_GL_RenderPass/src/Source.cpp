@@ -174,6 +174,7 @@ private:
 	GraphicsDeviceManager* m_ManagerDevice;
 
 	std::shared_ptr<SimpleRenderer> m_SimpleRenderer;
+    
 
 public:
 
@@ -346,9 +347,13 @@ public:
 		rdevice->BindingIndexBuffer( m_indexBuffer );
 		rdevice->BindingVertexAttributesBuffer( m_vertexBuffer );
 
-		m_SimpleRenderer = std::make_shared<SimpleRenderer>();
+		m_SimpleRenderer = std::make_shared<SimpleRenderer>(m_pipeline);
 
-		m_SimpleRenderer->Initialize( m_ManagerDevice->GetRenderDeviceHandle(), 800, 600);
+		m_SimpleRenderer->Initialize( m_ManagerDevice->GetRenderDeviceHandle(),
+									  m_ManagerDevice->GetWidth(),
+									  m_ManagerDevice->GetHeight());
+
+		rdevice->AddRenderPass( m_SimpleRenderer.get() );
 
 	}
 

@@ -9,6 +9,7 @@
 #include <GLFW\glfw3.h>
 #include "..\..\..\vendor\glfw\deps\stb_image_write.h"
 #include "Ifnity\Graphics\Utils.hpp"
+#include <Platform\Renderers\Simple.hpp>
 
 
 
@@ -48,9 +49,17 @@ namespace OpenGL
 
 
 	Device::Device()
-	{}
+	{
+		//Initialize visitor
+		m_RenderVisitor = new OpenGlRenderVisitor( this );
+		
+	
+	
+	}
 	Device::~Device()
-	{}
+	{
+		delete m_RenderVisitor;
+	}
 	void Device::Draw( DrawDescription& desc )
 	{
 
@@ -819,6 +828,16 @@ namespace OpenGL
 		IFNITY_LOG( LogCore, INFO, "DepthTexture its only implented in VK and D3D12" );
 	}
 
+	void Device::AddRenderPass( IRendererPass* pass )
+	{
+		//For now only support one simple render pass to debug and test. 
+		if( pass )
+		{
+			m_RenderPasses.push_back( pass );
+		}
+		
+	}
+
 
 
 	/**
@@ -1295,12 +1314,12 @@ namespace OpenGL
 		}
 
 		// Forzar el formato a R8G8B8A8
-		desc.format = rhi::Format::R8G8B8A8;
+		GLenum format = OpenGL::c_FormatMap[ ( uint8_t )desc.format ].glFormat;
 
 		int numMipmaps = Utils::getNumMipMapLevels2D( desc.width, desc.height );
 
 		glCreateTextures(GL_TEXTURE_2D, 1, &m_TextureID);
-		glTextureStorage2D(m_TextureID, 1, GL_RGBA8, desc.width, desc.height); 
+		glTextureStorage2D(m_TextureID, 1, format, desc.width, desc.height); 
 
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTextureParameteri(m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -1428,6 +1447,12 @@ namespace OpenGL
 	uint64_t SceneObject::getTextureHandleBindless( uint64_t idx, const std::span<Texture>& textures )
 	{
 		return idx == INVALID_TEXTURE ? 0 : textures[ idx ].getHandleBindless();
+	}
+
+	void OpenGlRenderVisitor::Visit( SimpleRenderer& pass )
+	{
+		//Checking about framebuffer 
+		device_->framebuffer_ = std::make_unique<GLFrameBuffer>( pass.GetFramebuffer() );
 	}
 
 };

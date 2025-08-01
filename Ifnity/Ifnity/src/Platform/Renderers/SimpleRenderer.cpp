@@ -8,6 +8,8 @@ IFNITY_NAMESPACE
 
 SimpleRenderer::SimpleRenderer()
 {
+	IFNITY_LOG( LogApp, INFO, "SimpleRenderer created" );
+	IFNITY_LOG( LogApp, WARNING, "Not forget bind pipeline handle , or call create it" );	
 }
 
 SimpleRenderer::~SimpleRenderer()
@@ -30,7 +32,7 @@ void SimpleRenderer::Initialize(DeviceHandle device, unsigned int sizeX, unsigne
 	TextureDescription colorDesc;
 	colorDesc.format = rhi::Format::R8G8B8A8;
 	colorDesc.dimension = rhi::TextureType::TEXTURE2D;
-	colorDesc.flags = rhi::TextureUsageBits::ATTACHMENT;
+	colorDesc.flags = rhi::TextureUsageBits::ATTACHMENT | TextureDescription::IS_RENDER_TARGET;
 	colorDesc.width = sizeX;
 	colorDesc.height = sizeY;
 
@@ -40,7 +42,7 @@ void SimpleRenderer::Initialize(DeviceHandle device, unsigned int sizeX, unsigne
 	TextureDescription depthDesc;
 	depthDesc.format = rhi::Format::Z_UNORM16;
 	depthDesc.dimension = rhi::TextureType::TEXTURE2D;
-	depthDesc.flags = rhi::TextureUsageBits::ATTACHMENT;
+	depthDesc.flags = rhi::TextureUsageBits::ATTACHMENT | TextureDescription::IS_RENDER_TARGET;
 	depthDesc.width = sizeX;
 	depthDesc.height = sizeY;
 

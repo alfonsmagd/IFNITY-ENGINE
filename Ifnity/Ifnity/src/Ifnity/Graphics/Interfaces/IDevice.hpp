@@ -9,6 +9,7 @@
 #include "IGraphicsPipeline.hpp"
 #include "IMeshObject.hpp"
 #include "ISceneObject.hpp"
+#include "IRenderPassVisitor.hpp"
 
 
 IFNITY_NAMESPACE
@@ -111,6 +112,10 @@ public:
 	virtual void Shutdown() = 0;
 	// Render the scene
 	virtual void Render() = 0;
+
+	virtual void Accept(IRenderPassVisitor& visitor) = 0;
+
+
 };
 
 
@@ -136,6 +141,7 @@ public:
 	virtual void StartRecording() {};
 	virtual void StopRecording() {};
 	virtual void SetDepthTexture(TextureHandle texture) = 0;
+	virtual void AddRenderPass( IRendererPass* pass ) {};
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
 

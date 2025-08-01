@@ -8,7 +8,7 @@
 
 IFNITY_NAMESPACE
 
-namespace OpenGl
+namespace OpenGL
 {
 	
 

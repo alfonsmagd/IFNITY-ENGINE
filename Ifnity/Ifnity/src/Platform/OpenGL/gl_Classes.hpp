@@ -1,4 +1,4 @@
-
+#pragma once
 
 
 
@@ -10,8 +10,7 @@
 IFNITY_NAMESPACE
 
 
-
-namespace OpenGl
+namespace OpenGL
 {
 	#define BACKFRAMEBUFFER_OPENGL_ID 0
 
