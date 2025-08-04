@@ -65,6 +65,7 @@ void SimpleRenderer::Shutdown()
 
 void SimpleRenderer::Render()
 {
+	
 }
 
 IFNITY_END_NAMESPACE

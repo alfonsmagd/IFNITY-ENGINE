@@ -7,6 +7,8 @@
 #include "Ifnity/Graphics/ifrhi.h"
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
 #include "Ifnity/Graphics/Interfaces/IRenderPassVisitor.hpp"    
+#include <Platform\Renderers\Simple.hpp>
+#include <variant>
 #include "Ifnity/Graphics/Features/CubeMapTextures.hpp"
 #include "gl_constans.hpp"
 #include "../OpenGL/gl_Classes.hpp"
@@ -23,10 +25,12 @@ namespace OpenGL
 	class SceneObject;
     class Device;
 
+    using RenderPassVariant = std::variant<SimpleRenderer>;
+
     class OpenGlRenderVisitor final: public IRenderPassVisitor
     {
     public:
-        void Visit(class SimpleRenderer& pass) override;
+        void Visit( SimpleRenderer& pass) override;
 
 
 		//Delete copy constructor and assignment operator
@@ -34,6 +38,8 @@ namespace OpenGL
 		OpenGlRenderVisitor( const OpenGlRenderVisitor& ) = delete;
 		OpenGlRenderVisitor& operator=( const OpenGlRenderVisitor& ) = delete;
         
+        void operator() (  SimpleRenderer& pass );
+
 		//No moveVisit
 
 
@@ -123,6 +129,7 @@ namespace OpenGL
 			std::unique_ptr<GLFrameBuffer> lastFramebuffer_; ///< The last framebuffer used by the device.
 			std::unique_ptr<GLFrameBuffer> framebuffer_; ///< The framebuffer used by the device.
 			std::vector<IRendererPass*> m_RenderPasses; ///< The render passes used by the device.
+            std::vector<RenderPassVariant> m_Rpass;
            
             Program m_Program; ///< The program used by the device.
 

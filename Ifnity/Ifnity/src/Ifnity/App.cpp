@@ -153,19 +153,14 @@ namespace IFNITY {
 #ifndef _MODO_TEST 
 		// TODO: CHange this logic, now is usefull to debug  this should be in a layer. 
 #endif
+		RenderImGuiFrame();
+
 		while (isRunning())
 		{
 			glfwPollEvents();
 #ifndef _MODO_TEST
-			RenderImGuiFrame();
+			
 #endif
-			//ImGui::ShowDemoWindow();
-			//Layer Renders. 
-			for (Layer* layer : m_LayerStack)
-			{
-				layer->OnUpdate();
-			}
-
 			// Update animation 
 			Animate();
 
@@ -173,7 +168,15 @@ namespace IFNITY {
 			Render();
 
 
+			//ImGui::ShowDemoWindow();
+			//Layer Renders. 
+			for (Layer* layer : m_LayerStack)
+			{
+				layer->OnUpdate();
+			}
 			m_ManagerDevice->OnUpdate();
+			
+			RenderImGuiFrame();
 
 
 #ifndef _MODO_TEST

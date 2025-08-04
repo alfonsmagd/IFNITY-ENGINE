@@ -6,11 +6,10 @@
 
 
 #include "gl_backend.hpp"
-#include <variant>
 #include <GLFW\glfw3.h>
 #include "..\..\..\vendor\glfw\deps\stb_image_write.h"
 #include "Ifnity\Graphics\Utils.hpp"
-
+#include <Platform\Renderers\Simple.hpp>
 
 
 
@@ -20,10 +19,8 @@ IFNITY_NAMESPACE
 
 using vec2 = glm::vec2;
 
-
 namespace OpenGL
 {
-	
 	/*int getNumMipMapLevels2D(int w, int h)
 	{
 		int levels = 1;
@@ -31,14 +28,6 @@ namespace OpenGL
 			levels += 1;
 		return levels;
 	}*/
-	using RenderPassVariant = std::variant<SimpleRenderer>;
-	void Accept(const RenderPassVariant& renderpass )
-	{
-		if (const SimpleRenderer* render = std::get_if<SimpleRenderer>(&renderpass))
-		{
-			// Puedes usar 'render' aquí
-		}
-	}
 
 	void CheckOpenGLError( const char* stmt, const char* fname, int line )
 	{
@@ -121,7 +110,10 @@ namespace OpenGL
 				glDrawArrays( GL_TRIANGLES, 0, desc.size );
 			}
 
-			framebuffer_->bindAsInput();
+			if( lastFramebuffer_ )
+			{
+				lastFramebuffer_->bindAsInput(); // Backbuffer 
+			}
 
 			if( desc.isIndexed || desc.drawMode == DRAW_INDEXED )
 			{
@@ -133,18 +125,19 @@ namespace OpenGL
 			}
 
 
-			
-			
+			lastFramebuffer_ = std::move( framebuffer_ );
+			framebuffer_.reset();
 		}
-		
+		if(lastFramebuffer_)
+		{
 			//Imgui image render
-			GLuint texId = framebuffer_->m_DepthAttachment;
+			GLuint texId = lastFramebuffer_->m_DepthAttachment;
 			glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 			ImGui::Begin("Framebuffer Preview");
 			ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(texId)), ImVec2(512, 512));
-			ImGui::Image( reinterpret_cast< void* >(static_cast< intptr_t >(framebuffer_->m_ColorAttachments[0].second->GetTextureID())), ImVec2(512, 512));
+			ImGui::Image( reinterpret_cast< void* >(static_cast< intptr_t >(lastFramebuffer_->m_ColorAttachments[0].second->GetTextureID())), ImVec2(512, 512));
 			ImGui::End();
-		
+		}
 
 	
 
@@ -1519,31 +1512,13 @@ namespace OpenGL
 	void OpenGlRenderVisitor::Visit( SimpleRenderer& pass )
 	{
 		//Checking about framebuffer 
-		if(!device_->framebuffer_){
-			device_->framebuffer_ = std::make_unique<GLFrameBuffer>( pass.GetFramebuffer() );
-		}
-		
+		device_->framebuffer_ = std::make_unique<GLFrameBuffer>( pass.GetFramebuffer() );
 		device_->framebuffer_->bindAsRenderTarget();
 
 		//Get pipeline and bind it now 
 		auto pipeline = pass.GetPipeline();
 		pipeline->BindPipeline( device_ );
 
-
-	}
-
-	void OpenGlRenderVisitor::operator() ( SimpleRenderer& pass )
-	{
-		//Checking about framebuffer 
-		if(!device_->framebuffer_){
-			device_->framebuffer_ = std::make_unique<GLFrameBuffer>( pass.GetFramebuffer() );
-		}
-
-		device_->framebuffer_->bindAsRenderTarget();
-
-		//Get pipeline and bind it now 
-		auto pipeline = pass.GetPipeline();
-		pipeline->BindPipeline( device_ );
 
 	}
 

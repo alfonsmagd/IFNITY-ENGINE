@@ -52,6 +52,7 @@ namespace OpenGL
 
 		// Unbind the framebuffer clear operation
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		
 	}
 
 	GLFrameBuffer::~GLFrameBuffer()
@@ -78,17 +79,6 @@ namespace OpenGL
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

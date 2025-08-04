@@ -18,6 +18,7 @@ file(GLOB_RECURSE HEADERS "${PROJECT_SOURCE_DIR}/src/*.hpp")
 # Incluye directories
 include_directories(
     "${PROJECT_SOURCE_DIR}/../../Ifnity/vendor/spdlog/include"
+    "${PROJECT_SOURCE_DIR}/../../Ifnity/vendor/glad/include"
     "${PROJECT_SOURCE_DIR}/../../Ifnity/src"
 )
 
