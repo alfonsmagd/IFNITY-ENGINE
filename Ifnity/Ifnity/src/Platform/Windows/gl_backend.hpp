@@ -31,6 +31,7 @@ namespace OpenGL
     {
     public:
         void Visit( SimpleRenderer& pass) override;
+		void Visit( DebugRenderer& pass ) override;
 
 
 		//Delete copy constructor and assignment operator
@@ -124,6 +125,7 @@ namespace OpenGL
 			BufferHandle CreateDefaultBoundBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags = 0);
             void GetMeshVAO(const std::string mesh);
             void SetupVertexAttributes( GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes );
+			void DrawInmediate( const DrawDescription& desc );
 
 
 			std::unique_ptr<GLFrameBuffer> lastFramebuffer_; ///< The last framebuffer used by the device.

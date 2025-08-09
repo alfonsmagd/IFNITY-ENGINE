@@ -31,14 +31,7 @@ namespace OpenGL
 			levels += 1;
 		return levels;
 	}*/
-	using RenderPassVariant = std::variant<SimpleRenderer>;
-	void Accept(const RenderPassVariant& renderpass )
-	{
-		if (const SimpleRenderer* render = std::get_if<SimpleRenderer>(&renderpass))
-		{
-			// Puedes usar 'render' aquí
-		}
-	}
+	
 
 	void CheckOpenGLError( const char* stmt, const char* fname, int line )
 	{
@@ -78,73 +71,40 @@ namespace OpenGL
 		if( m_RenderPasses.empty() )
 		{
 
-
-			glBindVertexArray( m_VAO );
-			SetOpenGLRasterizationState( desc.rasterizationState );
-			if( desc.isIndexed || desc.drawMode == DRAW_INDEXED )
-			{
-
-				glDrawElements( GL_TRIANGLES, desc.size, GL_UNSIGNED_INT, desc.indices );
-			}
-			else
-			{
-				glDrawArrays( GL_TRIANGLES, 0, desc.size );
-			}
+			DrawInmediate( desc );
 			return;
 		}
 
+		int count = 0;
 		// Render con render passes
+		
+
 		for( auto* pass : m_RenderPasses )
 		{
+			//cHECK that the second pass is debug renderer
+		
 			if( !pass )
 				continue;
 
 			pass->Accept( *m_RenderVisitor );
-
+			glEnable(GL_DEPTH_TEST);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 			if( !framebuffer_ )
 				continue;
-			glEnable(GL_DEPTH_TEST);
-			//glDisable(GL_BLEND); // Disable blending for now, can be enabled later if needed 
-		
+	
+			pass->AdjustDraw( desc ); // Adjust the draw call for the pass
+			DrawInmediate( desc ); // Draw the immediate mode renderer
+			count++;
 
-			glBindVertexArray( m_VAO );
-
-			
-			SetOpenGLRasterizationState( desc.rasterizationState );
-
-			if( desc.isIndexed || desc.drawMode == DRAW_INDEXED )
-			{
-				glDrawElements( GL_TRIANGLES, desc.size, GL_UNSIGNED_INT, desc.indices );
-			}
-			else
-			{
-				glDrawArrays( GL_TRIANGLES, 0, desc.size );
-			}
-
-			framebuffer_->bindAsInput();
-
-			if( desc.isIndexed || desc.drawMode == DRAW_INDEXED )
-			{
-				glDrawElements( GL_TRIANGLES, desc.size, GL_UNSIGNED_INT, desc.indices );
-			}
-			else
-			{
-				glDrawArrays( GL_TRIANGLES, 0, desc.size );
-			}
-
-
-			
-			
 		}
 		
-			//Imgui image render
-			GLuint texId = framebuffer_->m_DepthAttachment;
-			glBindFramebuffer( GL_FRAMEBUFFER, 0 );
-			ImGui::Begin("Framebuffer Preview");
-			ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(texId)), ImVec2(512, 512));
-			ImGui::Image( reinterpret_cast< void* >(static_cast< intptr_t >(framebuffer_->m_ColorAttachments[0].second->GetTextureID())), ImVec2(512, 512));
-			ImGui::End();
 		
+		GLuint texId = framebuffer_->m_DepthAttachment;
+		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		ImGui::Begin("Framebuffer Preview");
+		ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(texId)), ImVec2(512, 512));
+		ImGui::Image( reinterpret_cast< void* >(static_cast< intptr_t >(framebuffer_->m_ColorAttachments[0].second->GetTextureID())), ImVec2(512, 512));
+		ImGui::End();
 
 	
 
@@ -877,6 +837,29 @@ namespace OpenGL
 	}
 
 
+	void Device::DrawInmediate(const DrawDescription& desc)
+	{
+		glBindVertexArray(m_VAO);
+		SetOpenGLRasterizationState(desc.rasterizationState);
+
+		if (desc.depthTest) glEnable(GL_DEPTH_TEST);
+		else glDisable(GL_DEPTH_TEST);
+
+		if( desc.isPostProcessing )
+		{
+			glDrawArrays( GL_TRIANGLES, 0, desc.size );
+			return;
+		}
+
+
+		if (desc.isIndexed || desc.drawMode == DRAW_INDEXED )
+			glDrawElements(GL_TRIANGLES, desc.size, GL_UNSIGNED_INT, desc.indices);
+		else
+			glDrawArrays(GL_TRIANGLES, 0, desc.size);
+	}
+
+
+
 
 	void Device::SetRenderState( const RenderState& state )
 	{
@@ -1532,20 +1515,25 @@ namespace OpenGL
 
 	}
 
-	void OpenGlRenderVisitor::operator() ( SimpleRenderer& pass )
+	void OpenGlRenderVisitor::Visit( DebugRenderer& pass )
 	{
 		//Checking about framebuffer 
-		if(!device_->framebuffer_){
-			device_->framebuffer_ = std::make_unique<GLFrameBuffer>( pass.GetFramebuffer() );
+		if( !device_->framebuffer_ )
+		{
+			IFNITY_LOG( LogCore, WARNING, "DebugRenderer pass requires a framebuffer to be set up. Please ensure that the framebuffer is initialized before rendering. and execute DEBUG RENDERER" );
+			
+			return;
 		}
 
-		device_->framebuffer_->bindAsRenderTarget();
-
+		device_->framebuffer_->bindAsInput(BACKFRAMEBUFFER_OPENGL_ID,0);
 		//Get pipeline and bind it now 
 		auto pipeline = pass.GetPipeline();
 		pipeline->BindPipeline( device_ );
 
+
 	}
+	
+
 
 };
 

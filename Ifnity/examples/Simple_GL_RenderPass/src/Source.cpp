@@ -396,6 +396,11 @@ class Source: public IFNITY::App
 private:
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
+	
+	std::shared_ptr<IShader> m_debugVs;
+	std::shared_ptr<IShader> m_debugPs;
+
+
 	//FPS Counter
 	IFNITY::FpsCounter m_FpsCounter;
 	float deltaSeconds = 0.0f;
@@ -404,9 +409,11 @@ private:
 	BufferHandle m_vertexBuffer;
 	BufferHandle m_indexBuffer;
 	GraphicsPipelineHandle m_pipeline;
+	GraphicsPipelineHandle m_debugPipeline;
 	GraphicsDeviceManager* m_ManagerDevice;
 
 	std::shared_ptr<SimpleRenderer> m_SimpleRenderer;
+	std::shared_ptr<DebugRenderer> m_DebugRenderer;
 	GLFramebuffer shadowMap;
 
 public:
@@ -444,6 +451,8 @@ public:
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
+		m_debugVs = std::make_shared<IShader>();
+		m_debugPs = std::make_shared<IShader>();
 
 
 		const std::wstring shader = LR"(struct PSInput
@@ -489,9 +498,22 @@ public:
 			DescriptionShader.APIflag = ShaderAPIflag::SPIRV_BIN;
 			m_ps->SetShaderDescription(DescriptionShader);
 		}
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "quadvert";
+			m_debugVs->SetShaderDescription(DescriptionShader);
+		}
+		{
+			DescriptionShader.NoCompile = true;
+			DescriptionShader.FileName = "quadfrag";
+			m_debugPs->SetShaderDescription(DescriptionShader);
+		}
 
 		ShaderCompiler::CompileShader(m_vs.get());
 		ShaderCompiler::CompileShader(m_ps.get());
+		ShaderCompiler::CompileShader( m_debugVs.get() );
+		ShaderCompiler::CompileShader( m_debugPs.get() );
+
 
 		GraphicsPipelineDescription gdesc;
 		{
@@ -519,6 +541,7 @@ public:
 
 			gdesc.SetVertexShader( m_vs.get() )
 				.SetPixelShader( m_ps.get() )
+
 				.SetVertexInput( vertexInput );
 
 			RasterizationState rasterizationState;
@@ -531,6 +554,13 @@ public:
 		}//end of gdesc
 		 //Create the pipeline
 		m_pipeline = rdevice->CreateGraphicsPipeline( gdesc );
+		{
+			gdesc.SetVertexShader(m_debugVs.get())
+				.SetPixelShader(m_debugPs.get())
+				;
+			gdesc.AddDebugName( "Debug Pipeline" );
+		}
+		m_debugPipeline = rdevice->CreateGraphicsPipeline( gdesc );
 
 
 		//Buffer Data 
@@ -541,6 +571,11 @@ public:
 			{ {  0.5f, -0.5f , 0.9f }, { 0.0f, 0.0f, 1.0f, 1.0f } },  // azul (más lejos)
 
 			{ {  0.5f,  0.5f , 0.1f }, { 1.0f, 1.0f, 0.0f, 1.0f } },  // amarillo (más cerca)
+			 
+			  
+
+
+
 		};
 
 		//IndexBuffer
@@ -580,15 +615,20 @@ public:
 		rdevice->BindingIndexBuffer( m_indexBuffer );
 		rdevice->BindingVertexAttributesBuffer( m_vertexBuffer );
 
+	
+
 		m_SimpleRenderer = std::make_shared<SimpleRenderer>(m_pipeline);
+		m_DebugRenderer = std::make_shared<DebugRenderer>( m_debugPipeline, m_SimpleRenderer.get() );
 
 		m_SimpleRenderer->Initialize( m_ManagerDevice->GetRenderDeviceHandle(),
 									  m_ManagerDevice->GetWidth(),
 									  m_ManagerDevice->GetHeight());
+		m_DebugRenderer->Initialize( m_ManagerDevice->GetRenderDeviceHandle(),
+									 m_ManagerDevice->GetWidth(),
+									 m_ManagerDevice->GetHeight() );
 
 		rdevice->AddRenderPass( m_SimpleRenderer.get() );
-
-		
+		rdevice->AddRenderPass( m_DebugRenderer.get() );
 
 	}
 

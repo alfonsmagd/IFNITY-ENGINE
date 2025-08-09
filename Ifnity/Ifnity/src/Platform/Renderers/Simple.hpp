@@ -32,6 +32,11 @@ public:
 		static_cast< Derived* >(this)->Render();
 	}
 
+	void Render(IDevice* dev, DrawDescription& desc)
+	{
+		static_cast< Derived* >(this)->Render(dev,desc);
+	}
+
 	const rhi::Framebuffer<TextureHandle>& GetFramebuffer() const
 	{
 		return static_cast< const Derived* >(this)->m_framebuffer;
@@ -64,6 +69,11 @@ public:
 	void Initialize( DeviceHandle device, unsigned int sizeX, unsigned int sizeY );
 	void Shutdown();
 	void Render();
+	void Render(IDevice* dev, DrawDescription& desc)
+	{
+		//Render Device;
+		
+	}
 
 protected:
 	friend class RendererPassCRTP<SimpleRenderer>;
@@ -78,13 +88,44 @@ protected:
 };
 
 
+class DebugRenderer final: public RendererPassCRTP<DebugRenderer>
+{
+public:
+	DebugRenderer( GraphicsPipelineHandle pipeline, IRendererPass* renderpass = nullptr
+				   ): m_pipeline(pipeline), m_prevRenderPass(renderpass) {}
+	~DebugRenderer() = default;
 
+	DebugRenderer() = default;
+	void Initialize( DeviceHandle device, unsigned int sizeX, unsigned int sizeY ) {};
+	void Shutdown() {};
+	void Render() {};
+	void Render(IDevice* dev, DrawDescription& desc)
+	{
+		//In this case dont use description
+		//Only draw a quad in the screen 
+		DrawDescription drawDesc;
+		drawDesc.rasterizationState.primitiveType = rhi::PrimitiveType::TriangleList;
+		drawDesc.rasterizationState.cullMode = rhi::CullModeType::None;
+		drawDesc.rasterizationState.fillMode = rhi::FillModeType::Solid;
+		drawDesc.rasterizationState.frontFace = rhi::FrontFaceType::CounterClockwise;
+		drawDesc.size = 6;
 
+		dev->Draw( drawDesc );
+	}
 
+	void AdjustDraw(DrawDescription& io) override {
+		io.isPostProcessing = true; // Indicate that this is a post-processing pass
+	}
 
+protected:
+	friend class RendererPassCRTP<DebugRenderer>;
 
+	GraphicsPipelineHandle m_pipeline;
+	TextureHandle  m_depthTexture;
+	IRendererPass* m_prevRenderPass = nullptr;
 
-
+	DeviceHandle m_device;
+};
 
 
 
