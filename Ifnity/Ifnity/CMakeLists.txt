@@ -306,20 +306,29 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Filtrar y mostrar solo los destinos que generan archivos .exe
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-if(EXISTS "${NVML_LIB_PATH}")
- add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST})
+# Cache the existence check result for better performance
+if(NOT DEFINED NVML_LIB_EXISTS)
+    if(EXISTS "${NVML_LIB_PATH}")
+        set(NVML_LIB_EXISTS TRUE CACHE BOOL "NVML library exists")
+        message(STATUS "NVML library found at: ${NVML_LIB_PATH}")
+    else()
+        set(NVML_LIB_EXISTS FALSE CACHE BOOL "NVML library exists")
+        message(WARNING "nvml.lib not found at ${NVML_LIB_PATH}, skipping copy.")
+    endif()
+endif()
 
-else()
-  message(WARNING "nvml.lib not found, skipping copy.")
+if(NVML_LIB_EXISTS)
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${NVML_LIB_PATH}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${NVML_LIB_PATH}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${NVML_LIB_PATH}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}"
+        COMMENT "Copying nvml.lib to output directories")
 endif()
 
 # Copiar nvml.lib al directorio de enlace
