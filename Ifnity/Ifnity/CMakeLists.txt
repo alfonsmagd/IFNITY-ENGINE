@@ -124,21 +124,21 @@ ASSIGN_VENDOR_FOLDER(glslang)
 
 
 # Include directories
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
+#include_directories(${PROJECT_SOURCE_DIR}/src)
+#include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
 # La línea siguiente ya no es necesaria porque add_subdirectory se encargará de incluir los directorios necesarios
 # include_directories(${PROJECT_SOURCE_DIR}/vendor/glfw/include)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
+#include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
 #include nvml directory
 include_directories(${PROJECT_SOURCE_DIR}/vendor/nvml)
 #include glad directory 
 include_directories(${PROJECT_SOURCE_DIR}/vendor/glad/include)
 #include imgui directory
-include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui) 
+#include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui) 
 #include implot directory
-include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
+#include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
 #include stb_image 
-include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
+#include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
 #include d3d12mmemoryallocator and vkmemoryallocator
 include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
 # Include Vulkan directories
@@ -148,9 +148,9 @@ include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
 #Include DXC
 include_directories(${DXC_INCLUDE_DIR})
 #include assimp
-include_directories(${PROJECT_SOURCE_DIR}/vendor/assimp/include)
+#include_directories(${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 #include RapidJson its only header library its not necessary to link it with add_subdirectory
-include_directories(${PROJECT_SOURCE_DIR}/vendor/rapidjson/include)
+#include_directories(${PROJECT_SOURCE_DIR}/vendor/rapidjson/include)
 
 #include glslang 
 include_directories(deps/src/glslang/glslang/Include)
@@ -221,22 +221,18 @@ if(NOT SOURCE_FILES)
     message(FATAL_ERROR "No source files given to target: ${PROJECT_NAME}")
 endif()
 
-
+setup_core_includes(${PROJECT_NAME})
+link_core_libraries(${PROJECT_NAME})
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
 target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
-target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
-target_link_libraries(${PROJECT_NAME} PUBLIC implot)
-target_link_libraries(${PROJECT_NAME} INTERFACE  glm)
-target_link_libraries(${PROJECT_NAME} INTERFACE  stb_image)
 target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
 # Link Vulkan libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
 # Link VK-Bootstrap
 target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
-target_link_libraries(${PROJECT_NAME} PUBLIC glslang)
+#target_link_libraries(${PROJECT_NAME} PUBLIC glslang)
 ASSIGN_VENDOR_FOLDER(spirv-cross-core)
 ASSIGN_VENDOR_FOLDER(spirv-cross-c)
 ASSIGN_VENDOR_FOLDER(vk-bootstrap)
@@ -253,7 +249,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${DXC_INCLUDE_DIR})
 
 target_include_directories(${PROJECT_NAME} BEFORE PRIVATE "${DX12_AGILITY_SDK_PATH}/include")
 # Include Target assimp Directories
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
+#target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 
 
 
