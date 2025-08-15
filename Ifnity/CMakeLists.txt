@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.8)
 project(IFNITYPROYECT CXX C)
 
 option(BUILD_SHARED_IFNITY "Build Ifnity as a shared library dll" OFF)
+option(IFNITY_OPENGL_ONLY "Build Ifnity with OpenGL support only (excludes Vulkan and D3D12)" OFF)
+
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(EXAMPLES_BASE_PATH "${CMAKE_SOURCE_DIR}/examples")
@@ -33,27 +35,26 @@ add_subdirectory(Ifnity)
 
 
 # ========= Build examples =========
-set(EXAMPLE_DIRS
-    Sandbox
-    #ShadersPipeLine
-    D3D12_SimpleTriangle
-    #D3Texture
-    #D3D12_Cube_MVP
-    #D3D12_Assimp
-    D3D12_Scene
-    #d3d12_test_scene
-    #d3d12_SceneDebug
-    #Simple_Texture
-    scene_materials
-    #Geometry_Mesh
-    #glslang_vk_test
-    #bufferVulkan
-    #Texture_Sample
-    #camera_mesh_vk
-    SceneVk
-    Simple_GL_RenderPass
-    #Triangle
-)
+# ========= Build examples =========
+# Filtra ejemplos basados en la configuración
+if(IFNITY_OPENGL_ONLY)
+    set(EXAMPLE_DIRS
+        Sandbox
+        Simple_GL_RenderPass
+        #scene_materials  # Si es compatible con OpenGL
+        # Agrega aquí otros ejemplos que funcionen solo con OpenGL
+    )
+else()
+    set(EXAMPLE_DIRS
+        Sandbox
+        D3D12_SimpleTriangle
+        D3D12_Scene
+        SceneVk
+        Simple_GL_RenderPass
+        #scene_materials
+        # ... todos los ejemplos
+    )
+endif()
 
 foreach(EXAMPLE ${EXAMPLE_DIRS})
     add_subdirectory("${EXAMPLES_BASE_PATH}/${EXAMPLE}" "${CMAKE_BINARY_DIR}/${EXAMPLE}")

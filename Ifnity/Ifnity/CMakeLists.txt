@@ -160,13 +160,35 @@ include_directories(deps/src/glslang/src)
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
-# Source files
-file(GLOB_RECURSE SOURCE_FILES
-    ${PROJECT_SOURCE_DIR}/src/*.h
-    ${PROJECT_SOURCE_DIR}/src/*.hpp
-    ${PROJECT_SOURCE_DIR}/src/*.cpp
-    ${PROJECT_SOURCE_DIR}/src/*.c
-)
+
+
+# ========= GRAPHICS API CONFIGURATION =========
+# Include graphics API configurations
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CoreEngine.cmake)
+
+# Always include OpenGL
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenGL.cmake)
+
+# Include Vulkan and D3D12 unless OpenGL-only mode is enabled
+if(NOT IFNITY_OPENGL_ONLY)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Vulkan.cmake)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/D3D12.cmake)
+endif()
+
+
+# ========= GRAPHICS API SOURCES COLLECTION =========
+# Reemplazar file(GLOB_RECURSE ...) con fuentes modulares de las APIs
+set(SOURCE_FILES)
+
+# Siempre incluir Core Engine y OpenGL
+list(APPEND SOURCE_FILES ${CORE_ENGINE_SOURCES} ${OPENGL_SOURCES})
+list(APPEND SOURCE_FILES ${CORE_ENGINE_HEADERS} ${OPENGL_HEADERS})
+
+# Incluir Vulkan y D3D12 si no está en modo OpenGL-only
+if(NOT IFNITY_OPENGL_ONLY)
+    list(APPEND SOURCE_FILES ${VULKAN_SOURCES} ${D3D12_SOURCES})
+    list(APPEND SOURCE_FILES ${VULKAN_HEADERS} ${D3D12_HEADERS})
+endif()
 
 # Vendor Source Files 
 set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.c)

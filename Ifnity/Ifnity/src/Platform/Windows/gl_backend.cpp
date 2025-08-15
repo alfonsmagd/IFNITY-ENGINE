@@ -102,8 +102,8 @@ namespace OpenGL
 		GLuint texId = framebuffer_->m_DepthAttachment;
 		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 		ImGui::Begin("Framebuffer Preview");
-		ImGui::Image(reinterpret_cast<void*>(static_cast<intptr_t>(texId)), ImVec2(512, 512));
-		ImGui::Image( reinterpret_cast< void* >(static_cast< intptr_t >(framebuffer_->m_ColorAttachments[0].second->GetTextureID())), ImVec2(512, 512));
+		ImGui::Image((ImTextureID)(intptr_t)texId, ImVec2(512, 512));
+		ImGui::Image((ImTextureID)(intptr_t)framebuffer_->m_ColorAttachments[0].second->GetTextureID(), ImVec2(512, 512));
 		ImGui::End();
 
 	
