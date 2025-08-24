@@ -29,7 +29,10 @@
 #include "Ifnity/Scene/Scene.h"
 
 //Utils Vulkan to test Vulkan API
+#ifdef IFNITY_VULKAN_API
 #include "Platform\Windows\UtilsVulkan.h"
+#endif
+
 
 //Renderers
 #include "Platform/Renderers/Simple.hpp"

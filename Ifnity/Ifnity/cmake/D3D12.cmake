@@ -130,3 +130,53 @@ set(D3D12_HEADERS ${D3D12_HEADERS} PARENT_SCOPE)
 list(LENGTH D3D12_SOURCES D3D12_SOURCES_COUNT)
 message(STATUS "D3D12: Found ${D3D12_SOURCES_COUNT}  source files")
 message(STATUS "DirectX 12 configuration complete.")
+
+
+# Print files by category
+message(STATUS "=== D3D12 FILES BY CATEGORY ===")
+
+message(STATUS "--- D3D12 PLATFORM SOURCES ---")
+foreach(FILE ${D3D12_PLATFORM_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- D3D12 PLATFORM HEADERS ---")
+foreach(FILE ${D3D12_PLATFORM_HEADERS})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- D3D12 IMGUI SOURCES ---")
+foreach(FILE ${D3D12_IMGUI_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- D3D12 IMGUI HEADERS ---")
+foreach(FILE ${D3D12_IMGUI_HEADERS})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- D3D12 VENDOR SOURCES ---")
+foreach(FILE ${D3D12_VENDOR_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+# Additional info about DLLs that will be copied
+message(STATUS "--- DXC DLLS TO BE COPIED ---")
+if(DXC_DLLS_GLOBAL)
+    foreach(DLL ${DXC_DLLS_GLOBAL})
+        message(STATUS "  ${DLL}")
+    endforeach()
+else()
+    message(STATUS "  No DXC DLLs found")
+endif()
+
+message(STATUS "--- AGILITY SDK DLLS TO BE COPIED ---")
+if(DX_AGILITY_DLLS_GLOBAL)
+    foreach(DLL ${DX_AGILITY_DLLS_GLOBAL})
+        message(STATUS "  ${DLL}")
+    endforeach()
+else()
+    message(STATUS "  No Agility SDK DLLs found")
+endif()
+
+message(STATUS "DirectX 12 configuration complete.")

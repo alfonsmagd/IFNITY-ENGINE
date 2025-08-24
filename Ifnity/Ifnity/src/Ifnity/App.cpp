@@ -1,17 +1,33 @@
 #include "pch.h"
 
+
+
+
 #include "App.h"
 #include "Ifnity/Layers/ExampleLayer.h" //TODO: BORRAR , your own cpp 
 #include "Ifnity/Layers/NVML_Layer.hpp"
+
+#ifdef IFNITY_OPENGL_API
+
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
-#include "Platform/ImguiRender/ImguiD3D11Render.h"
-#include "Platform/ImguiRender/ImguiD3D12Render.h"
-#include "Platform/ImguiRender/ImguiVulkanRender.h"
-#include <GLFW/glfw3.h>
 #include <glad\glad.h>
 #include <Platform/OpenGL/DeviceOpengl.h>
-#include <Platform/Windows/DeviceD3D11.h>
 
+#endif
+
+#ifdef IFNITY_VULKAN_API
+
+#include "Platform/ImguiRender/ImguiVulkanRender.h"
+
+#endif
+
+#ifdef IFNITY_D3D12_API
+#include "Platform/ImguiRender/ImguiD3D11Render.h"
+#include "Platform/ImguiRender/ImguiD3D12Render.h"
+
+
+#include <Platform/Windows/DeviceD3D11.h>
+#endif
 
 
 //#define _MODO_TEST 0
@@ -99,12 +115,19 @@ namespace IFNITY {
 		//  not necessary intialization maps for keys.
 		// io.KeyMap[ImGuiKey_Tab] = GLFW_KEY_TAB;
 		//TODO: Move this in Gharpics Device Manager. 
+
+		// Configure 
+
+		#ifdef IFNITY_OPENGL_API
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::OPENGL] = []()
 			{
+				
 				ImGui_ImplOpenGL3_NewFrame();
 				ImGui::NewFrame();
 
 			};
+		#endif
+		#ifdef IFNITY_D3D12_API
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::D3D11] = []()
 			{
 				ImGui_ImplDX11_NewFrame();
@@ -120,12 +143,15 @@ namespace IFNITY {
 
 
 			};
+		#endif
+
+		#ifdef IFNITY_VULKAN_API
 		m_ImguiRenderFunctionMap[rhi::GraphicsAPI::VULKAN] = []()
 			{
 				ImGui_ImplVulkan_NewFrame();
 				ImGui::NewFrame();
 			};
-
+		#endif
 
 	}
 	App::~App()

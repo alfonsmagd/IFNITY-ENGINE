@@ -172,3 +172,47 @@ list(LENGTH CORE_ENGINE_SOURCES CORE_ENGINE_SOURCES_COUNT)
 message(STATUS "Core Engine: Found ${CORE_ENGINE_SOURCES_COUNT} source files")
 message(STATUS "Core Engine configuration complete.")
 
+# Print files by category
+message(STATUS "=== CORE ENGINE FILES BY CATEGORY ===")
+
+message(STATUS "--- IFNITY CORE SOURCES ---")
+foreach(FILE ${IFNITY_CORE_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- GRAPHICS CORE SOURCES ---")
+foreach(FILE ${GRAPHICS_CORE_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- UTILS SOURCES ---")
+foreach(FILE ${UTILS_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- RENDERERS CORE SOURCES ---")
+foreach(FILE ${RENDERERS_CORE_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- SHADER BUILDER SOURCES ---")
+foreach(FILE ${SHADERBUILDER_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- BENCHMARK SOURCES ---")
+foreach(FILE ${BENCHMARK_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- ROOT SOURCES ---")
+foreach(FILE ${ROOT_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- SHARED VENDOR SOURCES ---")
+foreach(FILE ${SHARED_VENDOR_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "Core Engine configuration complete.")

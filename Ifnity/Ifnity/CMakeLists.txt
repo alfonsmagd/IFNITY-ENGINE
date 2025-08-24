@@ -136,33 +136,39 @@ include_directories(deps/src/glslang/src)
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
 
 
+
+set(SOURCE_FILES)
+
 # ========= GRAPHICS API CONFIGURATION =========
 # Include graphics API configurations
+
+
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CoreEngine.cmake)
 
 # Always include OpenGL
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenGL.cmake)
 
 # Include Vulkan and D3D12 unless OpenGL-only mode is enabled
-if(NOT IFNITY_OPENGL_ONLY)
+
+if(IFNITY_VULKAN_API)
     include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Vulkan.cmake)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/D3D12.cmake)
+    list(APPEND SOURCE_FILES ${VULKAN_SOURCES} ${VULKAN_HEADERS})
+    message(STATUS "Vulkan API support enabled.")
 endif()
 
+if(IFNITY_D3D12_API)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/D3D12.cmake)
+    list(APPEND SOURCE_FILES ${D3D12_SOURCES} ${D3D12_HEADERS})
+    message(STATUS "D3D12 API support enabled.")
+endif()
 
-# ========= GRAPHICS API SOURCES COLLECTION =========
-# Reemplazar file(GLOB_RECURSE ...) con fuentes modulares de las APIs
-set(SOURCE_FILES)
 
 # Siempre incluir Core Engine y OpenGL
 list(APPEND SOURCE_FILES ${CORE_ENGINE_SOURCES} ${OPENGL_SOURCES})
 list(APPEND SOURCE_FILES ${CORE_ENGINE_HEADERS} ${OPENGL_HEADERS})
 
-# Incluir Vulkan y D3D12 si no está en modo OpenGL-only
-if(NOT IFNITY_OPENGL_ONLY)
-    list(APPEND SOURCE_FILES ${VULKAN_SOURCES} ${D3D12_SOURCES})
-    list(APPEND SOURCE_FILES ${VULKAN_HEADERS} ${D3D12_HEADERS})
-endif()
+
 
 # Vendor Source Files 
 set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.c)
@@ -204,12 +210,17 @@ setup_opengl_includes(${PROJECT_NAME})
 link_opengl_libraries(${PROJECT_NAME})
 
 #D3D12 setup includes
-setup_d3d12_includes(${PROJECT_NAME})
-link_d3d12_libraries(${PROJECT_NAME})
+if(IFNITY_D3D12_API)
+    setup_d3d12_includes(${PROJECT_NAME})
+    link_d3d12_libraries(${PROJECT_NAME})
+endif()
 
 #Vulkan setup includes
-setup_vulkan_includes(${PROJECT_NAME})
-link_vulkan_libraries(${PROJECT_NAME})
+if(IFNITY_VULKAN_API)
+    setup_vulkan_includes(${PROJECT_NAME})
+    link_vulkan_libraries(${PROJECT_NAME})
+endif()
+
 
 
 
@@ -254,6 +265,26 @@ set_target_properties(zlib PROPERTIES
   
 # Preprocessor definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS IFNITY_EXPORTS_DLL)
+# ========= GRAPHICS API DEFINITIONS =========
+set(API_DEFINITIONS)
+
+# Siempre incluir OpenGL
+list(APPEND API_DEFINITIONS IFNITY_OPENGL_API)
+
+if(IFNITY_D3D12_API)
+    list(APPEND API_DEFINITIONS IFNITY_D3D12_API IFNITY_D3D11_API)
+endif()
+
+if(IFNITY_VULKAN_API)
+    list(APPEND API_DEFINITIONS IFNITY_VULKAN_API)
+endif()
+
+if(IFNITY_OPENGL_ONLY)
+    list(APPEND API_DEFINITIONS IFNITY_OPENGL_ONLY)
+endif()
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${API_DEFINITIONS})
+message(STATUS "Graphics API definitions: ${API_DEFINITIONS}")
 
 # Configurations
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist")
@@ -261,7 +292,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist")
 # Antes de definir las propiedades del target, establece las banderas del enlazador para la configuración Dist
 set(CMAKE_SHARED_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
 set(CMAKE_EXE_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
-set(CMAKE_MODULE_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
+set(CMAKE_MODULE_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker durante Dist builds.")
 
 
 
@@ -306,3 +337,19 @@ endif()
 
 # Export variables to parent scope and use them in other CMakeLists.txt
 set(DXC_DLLS_GLOBAL ${DXC_DLLS} PARENT_SCOPE)
+
+# Agregar DXC como dependencia independiente
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC "${DXC_INCLUDE_DIR}")
+
+# Copiar DLLs de DXC siempre
+if(DXC_DLLS_GLOBAL)
+    foreach(DXC_DLL ${DXC_DLLS_GLOBAL})
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${DXC_DLL}"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMENT "Copying DXC DLL: ${DXC_DLL}"
+        )
+    endforeach()
+endif()

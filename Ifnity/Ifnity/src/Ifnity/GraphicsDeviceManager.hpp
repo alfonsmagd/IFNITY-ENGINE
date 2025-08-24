@@ -7,8 +7,10 @@
 
 // GRAPHIC API
 #define VK_USE_PLATFORM_WIN32_KHR
+#ifdef  IFNITY_VULKAN_API
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
+#endif
 #define GLFW_INCLUDE_NONE // Do not include any OpenGL headers
 #include <GLFW/glfw3.h>
 #ifdef _WIN32

@@ -83,3 +83,34 @@ set(OPENGL_HEADERS ${OPENGL_HEADERS} PARENT_SCOPE)
 list(LENGTH OPENGL_SOURCES OPENGL_SOURCES_COUNT)
 message(STATUS "OpenGL: Found ${OPENGL_SOURCES_COUNT} source files")
 message(STATUS "OpenGL configuration complete.")
+
+
+# Print files by category
+message(STATUS "=== OPENGL FILES BY CATEGORY ===")
+
+message(STATUS "--- OPENGL PLATFORM SOURCES ---")
+foreach(FILE ${OPENGL_PLATFORM_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- OPENGL PLATFORM HEADERS ---")
+foreach(FILE ${OPENGL_PLATFORM_HEADERS})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- OPENGL IMGUI SOURCES ---")
+foreach(FILE ${OPENGL_IMGUI_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- OPENGL IMGUI HEADERS ---")
+foreach(FILE ${OPENGL_IMGUI_HEADERS})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "--- OPENGL VENDOR SOURCES ---")
+foreach(FILE ${OPENGL_VENDOR_SOURCES})
+    message(STATUS "  ${FILE}")
+endforeach()
+
+message(STATUS "OpenGL configuration complete.")

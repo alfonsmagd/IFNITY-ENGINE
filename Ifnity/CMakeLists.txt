@@ -5,6 +5,16 @@ option(BUILD_SHARED_IFNITY "Build Ifnity as a shared library dll" OFF)
 option(IFNITY_OPENGL_ONLY "Build Ifnity with OpenGL support only (excludes Vulkan and D3D12)" OFF)
 
 
+option(IFNITY_OPENGL_API "Enable OpenGL backend" ON)
+option(IFNITY_VULKAN_API "Enable Vulkan backend" OFF)
+option(IFNITY_D3D12_API "Enable D3D12 backend" ON)
+
+set(IFNITY_OPENGL_API ${IFNITY_OPENGL_API} CACHE BOOL "Enable OpenGL backend" FORCE)
+set(IFNITY_VULKAN_API ${IFNITY_VULKAN_API} CACHE BOOL "Enable Vulkan backend" FORCE)
+set(IFNITY_D3D12_API ${IFNITY_D3D12_API} CACHE BOOL "Enable D3D12 backend" FORCE)
+
+
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(EXAMPLES_BASE_PATH "${CMAKE_SOURCE_DIR}/examples")
 
