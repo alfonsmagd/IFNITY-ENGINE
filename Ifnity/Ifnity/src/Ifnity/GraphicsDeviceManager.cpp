@@ -4,7 +4,7 @@
 
 
 #include "GraphicsDeviceManager.hpp"
-#include "Platform\Windows\DeviceOpengl.h"
+#include "Platform\OpenGL\DeviceOpengl.h"
 #include "Platform\Windows\DeviceD3D11.h"
 #include "Platform\Windows\DeviceD3D12.hpp"
 #include "Platform\Windows\DeviceVulkan.h"

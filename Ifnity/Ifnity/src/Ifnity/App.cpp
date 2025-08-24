@@ -9,7 +9,7 @@
 #include "Platform/ImguiRender/ImguiVulkanRender.h"
 #include <GLFW/glfw3.h>
 #include <glad\glad.h>
-#include <Platform/Windows/DeviceOpengl.h>
+#include <Platform/OpenGL/DeviceOpengl.h>
 #include <Platform/Windows/DeviceD3D11.h>
 
 

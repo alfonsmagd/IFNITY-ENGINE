@@ -4,7 +4,7 @@
 
 
 #include "pch.h"
-#include "Platform/Windows/gl_constans.hpp"
+#include "gl_constans.hpp"
 #include <Ifnity\Graphics\Interfaces\ITexture.hpp>
 
 IFNITY_NAMESPACE
