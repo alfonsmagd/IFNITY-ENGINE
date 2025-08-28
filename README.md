@@ -8,7 +8,7 @@ This provides developers with seamless transitions across different graphics API
 
 ---
 
-## 🔥 Features
+##  Features
 - Multi-API Rendering: **OpenGL 4.6**, **Vulkan 1.3**, **DirectX 12 (SM 6.6)**.  
 - **Runtime API switching** – no restart, no recompilation.  
 - Modern rendering techniques: **dynamic rendering, bindless resources, timeline semaphores**.  
@@ -17,7 +17,7 @@ This provides developers with seamless transitions across different graphics API
 
 ---
 
-## 📊 Vulkan vs DirectX 12 Comparative (Frame-Level)
+## Vulkan vs DirectX 12 Comparative (Frame-Level)
 
 The engine includes internal benchmarking tools to analyze API behavior at frame level.  
 Below is an example capture comparing Vulkan and D3D12 performance:
@@ -28,7 +28,7 @@ Below is an example capture comparing Vulkan and D3D12 performance:
 
 ---
 
-## ⚙️ Build Instructions
+##  Build Instructions
 
 Clone the repository **with submodules**:
 
