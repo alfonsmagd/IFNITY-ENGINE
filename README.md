@@ -1,25 +1,80 @@
 # IFNITY Rendering Engine Tool  
 
 **IFNITY** is a tool designed for **real-time rendering** and **rapid prototyping of models**.  
-What makes it unique is its ability to **switch between OpenGL, Vulkan, and DirectX 12 at runtime**, with upcoming support for **WebGPU**.  
-This provides developers with seamless transitions across different graphics APIs — **without restarting or recompiling the project**.  
+What makes it unique is its multi-API support for **OpenGL, Vulkan, and DirectX 12**, with upcoming support for **WebGPU**.  
+Currently, API switching is available for **window context creation**. In the future, **runtime API switching for scene generation** will be implemented to provide seamless transitions across different graphics APIs during execution.  
 
 
 <img width="1263" height="722" alt="image" src="https://github.com/user-attachments/assets/50651bbf-80e8-437f-b64c-d27cc6516c32" />
 
 
 
-##  Features
-- Multi-API Rendering: **OpenGL 4.6**, **Vulkan 1.3**, **DirectX 12 (SM 6.6)**.  
-- **Runtime API switching** – no restart, no recompilation.  
-- Modern rendering techniques: **dynamic rendering, bindless resources, timeline semaphores**.  
-- Modular and extensible architecture for **R&D and prototyping**.  
-- Upcoming support for **WebGPU**.
+##  Architecture Overview
+
+### CORE
+- **Modular and extensible architecture** for R&D and prototyping
+- **API abstraction layer** – unified interface across graphics APIs
+- **Scene management** with Data-Oriented Design (DOD) for cache efficiency
+- **Asset pipeline** for model loading and texture processing
+- **Planned: DLL separation** for better modularity and hot-reloading
+
+### RENDERING HARDWARE INTERFACE (RHI)
+
+#### Vulkan 1.3
+- ✅ **Dynamic rendering** (VK_KHR_dynamic_rendering)
+- ✅ **Bindless resources** (descriptor indexing)
+- ✅ **Multi-draw indirect** commands
+- ✅ **Timeline semaphores** for efficient synchronization
+- ✅ **Memory allocation** with VMA
+- ✅ **Scene caching** with DOD patterns
+- 🔄 **Deferred rendering** (in development)
+- 🔄 **Compute shaders** pipeline
+- 🔄 **Ray tracing** (VK_KHR_ray_tracing_pipeline)
+- 🔄 **Mesh shaders** (VK_EXT_mesh_shader)
+
+#### DirectX 12 (SM 6.6)
+- ✅ **Dynamic rendering** pipeline
+- ✅ **Bindless resources** (descriptor heaps)
+- ✅ **Multi-draw indirect** commands
+- ✅ **Efficient synchronization** with timeline semaphores
+- ✅ **Resource barriers** optimization
+- ✅ **Scene caching** with DOD patterns
+- 🔄 **Deferred rendering** (in development)
+- 🔄 **Compute shaders** pipeline
+- 🔄 **Hardware ray tracing** (DXR 1.1)
+- 🔄 **Mesh shaders** (SM 6.5+)
+- 🔄 **Variable rate shading** (VRS)        
+- 🔄 **DirectStorage** integration
+- 🔄 **Sampler feedback** optimization
+- 🔄 **GPU-driven rendering** pipeline
+- 🔄 **Work graphs** (SM 6.8)
+
+#### OpenGL 4.6
+- ✅ **Bindless textures** (ARB_bindless_texture)
+- ✅ **Multi-draw indirect** (ARB_multi_draw_indirect)
+- ✅ **Direct State Access** (DSA)
+- ✅ **Efficient buffer management**
+- ✅ **Scene caching** with DOD patterns
+- 🔄 **Deferred rendering** (in development)
+- 🔄 **Compute shaders** (GL 4.3+)
+- 🔄 **Multi-threaded command generation**
+- 🔄 **Sparse textures** (ARB_sparse_texture)
+
+#### WebGPU (Planned)
+- 🔄 **Cross-platform web rendering**
+- 🔄 **Modern GPU features**
+- 🔄 **Compute shaders** support
+
+### FEATURES STATUS
+- **API switching for window contexts** – flexible graphics API selection
+- **Planned: Runtime API switching for scene generation** (future enhancement)
+- **Internal benchmarking tools** for API performance comparison
 - [![Build Status](https://github.com/alfonsmagd/IFNITY-ENGINE/actions/workflows/cmake-single-platform.yml/badge.svg)](https://github.com/alfonsmagd/IFNITY-ENGINE/actions)
 
----Bindless Rendering 
-----<img width="952" height="380" alt="image" src="https://github.com/user-attachments/assets/d244f6a0-d958-4a45-b10f-39ff1eb6e63a" />
+---
 
+## Bindless Rendering 
+<img width="952" height="380" alt="image" src="https://github.com/user-attachments/assets/d244f6a0-d958-4a45-b10f-39ff1eb6e63a" />
 
 ## Vulkan vs DirectX 12 Comparative (Frame-Level)
 
@@ -34,22 +89,31 @@ Below is an example capture comparing Vulkan and D3D12 performance:
 
 ##  Build Instructions
 
-Clone the repository **with submodules**:
+### Prerequisites
+- **Visual Studio 2022** (with CMake support)
+- **Git** (for submodules)
+- **Vulkan SDK** (latest version)
+- **Windows 10/11** (DirectX 12 support)
 
+### Getting Started
 
-
-
+**1. Clone the repository with submodules:**
+```bash
 git clone --recursive https://github.com/alfonsmagd/IFNITY-ENGINE.git
+```
 
-
-Open CMake here with Visual Studio so that it uses Ninja by default and generates the solution in a more user-friendly way.
-
-
+**2. Open with Visual Studio:**
+- Open the folder in Visual Studio 2022
+- CMake will automatically configure with Ninja build system
+- This provides a more user-friendly solution generation
 
 <img width="1278" height="322" alt="image" src="https://github.com/user-attachments/assets/49e8e63f-8301-4f23-9de9-9e5707f47a2c" />
 
+**3. Select target examples:**
+- **D3D12Scene** - DirectX 12 rendering example
+- **sceneVk** - Vulkan rendering example  
+- **scene_materials** - OpenGL 4.6 rendering example
 
-Select the examples who wants run. For draw scene use D3D12Scene, sceneVk, y scene_materials by opengl.
 <img width="495" height="542" alt="image" src="https://github.com/user-attachments/assets/9073619c-f428-4cce-8856-74158c128da5" />
 
 ##  Some Result Comparative 
@@ -60,5 +124,3 @@ Select the examples who wants run. For draw scene use D3D12Scene, sceneVk, y sce
 
 
 <img width="1223" height="350" alt="image" src="https://github.com/user-attachments/assets/6a801ef3-2baa-4e7d-9dd2-3840a3e36c6f" />
-
-
