@@ -20,13 +20,14 @@ Currently, API switching is available for **window context creation**. In the fu
 
 ### RENDERING HARDWARE INTERFACE (RHI)
 
-#### Vulkan 1.3
+#### Vulkan 1.3 and Support New Vulkan 1.4321
 - ✅ **Dynamic rendering** (VK_KHR_dynamic_rendering)
 - ✅ **Bindless resources** (descriptor indexing)
 - ✅ **Multi-draw indirect** commands
 - ✅ **Timeline semaphores** for efficient synchronization
 - ✅ **Memory allocation** with VMA
 - ✅ **Scene caching** with DOD patterns
+  ✅ **SRIV Cross** compatibily with Vulkan 1.4321 
 - 🔄 **Deferred rendering** (in development)
 - 🔄 **Compute shaders** pipeline
 - 🔄 **Ray tracing** (VK_KHR_ray_tracing_pipeline)
