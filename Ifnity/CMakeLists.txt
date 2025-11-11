@@ -50,7 +50,8 @@ add_subdirectory(Ifnity)
 if(IFNITY_OPENGL_ONLY)
     set(EXAMPLE_DIRS
         Sandbox
-        Simple_GL_RenderPass
+        #Not Working Yet
+        #Simple_GL_RenderPass
         #scene_materials  # Si es compatible con OpenGL
         # Agrega aquí otros ejemplos que funcionen solo con OpenGL
     )
@@ -60,8 +61,9 @@ else()
         D3D12_SimpleTriangle
         D3D12_Scene
         SceneVk
-        Simple_GL_RenderPass
-        #scene_materials
+        Triangle
+        #Simple_GL_RenderPass Not Working Yet
+        scene_materials
         # ... todos los ejemplos
     )
 endif()
