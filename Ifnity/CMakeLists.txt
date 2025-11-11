@@ -6,7 +6,7 @@ option(IFNITY_OPENGL_ONLY "Build Ifnity with OpenGL support only (excludes Vulka
 
 
 option(IFNITY_OPENGL_API "Enable OpenGL backend" ON)
-option(IFNITY_VULKAN_API "Enable Vulkan backend" OFF)
+option(IFNITY_VULKAN_API "Enable Vulkan backend" ON)
 option(IFNITY_D3D12_API "Enable D3D12 backend" ON)
 
 set(IFNITY_OPENGL_API ${IFNITY_OPENGL_API} CACHE BOOL "Enable OpenGL backend" FORCE)
@@ -45,30 +45,46 @@ add_subdirectory(Ifnity)
 
 
 # ========= Build examples =========
-# ========= Build examples =========
-# Filtra ejemplos basados en la configuración
-if(IFNITY_OPENGL_ONLY)
-    set(EXAMPLE_DIRS
-        Sandbox
-        #Not Working Yet
-        #Simple_GL_RenderPass
-        #scene_materials  # Si es compatible con OpenGL
-        # Agrega aquí otros ejemplos que funcionen solo con OpenGL
+# Filter examples based on enabled graphics APIs
+set(EXAMPLE_DIRS)
+
+# Always include Sandbox (assumes it's API-agnostic or multi-API)
+list(APPEND EXAMPLE_DIRS Sandbox)
+
+# Add OpenGL examples
+if(IFNITY_OPENGL_API)
+    list(APPEND EXAMPLE_DIRS
+        #Simple_GL_RenderPass  # Not Working Yet
+        scene_materials  # Uncomment when ready
+        SkyBox_Camera
+        Tetahedre
+        MeshGeometrical_Draw
     )
-else()
-    set(EXAMPLE_DIRS
-        Sandbox
-        D3D12_SimpleTriangle
-        D3D12_Scene
-        SceneVk
-        Triangle
-        #Simple_GL_RenderPass Not Working Yet
-        scene_materials
-        # ... todos los ejemplos
-    )
+    message(STATUS "OpenGL examples enabled")
 endif()
 
+# Add Vulkan examples
+if(IFNITY_VULKAN_API)
+    list(APPEND EXAMPLE_DIRS
+        SceneVk
+        Texture_Sample
+    )
+    message(STATUS "Vulkan examples enabled")
+endif()
+
+# Add D3D12 examples
+if(IFNITY_D3D12_API)
+    list(APPEND EXAMPLE_DIRS
+        D3D12_SimpleTriangle
+        D3D12_Scene
+    )
+    message(STATUS "D3D12 examples enabled")
+endif()
+
+# Build each example
 foreach(EXAMPLE ${EXAMPLE_DIRS})
     add_subdirectory("${EXAMPLES_BASE_PATH}/${EXAMPLE}" "${CMAKE_BINARY_DIR}/${EXAMPLE}")
     set_target_properties(${EXAMPLE} PROPERTIES FOLDER "Examples")
 endforeach()
+
+message(STATUS "Building examples: ${EXAMPLE_DIRS}")
