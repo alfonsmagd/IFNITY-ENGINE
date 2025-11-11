@@ -7,7 +7,17 @@ Currently, API switching is available for **window context creation**. In the fu
 
 <img width="1263" height="722" alt="image" src="https://github.com/user-attachments/assets/50651bbf-80e8-437f-b64c-d27cc6516c32" />
 
+## API Configuration Notes
 
+Currently, it is not required to build or have all three APIs (Vulkan, DirectX 12, OpenGL) enabled at once.
+From CMake, you can configure which graphics APIs you want to include in the build.
+If your system does not support a particular API, it will be automatically disabled during configuration.
+
+The available examples have been prepared to demonstrate bindless rendering under both Vulkan and DirectX 12.
+The RHI (Rendering Hardware Interface) usage between Vulkan and D3D12 is almost identical, with separation into different source files mainly due to shader differences.
+OpenGL, however, uses a different RHI flow, which is implemented separately.
+
+At the moment, no new features are being added, but the engine will continue to receive improvements and updates over time.
 
 ##  Architecture Overview
 
@@ -28,10 +38,7 @@ Currently, API switching is available for **window context creation**. In the fu
 - ✅ **Memory allocation** with VMA
 - ✅ **Scene caching** with DOD patterns
   ✅ **SRIV Cross** compatibily with Vulkan 1.4321 
-- 🔄 **Deferred rendering** (in development)
-- 🔄 **Compute shaders** pipeline
-- 🔄 **Ray tracing** (VK_KHR_ray_tracing_pipeline)
-- 🔄 **Mesh shaders** (VK_EXT_mesh_shader)
+
 
 #### DirectX 12 (SM 6.6)
 - ✅ **Dynamic rendering** pipeline
@@ -40,15 +47,7 @@ Currently, API switching is available for **window context creation**. In the fu
 - ✅ **Efficient synchronization** with timeline semaphores
 - ✅ **Resource barriers** optimization
 - ✅ **Scene caching** with DOD patterns
-- 🔄 **Deferred rendering** (in development)
-- 🔄 **Compute shaders** pipeline
-- 🔄 **Hardware ray tracing** (DXR 1.1)
-- 🔄 **Mesh shaders** (SM 6.5+)
-- 🔄 **Variable rate shading** (VRS)        
-- 🔄 **DirectStorage** integration
-- 🔄 **Sampler feedback** optimization
-- 🔄 **GPU-driven rendering** pipeline
-- 🔄 **Work graphs** (SM 6.8)
+
 
 #### OpenGL 4.6
 - ✅ **Bindless textures** (ARB_bindless_texture)
@@ -56,15 +55,9 @@ Currently, API switching is available for **window context creation**. In the fu
 - ✅ **Direct State Access** (DSA)
 - ✅ **Efficient buffer management**
 - ✅ **Scene caching** with DOD patterns
-- 🔄 **Deferred rendering** (in development)
-- 🔄 **Compute shaders** (GL 4.3+)
-- 🔄 **Multi-threaded command generation**
-- 🔄 **Sparse textures** (ARB_sparse_texture)
 
-#### WebGPU (Planned)
-- 🔄 **Cross-platform web rendering**
-- 🔄 **Modern GPU features**
-- 🔄 **Compute shaders** support
+
+
 
 ### FEATURES STATUS
 - **API switching for window contexts** – flexible graphics API selection
