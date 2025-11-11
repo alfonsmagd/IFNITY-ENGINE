@@ -4,9 +4,14 @@
 
 
 #pragma once
+#include "Ifnity/Graphics/ifrhi.h"
 #include "Ifnity/Graphics/Interfaces/IDevice.hpp"
+#include "Ifnity/Graphics/Interfaces/IRenderPassVisitor.hpp"    
+#include <Platform\Renderers\Simple.hpp>
+#include <variant>
 #include "Ifnity/Graphics/Features/CubeMapTextures.hpp"
 #include "gl_constans.hpp"
+#include "../OpenGL/gl_Classes.hpp"
 #include <glad\glad.h>
 #include <span>
  
@@ -18,7 +23,34 @@ namespace OpenGL
 {
 	//Forward declaration
 	class SceneObject;
+    class Device;
 
+    using RenderPassVariant = std::variant<SimpleRenderer>;
+
+    class OpenGlRenderVisitor final: public IRenderPassVisitor
+    {
+    public:
+        void Visit( SimpleRenderer& pass) override;
+		void Visit( DebugRenderer& pass ) override;
+
+
+		//Delete copy constructor and assignment operator
+		OpenGlRenderVisitor( Device* device ): device_( device ) {}
+		OpenGlRenderVisitor( const OpenGlRenderVisitor& ) = delete;
+		OpenGlRenderVisitor& operator=( const OpenGlRenderVisitor& ) = delete;
+        
+        void operator() (  SimpleRenderer& pass );
+
+		//No moveVisit
+
+
+
+    private:
+		Device* device_ = nullptr; ///< Pointer to the device used by the visitor.
+
+    };
+
+    //Other definitions
     //-------------------------------------------------//
     //  DEVICE OPENGL                                  //
     //-------------------------------------------------//
@@ -75,6 +107,10 @@ namespace OpenGL
 
 		//Set Depth Texture
 		void SetDepthTexture(TextureHandle texture) override;
+
+
+        void AddRenderPass( IRendererPass* pass ) override;
+       
     private:
 		
 		    GLuint GetVAO() const { return m_VAO; }
@@ -89,21 +125,27 @@ namespace OpenGL
 			BufferHandle CreateDefaultBoundBuffer(int64 size, const void* data, uint8_t binding, uint32_t flags = 0);
             void GetMeshVAO(const std::string mesh);
             void SetupVertexAttributes( GLuint vao, GLuint vertexBuffer, GLuint indexBuffer, const std::vector<VertexAttribute>& attributes );
+			void DrawInmediate( const DrawDescription& desc );
 
-			
+
+			std::unique_ptr<GLFrameBuffer> lastFramebuffer_; ///< The last framebuffer used by the device.
+			std::unique_ptr<GLFrameBuffer> framebuffer_; ///< The framebuffer used by the device.
+			std::vector<IRendererPass*> m_RenderPasses; ///< The render passes used by the device.
+            std::vector<RenderPassVariant> m_Rpass;
            
             Program m_Program; ///< The program used by the device.
 
 			GLuint       m_VAO; ///< The vertex array object used by the device DEFAULT VAO. 
 			BufferHandle m_VertexBuffer; ///< The vertex buffer used by the device.
-
+			OpenGlRenderVisitor* m_RenderVisitor; ///< The render visitor used by the device.
 			
-
+           
 			std::unordered_map<std::string_view, GLuint> m_MeshVAOs; ///< The buffers used by save VAO by ID Mesh.
             
             //Friend class 
             friend class MeshObject;
 			friend class GraphicsPipeline;
+			friend class OpenGlRenderVisitor;
     };
 
 
@@ -160,6 +202,7 @@ namespace OpenGL
 		Texture() = default;
         Texture(TextureDescription desc, uint32_t uid) : m_TextureDescription(desc), m_TextureID(uid){ }
         Texture(TextureDescription& desc);
+        Texture(TextureDescription& desc, bool renderTarget);
         Texture(GLenum type, int width, int height, GLenum internalFormat);
         Texture(int w, int h, const void* img);
 
@@ -168,9 +211,6 @@ namespace OpenGL
             Texture(const Texture& other) = delete;
         #endif // !BUILD_SHARED_IFNITY
 
-      
-
-       
 		//Destructor
          ~Texture();
          
@@ -277,7 +317,7 @@ namespace OpenGL
             const char* materialFile);
 
         //Implement Interface
-      
+        GLFrameBuffer* glframebuffer_;
         const MeshFileHeader& getHeader() const override { return header_; }
         const MeshData& getMeshData() const override { return meshData_; }
         const Scene& getScene() const override { return scene_; }
@@ -299,6 +339,17 @@ namespace OpenGL
         uint64_t getTextureHandleBindless(uint64_t idx, const std::span<Texture>& textures);
 
     };
+
+
+   
+	
+
+
+
+
+	//-------------------------------------------------  //
+	using RenderPass = rhi::RenderPass;
+	using Framebuffer = rhi::Framebuffer<Texture>;
 	
   
 };

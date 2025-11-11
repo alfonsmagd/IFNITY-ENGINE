@@ -192,11 +192,6 @@ private:
 		ImGui::End();
 	}
 
-
-
-
-
-
 };
 
 class Source: public IFNITY::App
@@ -209,6 +204,7 @@ private:
 	GraphicsDeviceManager* m_ManagerDevice;
 	GraphicsPipelineHandle m_SolidPipeline;
 	GraphicsPipelineHandle m_WireFramePipeline;
+
 	std::shared_ptr<IShader> m_vs;
 	std::shared_ptr<IShader> m_ps;
 
@@ -251,6 +247,7 @@ public:
 
 		m_vs = std::make_shared<IShader>();
 		m_ps = std::make_shared<IShader>();
+		m_debug
 
 		ShaderCreateDescription DescriptionShader;
 		{

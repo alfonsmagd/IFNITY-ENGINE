@@ -12,12 +12,15 @@
 #include "ShaderBuilding\ShaderBuilder.hpp"
 #include "BenchMark/FpsCounter.hpp"
 
+
+
 //Maths
 #include "Ifnity/Maths/math.h"
 
 //Models
 #include "Ifnity/Graphics/Interfaces/IMeshDataBuilder.hpp"
 #include "Ifnity/Models/GeometicModels.hpp"
+
 
 //Materials
 #include "Ifnity/Scene/Material.h"
@@ -26,7 +29,13 @@
 #include "Ifnity/Scene/Scene.h"
 
 //Utils Vulkan to test Vulkan API
+#ifdef IFNITY_VULKAN_API
 #include "Platform\Windows\UtilsVulkan.h"
+#endif
+
+
+//Renderers
+#include "Platform/Renderers/Simple.hpp"
 
 //wOMDPW
 //Entry Point this include have put at the end of the file.

@@ -24,9 +24,7 @@ DeviceOpengl::~DeviceOpengl()
 void DeviceOpengl::OnUpdate()
 {
 	
-	//
-	//glDrawArrays(GL_TRIANGLES, 0, 3);
-	//glEnable(GL_DEPTH_TEST);
+	
 	glClearColor(m_Color[0],m_Color[1], m_Color[2], m_Color[3]);
 	//Imgui update Render 
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

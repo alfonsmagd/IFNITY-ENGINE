@@ -7,8 +7,10 @@
 
 // GRAPHIC API
 #define VK_USE_PLATFORM_WIN32_KHR
+#ifdef  IFNITY_VULKAN_API
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
+#endif
 #define GLFW_INCLUDE_NONE // Do not include any OpenGL headers
 #include <GLFW/glfw3.h>
 #ifdef _WIN32
@@ -88,6 +90,7 @@ public:
 	virtual unsigned int GetHeight() const = 0;
 	//To implment next.
 	[[nodiscard]] virtual IDevice* GetRenderDevice() const { return nullptr; }
+	[[nodiscard]] virtual DeviceHandle GetRenderDeviceHandle() const { return nullptr; }
 
 	//Base Methods to build in glfw window process with no API specified by default. 
 	bool CreateWindowSurface(const WindowData&& props);

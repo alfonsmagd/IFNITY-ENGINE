@@ -2,6 +2,18 @@ cmake_minimum_required(VERSION 3.8)
 project(IFNITYPROYECT CXX C)
 
 option(BUILD_SHARED_IFNITY "Build Ifnity as a shared library dll" OFF)
+option(IFNITY_OPENGL_ONLY "Build Ifnity with OpenGL support only (excludes Vulkan and D3D12)" OFF)
+
+
+option(IFNITY_OPENGL_API "Enable OpenGL backend" ON)
+option(IFNITY_VULKAN_API "Enable Vulkan backend" ON)
+option(IFNITY_D3D12_API "Enable D3D12 backend" ON)
+
+set(IFNITY_OPENGL_API ${IFNITY_OPENGL_API} CACHE BOOL "Enable OpenGL backend" FORCE)
+set(IFNITY_VULKAN_API ${IFNITY_VULKAN_API} CACHE BOOL "Enable Vulkan backend" FORCE)
+set(IFNITY_D3D12_API ${IFNITY_D3D12_API} CACHE BOOL "Enable D3D12 backend" FORCE)
+
+
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(EXAMPLES_BASE_PATH "${CMAKE_SOURCE_DIR}/examples")
@@ -33,28 +45,46 @@ add_subdirectory(Ifnity)
 
 
 # ========= Build examples =========
-set(EXAMPLE_DIRS
-    Sandbox
-    #ShadersPipeLine
-    D3D12_SimpleTriangle
-    #D3Texture
-    #D3D12_Cube_MVP
-    #D3D12_Assimp
-    D3D12_Scene
-    #d3d12_test_scene
-    #d3d12_SceneDebug
-    #Simple_Texture
-    scene_materials
-    #Geometry_Mesh
-    #glslang_vk_test
-    #bufferVulkan
-    #Texture_Sample
-    #camera_mesh_vk
-    Triangle
-    SceneVk
-)
+# Filter examples based on enabled graphics APIs
+set(EXAMPLE_DIRS)
 
+# Always include Sandbox (assumes it's API-agnostic or multi-API)
+list(APPEND EXAMPLE_DIRS Sandbox)
+
+# Add OpenGL examples
+if(IFNITY_OPENGL_API)
+    list(APPEND EXAMPLE_DIRS
+        #Simple_GL_RenderPass  # Not Working Yet
+        scene_materials  # Uncomment when ready
+        SkyBox_Camera
+        Tetahedre
+        MeshGeometrical_Draw
+    )
+    message(STATUS "OpenGL examples enabled")
+endif()
+
+# Add Vulkan examples
+if(IFNITY_VULKAN_API)
+    list(APPEND EXAMPLE_DIRS
+        SceneVk
+        Texture_Sample
+    )
+    message(STATUS "Vulkan examples enabled")
+endif()
+
+# Add D3D12 examples
+if(IFNITY_D3D12_API)
+    list(APPEND EXAMPLE_DIRS
+        D3D12_SimpleTriangle
+        D3D12_Scene
+    )
+    message(STATUS "D3D12 examples enabled")
+endif()
+
+# Build each example
 foreach(EXAMPLE ${EXAMPLE_DIRS})
     add_subdirectory("${EXAMPLES_BASE_PATH}/${EXAMPLE}" "${CMAKE_BINARY_DIR}/${EXAMPLE}")
     set_target_properties(${EXAMPLE} PROPERTIES FOLDER "Examples")
 endforeach()
+
+message(STATUS "Building examples: ${EXAMPLE_DIRS}")

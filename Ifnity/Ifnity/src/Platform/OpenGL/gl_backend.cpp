@@ -6,9 +6,11 @@
 
 
 #include "gl_backend.hpp"
+#include <variant>
 #include <GLFW\glfw3.h>
 #include "..\..\..\vendor\glfw\deps\stb_image_write.h"
 #include "Ifnity\Graphics\Utils.hpp"
+
 
 
 
@@ -18,8 +20,10 @@ IFNITY_NAMESPACE
 
 using vec2 = glm::vec2;
 
+
 namespace OpenGL
 {
+	
 	/*int getNumMipMapLevels2D(int w, int h)
 	{
 		int levels = 1;
@@ -27,6 +31,7 @@ namespace OpenGL
 			levels += 1;
 		return levels;
 	}*/
+	
 
 	void CheckOpenGLError( const char* stmt, const char* fname, int line )
 	{
@@ -48,28 +53,60 @@ namespace OpenGL
 
 
 	Device::Device()
-	{}
+	{
+		//Initialize visitor
+		m_RenderVisitor = new OpenGlRenderVisitor( this );
+
+
+
+	}
 	Device::~Device()
-	{}
+	{
+		delete m_RenderVisitor;
+	}
 	void Device::Draw( DrawDescription& desc )
 	{
 
-		/*glViewport( desc.viewPortState.x,
-					desc.viewPortState.y,
-					desc.viewPortState.width,
-					desc.viewPortState.height );*/
-		glBindVertexArray( m_VAO );
-		SetOpenGLRasterizationState( desc.rasterizationState );
-		if( desc.isIndexed || desc.drawMode == DRAW_INDEXED )
+		// Si no hay render passes definidos, renderiza directamente (forward)
+		if( m_RenderPasses.empty() )
 		{
-			
-			glDrawElements( GL_TRIANGLES, desc.size, GL_UNSIGNED_INT, desc.indices );
+
+			DrawInmediate( desc );
+			return;
 		}
-		else
+
+		int count = 0;
+		// Render con render passes
+		
+
+		for( auto* pass : m_RenderPasses )
 		{
-			glDrawArrays( GL_TRIANGLES, 0, desc.size );
+			//cHECK that the second pass is debug renderer
+		
+			if( !pass )
+				continue;
+
+			pass->Accept( *m_RenderVisitor );
+			glEnable(GL_DEPTH_TEST);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			if( !framebuffer_ )
+				continue;
+	
+			pass->AdjustDraw( desc ); // Adjust the draw call for the pass
+			DrawInmediate( desc ); // Draw the immediate mode renderer
+			count++;
+
 		}
-		//The next remove this and set in desc. u other size. 
+		
+		
+		GLuint texId = framebuffer_->m_DepthAttachment;
+		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		ImGui::Begin("Framebuffer Preview");
+		ImGui::Image((ImTextureID)(intptr_t)texId, ImVec2(512, 512));
+		ImGui::Image((ImTextureID)(intptr_t)framebuffer_->m_ColorAttachments[0].second->GetTextureID(), ImVec2(512, 512));
+		ImGui::End();
+
+	
 
 
 
@@ -178,7 +215,7 @@ namespace OpenGL
 
 			glNamedBufferStorage( vertexBuffer, kBufferSize, data, GL_DYNAMIC_STORAGE_BIT );
 
-			
+
 			return std::make_shared<Buffer>( vertexBuffer, desc );
 
 		}
@@ -318,7 +355,7 @@ namespace OpenGL
 		//only one binding buffer for now.
 		GLuint bindingIndex = bf->GetBufferDescription().binding;
 
-		glVertexArrayVertexBuffer( vao, bindingIndex, bufferID,offset,stride );
+		glVertexArrayVertexBuffer( vao, bindingIndex, bufferID, offset, stride );
 	}
 
 	void Device::BindingIndexBuffer( BufferHandle& bf )
@@ -327,7 +364,7 @@ namespace OpenGL
 		const GLuint vao = m_VAO;
 		const GLuint bufferID = bf->GetBufferID();
 
-	    glVertexArrayElementBuffer( vao, bufferID );
+		glVertexArrayElementBuffer( vao, bufferID );
 
 
 	}
@@ -351,6 +388,11 @@ namespace OpenGL
 				{
 					//Create a bindless texture
 					return TextureHandle( new Texture( desc ) );
+				}
+				else if( desc.hasFlag( TextureDescription::TextureFlags::IS_RENDER_TARGET ) )
+				{
+					bool isAttachment = true;
+					return TextureHandle( new Texture( desc, isAttachment ) );
 				}
 				return CreateTexture2DImpl( desc );
 				break;
@@ -717,14 +759,14 @@ namespace OpenGL
 	BufferHandle Device::CreateVertexAttAndIndexBuffer( const BufferDescription& desc )
 	{
 		GLuint indexBuffer;
-		glCreateBuffers(1, &indexBuffer);
+		glCreateBuffers( 1, &indexBuffer );
 
 		const GLsizeiptr kBufferSize = desc.byteSize;
 		const void* data = desc.data;
 
-		glNamedBufferStorage(indexBuffer, kBufferSize, data, 0);
+		glNamedBufferStorage( indexBuffer, kBufferSize, data, 0 );
 
-		
+
 		return std::make_shared<Buffer>( indexBuffer, desc );
 
 	}
@@ -795,6 +837,29 @@ namespace OpenGL
 	}
 
 
+	void Device::DrawInmediate(const DrawDescription& desc)
+	{
+		glBindVertexArray(m_VAO);
+		SetOpenGLRasterizationState(desc.rasterizationState);
+
+		if (desc.depthTest) glEnable(GL_DEPTH_TEST);
+		else glDisable(GL_DEPTH_TEST);
+
+		if( desc.isPostProcessing )
+		{
+			glDrawArrays( GL_TRIANGLES, 0, desc.size );
+			return;
+		}
+
+
+		if (desc.isIndexed || desc.drawMode == DRAW_INDEXED )
+			glDrawElements(GL_TRIANGLES, desc.size, GL_UNSIGNED_INT, desc.indices);
+		else
+			glDrawArrays(GL_TRIANGLES, 0, desc.size);
+	}
+
+
+
 
 	void Device::SetRenderState( const RenderState& state )
 	{
@@ -812,6 +877,16 @@ namespace OpenGL
 	void Device::SetDepthTexture( TextureHandle texture )
 	{
 		IFNITY_LOG( LogCore, INFO, "DepthTexture its only implented in VK and D3D12" );
+	}
+
+	void Device::AddRenderPass( IRendererPass* pass )
+	{
+		//For now only support one simple render pass to debug and test. 
+		if( pass )
+		{
+			m_RenderPasses.push_back( pass );
+		}
+
 	}
 
 
@@ -838,27 +913,27 @@ namespace OpenGL
 
 
 		const auto& inputElementCount = vertexInput.getNumAttributes();
-		glCreateVertexArrays(1, &m_VAO);
+		glCreateVertexArrays( 1, &m_VAO );
 
 		uint32_t stride = 0;
 		bool strideSet = false;
 
-		for (uint32_t i = 0; i < inputElementCount; ++i)
+		for( uint32_t i = 0; i < inputElementCount; ++i )
 		{
-			const auto& attr = vertexInput.attributes[i];
-			if (attr.format >= rhi::Format::UNKNOWN)
+			const auto& attr = vertexInput.attributes[ i ];
+			if( attr.format >= rhi::Format::UNKNOWN )
 				continue;
 
 
 			uint32_t location = attr.location;
-			uint32_t offset   = static_cast<uint32_t>(attr.offset);
-			uint32_t size     = getNumComponents(attr.format);
+			uint32_t offset = static_cast< uint32_t >( attr.offset );
+			uint32_t size = getNumComponents( attr.format );
 
-			glEnableVertexArrayAttrib(m_VAO, location);
-			glVertexArrayAttribFormat(m_VAO, location, size, GL_FLOAT, GL_FALSE, offset);
-			glVertexArrayAttribBinding(m_VAO, location, 0); //FOR NOW BINDING 0 
+			glEnableVertexArrayAttrib( m_VAO, location );
+			glVertexArrayAttribFormat( m_VAO, location, size, GL_FLOAT, GL_FALSE, offset );
+			glVertexArrayAttribBinding( m_VAO, location, 0 ); //FOR NOW BINDING 0 
 		}
-		
+
 	}
 
 
@@ -871,12 +946,12 @@ namespace OpenGL
 		if( gldev )
 		{
 			gldev->SetRenderState( m_Description.renderState );
-			
-			if(gldev->GetVAO() != this->m_VAO)
+
+			if( gldev->GetVAO() != this->m_VAO )
 			{
-				gldev->SetVAO(this->m_VAO);
+				gldev->SetVAO( this->m_VAO );
 			}
-			
+
 			glUseProgram( m_Program.id );
 		}
 
@@ -1280,6 +1355,29 @@ namespace OpenGL
 		m_TextureDescription = desc;
 	}
 
+	Texture::Texture( TextureDescription& desc, bool renderTarget )
+	{
+		// Verificar si el contexto de OpenGL est activo
+		if( !glfwGetCurrentContext() )
+		{
+			IFNITY_LOG( LogApp, ERROR, "The gl context its not active." );
+			return;
+		}
+
+		GLenum format = OpenGL::c_FormatMap[ ( uint8_t )desc.format ].glFormat;
+
+		int numMipmaps = Utils::getNumMipMapLevels2D( desc.width, desc.height );
+
+		glCreateTextures( GL_TEXTURE_2D, 1, &m_TextureID );
+		glTextureStorage2D( m_TextureID, 1, format, desc.width, desc.height );
+
+		glTextureParameteri( m_TextureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTextureParameteri( m_TextureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTextureParameteri( m_TextureID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+		glTextureParameteri( m_TextureID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
+	}
+
 	Texture::Texture( GLenum type, int width, int height, GLenum internalFormat )
 	{}
 
@@ -1400,6 +1498,42 @@ namespace OpenGL
 	{
 		return idx == INVALID_TEXTURE ? 0 : textures[ idx ].getHandleBindless();
 	}
+
+	void OpenGlRenderVisitor::Visit( SimpleRenderer& pass )
+	{
+		//Checking about framebuffer 
+		if(!device_->framebuffer_){
+			device_->framebuffer_ = std::make_unique<GLFrameBuffer>( pass.GetFramebuffer() );
+		}
+		
+		device_->framebuffer_->bindAsRenderTarget();
+
+		//Get pipeline and bind it now 
+		auto pipeline = pass.GetPipeline();
+		pipeline->BindPipeline( device_ );
+
+
+	}
+
+	void OpenGlRenderVisitor::Visit( DebugRenderer& pass )
+	{
+		//Checking about framebuffer 
+		if( !device_->framebuffer_ )
+		{
+			IFNITY_LOG( LogCore, WARNING, "DebugRenderer pass requires a framebuffer to be set up. Please ensure that the framebuffer is initialized before rendering. and execute DEBUG RENDERER" );
+			
+			return;
+		}
+
+		device_->framebuffer_->bindAsInput(BACKFRAMEBUFFER_OPENGL_ID,0);
+		//Get pipeline and bind it now 
+		auto pipeline = pass.GetPipeline();
+		pipeline->BindPipeline( device_ );
+
+
+	}
+	
+
 
 };
 

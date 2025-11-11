@@ -9,9 +9,14 @@
 #include "IGraphicsPipeline.hpp"
 #include "IMeshObject.hpp"
 #include "ISceneObject.hpp"
+#include "IRenderPassVisitor.hpp"
 
 
 IFNITY_NAMESPACE
+
+struct IDevice;
+
+using DeviceHandle = std::shared_ptr<IDevice>;
 
 
 enum IFNITY_API DrawModeUse
@@ -35,6 +40,7 @@ struct IFNITY_API DrawDescription
 	const void* indices = nullptr;
     unsigned int size;
 	unsigned int instanceCount = 1;
+	bool isPostProcessing = false; // For post-processing effects
 	struct
 	{
 		float Constant = 0.0f;
@@ -70,32 +76,78 @@ struct IFNITY_API DrawDescription
 
 	//Constructors 
 	DrawDescription() = default;
+	DrawDescription(const DrawDescription& other) = default;
 	DrawDescription(const RasterizationState& rasterizationState, const ViewPortState& viewPortState): 
 		rasterizationState(rasterizationState), viewPortState(viewPortState) {}
-	DrawDescription& operator=(const DrawDescription& desc)
+
+	DrawDescription& operator=(DrawDescription&& other) noexcept
 	{
-		rasterizationState = desc.rasterizationState;
-		viewPortState = desc.viewPortState;
-		isIndexed = desc.isIndexed;
-		indices = desc.indices;
-		size = desc.size;
+		if (this != &other)
+		{
+			rasterizationState = std::move(other.rasterizationState);
+			viewPortState      = std::move(other.viewPortState);
+			drawMode           = other.drawMode;
+			depthTest          = other.depthTest;
+			enableBias         = other.enableBias;
+			isIndexed          = other.isIndexed;
+			indices            = other.indices; // no se libera aquí
+			size               = other.size;
+			instanceCount      = other.instanceCount;
+			depthBiasValues    = other.depthBiasValues;
+			startintRecord     = other.startintRecord;
+			onlyOneRender      = other.onlyOneRender;
+
+			other.indices = nullptr; // prevenir puntero colgante
+		}
 		return *this;
 	}
-	const DrawDescription& operator=(DrawDescription&& desc) noexcept
+
+	DrawDescription& operator=(const DrawDescription& other)
 	{
-		rasterizationState = std::move(desc.rasterizationState);
-		viewPortState = std::move(desc.viewPortState);
-		isIndexed = std::move(desc.isIndexed);
-		indices = std::move(desc.indices);
-		size = std::move(desc.size);
+		if (this != &other)
+		{
+			rasterizationState = other.rasterizationState;
+			viewPortState      = other.viewPortState;
+			drawMode           = other.drawMode;
+			depthTest          = other.depthTest;
+			enableBias         = other.enableBias;
+			isIndexed          = other.isIndexed;
+			indices            = other.indices; 
+			size               = other.size;
+			instanceCount      = other.instanceCount;
+			depthBiasValues    = other.depthBiasValues;
+			startintRecord     = other.startintRecord;
+			onlyOneRender      = other.onlyOneRender;
+		}
 		return *this;
 	}
+
+
+
 	~DrawDescription()
 	{
 		delete indices;
 	}
 
 };
+
+class IFNITY_API IRendererPass
+{
+public:
+	virtual ~IRendererPass() = default;
+	// Initialize the renderer pass
+	virtual void Initialize( DeviceHandle device, unsigned int sizeX, unsigned int sizeY ) = 0;
+	// Shutdown the renderer pass
+	virtual void Shutdown() = 0;
+	// Render the scene
+	virtual void Render() = 0;
+
+	virtual void Accept(IRenderPassVisitor& visitor) = 0;
+	virtual void AdjustDraw( DrawDescription& desc ) {};
+
+
+};
+
 
 // Definition of the IDevice interface
 class IFNITY_API IDevice {
@@ -119,6 +171,7 @@ public:
 	virtual void StartRecording() {};
 	virtual void StopRecording() {};
 	virtual void SetDepthTexture(TextureHandle texture) = 0;
+	virtual void AddRenderPass( IRendererPass* pass ) {};
     // Virtual destructor to ensure proper destruction of derived objects
     virtual ~IDevice() = default;
 
@@ -126,7 +179,7 @@ public:
 };
 
 
-using DeviceHandle = std::shared_ptr<IDevice>;
+
 
 
 IFNITY_END_NAMESPACE

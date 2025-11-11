@@ -232,7 +232,7 @@ namespace Vulkan
 	void Device::StopRecording()
 	{
 
-		ImGui_ImplVulkan_RenderDrawData( ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_ );
+		//ImGui_ImplVulkan_RenderDrawData( ImGui::GetDrawData(), cmdBuffer.wrapper_->cmdBuf_ );
 		cmdBuffer.cmdEndRendering();
 		m_DeviceVulkan->submit( cmdBuffer, currentTexture_ );
 

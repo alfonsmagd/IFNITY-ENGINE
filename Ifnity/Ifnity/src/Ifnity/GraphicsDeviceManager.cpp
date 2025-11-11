@@ -1,13 +1,25 @@
 
 
 
-
-
 #include "GraphicsDeviceManager.hpp"
-#include "Platform\Windows\DeviceOpengl.h"
+
+#ifdef IFNITY_OPENGL_API
+#include "Platform\OpenGL\DeviceOpengl.h"
+#endif
+
+#ifdef IFNITY_D3D12_API
+
 #include "Platform\Windows\DeviceD3D11.h"
 #include "Platform\Windows\DeviceD3D12.hpp"
+
+#endif
+
+#ifdef IFNITY_VULKAN_API
+
 #include "Platform\Windows\DeviceVulkan.h"
+
+#endif
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 #ifdef _WINDOWS
@@ -23,45 +35,45 @@ rhi::GraphicsAPI GraphicsDeviceManager::g_API = rhi::GraphicsAPI::OPENGL;
 
 
 
-bool GraphicsDeviceManager::CreateWindowSurface(const WindowData&& props)
+bool GraphicsDeviceManager::CreateWindowSurface( const WindowData&& props )
 {
-#ifdef _WINDOWS
+	#ifdef _WINDOWS
 	// this needs to happen before glfwInit in order to override GLFW behavior
-	SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
-#endif
-	m_Props = std::move(props);
+	SetProcessDpiAwareness( PROCESS_PER_MONITOR_DPI_AWARE );
+	#endif
+	m_Props = std::move( props );
 
-	if (!CreateInstance())
+	if( !CreateInstance() )
 	{
-		IFNITY_LOG(LogApp, ERROR, "Failed to create Window Instance");
+		IFNITY_LOG( LogApp, ERROR, "Failed to create Window Instance" );
 		return false;
 	}
 
 	// GLFW Configuration initialization //GLFW NO API YET SPECIFIED by default GLFW uses OPENGL API. 
-	glfwSetErrorCallback([](int error, const char* description)
-		{
-			IFNITY_LOG(LogApp, ERROR, "GLFW Error ({0}): {1}", error, description);
-		});
+	glfwSetErrorCallback( []( int error, const char* description )
+						  {
+							  IFNITY_LOG( LogApp, ERROR, "GLFW Error ({0}): {1}", error, description );
+						  } );
 
 	glfwDefaultWindowHints(); // optional, the current window hints are already the default
 
 	//GLFW by default format 
 	//TODO: Add more formats to the  window creatin with glfwWindowHint and probably more configurations here
 
-	if (!ConfigureSpecificHintsGLFW())
+	if( !ConfigureSpecificHintsGLFW() )
 	{
-		IFNITY_LOG(LogApp, ERROR, "Failed to configure GLFW hints");
+		IFNITY_LOG( LogApp, ERROR, "Failed to configure GLFW hints" );
 		return false;
 	}
 
-	glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);   // Ignored for fullscreen
+	glfwWindowHint( GLFW_VISIBLE, GLFW_FALSE );   // Ignored for fullscreen
 
-	m_Window = glfwCreateWindow(props.Width, props.Height, props.Title.c_str(), nullptr, nullptr);
+	m_Window = glfwCreateWindow( props.Width, props.Height, props.Title.c_str(), nullptr, nullptr );
 
 	//Check if the window was created correctly
-	if (!m_Window)
+	if( !m_Window )
 	{
-		IFNITY_LOG(LogApp, ERROR, "Failed to create GLFW window");
+		IFNITY_LOG( LogApp, ERROR, "Failed to create GLFW window" );
 		glfwTerminate();
 		return false;
 	}
@@ -69,28 +81,28 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData&& props)
 	//Configure differente properties of check if window is fullscreen, maximized, minimized, etc. 
 
 		//Take a pointer to the window data information to then return in callbaks. 
-	glfwSetWindowUserPointer(m_Window, &m_Props);
+	glfwSetWindowUserPointer( m_Window, &m_Props );
 
 	//SET VSYCN .... IN THE FUTRE TODO
 
-	HWND hwnd = glfwGetWin32Window(m_Window);
+	HWND hwnd = glfwGetWin32Window( m_Window );
 
 	// Set GLFW callbacks
 	SetGLFWCallbacks();
 
 
 	// Set the swapchain and get the surface for API selected. 
-	if (!InitializeDeviceAndContext())
+	if( !InitializeDeviceAndContext() )
 	{
-		IFNITY_LOG(LogApp, ERROR, "Failed to create API Surface");
+		IFNITY_LOG( LogApp, ERROR, "Failed to create API Surface" );
 		return false;
 	}
 
 	//Load Image_Icon. 
 	SetWindowIcon();
-	glfwShowWindow(m_Window);
+	glfwShowWindow( m_Window );
 
-	SetGraphicsDeviceState(StateGraphicsDevice::INITIALIZED);
+	SetGraphicsDeviceState( StateGraphicsDevice::INITIALIZED );
 	return true;
 
 
@@ -100,15 +112,15 @@ bool GraphicsDeviceManager::CreateWindowSurface(const WindowData&& props)
 bool GraphicsDeviceManager::CreateInstance()
 {
 	// Initialize the library
-	if (m_InstanceCreated)
+	if( m_InstanceCreated )
 	{
-		IFNITY_LOG(LogApp, TRACE, "Window Instance already created");
+		IFNITY_LOG( LogApp, TRACE, "Window Instance already created" );
 		return true;
 	}
 	// Check if GLFW can be initialized.
-	if (!glfwInit())
+	if( !glfwInit() )
 	{
-		IFNITY_LOG(LogApp, ERROR, "Failed to initialize GLFW");
+		IFNITY_LOG( LogApp, ERROR, "Failed to initialize GLFW" );
 		return false;
 	}
 
@@ -118,66 +130,84 @@ bool GraphicsDeviceManager::CreateInstance()
 void GraphicsDeviceManager::Shutdown()
 {
 	// Chek if Shutdown its provide when API is initialized
-	if (m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED)
+	if( m_StateGraphicsDevice == StateGraphicsDevice::INITIALIZED )
 	{
 		InternalPreDestroy();
-		
-			IFNITY_LOG(LogApp, WARNING, "Shutdown Graphics Device Manager");
-			glfwDestroyWindow(m_Window);
-			m_Window = nullptr;
-			glfwTerminate();
 
-		
-		SetGraphicsDeviceState(StateGraphicsDevice::NOT_INITIALIZED);
+		IFNITY_LOG( LogApp, WARNING, "Shutdown Graphics Device Manager" );
+		glfwDestroyWindow( m_Window );
+		m_Window = nullptr;
+		glfwTerminate();
+
+
+		SetGraphicsDeviceState( StateGraphicsDevice::NOT_INITIALIZED );
 
 		m_InstanceCreated = false;
 	}
 	else
 	{
-		IFNITY_LOG(LogApp, ERROR, "Graphics Device Manager is not initialized");
+		IFNITY_LOG( LogApp, ERROR, "Graphics Device Manager is not initialized" );
 	}
 
 
 
 }
 
-void GraphicsDeviceManager::RenderDemo(int w, int h) const
+void GraphicsDeviceManager::RenderDemo( int w, int h ) const
 {}
 // Create Window 
-GraphicsDeviceManager* GraphicsDeviceManager::Create(rhi::GraphicsAPI api)
+GraphicsDeviceManager* GraphicsDeviceManager::Create( rhi::GraphicsAPI api )
 {
 	GraphicsDeviceManager::g_API = api;
 	//Check the API type
-	switch (api)
+	switch( api )
 	{
-	case rhi::GraphicsAPI::OPENGL:
-	{
+		case rhi::GraphicsAPI::OPENGL:
+		{
+			#ifdef IFNITY_OPENGL_API
+			return BuildWindow<DeviceOpengl>();
+			#endif
 
-		return BuildWindow<DeviceOpengl>();
+		} // Fin del ámbito para OPENGL
+		break;
 
-	} // Fin del ámbito para OPENGL
-	break;
-
-	case rhi::GraphicsAPI::D3D11:
-	{
-		return BuildWindow<DeviceD3D11>();
-	} // Fin del ámbito para D3D11
-	case rhi::GraphicsAPI::D3D12:
-	{
-		return BuildWindow<DeviceD3D12>();
-
-	} // Fin del ámbito para D3D12
-	break;
-	case rhi::GraphicsAPI::VULKAN:
-	{
-		return BuildWindow<DeviceVulkan>();
-	}
-	break;
+		case rhi::GraphicsAPI::D3D11:
+		{
+			#ifdef IFNITY_D3D12_API
+			return BuildWindow<DeviceD3D11>();
+			#else
+			IFNITY_LOG( LogApp, ERROR, "D3D11 API not found. Please enable IFNITY_D3D12_API in CMakeLists.txt" );
+			assert( false && "D3D11 API not found. Please enable IFNITY_D3D12_API in CMakeLists.txt" );	
+			#endif
 
 
+		} 
+		case rhi::GraphicsAPI::D3D12:
+		{
+			#ifdef IFNITY_D3D12_API
+			return BuildWindow<DeviceD3D12>();
+			#else
+			IFNITY_LOG( LogApp, ERROR, "D3D12 API not found. Please enable IFNITY_D3D12_API in CMakeLists.txt" );
+			assert( false && "D3D12 API not found. Please enable IFNITY_D3D12_API in CMakeLists.txt" );
+			#endif
 
-	default:
-		return BuildWindow<DeviceOpengl>();
+		} // Fin del ámbito para D3D12
+		break;
+		case rhi::GraphicsAPI::VULKAN:
+		{
+			#ifdef IFNITY_VULKAN_API
+			return BuildWindow<DeviceVulkan>();
+			#else
+			IFNITY_LOG( LogApp, ERROR, "VULKAN API not found. Please enable IFNITY_VULKAN_API in CMakeLists.txt" );
+			assert( false && "VULKAN API not found. Please enable IFNITY_VULKAN_API in CMakeLists.txt" );
+			#endif
+		}
+		break;
+
+
+
+		default:
+			return BuildWindow<DeviceOpengl>();
 	}
 }
 
@@ -185,53 +215,53 @@ void GraphicsDeviceManager::SetGLFWCallbacks()
 {
 	// Set GLFW callbacks
 
-	glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			data.Width = width;
-			data.Height = height;
+	glfwSetWindowSizeCallback( m_Window, []( GLFWwindow* window, int width, int height )
+							   {
+								   WindowData& data = *( WindowData* )glfwGetWindowUserPointer( window );
+								   data.Width = width;
+								   data.Height = height;
 
-			//data.GLFWEventSourceBus.triggerWindowResize(width, height);
-			data.GLFWEventSourceBus.triggerEvent<WindowResize>(width, height);
+								   //data.GLFWEventSourceBus.triggerWindowResize(width, height);
+								   data.GLFWEventSourceBus.triggerEvent<WindowResize>( width, height );
 
 
 
-		});
+							   } );
 
-	glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+	glfwSetWindowCloseCallback( m_Window, []( GLFWwindow* window )
+								{
+									WindowData& data = *( WindowData* )glfwGetWindowUserPointer( window );
 
-			//data.GLFWEventSourceBus.triggerWindowClose();
-			data.GLFWEventSourceBus.triggerEvent<WindowClose>();
-		});
+									//data.GLFWEventSourceBus.triggerWindowClose();
+									data.GLFWEventSourceBus.triggerEvent<WindowClose>();
+								} );
 
-	glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-				//data.GLFWEventSourceBus.triggerKeyPressed(key, 0);
-				data.GLFWEventSourceBus.triggerEvent<KeyPressed>(key, action,mods);
-		
-		});
+	glfwSetKeyCallback( m_Window, []( GLFWwindow* window, int key, int scancode, int action, int mods )
+						{
+							WindowData& data = *( WindowData* )glfwGetWindowUserPointer( window );
+							//data.GLFWEventSourceBus.triggerKeyPressed(key, 0);
+							data.GLFWEventSourceBus.triggerEvent<KeyPressed>( key, action, mods );
 
-	glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+						} );
 
-			data.GLFWEventSourceBus.triggerEvent<MouseMove>(xpos, ypos);
-		});
+	glfwSetCursorPosCallback( m_Window, []( GLFWwindow* window, double xpos, double ypos )
+							  {
+								  WindowData& data = *( WindowData* )glfwGetWindowUserPointer( window );
 
-	glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			data.GLFWEventSourceBus.triggerEvent<ScrollMouseMove>(xoffset, yoffset);
-		});
+								  data.GLFWEventSourceBus.triggerEvent<MouseMove>( xpos, ypos );
+							  } );
 
-	glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
-		{
-			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-			data.GLFWEventSourceBus.triggerEvent<MouseClick>(button, action, mods);
-		});
+	glfwSetScrollCallback( m_Window, []( GLFWwindow* window, double xoffset, double yoffset )
+						   {
+							   WindowData& data = *( WindowData* )glfwGetWindowUserPointer( window );
+							   data.GLFWEventSourceBus.triggerEvent<ScrollMouseMove>( xoffset, yoffset );
+						   } );
+
+	glfwSetMouseButtonCallback( m_Window, []( GLFWwindow* window, int button, int action, int mods )
+								{
+									WindowData& data = *( WindowData* )glfwGetWindowUserPointer( window );
+									data.GLFWEventSourceBus.triggerEvent<MouseClick>( button, action, mods );
+								} );
 
 
 }
@@ -246,25 +276,25 @@ void GraphicsDeviceManager::SetWindowIcon()
 {
 	// Load image with stb_image
 	int width, height, channels;
-	stbi_uc* pixels = stbi_load("logo3.png", &width, &height, &channels, STBI_rgb_alpha);
+	stbi_uc* pixels = stbi_load( "logo3.png", &width, &height, &channels, STBI_rgb_alpha );
 
-	if (!pixels)
+	if( !pixels )
 	{
-		IFNITY_LOG(LogApp, ERROR, "Failed to load window icon image ");
+		IFNITY_LOG( LogApp, ERROR, "Failed to load window icon image " );
 		return;
 	}
 	// Set GLFW icon
-	GLFWimage images[1];
-	images[0].width = width;
-	images[0].height = height;
-	images[0].pixels = pixels;
-	glfwSetWindowIcon(m_Window, 1, images);
+	GLFWimage images[ 1 ];
+	images[ 0 ].width = width;
+	images[ 0 ].height = height;
+	images[ 0 ].pixels = pixels;
+	glfwSetWindowIcon( m_Window, 1, images );
 
 	// Free image
-	stbi_image_free(pixels);
+	stbi_image_free( pixels );
 
 	//LOG 
-	IFNITY_LOG(LogApp, INFO, "Window Icon setted");
+	IFNITY_LOG( LogApp, INFO, "Window Icon setted" );
 }
 
 IFNITY_END_NAMESPACE

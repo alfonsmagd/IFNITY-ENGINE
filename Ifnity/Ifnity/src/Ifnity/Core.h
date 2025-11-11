@@ -4,9 +4,6 @@
 #pragma warning(disable : 4251) // disable warning for dll interface using in the same interface dll, if you want to use this dll in another dll you should use the same compiler and the same version of the compiler
 
 
-
-
-
 //#define SANDBOX_TOOL 
 #define VMA_ALLOCATOR_VK 1
 #define D3D12VMA_ALLOCATOR 1

@@ -122,35 +122,9 @@ ASSIGN_VENDOR_FOLDER(assimp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/vendor/glslang)
 ASSIGN_VENDOR_FOLDER(glslang)
 
-
-# Include directories
-include_directories(${PROJECT_SOURCE_DIR}/src)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/spdlog/include)
-# La línea siguiente ya no es necesaria porque add_subdirectory se encargará de incluir los directorios necesarios
-# include_directories(${PROJECT_SOURCE_DIR}/vendor/glfw/include)
-include_directories(${PROJECT_SOURCE_DIR}/vendor/glm)
 #include nvml directory
 include_directories(${PROJECT_SOURCE_DIR}/vendor/nvml)
-#include glad directory 
-include_directories(${PROJECT_SOURCE_DIR}/vendor/glad/include)
-#include imgui directory
-include_directories(${PROJECT_SOURCE_DIR}/vendor/imgui) 
-#include implot directory
-include_directories(${PROJECT_SOURCE_DIR}/vendor/implot)
-#include stb_image 
-include_directories(${PROJECT_SOURCE_DIR}/vendor/stb_image)
-#include d3d12mmemoryallocator and vkmemoryallocator
-include_directories(${PROJECT_SOURCE_DIR}/vendor/D3D12MemoryAllocator/include)
-# Include Vulkan directories
-include_directories(${Vulkan_INCLUDE_DIRS})
-# Include VK-Bootstrap
-include_directories(${PROJECT_SOURCE_DIR}/vendor/vk-bootstrap)
-#Include DXC
-include_directories(${DXC_INCLUDE_DIR})
-#include assimp
-include_directories(${PROJECT_SOURCE_DIR}/vendor/assimp/include)
-#include RapidJson its only header library its not necessary to link it with add_subdirectory
-include_directories(${PROJECT_SOURCE_DIR}/vendor/rapidjson/include)
+
 
 #include glslang 
 include_directories(deps/src/glslang/glslang/Include)
@@ -160,13 +134,41 @@ include_directories(deps/src/glslang/src)
 
 
 message("Ruta del directorio de origen del proyecto: ${PROJECT_SOURCE_DIR}")
-# Source files
-file(GLOB_RECURSE SOURCE_FILES
-    ${PROJECT_SOURCE_DIR}/src/*.h
-    ${PROJECT_SOURCE_DIR}/src/*.hpp
-    ${PROJECT_SOURCE_DIR}/src/*.cpp
-    ${PROJECT_SOURCE_DIR}/src/*.c
-)
+
+
+
+set(SOURCE_FILES)
+
+# ========= GRAPHICS API CONFIGURATION =========
+# Include graphics API configurations
+
+
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CoreEngine.cmake)
+
+# Always include OpenGL
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenGL.cmake)
+
+# Include Vulkan and D3D12 unless OpenGL-only mode is enabled
+
+if(IFNITY_VULKAN_API)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Vulkan.cmake)
+    list(APPEND SOURCE_FILES ${VULKAN_SOURCES} ${VULKAN_HEADERS})
+    message(STATUS "Vulkan API support enabled.")
+endif()
+
+if(IFNITY_D3D12_API)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/D3D12.cmake)
+    list(APPEND SOURCE_FILES ${D3D12_SOURCES} ${D3D12_HEADERS})
+    message(STATUS "D3D12 API support enabled.")
+endif()
+
+
+# Siempre incluir Core Engine y OpenGL
+list(APPEND SOURCE_FILES ${CORE_ENGINE_SOURCES} ${OPENGL_SOURCES})
+list(APPEND SOURCE_FILES ${CORE_ENGINE_HEADERS} ${OPENGL_HEADERS})
+
+
 
 # Vendor Source Files 
 set(GLAD_SOURCE ${PROJECT_SOURCE_DIR}/vendor/glad/src/glad.c)
@@ -199,39 +201,36 @@ if(NOT SOURCE_FILES)
     message(FATAL_ERROR "No source files given to target: ${PROJECT_NAME}")
 endif()
 
+#Core engine  includes
+setup_core_includes(${PROJECT_NAME})
+link_core_libraries(${PROJECT_NAME})
+
+#OpenGL setup includes 
+setup_opengl_includes(${PROJECT_NAME})
+link_opengl_libraries(${PROJECT_NAME})
+
+#D3D12 setup includes
+if(IFNITY_D3D12_API)
+    setup_d3d12_includes(${PROJECT_NAME})
+    link_d3d12_libraries(${PROJECT_NAME})
+endif()
+
+#Vulkan setup includes
+if(IFNITY_VULKAN_API)
+    setup_vulkan_includes(${PROJECT_NAME})
+    link_vulkan_libraries(${PROJECT_NAME})
+endif()
 
 
-# Link libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
-target_link_libraries(${PROJECT_NAME} PUBLIC opengl32)
-target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
-target_link_libraries(${PROJECT_NAME} PUBLIC implot)
-target_link_libraries(${PROJECT_NAME} INTERFACE  glm)
-target_link_libraries(${PROJECT_NAME} INTERFACE  stb_image)
-target_link_libraries(${PROJECT_NAME} PUBLIC D3D12MemoryAllocator)
+
+
 # Link Vulkan libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Vulkan_LIBRARIES})
-# Link VK-Bootstrap
-target_link_libraries(${PROJECT_NAME} PUBLIC vk-bootstrap::vk-bootstrap)
 target_link_libraries(${PROJECT_NAME} PUBLIC spirv-cross-core spirv-cross-c)
-target_link_libraries(${PROJECT_NAME} PUBLIC glslang)
+#target_link_libraries(${PROJECT_NAME} PUBLIC glslang)
 ASSIGN_VENDOR_FOLDER(spirv-cross-core)
 ASSIGN_VENDOR_FOLDER(spirv-cross-c)
 ASSIGN_VENDOR_FOLDER(vk-bootstrap)
-#Link dxc
-target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
-#Target link assimp
-target_link_libraries(${PROJECT_NAME} PUBLIC assimp)
-ASSIGN_VENDOR_FOLDER(assimp)
 
-# Include Target Directories
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src/vma)
-# Include Target DXC Directories
-target_include_directories(${PROJECT_NAME} PUBLIC ${DXC_INCLUDE_DIR})
-
-target_include_directories(${PROJECT_NAME} BEFORE PRIVATE "${DX12_AGILITY_SDK_PATH}/include")
-# Include Target assimp Directories
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/vendor/assimp/include)
 
 
 
@@ -266,6 +265,26 @@ set_target_properties(zlib PROPERTIES
   
 # Preprocessor definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE IFNITY_PLATFORM_WINDOWS IFNITY_EXPORTS_DLL)
+# ========= GRAPHICS API DEFINITIONS =========
+set(API_DEFINITIONS)
+
+# Siempre incluir OpenGL
+list(APPEND API_DEFINITIONS IFNITY_OPENGL_API)
+
+if(IFNITY_D3D12_API)
+    list(APPEND API_DEFINITIONS IFNITY_D3D12_API IFNITY_D3D11_API)
+endif()
+
+if(IFNITY_VULKAN_API)
+    list(APPEND API_DEFINITIONS IFNITY_VULKAN_API)
+endif()
+
+if(IFNITY_OPENGL_ONLY)
+    list(APPEND API_DEFINITIONS IFNITY_OPENGL_ONLY)
+endif()
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${API_DEFINITIONS})
+message(STATUS "Graphics API definitions: ${API_DEFINITIONS}")
 
 # Configurations
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist")
@@ -273,7 +292,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug;Release;Dist")
 # Antes de definir las propiedades del target, establece las banderas del enlazador para la configuración Dist
 set(CMAKE_SHARED_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
 set(CMAKE_EXE_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
-set(CMAKE_MODULE_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker during Dist builds.")
+set(CMAKE_MODULE_LINKER_FLAGS_DIST "-O2" CACHE STRING "Flags used by the linker durante Dist builds.")
 
 
 
@@ -288,20 +307,29 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 # Filtrar y mostrar solo los destinos que generan archivos .exe
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-if(EXISTS "${NVML_LIB_PATH}")
- add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${PROJECT_SOURCE_DIR}/vendor/nvml/nvml.lib
-    ${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST})
+# Cache the existence check result for better performance
+if(NOT DEFINED NVML_LIB_EXISTS)
+    if(EXISTS "${NVML_LIB_PATH}")
+        set(NVML_LIB_EXISTS TRUE CACHE BOOL "NVML library exists")
+        message(STATUS "NVML library found at: ${NVML_LIB_PATH}")
+    else()
+        set(NVML_LIB_EXISTS FALSE CACHE BOOL "NVML library exists")
+        message(WARNING "nvml.lib not found at ${NVML_LIB_PATH}, skipping copy.")
+    endif()
+endif()
 
-else()
-  message(WARNING "nvml.lib not found, skipping copy.")
+if(NVML_LIB_EXISTS)
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${NVML_LIB_PATH}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${NVML_LIB_PATH}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${NVML_LIB_PATH}"
+            "${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DIST}"
+        COMMENT "Copying nvml.lib to output directories")
 endif()
 
 # Copiar nvml.lib al directorio de enlace
@@ -309,3 +337,19 @@ endif()
 
 # Export variables to parent scope and use them in other CMakeLists.txt
 set(DXC_DLLS_GLOBAL ${DXC_DLLS} PARENT_SCOPE)
+
+# Agregar DXC como dependencia independiente
+target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC "${DXC_INCLUDE_DIR}")
+
+# Copiar DLLs de DXC siempre
+if(DXC_DLLS_GLOBAL)
+    foreach(DXC_DLL ${DXC_DLLS_GLOBAL})
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${DXC_DLL}"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+            COMMENT "Copying DXC DLL: ${DXC_DLL}"
+        )
+    endforeach()
+endif()

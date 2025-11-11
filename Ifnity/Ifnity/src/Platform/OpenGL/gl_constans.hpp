@@ -1,4 +1,7 @@
+#pragma once
+
 #include "Ifnity/Graphics/ifrhi.h"
+#include "Ifnity/Graphics/Interfaces/IGraphicsPipeline.hpp"
 #include <glad/glad.h>
 
 IFNITY_NAMESPACE
@@ -293,21 +296,21 @@ namespace OpenGL
      * @param factor The blend factor.
      * @return The corresponding OpenGL blend factor.
      */
-    inline GLenum ConvertToOpenGLBlendFactor(BlendFactor factor)
+    inline GLenum ConvertToOpenGLBlendFactor(rhi::BlendFactor factor)
     {
         switch(factor)
         {
-        case BlendFactor::ZERO:
+        case rhi::BlendFactor::ZERO:
             return GL_ZERO;
-        case BlendFactor::ONE:
+        case rhi::BlendFactor::ONE:
             return GL_ONE;
-        case BlendFactor::SRC_COLOR:
+        case rhi::BlendFactor::SRC_COLOR:
             return GL_SRC_COLOR;
-        case BlendFactor::ONE_MINUS_SRC_COLOR:
+        case rhi::BlendFactor::ONE_MINUS_SRC_COLOR:
             return GL_ONE_MINUS_DST_COLOR;
-        case BlendFactor::SRC_ALPHA:
+        case rhi::BlendFactor::SRC_ALPHA:
             return GL_SRC_ALPHA;
-        case BlendFactor::ONE_MINUS_SRC_ALPHA:
+        case rhi::BlendFactor::ONE_MINUS_SRC_ALPHA:
             return GL_ONE_MINUS_SRC_ALPHA;
         default:
             return GL_ONE; // Default value

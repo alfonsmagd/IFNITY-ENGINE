@@ -4,10 +4,22 @@
 #include "Ifnity/Event/WindowEvent.h"
 #include "imgui.h"
 #include "ImPlot.h"
+
+
+#ifdef    IFNITY_OPENGL_API
+
 #include "Platform/ImguiRender/ImguiOpenglRender.h"
+
+#endif
+#ifdef    IFNITY_VULKAN_API
+#include "Platform/ImguiRender/ImguiVulkanRender.h"
+#endif
+
+#ifdef    IFNITY_D3D12_API
 #include "Platform/ImguiRender/ImguiD3D11Render.h"
 #include "Platform/ImguiRender/ImguiD3D12Render.h"
-#include "Platform/ImguiRender/ImguiVulkanRender.h"
+
+#endif
 #include <GLFW\glfw3.h>
 
 #include "../App.h"
@@ -66,19 +78,28 @@ void ImguiLayer::OnAttach()
 		ImGuiOnDetach = ImGui_ImplOpenGL3_Shutdown;
 		break;
 	case rhi::GraphicsAPI::D3D11:
+		#ifdef IFNITY_D3D12_API
 		ImGuiRenderDrawData = ImGui_ImplDX11_RenderDrawData;
 		ImGuiOnDetach = ImGui_ImplDX11_Shutdown;
 		break;
+		#endif
 	case rhi::GraphicsAPI::D3D12:
+
+		#ifdef IFNITY_D3D12_API
 		ImGuiRenderDrawData = [](ImDrawData* drawData) {
 			ImDrawData* draw_data = ImGui::GetDrawData(); }; //This implement in D3D12Render
 		ImGuiOnDetach = ImGui_ImplDX12_Shutdown;
 		break;
+		#endif
 	case rhi::GraphicsAPI::VULKAN:
+
+		#ifdef IFNITY_VULKAN_API
 		ImGuiRenderDrawData = [](ImDrawData* drawData) {   // Obtén los datos de dibujo
 			ImDrawData* draw_data = ImGui::GetDrawData();
 			}; // This implement in VulkanRender
 		ImGuiOnDetach = ImGui_ImplVulkan_Shutdown;
+
+		#endif
 		break;
 	default:
 		break;

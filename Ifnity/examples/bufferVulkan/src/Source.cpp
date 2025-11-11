@@ -216,16 +216,7 @@ private:
 public:
 	Source(IFNITY::rhi::GraphicsAPI api): IFNITY::App(api), m_ManagerDevice(IFNITY::App::GetApp().GetDevicePtr())
 	{
-		// Obtener el contexto de ImGui desde IFNITY  DLL
-		/*ImGuiContext* context = GetImGuiContext();
-		if (context == nullptr)
-		{
-			IFNITY_LOG(LogApp, ERROR, "Failed to get ImGui context from DLL");
-			return;
-		}*/
 
-		// Establecer el contexto de ImGui en la aplicación principal
-		//ImGui::SetCurrentContext(context);
 		PushLayer(new   IFNITY::NVML_Monitor());
 		PushLayer(&m_ImGuiLayer);
 		PushOverlay(new IFNITY::ImguiLayer()); //Capa de dll 
@@ -280,7 +271,7 @@ public:
 		GraphicsPipelineDescription gdesc2;
 
 		BufferDescription desc;
-		desc.size = sizeof(glm::mat4);
+		desc.byteSize = sizeof(glm::mat4);
 		desc.type = BufferType::CONSTANT_BUFFER;
 		desc.binding = 0;
 		desc.data = nullptr;
@@ -350,8 +341,8 @@ public:
 			desc.storage = StorageType::HOST_VISIBLE;
 			desc.type = BufferType::VERTEX_BUFFER;
 			desc.binding = 0;
-			desc.size = vertexBufferSize;
-			desc.size = sizeof(vec3) * positions.size();
+			desc.byteSize = vertexBufferSize;
+			desc.byteSize = sizeof(vec3) * positions.size();
 			desc.data = positions.data();
 			desc.debugName = "Buffer: vertex";
 
@@ -362,7 +353,7 @@ public:
 		{
 			//uint32_t indices[] = { 0, 1, 2 };
 			desc.type = BufferType::INDEX_BUFFER;
-			desc.size =  sizeof(uint32_t) * indices.size();
+			desc.byteSize =  sizeof(uint32_t) * indices.size();
 			desc.data = indices.data();
 			desc.debugName = "Buffer: index";
 
