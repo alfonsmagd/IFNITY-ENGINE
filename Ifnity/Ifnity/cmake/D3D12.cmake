@@ -1,4 +1,4 @@
-# DirectX 12 Configuration - Platform-specific D3D12 backend
+?# DirectX 12 Configuration - Platform-specific D3D12 backend
 message(STATUS "Configuring DirectX 12 backend components...")
 
 # ========= D3D12 BACKEND SOURCES =========

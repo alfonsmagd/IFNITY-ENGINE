@@ -6,8 +6,8 @@ option(IFNITY_OPENGL_ONLY "Build Ifnity with OpenGL support only (excludes Vulka
 
 
 option(IFNITY_OPENGL_API "Enable OpenGL backend" ON)
-option(IFNITY_VULKAN_API "Enable Vulkan backend" ON)
-option(IFNITY_D3D12_API "Enable D3D12 backend" ON)
+option(IFNITY_VULKAN_API "Enable Vulkan backend" OFF)
+option(IFNITY_D3D12_API "Enable D3D12 backend" OFF)
 
 set(IFNITY_OPENGL_API ${IFNITY_OPENGL_API} CACHE BOOL "Enable OpenGL backend" FORCE)
 set(IFNITY_VULKAN_API ${IFNITY_VULKAN_API} CACHE BOOL "Enable Vulkan backend" FORCE)

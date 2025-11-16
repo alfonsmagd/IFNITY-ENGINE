@@ -31,6 +31,49 @@ set(DXC_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/include")
 set(DXC_LIB_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/lib/x64/dxcompiler.lib")
 set(DXC_DLL_DIR "${PROJECT_SOURCE_DIR}/vendor/dxc/bin/x64")
 
+# ========================================
+# SLANG SDK CONFIGURATION
+# ========================================
+set(SLANG_ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/vendor/slang")
+set(SLANG_INCLUDE_DIR "${SLANG_ROOT_DIR}/include")
+set(SLANG_LIBRARY_DIR "${SLANG_ROOT_DIR}/lib")
+set(SLANG_BIN_DIR "${SLANG_ROOT_DIR}/bin")
+
+# Verificar que Slang existe
+if(NOT EXISTS "${SLANG_INCLUDE_DIR}/slang.h")
+    message(FATAL_ERROR 
+        "Slang SDK not found at ${SLANG_ROOT_DIR}\n"
+        "Please download from: https://github.com/shader-slang/slang/releases\n"
+        "And extract to: ${SLANG_ROOT_DIR}")
+endif()
+
+message(STATUS "Slang SDK found at: ${SLANG_ROOT_DIR}")
+
+# Buscar la biblioteca Slang
+if(WIN32)
+    set(SLANG_LIBRARY "${SLANG_LIBRARY_DIR}/slang.lib")
+else()
+    set(SLANG_LIBRARY "${SLANG_LIBRARY_DIR}/libslang.so")
+endif()
+
+if(NOT EXISTS "${SLANG_LIBRARY}")
+    message(FATAL_ERROR "Slang library not found at: ${SLANG_LIBRARY}")
+endif()
+
+# Copiar DLLs de Slang al directorio de salida
+if(WIN32)
+    file(GLOB SLANG_DLLS "${SLANG_BIN_DIR}/*.dll")
+    if(SLANG_DLLS)
+        message(STATUS "Found Slang DLLs: ${SLANG_DLLS}")
+    else()
+        message(WARNING "No Slang DLLs found in ${SLANG_BIN_DIR}")
+    endif()
+    
+    # Guardar las DLLs globalmente
+    set(SLANG_DLLS_GLOBAL ${SLANG_DLLS} CACHE INTERNAL "Slang DLL paths")
+endif()
+
+
 file(GLOB DXC_DLLS "${DXC_DLL_DIR}/*.dll")
 foreach(DLL_PATH IN LISTS DXC_DLLS)
     if(EXISTS ${DLL_PATH})
@@ -146,7 +189,7 @@ set(SOURCE_FILES)
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CoreEngine.cmake)
 
-# Always include OpenGL
+# Siempre incluir OpenGL
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/OpenGL.cmake)
 
 # Include Vulkan and D3D12 unless OpenGL-only mode is enabled
@@ -342,6 +385,25 @@ set(DXC_DLLS_GLOBAL ${DXC_DLLS} PARENT_SCOPE)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${DXC_LIB_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC "${DXC_INCLUDE_DIR}")
 
+#Slang 
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SLANG_LIBRARY})
+
+# Link Slang
+target_include_directories(Ifnity PUBLIC ${SLANG_INCLUDE_DIR})
+target_link_libraries(Ifnity PRIVATE ${SLANG_LIBRARY})
+
+# Copiar DLLs de Slang después de compilar
+if(WIN32 AND SLANG_DLLS)
+    foreach(DLL_PATH IN LISTS SLANG_DLLS)
+        add_custom_command(TARGET Ifnity POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${DLL_PATH}"
+                "$<TARGET_FILE_DIR:Ifnity>"
+            COMMENT "Copying Slang DLL: ${DLL_PATH}"
+        )
+    endforeach()
+endif()
+
 # Copiar DLLs de DXC siempre
 if(DXC_DLLS_GLOBAL)
     foreach(DXC_DLL ${DXC_DLLS_GLOBAL})
@@ -353,3 +415,5 @@ if(DXC_DLLS_GLOBAL)
         )
     endforeach()
 endif()
+
+# Copy slang dlls 

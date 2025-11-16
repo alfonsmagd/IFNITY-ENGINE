@@ -10,6 +10,7 @@
 #include "Ifnity/Graphics/Interfaces/IShader.hpp"
 #include <dxcapi.h>
 #include <wrl\client.h>
+#include <slang.h>
 
 
 //#pragma comment(lib, "dxcompiler.lib")
